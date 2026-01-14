@@ -1,0 +1,18 @@
+[
+  {
+    "code": "NASDAQ",
+    "name": "NASDAQ",
+    "price": 16234.56,
+    "change": 123.45,
+    "changeRate": 0.77,
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "code": "DOWJONES",
+    "name": "DOW JONES",
+    "price": 38901.23,
+    "change": -210.12,
+    "changeRate": -0.54,
+    "updatedAt": "2024-01-01T00:00:00Z"
+  }
+]

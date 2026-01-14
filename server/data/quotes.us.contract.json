@@ -1,0 +1,30 @@
+{
+  "AAPL": {
+    "price": 260.9,
+    "change": -0.15,
+    "changeRate": -0.06,
+    "volume": 45715005,
+    "marketCap": 3836893582300
+  },
+  "MSFT": {
+    "price": 469.86,
+    "change": -0.81,
+    "changeRate": -0.17,
+    "volume": 28532263,
+    "marketCap": 3498197190879
+  },
+  "JNJ": {
+    "price": 213.831,
+    "change": 0.141,
+    "changeRate": 0.07,
+    "volume": 11379157,
+    "marketCap": 514842270346
+  },
+  "BRK.B": {
+    "price": 409.12,
+    "change": -1.35,
+    "changeRate": -0.33,
+    "volume": 3123456,
+    "marketCap": 889123456789
+  }
+}
