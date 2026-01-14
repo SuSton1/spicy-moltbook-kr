@@ -246,6 +246,37 @@ const buildApiUrl = (path: string, params?: URLSearchParams) => {
   return { primary: `${base}${relative}`, fallback: relative }
 }
 
+export const buildApiErrorMessage = (
+  payload: Record<string, unknown>,
+  responseStatus: number,
+) => {
+  const code = payload.code as string | undefined
+  const message =
+    (payload.message as string | undefined) ||
+    (payload.error as string | undefined) ||
+    (payload.detail as string | undefined) ||
+    `API error: ${responseStatus}`
+  const requestId = payload.requestId as string | undefined
+  const upstreamStatus = payload.upstreamStatus as number | undefined
+  const upstreamCode = payload.upstreamCode as string | undefined
+  const upstreamMessage = payload.upstreamMessage as string | undefined
+  const meta: string[] = []
+  if (requestId) {
+    meta.push(`requestId=${requestId}`)
+  }
+  if (upstreamStatus) {
+    meta.push(`upstreamStatus=${upstreamStatus}`)
+  }
+  if (upstreamCode) {
+    meta.push(`upstreamCode=${upstreamCode}`)
+  }
+  if (upstreamMessage) {
+    meta.push(`upstreamMessage=${upstreamMessage}`)
+  }
+  const suffix = meta.length ? ` (${meta.join(" ")})` : ""
+  return code ? `${code}: ${message}${suffix}` : `${message}${suffix}`
+}
+
 const fetchJson = async <T>(
   url: string,
   fallbackUrl?: string,
@@ -313,14 +344,7 @@ const fetchJson = async <T>(
     if (allowApiError) {
       return payload as T
     }
-    const code = payload.code as string | undefined
-    const message =
-      (payload.message as string | undefined) ||
-      (payload.error as string | undefined) ||
-      (payload.detail as string | undefined) ||
-      `API error: ${response.status}`
-    const combined = code ? `${code}: ${message}` : message
-    throw new Error(combined)
+    throw new Error(buildApiErrorMessage(payload, response.status))
   }
   if (usedFallback) {
     warnProxyFallback()
@@ -401,14 +425,7 @@ const fetchJsonWithBody = async <T>(
     if (allowApiError) {
       return payload as T
     }
-    const code = payload.code as string | undefined
-    const message =
-      (payload.message as string | undefined) ||
-      (payload.error as string | undefined) ||
-      (payload.detail as string | undefined) ||
-      `API error: ${response.status}`
-    const combined = code ? `${code}: ${message}` : message
-    throw new Error(combined)
+    throw new Error(buildApiErrorMessage(payload, response.status))
   }
   if (usedFallback) {
     warnProxyFallback()

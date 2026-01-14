@@ -5,7 +5,9 @@ import {
   type IntradayCandle,
   limitCandlesByDays,
   normalizeCandleSeries,
+  shiftIntradayToSessionStart,
 } from "./intraday"
+import { SESSION_WINDOWS } from "./session"
 
 const buildCandle = (
   time: string,
@@ -65,5 +67,19 @@ describe("intraday helpers", () => {
     expect(limited).toHaveLength(2)
     expect(limited[0].time.startsWith("20240220")).toBe(true)
     expect(limited[1].time.startsWith("20240221")).toBe(true)
+  })
+
+  it("shifts end-time candles back to session start when needed", () => {
+    const candles: IntradayCandle[] = [
+      buildCandle("202402190915", 10, 11, 100),
+      buildCandle("202402190930", 11, 12, 110),
+    ]
+    const shifted = shiftIntradayToSessionStart(
+      candles,
+      15,
+      SESSION_WINDOWS.KRX,
+    )
+    expect(shifted[0].time).toBe("202402190900")
+    expect(shifted[1].time).toBe("202402190915")
   })
 })

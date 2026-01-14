@@ -3,6 +3,7 @@ import {
   createChart,
   type CandlestickData,
   type HistogramData,
+  type IChartApi,
   type ISeriesApi,
   type LineData,
   type UTCTimestamp,
@@ -142,9 +143,16 @@ export const StockChart = memo(function StockChart({
   timeZone,
 }: StockChartProps) {
   const chartRef = useRef<HTMLDivElement | null>(null)
+  const volumeRef = useRef<HTMLDivElement | null>(null)
   const indicatorRef = useRef<HTMLDivElement | null>(null)
   const tooltipRef = useRef<HTMLDivElement | null>(null)
   const seriesRef = useRef<SeriesGroup>({})
+  const chartInstanceRef = useRef<{
+    price?: IChartApi
+    volume?: IChartApi
+    indicator?: IChartApi
+  }>({})
+  const syncReadyRef = useRef(false)
   const supportLinesRef = useRef<
     ReturnType<ISeriesApi<"Candlestick">["createPriceLine"]>[]
   >([])
@@ -204,11 +212,11 @@ export const StockChart = memo(function StockChart({
   )
 
   useEffect(() => {
-    if (!chartRef.current) {
+    if (!chartRef.current || !volumeRef.current) {
       return
     }
 
-    const chart = createChart(chartRef.current, {
+    const baseOptions = {
       layout: {
         background: { color: "#0f1422" },
         textColor: "#c7d1ef",
@@ -232,6 +240,22 @@ export const StockChart = memo(function StockChart({
         timeFormatter: (time: number) =>
           formatTimeLabel(time as number, timeZone),
       },
+    }
+
+    const chart = createChart(chartRef.current, baseOptions)
+    const volumeChart = createChart(volumeRef.current, {
+      ...baseOptions,
+      handleScroll: {
+        pressedMouseMove: false,
+        mouseWheel: false,
+        horzTouchDrag: false,
+        vertTouchDrag: false,
+      },
+      handleScale: {
+        axisPressedMouseMove: false,
+        mouseWheel: false,
+        pinch: false,
+      },
     })
 
     const candle = chart.addCandlestickSeries({
@@ -242,11 +266,11 @@ export const StockChart = memo(function StockChart({
       wickDownColor: "#4ea7ff",
     })
 
-    const volume = chart.addHistogramSeries({
+    const volume = volumeChart.addHistogramSeries({
       priceFormat: { type: "volume" },
       priceScaleId: "",
     })
-    volume.priceScale().applyOptions({ scaleMargins: { top: 0.75, bottom: 0 } })
+    volume.priceScale().applyOptions({ scaleMargins: { top: 0.1, bottom: 0 } })
 
     const ma5Series = chart.addLineSeries({ color: "#f5b942", lineWidth: 1 })
     const ma20Series = chart.addLineSeries({ color: "#3f9cff", lineWidth: 1 })
@@ -292,22 +316,7 @@ export const StockChart = memo(function StockChart({
 
     const indicatorChart = indicatorRef.current
       ? createChart(indicatorRef.current, {
-          layout: {
-            background: { color: "#0f1422" },
-            textColor: "#c7d1ef",
-            fontFamily: "Space Grotesk",
-            attributionLogo: false,
-          },
-          grid: {
-            vertLines: { color: "rgba(255,255,255,0.05)" },
-            horzLines: { color: "rgba(255,255,255,0.05)" },
-          },
-          rightPriceScale: {
-            borderColor: "rgba(255,255,255,0.1)",
-          },
-          timeScale: {
-            borderColor: "rgba(255,255,255,0.1)",
-          },
+          ...baseOptions,
         })
       : null
 
@@ -343,15 +352,44 @@ export const StockChart = memo(function StockChart({
       ]
 
       chart.timeScale().subscribeVisibleTimeRangeChange((range) => {
-        if (range && indicatorChart) {
+        if (
+          syncReadyRef.current &&
+          range &&
+          range.from != null &&
+          range.to != null &&
+          indicatorChart
+        ) {
           indicatorChart.timeScale().setVisibleRange(range)
         }
       })
       indicatorChart.timeScale().subscribeVisibleTimeRangeChange((range) => {
-        if (range && chart) {
+        if (
+          syncReadyRef.current &&
+          range &&
+          range.from != null &&
+          range.to != null &&
+          chart
+        ) {
           chart.timeScale().setVisibleRange(range)
         }
       })
+    }
+
+    chart.timeScale().subscribeVisibleTimeRangeChange((range) => {
+      if (
+        syncReadyRef.current &&
+        range &&
+        range.from != null &&
+        range.to != null
+      ) {
+        volumeChart.timeScale().setVisibleRange(range)
+      }
+    })
+
+    chartInstanceRef.current = {
+      price: chart,
+      volume: volumeChart,
+      indicator: indicatorChart ?? undefined,
     }
 
     chart.subscribeCrosshairMove((param) => {
@@ -373,7 +411,10 @@ export const StockChart = memo(function StockChart({
     })
 
     return () => {
+      syncReadyRef.current = false
+      chartInstanceRef.current = {}
       chart.remove()
+      volumeChart.remove()
       indicatorChart?.remove()
     }
   }, [timeZone])
@@ -385,6 +426,17 @@ export const StockChart = memo(function StockChart({
     }
     series.candle.setData(candleData)
     series.volume.setData(volumeData)
+    syncReadyRef.current = candleData.length > 0 && volumeData.length > 0
+    const priceChart = chartInstanceRef.current.price
+    const volumeChart = chartInstanceRef.current.volume
+    const indicatorChart = chartInstanceRef.current.indicator
+    if (syncReadyRef.current && priceChart && volumeChart) {
+      const range = priceChart.timeScale().getVisibleRange()
+      if (range && range.from != null && range.to != null) {
+        volumeChart.timeScale().setVisibleRange(range)
+        indicatorChart?.timeScale().setVisibleRange(range)
+      }
+    }
     series.ma5?.setData(buildLine(ma5, timeZone))
     series.ma20?.setData(buildLine(ma20, timeZone))
     series.ma60?.setData(buildLine(ma60, timeZone))
@@ -521,7 +573,16 @@ export const StockChart = memo(function StockChart({
 
   return (
     <div className="chart-wrap">
-      <div ref={chartRef} className="chart-canvas" />
+      <div
+        ref={chartRef}
+        className="chart-canvas"
+        data-testid="chart-price-pane"
+      />
+      <div
+        ref={volumeRef}
+        className="chart-volume-canvas"
+        data-testid="chart-volume-pane"
+      />
       <div className="chart-tooltip" ref={tooltipRef} />
       <div className="small-text" data-testid="chart-candle-count">
         {candles.length}

@@ -93,6 +93,24 @@ const INDEX_CACHE_PREFIX = "indices-cache"
 const RANKING_CACHE_PREFIX = "rankings-cache"
 const QUOTE_CACHE_PREFIX = "quote-cache"
 const RANKING_CACHE_TTL = 10000
+const CHART_CACHE_TTL = 120000
+const chartCache = new Map<string, { data: Candle[]; updatedAt: number }>()
+
+const readChartCache = (key: string) => {
+  const entry = chartCache.get(key)
+  if (!entry) {
+    return null
+  }
+  if (Date.now() - entry.updatedAt > CHART_CACHE_TTL) {
+    chartCache.delete(key)
+    return null
+  }
+  return entry
+}
+
+const writeChartCache = (key: string, data: Candle[]) => {
+  chartCache.set(key, { data, updatedAt: Date.now() })
+}
 
 const FIXTURE_INDICES: IndexItem[] = [
   {
@@ -868,6 +886,10 @@ export const useCandles = (
   const abortRef = useRef<AbortController | null>(null)
   const limit = resolveCandleLimit(tf)
   const perfKey = `chart:${symbol}:${tf}`
+  const cacheKey = useMemo(
+    () => `chart:${region}:${symbol}:${tf}`,
+    [region, symbol, tf],
+  )
 
   const load = useCallback(async () => {
     if (!symbol) {
@@ -877,7 +899,12 @@ export const useCandles = (
       abortRef.current?.abort()
       const controller = new AbortController()
       abortRef.current = controller
-      setStatus("loading")
+      const cached = readChartCache(cacheKey)
+      if (cached && cached.data.length > 0) {
+        startTransition(() => onSuccess(cached.data))
+      } else {
+        setStatus("loading")
+      }
       perfStart(perfKey)
       const days = isIntradayInterval(tf) ? 5 : 1
       const payload = await fetchCandles(
@@ -907,7 +934,8 @@ export const useCandles = (
         }
         return String(a.time).localeCompare(String(b.time))
       })
-      onSuccess(sorted)
+      startTransition(() => onSuccess(sorted))
+      writeChartCache(cacheKey, sorted)
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
         return
@@ -915,7 +943,17 @@ export const useCandles = (
       perfMark(perfKey, "error", true)
       onError(err)
     }
-  }, [limit, onError, onSuccess, perfKey, region, setStatus, symbol, tf])
+  }, [
+    cacheKey,
+    limit,
+    onError,
+    onSuccess,
+    perfKey,
+    region,
+    setStatus,
+    symbol,
+    tf,
+  ])
 
   usePolling(load, pollMs)
 

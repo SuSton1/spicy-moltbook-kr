@@ -101,6 +101,7 @@ Whenever a fix changes behavior intentionally, update invariants and update test
 ========================================================
 - Intraday intervals must be exactly 8 options (1m/3m/5m/10m/15m/30m/1h/4h).
 - days=1 must show at least 1 full trading day of intraday data.
+- NXT session uses 08:00~20:00 KST (metadata in server/data/symbols.nxt.json).
 - Timestamps must align to the correct market session timezone (KR: Asia/Seoul, US: America/New_York).
 - Contract mode must never emit UPSTREAM_ERROR for intraday endpoints.
 

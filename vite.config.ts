@@ -33,8 +33,19 @@ import {
   buildIntradayTimeKey,
   limitCandlesByDays,
   normalizeCandleSeries,
+  shiftIntradayToSessionStart,
 } from "./src/lib/intraday"
-import { formatTimeInZone, toEpochMsInZone } from "./src/lib/timezone"
+import {
+  formatDateInZone,
+  formatTimeInZone,
+  toEpochMsInZone,
+} from "./src/lib/timezone"
+import {
+  parseSessionClock,
+  resolveSessionWindow,
+  sessionDurationMinutes,
+  type SessionWindow,
+} from "./src/lib/session"
 import {
   getUsSymbols,
   normalizeUsTickerForProvider,
@@ -425,6 +436,26 @@ const createApiProxy = (
         >
       })
     : null
+  const nxtMetaPath = path.join(dataDir, "symbols.nxt.json")
+  const nxtMeta = fs.existsSync(nxtMetaPath)
+    ? (JSON.parse(fs.readFileSync(nxtMetaPath, "utf8")) as {
+        symbols?: string[]
+        session?: { open?: string; close?: string }
+      })
+    : null
+  const nxtSymbolSet = new Set(
+    (nxtMeta?.symbols ?? [])
+      .map((symbol) => String(symbol).trim())
+      .filter(Boolean),
+  )
+  const nxtSessionOverride = (() => {
+    const open = parseSessionClock(nxtMeta?.session?.open)
+    const close = parseSessionClock(nxtMeta?.session?.close)
+    if (!open || !close) {
+      return null
+    }
+    return { open, close }
+  })()
   const contractSymbolSet = new Set(contractSymbols)
   const usQuoteFixtureMap = usQuoteFixtures
     ? new Map(Object.entries(usQuoteFixtures))
@@ -830,6 +861,41 @@ const createApiProxy = (
       })
     inflight.set(key, promise as Promise<unknown>)
     return promise
+  }
+
+  const fetchWithCacheSWR = async <T>(
+    key: string,
+    ttlMs: number,
+    fetcher: () => Promise<T>,
+    staleMs = ttlMs,
+  ) => {
+    const cached = cache.get(key)
+    const now = Date.now()
+    if (cached) {
+      if (cached.expiresAt > now) {
+        return cached.value as T
+      }
+      if (now - cached.expiresAt <= staleMs) {
+        if (!inflight.has(key)) {
+          const refresh = fetcher()
+            .then((value) => {
+              cache.set(key, { value, expiresAt: Date.now() + ttlMs })
+              inflight.delete(key)
+              return value
+            })
+            .catch((error) => {
+              inflight.delete(key)
+              if (isDevServer) {
+                console.warn(`[cache] swr refresh failed: ${key}`, error)
+              }
+              return cached.value as T
+            })
+          inflight.set(key, refresh as Promise<unknown>)
+        }
+        return cached.value as T
+      }
+    }
+    return fetchWithCache(key, ttlMs, fetcher)
   }
 
   const parseNumber = (value: string | number | undefined) => {
@@ -1776,6 +1842,29 @@ const createApiProxy = (
     return withContractCaps
   }
 
+  const isNxtSymbol = (symbol: string) => nxtSymbolSet.has(symbol)
+
+  const resolveSessionForSymbol = (
+    region: MarketRegion,
+    symbol: string,
+  ): SessionWindow => {
+    if (region === "US") {
+      return resolveSessionWindow("US")
+    }
+    if (isNxtSymbol(symbol)) {
+      const base = resolveSessionWindow("KR", "NXT")
+      if (nxtSessionOverride) {
+        return {
+          ...base,
+          open: nxtSessionOverride.open,
+          close: nxtSessionOverride.close,
+        }
+      }
+      return base
+    }
+    return resolveSessionWindow("KR", "KRX")
+  }
+
   const resolveIntradayTimeZone = (region: MarketRegion) =>
     region === "US" ? "America/New_York" : "Asia/Seoul"
 
@@ -1814,12 +1903,17 @@ const createApiProxy = (
     intervalMinutes: number,
     days: number,
     points: CandlePoint[],
+    session: SessionWindow,
   ) => {
     if (!isDevServer || dataMode !== "kis" || points.length === 0) {
       return
     }
-    const expectedBarsPerDay = Math.max(1, Math.ceil(390 / intervalMinutes))
-    const expectedDays = region === "KR" ? 1 : Math.min(days, 5)
+    const sessionMinutes = sessionDurationMinutes(session)
+    const expectedBarsPerDay = Math.max(
+      1,
+      Math.ceil(sessionMinutes / intervalMinutes),
+    )
+    const expectedDays = Math.min(days, 5)
     const minBars = Math.floor(expectedBarsPerDay * expectedDays * 0.5)
     if (points.length < minBars) {
       console.warn(
@@ -1827,7 +1921,7 @@ const createApiProxy = (
       )
     }
 
-    const timeZone = resolveIntradayTimeZone(region)
+    const timeZone = session.timeZone
     const readHourMinute = (epochMs: number) => {
       const label = formatTimeInZone(new Date(epochMs), timeZone)
       const hour = Number(label.slice(0, 2))
@@ -1839,9 +1933,8 @@ const createApiProxy = (
     if (typeof first === "number" && typeof last === "number") {
       const firstTime = readHourMinute(first)
       const lastTime = readHourMinute(last)
-      const isKr = region === "KR"
-      const open = isKr ? { hour: 9, minute: 0 } : { hour: 9, minute: 30 }
-      const close = isKr ? { hour: 15, minute: 30 } : { hour: 16, minute: 0 }
+      const open = session.open
+      const close = session.close
       const toMinutes = (time: { hour: number; minute: number }) =>
         time.hour * 60 + time.minute
       const openMinutes = toMinutes(open)
@@ -1864,6 +1957,7 @@ const createApiProxy = (
     intervalMinutes: number,
     days: number,
   ) => {
+    const session = resolveSessionForSymbol(region, symbol)
     const entries = Object.values(intradayFixtures?.symbols ?? {})
     const entry =
       intradayFixtures?.symbols?.[symbol] ??
@@ -1878,8 +1972,13 @@ const createApiProxy = (
       intervalMinutes > 1
         ? aggregateIntradayCandles(limited, intervalMinutes)
         : limited
-    const points = finalizeIntradaySeries(aggregated, region)
-    warnIfIntradaySuspicious(region, intervalMinutes, days, points)
+    const shifted = shiftIntradayToSessionStart(
+      aggregated,
+      intervalMinutes,
+      session,
+    )
+    const points = finalizeIntradaySeries(shifted, region)
+    warnIfIntradaySuspicious(region, intervalMinutes, days, points, session)
     return { points }
   }
 
@@ -1984,12 +2083,29 @@ const createApiProxy = (
     }
   }
 
-  const fetchKrIntradayCandles = async (symbol: string) => {
-    const targetBars = 390
-    const maxLoops = 20
+  const fetchKrIntradayCandles = async (
+    symbol: string,
+    session: SessionWindow,
+    days: number,
+  ) => {
+    const targetDays = Math.min(Math.max(days, 1), 5)
+    const sessionMinutes = sessionDurationMinutes(session)
+    const targetBars = Math.max(60, Math.ceil(sessionMinutes * targetDays))
+    const maxLoops = Math.min(120, Math.ceil(targetBars / 25) + 10)
     const collected: CandlePoint[] = []
-    let requestTime = formatTimeInZone(new Date(), "Asia/Seoul")
+    const uniqueDays = new Set<string>()
+    const currentDateKey = formatDateInZone(new Date(), session.timeZone)
+    const sessionCloseKey = `${currentDateKey}${String(
+      session.close.hour,
+    ).padStart(2, "0")}${String(session.close.minute).padStart(2, "0")}`
+    const sessionCloseEpoch = toEpochMsInZone(sessionCloseKey, session.timeZone)
+    const nowEpoch = Date.now()
+    const requestEpoch = sessionCloseEpoch
+      ? Math.min(nowEpoch, sessionCloseEpoch)
+      : nowEpoch
+    let requestTime = formatTimeInZone(new Date(requestEpoch), session.timeZone)
     let lastEarliest = ""
+    const sessionOpenMinutes = session.open.hour * 60 + session.open.minute
 
     for (let i = 0; i < maxLoops && collected.length < targetBars; i += 1) {
       const series = await fetchIntradaySeries(symbol, requestTime)
@@ -2001,24 +2117,37 @@ const createApiProxy = (
         break
       }
       collected.push(...points)
+      points.forEach((point) => {
+        const date = point.time.slice(0, 8)
+        if (date) {
+          uniqueDays.add(date)
+        }
+      })
 
-      const earliest = points[points.length - 1]?.time ?? ""
+      const earliest =
+        points.reduce<string>(
+          (min, point) => (!min || point.time < min ? point.time : min),
+          "",
+        ) ?? ""
       if (!earliest || earliest === lastEarliest) {
         break
       }
       lastEarliest = earliest
 
-      const earliestEpoch = toEpochMsInZone(earliest, "Asia/Seoul")
+      const earliestEpoch = toEpochMsInZone(earliest, session.timeZone)
       if (!earliestEpoch) {
         break
       }
       const nextEpoch = earliestEpoch - 60_000
-      requestTime = formatTimeInZone(new Date(nextEpoch), "Asia/Seoul")
+      requestTime = formatTimeInZone(new Date(nextEpoch), session.timeZone)
 
       const hour = Number(earliest.slice(8, 10))
       const minute = Number(earliest.slice(10, 12))
       const minutesSinceOpen = hour * 60 + minute
-      if (minutesSinceOpen <= 9 * 60) {
+      if (
+        uniqueDays.size >= targetDays &&
+        minutesSinceOpen <= sessionOpenMinutes
+      ) {
         break
       }
       await sleep(120)
@@ -2120,6 +2249,7 @@ const createApiProxy = (
     aggregateMinutes: number,
     days: number,
   ) => {
+    const session = resolveSessionForSymbol(region, symbol)
     if (region === "US") {
       const exchangeCode = resolveUsExchangeCode(symbol)
       const candles = await fetchUsIntradayCandles(
@@ -2129,23 +2259,45 @@ const createApiProxy = (
         aggregateMinutes,
         days,
       )
-      const points = finalizeIntradaySeries(candles, region)
-      warnIfIntradaySuspicious(region, aggregateMinutes, days, points)
+      const shifted = shiftIntradayToSessionStart(
+        candles,
+        aggregateMinutes,
+        session,
+      )
+      const points = finalizeIntradaySeries(shifted, region)
+      warnIfIntradaySuspicious(region, aggregateMinutes, days, points, session)
       return { points }
     }
-    const candles = await fetchKrIntradayCandles(symbol)
-    if (days > 1 && isDevServer) {
-      console.warn(
-        `[kis] KR intraday limited to same-day data; requested days=${days}`,
-      )
-    }
-    const limited = limitCandlesByDays(candles, Math.min(days, 1))
+    const targetDays = Math.min(Math.max(days, 1), 5)
+    const candles = await fetchKrIntradayCandles(symbol, session, targetDays)
+    const limited = limitCandlesByDays(candles, targetDays)
     const aggregated =
       aggregateMinutes > 1
         ? aggregateIntradayCandles(limited, aggregateMinutes)
         : limited
-    const points = finalizeIntradaySeries(aggregated, region)
-    warnIfIntradaySuspicious(region, aggregateMinutes, days, points)
+    const shifted = shiftIntradayToSessionStart(
+      aggregated,
+      aggregateMinutes,
+      session,
+    )
+    const points = finalizeIntradaySeries(shifted, region)
+    warnIfIntradaySuspicious(
+      region,
+      aggregateMinutes,
+      targetDays,
+      points,
+      session,
+    )
+    if (isDevServer && targetDays > 1) {
+      const uniqueDays = new Set(
+        limited.map((point) => String(point.time).slice(0, 8)),
+      )
+      if (uniqueDays.size < targetDays) {
+        console.warn(
+          `[intraday] KR multi-day returned ${uniqueDays.size}d of ${targetDays}d`,
+        )
+      }
+    }
     return { points }
   }
 
@@ -2924,14 +3076,18 @@ const createApiProxy = (
             }
             const ttl = interval.minutes <= 15 ? 10000 : 30000
             const cacheKey = `intraday:${region}:${symbol}:${interval.key}:${resolvedDays}`
-            const series = await fetchWithCache(cacheKey, ttl, () =>
-              resolveIntradaySeries(
-                region,
-                symbol,
-                requestMinutes,
-                aggregateMinutes,
-                resolvedDays,
-              ),
+            const series = await fetchWithCacheSWR(
+              cacheKey,
+              ttl,
+              () =>
+                resolveIntradaySeries(
+                  region,
+                  symbol,
+                  requestMinutes,
+                  aggregateMinutes,
+                  resolvedDays,
+                ),
+              ttl * 2,
             )
             sendJson(res, 200, {
               ok: true,
@@ -3219,13 +3375,14 @@ const createApiProxy = (
             const requestTime = isIntraday
               ? formatTimeInZone(new Date(), "Asia/Seoul")
               : ""
-            const series = await fetchWithCache(
+            const series = await fetchWithCacheSWR(
               `candles:${symbol}:${tf}`,
               isIntraday ? 10000 : 60000,
               () =>
                 isIntraday
                   ? fetchIntradaySeries(symbol, requestTime)
                   : fetchDailySeries(symbol, period),
+              isIntraday ? 20000 : 180000,
             )
             const points =
               limit > 0 ? series.points.slice(-limit) : series.points

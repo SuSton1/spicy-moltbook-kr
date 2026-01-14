@@ -1,3 +1,6 @@
+import { formatDateTimeInZone, toEpochMsInZone } from "./timezone"
+import type { SessionWindow } from "./session"
+
 export type IntradayCandle = {
   time: string
   open: number
@@ -18,6 +21,14 @@ const normalizeTime = (value: string) => {
     return digits.slice(0, 8)
   }
   return ""
+}
+
+const buildSessionOpenKey = (date: string, session: SessionWindow) => {
+  const safeDate = date.replace(/\D/g, "").slice(0, 8)
+  if (safeDate.length < 8) {
+    return ""
+  }
+  return `${safeDate}${pad2(session.open.hour)}${pad2(session.open.minute)}`
 }
 
 export const buildIntradayTimeKey = (dateRaw: string, timeRaw: string) => {
@@ -130,4 +141,53 @@ export const limitCandlesByDays = (candles: IntradayCandle[], days: number) => {
     result.push(candle)
   }
   return result.reverse()
+}
+
+export const shiftIntradayToSessionStart = (
+  candles: IntradayCandle[],
+  intervalMinutes: number,
+  session: SessionWindow,
+) => {
+  const normalized = normalizeCandleSeries(candles)
+  if (intervalMinutes <= 1 || normalized.length === 0) {
+    return normalized
+  }
+  const firstDate = normalized[0].time.slice(0, 8)
+  const openKey = buildSessionOpenKey(firstDate, session)
+  const openEpoch = openKey ? toEpochMsInZone(openKey, session.timeZone) : null
+  if (!openEpoch) {
+    return normalized
+  }
+  const intervalMs = intervalMinutes * 60_000
+  let hasOpen = false
+  let hasOpenPlus = false
+  const epochs = normalized.map((candle) =>
+    toEpochMsInZone(candle.time, session.timeZone),
+  )
+  epochs.forEach((epoch) => {
+    if (!epoch) {
+      return
+    }
+    if (epoch === openEpoch) {
+      hasOpen = true
+    }
+    if (epoch === openEpoch + intervalMs) {
+      hasOpenPlus = true
+    }
+  })
+  if (hasOpen || !hasOpenPlus) {
+    return normalized
+  }
+  const shifted = normalized.map((candle, index) => {
+    const epoch = epochs[index]
+    if (!epoch) {
+      return candle
+    }
+    const shiftedTime = formatDateTimeInZone(
+      new Date(epoch - intervalMs),
+      session.timeZone,
+    )
+    return { ...candle, time: shiftedTime }
+  })
+  return normalizeCandleSeries(shifted)
 }

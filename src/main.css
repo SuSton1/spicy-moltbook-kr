@@ -498,15 +498,22 @@ textarea {
   padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .chart-canvas {
-  height: 260px;
+  height: 220px;
+}
+
+.chart-volume-canvas {
+  height: 90px;
 }
 
 .chart-indicator {
   height: 140px;
-  margin-top: 12px;
+  margin-top: 2px;
 }
 
 .chart-tooltip {

@@ -24,10 +24,10 @@ describe("intraday interval model", () => {
     expect(mapping.aggregateMinutes).toBe(240)
   })
 
-  it("clamps KR intraday to 1-day 1m provider requests", () => {
+  it("clamps KR intraday days to the 1~5 range", () => {
     const mapping = resolveKrProviderMinutes("5m", 3)
     expect(mapping.requestMinutes).toBe(1)
     expect(mapping.aggregateMinutes).toBe(5)
-    expect(mapping.days).toBe(1)
+    expect(mapping.days).toBe(3)
   })
 })

@@ -32,10 +32,11 @@ export const resolveUsProviderMinutes = (value?: string | null) => {
 
 export const resolveKrProviderMinutes = (value?: string | null, days = 1) => {
   const interval = resolveIntradayInterval(value)
+  const clampedDays = Math.min(Math.max(days, 1), 5)
   return {
     interval,
     requestMinutes: 1,
     aggregateMinutes: interval.minutes,
-    days: Math.min(Math.max(days, 1), 1),
+    days: clampedDays,
   }
 }

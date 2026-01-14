@@ -67,6 +67,46 @@ export const getTimeZoneOffsetMs = (timeZone: string, date: Date) => {
   return zonedUtc - date.getTime()
 }
 
+export const getZonedDateParts = (date: Date, timeZone: string): DateParts => {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  })
+  const parts = formatter.formatToParts(date)
+  const lookup = parts.reduce<Record<string, string>>((acc, part) => {
+    if (part.type !== "literal") {
+      acc[part.type] = part.value
+    }
+    return acc
+  }, {})
+  return {
+    year: Number(lookup.year ?? "1970"),
+    month: Number(lookup.month ?? "1"),
+    day: Number(lookup.day ?? "1"),
+    hour: Number(lookup.hour ?? "0"),
+    minute: Number(lookup.minute ?? "0"),
+    second: Number(lookup.second ?? "0"),
+  }
+}
+
+export const formatDateInZone = (date: Date, timeZone: string) => {
+  const parts = getZonedDateParts(date, timeZone)
+  const pad2 = (value: number) => String(value).padStart(2, "0")
+  return `${parts.year}${pad2(parts.month)}${pad2(parts.day)}`
+}
+
+export const formatDateTimeInZone = (date: Date, timeZone: string) => {
+  const parts = getZonedDateParts(date, timeZone)
+  const pad2 = (value: number) => String(value).padStart(2, "0")
+  return `${parts.year}${pad2(parts.month)}${pad2(parts.day)}${pad2(parts.hour)}${pad2(parts.minute)}`
+}
+
 export const toEpochMsInZone = (value: string | number, timeZone: string) => {
   const parsed = parseParts(value)
   if (!parsed) {

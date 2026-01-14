@@ -231,6 +231,8 @@ test("contract 종목 상세 차트/뉴스/공시", async ({ page }) => {
 
 test("contract 차트 분봉 간격 선택", async ({ page }) => {
   await page.goto(`/stocks/${symbol}`)
+  await expect(page.getByTestId("chart-price-pane")).toBeVisible()
+  await expect(page.getByTestId("chart-volume-pane")).toBeVisible()
   await page.getByTestId("intraday-interval-trigger").click()
   await expect(page.getByTestId("intraday-interval-menu")).toBeVisible()
   const intervalKeys = ["1m", "3m", "5m", "10m", "15m", "30m", "1h", "4h"]
@@ -251,6 +253,7 @@ test("contract 차트 분봉 간격 선택", async ({ page }) => {
   await expect(page.getByTestId("chart-error")).toHaveCount(0)
   const rangeText = await page.getByTestId("chart-range").textContent()
   expect(rangeText ?? "").toMatch(/09:/)
+  expect(rangeText ?? "").toMatch(/09:00/)
   expect(rangeText ?? "").toMatch(/15:/)
   expect(rangeText ?? "").not.toMatch(/22:/)
 
