@@ -14,6 +14,9 @@ import type { BrokerChartPane } from "./types"
 type CrosshairPayload = {
   pane: BrokerChartPane
   time: UTCTimestamp | null
+  price: number | null
+  y: number | null
+  hasPoint: boolean
 }
 
 export type BrokerChartEngine = {
@@ -29,7 +32,6 @@ export type BrokerChartEngine = {
   destroy: () => void
   resize: () => void
   syncScaleWidths: () => void
-  setActivePane: (pane: BrokerChartPane | null) => void
   updateTimeZone: (timeZone: string) => void
 }
 
@@ -87,7 +89,7 @@ export const createBrokerChartEngine = ({
         style: LineStyle.Dotted,
         width: 1,
         color: "rgba(199,209,239,0.55)",
-        labelVisible: true,
+        labelVisible: false,
       },
     },
     localization: {
@@ -116,6 +118,13 @@ export const createBrokerChartEngine = ({
   })
   const volumeChart = createChart(volumeContainer, {
     ...baseOptions,
+    crosshair: {
+      ...baseOptions.crosshair,
+      horzLine: {
+        ...baseOptions.crosshair?.horzLine,
+        visible: false,
+      },
+    },
     rightPriceScale: {
       ...baseOptions.rightPriceScale,
       scaleMargins: { top: 0.2, bottom: 0.05 },
@@ -155,41 +164,15 @@ export const createBrokerChartEngine = ({
     priceChart.addLineSeries({ color: "#2ed4a7", lineWidth: 1 }),
   ]
 
-  let suppressPriceCrosshair = false
-  let suppressVolumeCrosshair = false
   const rangeSyncing = { active: false }
+  let syncingToVolume = false
+  let syncingToPrice = false
   let syncReady = false
-  let activePane: BrokerChartPane | null = "price"
   let crosshairLookup = {
     closeByTime: new Map<UTCTimestamp, number>(),
     volumeByTime: new Map<UTCTimestamp, number>(),
   }
   let scaleSyncRaf: number | null = null
-
-  const applyCrosshairPane = (pane: BrokerChartPane | null) => {
-    if (activePane === pane) {
-      return
-    }
-    activePane = pane
-    priceChart.applyOptions({
-      crosshair: {
-        ...baseOptions.crosshair,
-        horzLine: {
-          ...baseOptions.crosshair?.horzLine,
-          visible: pane === "price",
-        },
-      },
-    })
-    volumeChart.applyOptions({
-      crosshair: {
-        ...baseOptions.crosshair,
-        horzLine: {
-          ...baseOptions.crosshair?.horzLine,
-          visible: pane === "volume",
-        },
-      },
-    })
-  }
 
   const syncScaleWidths = () => {
     if (scaleSyncRaf != null) {
@@ -249,49 +232,77 @@ export const createBrokerChartEngine = ({
   })
 
   priceChart.subscribeCrosshairMove((param) => {
-    if (suppressPriceCrosshair) {
-      suppressPriceCrosshair = false
+    if (syncingToPrice && !param.sourceEvent) {
       return
     }
+    const hasPoint = Boolean(param.point)
     const time =
       typeof param.time === "number" ? (param.time as UTCTimestamp) : null
-    applyCrosshairPane(time ? "price" : null)
+    const y = hasPoint ? (param.point?.y ?? null) : null
+    const derivedPrice =
+      y == null ? null : (candleSeries.coordinateToPrice(y) as number | null)
+    const price =
+      typeof derivedPrice === "number" && Number.isFinite(derivedPrice)
+        ? derivedPrice
+        : null
     if (!syncReady) {
-      onCrosshair({ pane: "price", time })
+      onCrosshair({ pane: "price", time, price, y, hasPoint })
       return
     }
-    if (!time) {
-      suppressVolumeCrosshair = true
-      volumeChart.clearCrosshairPosition()
-    } else {
-      const volumeValue = crosshairLookup.volumeByTime.get(time) ?? 0
-      suppressVolumeCrosshair = true
-      volumeChart.setCrosshairPosition(volumeValue, time, volumeSeries)
+    syncingToVolume = true
+    try {
+      if (!time) {
+        volumeChart.clearCrosshairPosition()
+      } else {
+        const volumeValue = crosshairLookup.volumeByTime.get(time) ?? 0
+        volumeChart.setCrosshairPosition(volumeValue, time, volumeSeries)
+      }
+    } finally {
+      syncingToVolume = false
     }
-    onCrosshair({ pane: "price", time })
+    onCrosshair({ pane: "price", time, price, y, hasPoint })
   })
 
   volumeChart.subscribeCrosshairMove((param) => {
-    if (suppressVolumeCrosshair) {
-      suppressVolumeCrosshair = false
+    if (syncingToVolume && !param.sourceEvent) {
       return
     }
+    const hasPoint = Boolean(param.point)
     const time =
       typeof param.time === "number" ? (param.time as UTCTimestamp) : null
-    applyCrosshairPane(time ? "volume" : null)
+    const closeValue = time ? crosshairLookup.closeByTime.get(time) : undefined
+    const derivedY =
+      typeof closeValue === "number" && Number.isFinite(closeValue)
+        ? candleSeries.priceToCoordinate(closeValue)
+        : null
+    const y =
+      typeof derivedY === "number" && Number.isFinite(derivedY)
+        ? derivedY
+        : null
+    const price =
+      typeof closeValue === "number" && Number.isFinite(closeValue)
+        ? closeValue
+        : null
     if (!syncReady) {
-      onCrosshair({ pane: "volume", time })
+      onCrosshair({ pane: "volume", time, price, y, hasPoint })
       return
     }
-    if (!time) {
-      suppressPriceCrosshair = true
-      priceChart.clearCrosshairPosition()
-    } else {
-      const closeValue = crosshairLookup.closeByTime.get(time) ?? 0
-      suppressPriceCrosshair = true
-      priceChart.setCrosshairPosition(closeValue, time, candleSeries)
+    syncingToPrice = true
+    try {
+      if (!time) {
+        priceChart.clearCrosshairPosition()
+      } else if (
+        typeof closeValue === "number" &&
+        Number.isFinite(closeValue)
+      ) {
+        priceChart.setCrosshairPosition(closeValue, time, candleSeries)
+      } else {
+        priceChart.clearCrosshairPosition()
+      }
+    } finally {
+      syncingToPrice = false
     }
-    onCrosshair({ pane: "volume", time })
+    onCrosshair({ pane: "volume", time, price, y, hasPoint })
   })
 
   const resize = () => {
@@ -335,7 +346,6 @@ export const createBrokerChartEngine = ({
   }
 
   resize()
-  applyCrosshairPane("price")
 
   return {
     priceChart,
@@ -355,7 +365,6 @@ export const createBrokerChartEngine = ({
     destroy,
     resize,
     syncScaleWidths,
-    setActivePane: applyCrosshairPane,
     updateTimeZone,
   }
 }

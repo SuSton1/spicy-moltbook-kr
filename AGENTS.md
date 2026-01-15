@@ -111,6 +111,7 @@ Whenever a fix changes behavior intentionally, update invariants and update test
 - Chart UX invariants:
   - Price+Volume 2-pane must be time-axis aligned (no horizontal drift).
   - Crosshair vertical dotted line must align across price+volume panes.
+  - Crosshair 우측 가격 라벨은 hover 중 깜빡임 없이 유지되며, 일시적인 time/point undefined로 숨기지 않고 실제 mouseleave에서만 숨긴다.
   - OHLC/등락 패널은 차트 내부 반투명 overlay(pointer-events:none)이며 캔들을 과도하게 가리지 않는다.
   - OHLC 라벨은 한국어(시간/시가/고가/저가/종가/거래량/등락/등락률).
   - Hover 등락/등락률은 hover 캔들 종가 기준(prevClose 대비)이며 현재 quote 기반 계산 금지.

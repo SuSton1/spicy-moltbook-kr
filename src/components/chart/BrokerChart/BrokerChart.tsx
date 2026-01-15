@@ -9,7 +9,7 @@ import {
   isIntradayInterval,
   resolveIntradayInterval,
 } from "../../../lib/chartIntervals"
-import { formatTimeLabel } from "../../../lib/format"
+import { formatNumber, formatTimeLabel } from "../../../lib/format"
 import type { SessionWindow } from "../../../lib/session"
 import type { Quote } from "../../../services/api"
 import { useLocalStorage } from "../../../hooks/useLocalStorage"
@@ -25,6 +25,7 @@ import {
 import type { BrokerCandle, BrokerChartTimeframe } from "./types"
 import { resolvePrevClose } from "./types"
 import { findNearestCandleAtOrBefore, useChartData } from "./useChartData"
+import { coalesceWhileHovering } from "./crosshairState"
 
 const DAILY_TIMEFRAMES: {
   label: string
@@ -75,6 +76,7 @@ export const BrokerChart = ({
   session?: SessionWindow | null
   name?: string
 }) => {
+  const wrapRef = useRef<HTMLDivElement | null>(null)
   const priceRef = useRef<HTMLDivElement | null>(null)
   const volumeRef = useRef<HTMLDivElement | null>(null)
   const engineRef = useRef<BrokerChartEngine | null>(null)
@@ -97,12 +99,63 @@ export const BrokerChart = ({
     [maDraft, maSettingsRaw],
   )
   const [crosshairActive, setCrosshairActive] = useState(false)
+  const hoverRef = useRef(false)
   const crosshairTimeRef = useRef<BrokerCandle["time"] | null>(null)
   const rafRef = useRef<number | null>(null)
   const [crosshairTime, setCrosshairTime] = useState<
     BrokerCandle["time"] | null
   >(null)
   const [visibleRangeLabel, setVisibleRangeLabel] = useState("")
+  const crosshairLabelRef = useRef<HTMLDivElement | null>(null)
+  const crosshairLabelRafRef = useRef<number | null>(null)
+  const crosshairLabelStateRef = useRef<{
+    price: number | null
+    y: number | null
+  }>({ price: null, y: null })
+
+  const clearHoverState = () => {
+    hoverRef.current = false
+    setCrosshairActive(false)
+    crosshairTimeRef.current = null
+    setCrosshairTime(null)
+    crosshairLabelStateRef.current = { price: null, y: null }
+    if (crosshairLabelRef.current) {
+      crosshairLabelRef.current.style.opacity = "0"
+    }
+    const engine = engineRef.current
+    engine?.priceChart.clearCrosshairPosition()
+    engine?.volumeChart.clearCrosshairPosition()
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      const wrapNode = wrapRef.current
+      if (!wrapNode) {
+        return
+      }
+      const rect = wrapNode.getBoundingClientRect()
+      const inside =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom
+      if (inside) {
+        if (!hoverRef.current) {
+          hoverRef.current = true
+          setCrosshairActive(true)
+        }
+        return
+      }
+      if (hoverRef.current) {
+        clearHoverState()
+      }
+    }
+
+    window.addEventListener("mousemove", handleMouseMove)
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove)
+    }
+  }, [])
 
   const intradayInterval = resolveIntradayInterval(
     isIntradayInterval(tf) ? tf : INTRADAY_INTERVALS[0].key,
@@ -179,16 +232,70 @@ export const BrokerChart = ({
       priceContainer: priceRef.current,
       volumeContainer: volumeRef.current,
       timeZone: timeZoneRef.current,
-      onCrosshair: ({ time }) => {
-        const active = Boolean(time)
-        setCrosshairActive(active)
-        crosshairTimeRef.current = time
-        if (rafRef.current) {
+      onCrosshair: ({ time, price, y, hasPoint }) => {
+        if (hasPoint && !hoverRef.current) {
+          hoverRef.current = true
+          setCrosshairActive(true)
+        }
+        const hovering = hoverRef.current
+        crosshairTimeRef.current = coalesceWhileHovering(
+          crosshairTimeRef.current,
+          time,
+          hovering,
+        )
+        if (typeof price === "number" && Number.isFinite(price)) {
+          crosshairLabelStateRef.current.price = price
+        } else if (!hovering) {
+          crosshairLabelStateRef.current.price = null
+        }
+        if (typeof y === "number" && Number.isFinite(y)) {
+          crosshairLabelStateRef.current.y = y
+        } else if (!hovering) {
+          crosshairLabelStateRef.current.y = null
+        }
+        if (!hovering) {
+          if (rafRef.current) {
+            window.cancelAnimationFrame(rafRef.current)
+            rafRef.current = null
+          }
+          setCrosshairTime(null)
+        } else if (!rafRef.current) {
+          rafRef.current = window.requestAnimationFrame(() => {
+            rafRef.current = null
+            setCrosshairTime(crosshairTimeRef.current)
+          })
+        }
+        if (crosshairLabelRafRef.current) {
           return
         }
-        rafRef.current = window.requestAnimationFrame(() => {
-          rafRef.current = null
-          setCrosshairTime(crosshairTimeRef.current)
+        crosshairLabelRafRef.current = window.requestAnimationFrame(() => {
+          crosshairLabelRafRef.current = null
+          const labelNode = crosshairLabelRef.current
+          const priceNode = priceRef.current
+          if (!labelNode || !priceNode) {
+            return
+          }
+          if (!hoverRef.current) {
+            labelNode.style.opacity = "0"
+            return
+          }
+          const { price: labelPrice, y: labelY } =
+            crosshairLabelStateRef.current
+          if (
+            typeof labelPrice !== "number" ||
+            !Number.isFinite(labelPrice) ||
+            typeof labelY !== "number" ||
+            !Number.isFinite(labelY)
+          ) {
+            return
+          }
+          const height = priceNode.getBoundingClientRect().height
+          const clampedY = height
+            ? Math.max(0, Math.min(height, labelY))
+            : labelY
+          labelNode.textContent = formatNumber(labelPrice)
+          labelNode.style.top = `${clampedY}px`
+          labelNode.style.opacity = "1"
         })
       },
     })
@@ -221,6 +328,11 @@ export const BrokerChart = ({
         window.cancelAnimationFrame(rafRef.current)
         rafRef.current = null
       }
+      if (crosshairLabelRafRef.current) {
+        window.cancelAnimationFrame(crosshairLabelRafRef.current)
+        crosshairLabelRafRef.current = null
+      }
+      clearHoverState()
     }
   }, [])
 
@@ -443,7 +555,7 @@ export const BrokerChart = ({
           crosshairActive={crosshairActive}
         />
 
-        <div className="broker-chart-wrap">
+        <div className="broker-chart-wrap" ref={wrapRef}>
           <OhlcOverlayPanel
             tf={tf}
             timeZone={timeZone}
@@ -452,6 +564,11 @@ export const BrokerChart = ({
             lastCandle={lastCandle}
             lastPrice={lastPrice}
             prevClose={prevClose}
+          />
+          <div
+            className="broker-chart-crosshair-price-label"
+            data-testid="chart-crosshair-price-label"
+            ref={crosshairLabelRef}
           />
           <div
             ref={priceRef}

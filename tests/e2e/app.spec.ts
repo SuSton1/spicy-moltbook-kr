@@ -233,6 +233,53 @@ test("contract 크로스헤어 이동 시 OHLC 패널 갱신", async ({ page }) 
   expect(second).not.toEqual(first)
 })
 
+test("contract 크로스헤어 우측 가격 라벨 깜빡임 없음", async ({ page }) => {
+  await page.goto(`/stocks/${symbol}`)
+  await expect(page.getByTestId("chart-candle-count")).not.toHaveText("0")
+
+  const label = page.getByTestId("chart-crosshair-price-label")
+  const pricePane = page.getByTestId("chart-price-pane")
+  const volumePane = page.getByTestId("chart-volume-pane")
+  await expect(pricePane).toBeVisible()
+  await expect(volumePane).toBeVisible()
+
+  const priceBox = await pricePane.boundingBox()
+  const volumeBox = await volumePane.boundingBox()
+  expect(priceBox).not.toBeNull()
+  expect(volumeBox).not.toBeNull()
+  if (!priceBox || !volumeBox) {
+    return
+  }
+
+  const readOpacity = async () =>
+    Number(
+      await label.evaluate((node) => window.getComputedStyle(node).opacity),
+    )
+
+  await page.mouse.move(
+    priceBox.x + priceBox.width * 0.62,
+    priceBox.y + priceBox.height * 0.45,
+  )
+  await expect
+    .poll(async () => (await label.textContent())?.trim() ?? "")
+    .not.toBe("")
+  await expect.poll(readOpacity).toBeGreaterThan(0.05)
+
+  await page.mouse.move(
+    volumeBox.x + volumeBox.width * 0.62,
+    volumeBox.y + volumeBox.height * 0.45,
+  )
+  for (let index = 0; index < 8; index += 1) {
+    const text = (await label.textContent())?.trim() ?? ""
+    expect(text).not.toBe("")
+    expect(await readOpacity()).toBeGreaterThan(0.05)
+    await page.waitForTimeout(50)
+  }
+
+  await page.mouse.move(priceBox.x - 20, priceBox.y - 20)
+  await expect.poll(readOpacity).toBeLessThanOrEqual(0.01)
+})
+
 test("contract OHLC 패널이 캔들을 가리지 않음", async ({ page }) => {
   await page.goto(`/stocks/${symbol}`)
   await expect(page.getByTestId("chart-candle-count")).not.toHaveText("0")
