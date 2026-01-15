@@ -111,12 +111,16 @@ Whenever a fix changes behavior intentionally, update invariants and update test
 - Chart UX invariants:
   - Price+Volume 2-pane must be time-axis aligned (no horizontal drift).
   - Crosshair vertical dotted line must align across price+volume panes.
-  - OHLC/Change% panel must not cover candle plot area (dock above or non-blocking).
+  - OHLC/등락 패널은 차트 내부 반투명 overlay(pointer-events:none)이며 캔들을 과도하게 가리지 않는다.
+  - OHLC 라벨은 한국어(시간/시가/고가/저가/종가/거래량/등락/등락률).
+  - 전일/prev-close reference line(전일/현재가 price line) 표시 금지.
+  - MA 기본 5/10/20/60/120 (5개) + 설정 변경/영구 저장.
   - Zoom/pan must work (wheel zoom, drag pan, touch drag/pinch on mobile).
   - Mobile chart should occupy most of viewport height by default.
 - No request storms:
   - Avoid <1s polling for quotes/charts; abort/debounce rapid switches.
-  - Market list quotes must be batched; no per-row `/api/stocks/:symbol/quote` calls from rankings/market pages.
+  - Quotes must be batched (/api/quotes/batch); no per-row/per-symbol `/api/stocks/:symbol/quote` calls from detail/rankings/market pages.
+  - Intraday defaults to days=1 (supports days=1..5); avoid multi-day fan-out on initial load.
   - Server SWR refresh retries must use capped exponential backoff; never infinite loops.
   - Server KIS fan-out must be bounded with cache + in-flight dedup + global RPS limiter.
 
@@ -128,7 +132,7 @@ Whenever a fix changes behavior intentionally, update invariants and update test
 - Performance invariants: rankings page 1 served from cache/SWR when possible; no per-row network calls in rankings pipeline.
 - US quotes must use KIS batch pipeline (price + marketCap); missing fields show “—” with dev-only warnings.
 - Intraday chart must expose 8 intervals (1m/3m/5m/10m/15m/30m/1h/4h) and /api/chart/intraday supports up to 5 days with correct timezone alignment.
-- No request storms: opening detail/market pages must not trigger repeated identical `/api/chart/intraday` calls in a tight loop.
+- No request storms: opening detail/market pages must not trigger repeated identical `/api/chart/intraday` or `/api/quotes/batch` calls in a tight loop.
 - Any change touching Market/Rankings/Search/Detail MUST run unit + Playwright contract tests.
 
 ## Pre-merge Checklist (Market/Home/Search/Detail)
@@ -165,7 +169,7 @@ Whenever a fix changes behavior intentionally, update invariants and update test
 - Search: shared SymbolSearchBox at top of Home + Market; local cache for instant results, server search for full universe.
 - Market: overseas(US) rankings UI not exposed.
 - Detail pages: Overview click never blocks UI; chart render stays async and responsive.
-- BrokerChart: 2-pane(가격+거래량) time-axis 정렬 + 크로스헤어 정렬 + OHLC 패널 도킹(캔들 가림 금지) + 줌/팬 동작 + 모바일 확대 유지.
+- BrokerChart: 2-pane(가격+거래량) 정렬 + 크로스헤어 정렬 + OHLC(한글) 반투명 overlay + 전일/현재가 라인 없음 + MA(5/10/20/60/120) 설정 저장 + 줌/팬 + 모바일 확대 유지.
 - NXT symbols: UI shows NXT session window; KIS requests use the NXT market div code.
 - Intraday chart: interval list stays at 8 options; /api/chart/intraday supports days=1..5 with timezone-safe timestamps.
 

@@ -767,11 +767,30 @@ export const useMarketRankings = (
   }
 }
 
-export const useQuote = (symbol: string, pollMs = 4000) => {
+export const useQuote = (symbol: string, pollMs = 5000) => {
   const { data, status, error, onError, onSuccess, setStatus } =
     useAsyncState<Quote | null>(resolveInitialQuote(symbol))
+  const dataRef = useRef<Quote | null>(data)
+  const abortRef = useRef<AbortController | null>(null)
+  const inflightRef = useRef(false)
+  const inflightKeyRef = useRef<string | null>(null)
+  const requestIdRef = useRef(0)
+  const backoffRef = useRef<{
+    key: string
+    failures: number
+    nextAllowedAt: number
+  }>({ key: "", failures: 0, nextAllowedAt: 0 })
 
   useEffect(() => {
+    dataRef.current = data
+  }, [data])
+
+  useEffect(() => {
+    abortRef.current?.abort()
+    inflightRef.current = false
+    inflightKeyRef.current = null
+    requestIdRef.current += 1
+    backoffRef.current = { key: "", failures: 0, nextAllowedAt: 0 }
     const initial = resolveInitialQuote(symbol)
     if (initial) {
       onSuccess(initial)
@@ -785,13 +804,58 @@ export const useQuote = (symbol: string, pollMs = 4000) => {
     if (!symbol) {
       return
     }
+    const cacheKey = `quote:${symbol}`
+    if (inflightRef.current && inflightKeyRef.current === cacheKey) {
+      return
+    }
+    const backoff = backoffRef.current
+    const nowMs = Date.now()
+    if (backoff.key === cacheKey && backoff.nextAllowedAt > nowMs) {
+      return
+    }
+    const requestId = requestIdRef.current + 1
+    requestIdRef.current = requestId
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    inflightRef.current = true
+    inflightKeyRef.current = cacheKey
     try {
-      setStatus("loading")
-      const payload = await fetchQuote(symbol)
+      const hasCached = Boolean((dataRef.current?.price ?? 0) > 0)
+      if (!hasCached) {
+        setStatus("loading")
+      }
+      const payload = await fetchQuote(symbol, controller.signal)
+      if (controller.signal.aborted || requestId !== requestIdRef.current) {
+        return
+      }
       onSuccess(payload.quote)
       writeQuoteCache(symbol, payload.quote)
+      if (backoffRef.current.key === cacheKey) {
+        backoffRef.current = { key: cacheKey, failures: 0, nextAllowedAt: 0 }
+      }
     } catch (err) {
+      if (controller.signal.aborted || requestId !== requestIdRef.current) {
+        return
+      }
       onError(err)
+      const current = backoffRef.current
+      const failures = current.key === cacheKey ? current.failures + 1 : 1
+      const jitter = Math.random() * 200
+      const delay = Math.min(
+        60000,
+        Math.round(500 * 2 ** Math.min(failures, 6) + jitter),
+      )
+      backoffRef.current = {
+        key: cacheKey,
+        failures,
+        nextAllowedAt: Date.now() + delay,
+      }
+    } finally {
+      if (requestId === requestIdRef.current) {
+        inflightRef.current = false
+        inflightKeyRef.current = null
+      }
     }
   }, [onError, onSuccess, setStatus, symbol])
 

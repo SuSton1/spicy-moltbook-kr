@@ -32,10 +32,34 @@ const resolveChangeClass = (value: number) => {
   return "muted"
 }
 
-export const OverlayPanels = ({
+export const BrokerChartHeader = ({
   symbol,
   name,
   session,
+  crosshairActive,
+}: {
+  symbol: string
+  name?: string
+  session?: SessionWindow | null
+  crosshairActive: boolean
+}) => {
+  return (
+    <div className="broker-chart-header" data-testid="chart-header">
+      <div className="broker-chart-title">
+        <strong>{name ?? symbol}</strong>
+        <span className="muted">({symbol})</span>
+      </div>
+      <div className="pill-row">
+        {session?.label && <span className="pill">{session.label}</span>}
+        <span className={`pill ${crosshairActive ? "active" : ""}`}>
+          {crosshairActive ? "크로스헤어" : "현재가"}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+export const OhlcOverlayPanel = ({
   tf,
   timeZone,
   crosshairActive,
@@ -44,9 +68,6 @@ export const OverlayPanels = ({
   lastPrice,
   prevClose,
 }: {
-  symbol: string
-  name?: string
-  session?: SessionWindow | null
   tf: BrokerChartTimeframe
   timeZone: string
   crosshairActive: boolean
@@ -79,44 +100,32 @@ export const OverlayPanels = ({
     : "muted"
 
   return (
-    <div className="broker-chart-panels">
-      <div className="broker-chart-header">
-        <div className="broker-chart-title">
-          <strong>{name ?? symbol}</strong>
-          <span className="muted">({symbol})</span>
-        </div>
-        <div className="pill-row">
-          {session?.label && <span className="pill">{session.label}</span>}
-          <span className={`pill ${crosshairActive ? "active" : ""}`}>
-            {crosshairActive ? "크로스헤어" : "현재가"}
+    <div
+      className="broker-chart-ohlc broker-chart-ohlc-overlay"
+      data-testid="chart-ohlc-panel"
+    >
+      <div className="broker-chart-ohlc-row">
+        <span className="muted">
+          시간 {ohlc ? formatPanelTime(ohlc.time, tf, timeZone) : "-"}
+        </span>
+        {changeMetrics && (
+          <span className={changeClass}>
+            등락 {formatSigned(changeMetrics.change)} / 등락률{" "}
+            {formatSignedPercent(changeMetrics.changeRate)}
           </span>
-        </div>
+        )}
       </div>
-
-      <div className="broker-chart-ohlc" data-testid="chart-ohlc-panel">
-        <div className="broker-chart-ohlc-row">
-          <span className="muted">
-            {ohlc ? formatPanelTime(ohlc.time, tf, timeZone) : "-"}
-          </span>
-          {changeMetrics && (
-            <span className={changeClass}>
-              {formatSigned(changeMetrics.change)} (
-              {formatSignedPercent(changeMetrics.changeRate)})
-            </span>
-          )}
-        </div>
-        <div className="broker-chart-ohlc-grid">
-          <span className="muted">O</span>
-          <span>{ohlc ? formatNumber(ohlc.open) : "-"}</span>
-          <span className="muted">H</span>
-          <span>{ohlc ? formatNumber(ohlc.high) : "-"}</span>
-          <span className="muted">L</span>
-          <span>{ohlc ? formatNumber(ohlc.low) : "-"}</span>
-          <span className="muted">C</span>
-          <span>{ohlc ? formatNumber(ohlc.close) : "-"}</span>
-          <span className="muted">V</span>
-          <span>{ohlc ? formatNumber(ohlc.volume) : "-"}</span>
-        </div>
+      <div className="broker-chart-ohlc-grid">
+        <span className="muted">시가</span>
+        <span>{ohlc ? formatNumber(ohlc.open) : "-"}</span>
+        <span className="muted">고가</span>
+        <span>{ohlc ? formatNumber(ohlc.high) : "-"}</span>
+        <span className="muted">저가</span>
+        <span>{ohlc ? formatNumber(ohlc.low) : "-"}</span>
+        <span className="muted">종가</span>
+        <span>{ohlc ? formatNumber(ohlc.close) : "-"}</span>
+        <span className="muted">거래량</span>
+        <span>{ohlc ? formatNumber(ohlc.volume) : "-"}</span>
       </div>
     </div>
   )

@@ -12,9 +12,16 @@ import {
 import { formatTimeLabel } from "../../../lib/format"
 import type { SessionWindow } from "../../../lib/session"
 import type { Quote } from "../../../services/api"
+import { useLocalStorage } from "../../../hooks/useLocalStorage"
 import { simpleMovingAverage } from "./indicators"
 import { createBrokerChartEngine, type BrokerChartEngine } from "./chartEngine"
-import { OverlayPanels } from "./overlayPanels"
+import { BrokerChartHeader, OhlcOverlayPanel } from "./overlayPanels"
+import {
+  DEFAULT_MA_SETTINGS,
+  normalizeMaSettings,
+  updateMaLine,
+  type MaSettings,
+} from "./maSettings"
 import type { BrokerCandle, BrokerChartTimeframe } from "./types"
 import { resolvePrevClose } from "./types"
 import { findNearestCandleAtOrBefore, useChartData } from "./useChartData"
@@ -47,22 +54,11 @@ const buildVolumes = (candles: BrokerCandle[]): HistogramData[] =>
 
 const buildMaSeries = (
   candles: BrokerCandle[],
-  enabled: { ma5: boolean; ma20: boolean; ma60: boolean; ma120: boolean },
-) => {
-  const result: { key: keyof typeof enabled; data: LineData[] }[] = []
-  if (enabled.ma5) {
-    result.push({ key: "ma5", data: simpleMovingAverage(candles, 5) })
-  }
-  if (enabled.ma20) {
-    result.push({ key: "ma20", data: simpleMovingAverage(candles, 20) })
-  }
-  if (enabled.ma60) {
-    result.push({ key: "ma60", data: simpleMovingAverage(candles, 60) })
-  }
-  if (enabled.ma120) {
-    result.push({ key: "ma120", data: simpleMovingAverage(candles, 120) })
-  }
-  return result
+  settings: MaSettings,
+): LineData[][] => {
+  return settings.lines.map((line) =>
+    line.enabled ? simpleMovingAverage(candles, line.period) : [],
+  )
 }
 
 export const BrokerChart = ({
@@ -87,13 +83,15 @@ export const BrokerChart = ({
   const fitKeyRef = useRef<string | null>(null)
   const [tf, setTf] = useState<BrokerChartTimeframe>("1d")
   const [showIntervalMenu, setShowIntervalMenu] = useState(false)
+  const [showDaysMenu, setShowDaysMenu] = useState(false)
   const [showMaMenu, setShowMaMenu] = useState(false)
-  const [maEnabled, setMaEnabled] = useState({
-    ma5: false,
-    ma20: false,
-    ma60: false,
-    ma120: false,
-  })
+  const [intradayDays, setIntradayDays] = useState<1 | 3 | 5>(1)
+  const { value: maSettingsRaw, setValue: setMaSettingsRaw } =
+    useLocalStorage<MaSettings>("brokerChart:maSettings", DEFAULT_MA_SETTINGS)
+  const maSettings = useMemo(
+    () => normalizeMaSettings(maSettingsRaw),
+    [maSettingsRaw],
+  )
   const [crosshairActive, setCrosshairActive] = useState(false)
   const crosshairTimeRef = useRef<BrokerCandle["time"] | null>(null)
   const rafRef = useRef<number | null>(null)
@@ -110,7 +108,7 @@ export const BrokerChart = ({
   const pollMs = isIntradayInterval(tf)
     ? intradayInterval.pollMs
     : dailyInterval.poll
-  const days = isIntradayInterval(tf) ? 5 : 1
+  const days = isIntradayInterval(tf) ? intradayDays : 1
   const viewKey = `${symbol}:${tf}:${days}`
 
   const chartData = useChartData({
@@ -133,12 +131,6 @@ export const BrokerChart = ({
     (quote?.price ?? 0) > 0
       ? (quote?.price ?? null)
       : (lastCandle?.close ?? null)
-  const lastPriceColor =
-    typeof lastPrice === "number" &&
-    typeof prevClose === "number" &&
-    lastPrice - prevClose < 0
-      ? "#4ea7ff"
-      : "#ff6d6d"
 
   const candleData = useMemo(() => buildCandles(candles), [candles])
   const volumeData = useMemo(() => buildVolumes(candles), [candles])
@@ -152,8 +144,8 @@ export const BrokerChart = ({
     [candles],
   )
   const maSeries = useMemo(
-    () => buildMaSeries(candles, maEnabled),
-    [candles, maEnabled],
+    () => buildMaSeries(candles, maSettings),
+    [candles, maSettings],
   )
 
   const selectedCandle = useMemo(() => {
@@ -244,21 +236,10 @@ export const BrokerChart = ({
     engine.volumeSeries.setData(volumeData)
     const syncReady = candleData.length > 0 && volumeData.length > 0
     engine.setSyncReady(syncReady)
-    const series = maSeries.reduce<Record<string, LineData[]>>((acc, item) => {
-      acc[item.key] = item.data
-      return acc
-    }, {})
-    engine.maSeries.ma5.setData(series.ma5 ?? [])
-    engine.maSeries.ma20.setData(series.ma20 ?? [])
-    engine.maSeries.ma60.setData(series.ma60 ?? [])
-    engine.maSeries.ma120.setData(series.ma120 ?? [])
-
-    engine.setReferenceLines({
-      lastPrice,
-      prevClose,
-      lastPriceColor,
-      prevCloseColor: "rgba(199,209,239,0.5)",
+    engine.maSeries.forEach((series, index) => {
+      series.setData(maSeries[index] ?? [])
     })
+
     engine.syncScaleWidths()
     if (syncReady && fitKeyRef.current !== viewKey) {
       engine.priceChart.timeScale().fitContent()
@@ -272,7 +253,6 @@ export const BrokerChart = ({
     candleData,
     crosshairLookupItems,
     lastPrice,
-    lastPriceColor,
     maSeries,
     prevClose,
     viewKey,
@@ -310,6 +290,7 @@ export const BrokerChart = ({
                   onClick={() => {
                     setTf(item.key)
                     setShowIntervalMenu(false)
+                    setShowDaysMenu(false)
                     setShowMaMenu(false)
                   }}
                   type="button"
@@ -320,6 +301,42 @@ export const BrokerChart = ({
             </div>
           )}
         </div>
+        {isIntradayInterval(tf) && (
+          <div className="interval-control">
+            <button
+              className="btn"
+              data-testid="intraday-days-trigger"
+              onClick={() => {
+                setShowDaysMenu((prev) => !prev)
+                setShowIntervalMenu(false)
+                setShowMaMenu(false)
+              }}
+              type="button"
+            >
+              {intradayDays}일
+            </button>
+            {showDaysMenu && (
+              <div className="interval-menu" data-testid="intraday-days-menu">
+                {([1, 3, 5] as const).map((value) => (
+                  <button
+                    key={value}
+                    className={`btn ${intradayDays === value ? "active" : ""}`}
+                    data-testid={`intraday-days-option-${value}`}
+                    onClick={() => {
+                      setIntradayDays(value)
+                      setShowDaysMenu(false)
+                      setShowIntervalMenu(false)
+                      setShowMaMenu(false)
+                    }}
+                    type="button"
+                  >
+                    {value}일
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {DAILY_TIMEFRAMES.map((item) => (
           <button
             key={item.value}
@@ -328,6 +345,7 @@ export const BrokerChart = ({
             onClick={() => {
               setTf(item.value)
               setShowIntervalMenu(false)
+              setShowDaysMenu(false)
               setShowMaMenu(false)
             }}
             type="button"
@@ -337,35 +355,52 @@ export const BrokerChart = ({
         ))}
         <div className="interval-control">
           <button
-            className={Object.values(maEnabled).some(Boolean) ? "active" : ""}
+            className={
+              maSettings.lines.some((line) => line.enabled) ? "active" : ""
+            }
             onClick={() => {
               setShowMaMenu((prev) => !prev)
               setShowIntervalMenu(false)
+              setShowDaysMenu(false)
             }}
             type="button"
           >
             지표
           </button>
           {showMaMenu && (
-            <div className="interval-menu" data-testid="ma-menu">
-              {(
-                [
-                  ["ma5", "MA5"],
-                  ["ma20", "MA20"],
-                  ["ma60", "MA60"],
-                  ["ma120", "MA120"],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  className={`btn ${maEnabled[key] ? "active" : ""}`}
-                  onClick={() =>
-                    setMaEnabled((prev) => ({ ...prev, [key]: !prev[key] }))
-                  }
-                  type="button"
-                >
-                  {label}
-                </button>
+            <div className="interval-menu ma-menu" data-testid="ma-menu">
+              {maSettings.lines.map((line, index) => (
+                <div className="ma-setting-row" key={line.id}>
+                  <label className="ma-setting-toggle">
+                    <input
+                      checked={line.enabled}
+                      data-testid={`ma-enabled-${index}`}
+                      onChange={() => {
+                        setMaSettingsRaw((prev) =>
+                          updateMaLine(prev, index, { enabled: !line.enabled }),
+                        )
+                      }}
+                      type="checkbox"
+                    />
+                    <span className={line.enabled ? "" : "muted"}>
+                      MA{line.period}
+                    </span>
+                  </label>
+                  <input
+                    data-testid={`ma-period-${index}`}
+                    inputMode="numeric"
+                    max={500}
+                    min={1}
+                    onChange={(event) => {
+                      const nextValue = Number(event.target.value)
+                      setMaSettingsRaw((prev) =>
+                        updateMaLine(prev, index, { period: nextValue }),
+                      )
+                    }}
+                    type="number"
+                    value={line.period}
+                  />
+                </div>
               ))}
             </div>
           )}
@@ -373,20 +408,23 @@ export const BrokerChart = ({
       </div>
 
       <div className="broker-chart-shell">
-        <OverlayPanels
+        <BrokerChartHeader
           symbol={symbol}
           name={name}
           session={session}
-          tf={tf}
-          timeZone={timeZone}
           crosshairActive={crosshairActive}
-          candle={crosshairActive ? selectedCandle : null}
-          lastCandle={lastCandle}
-          lastPrice={lastPrice}
-          prevClose={prevClose}
         />
 
         <div className="broker-chart-wrap">
+          <OhlcOverlayPanel
+            tf={tf}
+            timeZone={timeZone}
+            crosshairActive={crosshairActive}
+            candle={crosshairActive ? selectedCandle : null}
+            lastCandle={lastCandle}
+            lastPrice={lastPrice}
+            prevClose={prevClose}
+          />
           <div
             ref={priceRef}
             className="broker-chart-canvas broker-chart-price"

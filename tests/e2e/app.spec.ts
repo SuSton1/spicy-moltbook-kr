@@ -250,7 +250,27 @@ test("contract OHLC 패널이 캔들을 가리지 않음", async ({ page }) => {
     return
   }
 
-  expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(priceBox.y + 1)
+  const pointerEvents = await panel.evaluate(
+    (node) => window.getComputedStyle(node).pointerEvents,
+  )
+  expect(pointerEvents).toBe("none")
+  expect(panelBox.height).toBeLessThanOrEqual(priceBox.height * 0.35)
+  expect(panelBox.width).toBeLessThanOrEqual(priceBox.width * 0.75)
+})
+
+test("contract OHLC 패널 라벨 한국어", async ({ page }) => {
+  await page.goto(`/stocks/${symbol}`)
+  const panel = page.getByTestId("chart-ohlc-panel")
+  await expect(panel).toBeVisible()
+  await expect(panel).toContainText("시간")
+  await expect(panel).toContainText("시가")
+  await expect(panel).toContainText("고가")
+  await expect(panel).toContainText("저가")
+  await expect(panel).toContainText("종가")
+  await expect(panel).toContainText("거래량")
+  await expect(panel).toContainText("등락")
+  await expect(panel).toContainText("등락률")
+  await expect(page.getByText("전일")).toHaveCount(0)
 })
 
 test("contract 가격/거래량 pane plot 너비 동일", async ({ page }) => {
@@ -341,6 +361,21 @@ test("contract 일/주/월 전환 시 에러 없음", async ({ page }) => {
   await expect(page.getByTestId("chart-error")).toHaveCount(0)
 })
 
+test("contract intraday 기본 days=1", async ({ page }) => {
+  const intradayRequests: string[] = []
+  page.on("request", (request) => {
+    if (request.url().includes("/api/chart/intraday")) {
+      intradayRequests.push(request.url())
+    }
+  })
+
+  await page.goto(`/stocks/${symbol}`)
+  await page.getByTestId("intraday-interval-trigger").click()
+  await page.getByTestId("intraday-interval-option-1m").click()
+  await expect.poll(() => intradayRequests.length).toBeGreaterThan(0)
+  expect(intradayRequests[0] ?? "").toMatch(/days=1/)
+})
+
 test("contract 분봉 전환 시 요청 스팸 없음", async ({ page }) => {
   const intradayRequests: string[] = []
   page.on("request", (request) => {
@@ -375,6 +410,42 @@ test("contract intraday 요청 폴링 상한", async ({ page }) => {
   await page.waitForTimeout(12_000)
 
   expect(intradayRequests.length).toBeLessThanOrEqual(3)
+})
+
+test("contract 종목 상세 시세는 배치로만 조회", async ({ page }) => {
+  const perSymbolRequests: string[] = []
+  const batchRequests: string[] = []
+  page.on("request", (request) => {
+    if (
+      request.url().includes("/api/stocks/") &&
+      request.url().includes("/quote")
+    ) {
+      perSymbolRequests.push(request.url())
+    }
+    if (request.url().includes("/api/quotes/batch")) {
+      batchRequests.push(request.url())
+    }
+  })
+
+  await page.goto(`/stocks/${symbol}`)
+  await expect(page.getByTestId("quote-last")).toBeVisible({ timeout: 1500 })
+  await page.waitForTimeout(600)
+
+  expect(perSymbolRequests).toHaveLength(0)
+  expect(batchRequests.length).toBeGreaterThan(0)
+})
+
+test("contract MA 설정 변경 시 영구 저장", async ({ page }) => {
+  await page.goto(`/stocks/${symbol}`)
+  const indicatorButton = page.getByRole("button", { name: "지표" })
+  await indicatorButton.click()
+  await expect(page.getByTestId("ma-menu")).toBeVisible()
+  await expect(page.getByTestId("ma-period-0")).toHaveValue("5")
+  await page.getByTestId("ma-period-0").fill("7")
+  await expect(page.getByTestId("ma-period-0")).toHaveValue("7")
+  await page.reload()
+  await page.getByRole("button", { name: "지표" }).click()
+  await expect(page.getByTestId("ma-period-0")).toHaveValue("7")
 })
 
 test("contract 종목 상세 개요 탭 클릭", async ({ page }) => {

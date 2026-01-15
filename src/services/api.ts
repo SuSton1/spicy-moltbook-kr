@@ -19,6 +19,7 @@ export type Quote = {
 
 export type BatchQuoteItem = {
   code: string
+  name?: string
   price: number | null
   change: number | null
   changeRate: number | null
@@ -26,6 +27,7 @@ export type BatchQuoteItem = {
   turnover: number | null
   marketCap: number | null
   updatedAt?: string
+  session?: SessionWindow
 }
 
 export type Candle = {
@@ -513,16 +515,29 @@ export const fetchRankings = async (params: RankingQuery) => {
   )
 }
 
-export const fetchQuote = async (symbol: string) => {
-  const { primary, fallback } = buildApiUrl(`/api/stocks/${symbol}/quote`)
-  const payload = await fetchJson<{ quote: Quote; session?: SessionWindow }>(
-    primary,
-    fallback,
-  )
-  const session = payload.session ?? payload.quote.session
-  return {
-    quote: session ? { ...payload.quote, session } : payload.quote,
-  }
+export const fetchQuote = async (symbol: string, signal?: AbortSignal) => {
+  const region: "KR" | "US" = /^[0-9]{6}$/.test(symbol) ? "KR" : "US"
+  const payload = await fetchBatchQuotes({ region, symbols: [symbol], signal })
+  const item = payload.quotesBySymbol[symbol]
+  const quote: Quote = item
+    ? {
+        code: symbol,
+        name: item.name,
+        price: item.price ?? 0,
+        change: item.change ?? 0,
+        changeRate: item.changeRate ?? 0,
+        volume: item.volume ?? null,
+        updatedAt: item.updatedAt,
+        session: item.session,
+      }
+    : {
+        code: symbol,
+        price: 0,
+        change: 0,
+        changeRate: 0,
+        volume: null,
+      }
+  return { quote }
 }
 
 export const fetchCandles = async (

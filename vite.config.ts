@@ -105,6 +105,7 @@ type RankingItem = {
 
 type BatchQuoteItem = {
   code: string
+  name?: string
   price: number | null
   change: number | null
   changeRate: number | null
@@ -112,6 +113,7 @@ type BatchQuoteItem = {
   turnover: number | null
   marketCap: number | null
   updatedAt?: string
+  session?: SessionWindow
 }
 
 type UsQuoteFixture = {
@@ -877,7 +879,23 @@ const createApiProxy = (
     }
   }
 
-  const kisRequestCounts = new Map<string, number>()
+  const kisRequestCounts = new Map<
+    string,
+    { count: number; lastSeenAt: number }
+  >()
+  let kisRequestCountsPurgedAt = 0
+  const purgeKisRequestCounts = (now: number) => {
+    if (now - kisRequestCountsPurgedAt < 30000) {
+      return
+    }
+    kisRequestCountsPurgedAt = now
+    const cutoff = now - 120000
+    for (const [key, entry] of kisRequestCounts.entries()) {
+      if (entry.lastSeenAt < cutoff) {
+        kisRequestCounts.delete(key)
+      }
+    }
+  }
   const stormDebugEnabled =
     isDevServer &&
     readEnvValue(env, ["KIS_DEBUG_STORM", "DEBUG_STORM", "VITE_DEBUG_STORM"])
@@ -923,10 +941,13 @@ const createApiProxy = (
     const meta = event.meta
     const requestId = meta?.requestId
     if (event.type === "start" && requestId) {
-      kisRequestCounts.set(
-        requestId,
-        (kisRequestCounts.get(requestId) ?? 0) + 1,
-      )
+      const now = Date.now()
+      purgeKisRequestCounts(now)
+      const current = kisRequestCounts.get(requestId)
+      kisRequestCounts.set(requestId, {
+        count: (current?.count ?? 0) + 1,
+        lastSeenAt: now,
+      })
       if (meta?.endpoint) {
         stormUpstreamCounter.record(
           `${meta.endpoint}:${meta.symbol ?? "-"}:${meta.interval ?? "-"}:${meta.days ?? "-"}`,
@@ -968,12 +989,12 @@ const createApiProxy = (
     if (!isDevServer) {
       return
     }
-    const count = kisRequestCounts.get(requestId)
-    if (count === undefined) {
+    const entry = kisRequestCounts.get(requestId)
+    if (!entry) {
       return
     }
     console.info(
-      `[kis] requestId=${requestId} label=${label} upstreamCalls=${count}`,
+      `[kis] requestId=${requestId} label=${label} upstreamCalls=${entry.count}`,
     )
     kisRequestCounts.delete(requestId)
   }
@@ -1478,7 +1499,7 @@ const createApiProxy = (
   const readContractOutput = (symbol: string) =>
     contractQuotes?.[symbol]?.output ?? null
 
-  const fetchQuote = async (symbol: string) => {
+  const fetchQuote = async (symbol: string, meta?: KisRequestMeta) => {
     const marketDivCode = resolveKrMarketDivCode(symbol)
     const url = new URL(
       `${baseUrl}/uapi/domestic-stock/v1/quotations/inquire-price`,
@@ -1493,6 +1514,7 @@ const createApiProxy = (
         headers: await buildHeaders(trIds.quote),
       },
       {
+        ...meta,
         trId: trIds.quote,
         endpoint: "domestic-quote",
         symbol,
@@ -1511,6 +1533,7 @@ const createApiProxy = (
   const fetchOverseasPriceOutput = async (
     symbol: string,
     exchangeCode: string,
+    meta?: KisRequestMeta,
   ) => {
     const url = new URL(`${baseUrl}/uapi/overseas-price/v1/quotations/price`)
     url.searchParams.set("AUTH", "")
@@ -1524,6 +1547,7 @@ const createApiProxy = (
         headers: await buildHeaders(trIds.usPrice),
       },
       {
+        ...meta,
         trId: trIds.usPrice,
         endpoint: "overseas-price",
         symbol,
@@ -1540,6 +1564,7 @@ const createApiProxy = (
   const fetchOverseasPriceDetailOutput = async (
     symbol: string,
     exchangeCode: string,
+    meta?: KisRequestMeta,
   ) => {
     const url = new URL(
       `${baseUrl}/uapi/overseas-price/v1/quotations/price-detail`,
@@ -1555,6 +1580,7 @@ const createApiProxy = (
         headers: await buildHeaders(trIds.usPriceDetail),
       },
       {
+        ...meta,
         trId: trIds.usPriceDetail,
         endpoint: "overseas-price-detail",
         symbol,
@@ -1639,10 +1665,17 @@ const createApiProxy = (
     return value
   }
 
-  const fetchUsQuote = async (symbol: string): Promise<BatchQuoteItem> => {
+  const fetchUsQuote = async (
+    symbol: string,
+    meta?: KisRequestMeta,
+  ): Promise<BatchQuoteItem> => {
     const exchangeCode = resolveUsExchangeCode(symbol)
     const normalized = normalizeUsTickerForProvider("kis", symbol)
-    const priceOutput = await fetchOverseasPriceOutput(normalized, exchangeCode)
+    const priceOutput = await fetchOverseasPriceOutput(
+      normalized,
+      exchangeCode,
+      meta,
+    )
     const now = Date.now()
     let detailOutput: Record<string, unknown> | null = null
     let marketCap = readUsMarketCapCache(symbol, now)
@@ -1650,6 +1683,7 @@ const createApiProxy = (
       detailOutput = await fetchOverseasPriceDetailOutput(
         normalized,
         exchangeCode,
+        meta,
       )
       const detailMetrics = normalizeOverseasQuoteMetrics(detailOutput)
       marketCap = detailMetrics.marketCap
@@ -1703,6 +1737,7 @@ const createApiProxy = (
     entry: ReturnType<typeof normalizeQuoteOutput>,
   ): BatchQuoteItem => ({
     code: symbol,
+    name: entry.quote.name,
     price: normalizePrice(entry.quote.price),
     change: normalizeNullable(entry.quote.change),
     changeRate: normalizeNullable(entry.quote.changeRate),
@@ -1716,7 +1751,7 @@ const createApiProxy = (
     const meta = symbolLookup.get(symbol)
     return {
       code: symbol,
-      name: meta?.name ?? symbol,
+      name: item.name ?? meta?.name ?? symbol,
       price: item.price ?? 0,
       change: item.change ?? 0,
       changeRate: item.changeRate ?? 0,
@@ -1835,6 +1870,7 @@ const createApiProxy = (
   const fetchQuoteItems = async (
     region: MarketRegion,
     symbols: string[],
+    meta?: KisRequestMeta,
   ): Promise<Record<string, BatchQuoteItem>> => {
     const results: Record<string, BatchQuoteItem> = {}
     const limited = symbols.slice(0, QUOTE_BATCH_LIMIT)
@@ -1842,8 +1878,8 @@ const createApiProxy = (
       try {
         const quoteItem =
           region === "US"
-            ? await fetchUsQuote(symbol)
-            : buildBatchQuoteItem(symbol, await fetchQuote(symbol))
+            ? await fetchUsQuote(symbol, meta)
+            : buildBatchQuoteItem(symbol, await fetchQuote(symbol, meta))
         results[symbol] = quoteItem
         writeQuoteCacheEntry(region, symbol, quoteItem)
         metricsCache.set(symbol, {
@@ -1857,7 +1893,11 @@ const createApiProxy = (
     return results
   }
 
-  const scheduleQuoteRefresh = (region: MarketRegion, symbols: string[]) => {
+  const scheduleQuoteRefresh = (
+    region: MarketRegion,
+    symbols: string[],
+    meta?: KisRequestMeta,
+  ) => {
     const pending = symbols
       .map((symbol) => symbol.trim())
       .filter(Boolean)
@@ -1866,7 +1906,7 @@ const createApiProxy = (
     if (pending.length === 0) {
       return
     }
-    const promise = fetchQuoteItems(region, pending)
+    const promise = fetchQuoteItems(region, pending, meta)
       .then(() => undefined)
       .catch(() => undefined)
       .finally(() => {
@@ -1882,6 +1922,7 @@ const createApiProxy = (
   const resolveBatchQuotes = async (
     region: MarketRegion,
     symbols: string[],
+    meta?: KisRequestMeta,
   ): Promise<Record<string, BatchQuoteItem>> => {
     const now = Date.now()
     const limited = symbols.slice(0, QUOTE_BATCH_LIMIT)
@@ -1900,11 +1941,11 @@ const createApiProxy = (
       }
     })
     if (missing.length > 0) {
-      const fetched = await fetchQuoteItems(region, missing)
+      const fetched = await fetchQuoteItems(region, missing, meta)
       Object.assign(results, fetched)
     }
     if (refresh.length > 0) {
-      scheduleQuoteRefresh(region, refresh)
+      scheduleQuoteRefresh(region, refresh, meta)
     }
     return results
   }
@@ -2592,12 +2633,16 @@ const createApiProxy = (
       return { points }
     }
     const targetDays = Math.min(Math.max(days, 1), 5)
-    const candles = await fetchKrIntradayCandles(
-      symbol,
-      session,
-      targetDays,
-      requestMeta,
+    const baseTtl = aggregateMinutes <= 15 ? 10000 : 30000
+    const rawTtl = targetDays > 1 ? Math.max(baseTtl, 60000) : baseTtl
+    const rawKey = `intradayRaw:KR:${symbol}:${targetDays}`
+    const rawCandles = await fetchWithCacheSWR(
+      rawKey,
+      rawTtl,
+      () => fetchKrIntradayCandles(symbol, session, targetDays, requestMeta),
+      rawTtl * 2,
     )
+    const candles = normalizeCandleSeries(rawCandles)
     const limited = limitCandlesByDays(candles, targetDays)
     const aggregated = aggregateIntradayCandles(limited, aggregateMinutes)
     const shifted = shiftIntradayToSessionStart(
@@ -2995,13 +3040,30 @@ const createApiProxy = (
                   return quote ? [[symbol, quote]] : []
                 }),
               )
+              const enriched = Object.fromEntries(
+                symbols.flatMap((symbol) => {
+                  const quote = quotesBySymbol[symbol]
+                  if (!quote) {
+                    return []
+                  }
+                  return [
+                    [
+                      symbol,
+                      {
+                        ...quote,
+                        session: resolveSessionForSymbol(region, symbol),
+                      },
+                    ],
+                  ]
+                }),
+              )
               if (region === "US") {
-                logUsQuoteCoverage(fixtureSource, symbols, quotesBySymbol)
+                logUsQuoteCoverage(fixtureSource, symbols, enriched)
               }
               sendJson(res, 200, {
                 ok: true,
                 source: fixtureSource,
-                quotesBySymbol,
+                quotesBySymbol: enriched,
                 ts: Date.now(),
               })
               return
@@ -3017,14 +3079,35 @@ const createApiProxy = (
               if (!ensureTrId(res, "usPriceDetail", requestId)) {
                 return
               }
-              const quotesBySymbol = await resolveBatchQuotes(region, symbols)
-              logUsQuoteCoverage("kis", symbols, quotesBySymbol)
+              const quotesBySymbol = await resolveBatchQuotes(region, symbols, {
+                requestId,
+                endpoint: "/api/quotes/batch",
+              })
+              const enriched = Object.fromEntries(
+                symbols.flatMap((symbol) => {
+                  const quote = quotesBySymbol[symbol]
+                  if (!quote) {
+                    return []
+                  }
+                  return [
+                    [
+                      symbol,
+                      {
+                        ...quote,
+                        session: resolveSessionForSymbol(region, symbol),
+                      },
+                    ],
+                  ]
+                }),
+              )
+              logUsQuoteCoverage("kis", symbols, enriched)
               sendJson(res, 200, {
                 ok: true,
                 source: "kis",
-                quotesBySymbol,
+                quotesBySymbol: enriched,
                 ts: Date.now(),
               })
+              flushKisRequestCount(requestId, "/api/quotes/batch")
               return
             }
 
@@ -3034,13 +3117,34 @@ const createApiProxy = (
             if (!ensureTrId(res, "quote", requestId)) {
               return
             }
-            const quotesBySymbol = await resolveBatchQuotes(region, symbols)
+            const quotesBySymbol = await resolveBatchQuotes(region, symbols, {
+              requestId,
+              endpoint: "/api/quotes/batch",
+            })
+            const enriched = Object.fromEntries(
+              symbols.flatMap((symbol) => {
+                const quote = quotesBySymbol[symbol]
+                if (!quote) {
+                  return []
+                }
+                return [
+                  [
+                    symbol,
+                    {
+                      ...quote,
+                      session: resolveSessionForSymbol(region, symbol),
+                    },
+                  ],
+                ]
+              }),
+            )
             sendJson(res, 200, {
               ok: true,
               source: "kis",
-              quotesBySymbol,
+              quotesBySymbol: enriched,
               ts: Date.now(),
             })
+            flushKisRequestCount(requestId, "/api/quotes/batch")
             return
           }
 
@@ -3713,31 +3817,61 @@ const createApiProxy = (
               if (!ensureTrId(res, "usPriceDetail", requestId)) {
                 return
               }
-              const quoteItem = await fetchWithCache(
-                `quote:us:${symbol}`,
-                4000,
-                () => fetchUsQuote(symbol),
-              )
+              const quoteItem =
+                (
+                  await resolveBatchQuotes(region, [symbol], {
+                    requestId,
+                    endpoint: "/api/stocks/:symbol/quote",
+                  })
+                )[symbol] ?? null
+              if (!quoteItem) {
+                sendError(
+                  res,
+                  502,
+                  "UPSTREAM_ERROR",
+                  "업스트림 오류",
+                  requestId,
+                  "Missing quote",
+                )
+                return
+              }
               sendJson(res, 200, {
                 ok: true,
                 source: "kis",
                 quote: buildQuoteFromBatchItem(symbol, quoteItem),
                 session,
               })
+              flushKisRequestCount(requestId, "/api/stocks/:symbol/quote")
               return
             }
             if (!ensureTrId(res, "quote", requestId)) {
               return
             }
-            const quote = await fetchWithCache(`quote:${symbol}`, 4000, () =>
-              fetchQuote(symbol),
-            )
+            const quoteItem =
+              (
+                await resolveBatchQuotes(region, [symbol], {
+                  requestId,
+                  endpoint: "/api/stocks/:symbol/quote",
+                })
+              )[symbol] ?? null
+            if (!quoteItem) {
+              sendError(
+                res,
+                502,
+                "UPSTREAM_ERROR",
+                "업스트림 오류",
+                requestId,
+                "Missing quote",
+              )
+              return
+            }
             sendJson(res, 200, {
               ok: true,
               source: "kis",
-              quote: quote.quote,
+              quote: buildQuoteFromBatchItem(symbol, quoteItem),
               session,
             })
+            flushKisRequestCount(requestId, "/api/stocks/:symbol/quote")
             return
           }
 

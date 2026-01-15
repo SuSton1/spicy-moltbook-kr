@@ -477,6 +477,34 @@ textarea {
   border-radius: var(--radius-sm);
 }
 
+.ma-menu {
+  min-width: 220px;
+}
+
+.ma-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ma-setting-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.ma-setting-row input[type="number"] {
+  width: 86px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0f1422;
+  color: var(--text);
+  font-size: 12px;
+}
+
 .tf-row button {
   padding: 6px 10px;
   border-radius: 999px;
@@ -565,16 +593,25 @@ textarea {
 }
 
 .broker-chart-ohlc {
-  max-width: 320px;
-  padding: 10px 12px;
+  padding: 6px 8px;
   border-radius: var(--radius-sm);
-  background: rgba(8, 12, 24, 0.92);
+  background: rgba(8, 12, 24, 0.45);
+  backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 11px;
   color: var(--text);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+}
+
+.broker-chart-ohlc-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  pointer-events: none;
+  max-width: min(320px, calc(100% - 20px));
 }
 
 .broker-chart-ohlc-row {
@@ -586,8 +623,8 @@ textarea {
 
 .broker-chart-ohlc-grid {
   display: grid;
-  grid-template-columns: 16px 1fr 16px 1fr;
-  gap: 4px 8px;
+  grid-template-columns: 52px 1fr;
+  gap: 2px 8px;
 }
 
 @media (max-width: 520px) {

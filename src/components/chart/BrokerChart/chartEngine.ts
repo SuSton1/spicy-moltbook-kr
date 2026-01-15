@@ -21,12 +21,7 @@ export type BrokerChartEngine = {
   volumeChart: IChartApi
   candleSeries: ISeriesApi<"Candlestick">
   volumeSeries: ISeriesApi<"Histogram">
-  maSeries: {
-    ma5: ISeriesApi<"Line">
-    ma20: ISeriesApi<"Line">
-    ma60: ISeriesApi<"Line">
-    ma120: ISeriesApi<"Line">
-  }
+  maSeries: ISeriesApi<"Line">[]
   setCrosshairLookup: (
     items: { time: UTCTimestamp; close: number; volume: number }[],
   ) => void
@@ -35,12 +30,6 @@ export type BrokerChartEngine = {
   resize: () => void
   syncScaleWidths: () => void
   setActivePane: (pane: BrokerChartPane | null) => void
-  setReferenceLines: (params: {
-    lastPrice: number | null
-    prevClose: number | null
-    lastPriceColor: string
-    prevCloseColor: string
-  }) => void
   updateTimeZone: (timeZone: string) => void
 }
 
@@ -138,17 +127,13 @@ export const createBrokerChartEngine = ({
     priceFormat: { type: "volume" },
   })
 
-  const ma5 = priceChart.addLineSeries({ color: "#f5b942", lineWidth: 1 })
-  const ma20 = priceChart.addLineSeries({ color: "#3f9cff", lineWidth: 1 })
-  const ma60 = priceChart.addLineSeries({ color: "#b089ff", lineWidth: 1 })
-  const ma120 = priceChart.addLineSeries({ color: "#2ed4a7", lineWidth: 1 })
-
-  let lastPriceLine: ReturnType<
-    ISeriesApi<"Candlestick">["createPriceLine"]
-  > | null = null
-  let prevCloseLine: ReturnType<
-    ISeriesApi<"Candlestick">["createPriceLine"]
-  > | null = null
+  const maSeries = [
+    priceChart.addLineSeries({ color: "#f5b942", lineWidth: 1 }),
+    priceChart.addLineSeries({ color: "#ff9f43", lineWidth: 1 }),
+    priceChart.addLineSeries({ color: "#3f9cff", lineWidth: 1 }),
+    priceChart.addLineSeries({ color: "#b089ff", lineWidth: 1 }),
+    priceChart.addLineSeries({ color: "#2ed4a7", lineWidth: 1 }),
+  ]
 
   let suppressPriceCrosshair = false
   let suppressVolumeCrosshair = false
@@ -320,42 +305,6 @@ export const createBrokerChartEngine = ({
     })
   }
 
-  const setReferenceLines = (params: {
-    lastPrice: number | null
-    prevClose: number | null
-    lastPriceColor: string
-    prevCloseColor: string
-  }) => {
-    if (lastPriceLine) {
-      candleSeries.removePriceLine(lastPriceLine)
-      lastPriceLine = null
-    }
-    if (prevCloseLine) {
-      candleSeries.removePriceLine(prevCloseLine)
-      prevCloseLine = null
-    }
-    if (typeof params.prevClose === "number" && params.prevClose > 0) {
-      prevCloseLine = candleSeries.createPriceLine({
-        price: params.prevClose,
-        color: params.prevCloseColor,
-        lineWidth: 1,
-        lineStyle: LineStyle.Dashed,
-        axisLabelVisible: true,
-        title: "전일",
-      })
-    }
-    if (typeof params.lastPrice === "number" && params.lastPrice > 0) {
-      lastPriceLine = candleSeries.createPriceLine({
-        price: params.lastPrice,
-        color: params.lastPriceColor,
-        lineWidth: 1,
-        lineStyle: LineStyle.Solid,
-        axisLabelVisible: true,
-        title: "현재",
-      })
-    }
-  }
-
   const destroy = () => {
     if (scaleSyncRaf != null) {
       window.cancelAnimationFrame(scaleSyncRaf)
@@ -373,7 +322,7 @@ export const createBrokerChartEngine = ({
     volumeChart,
     candleSeries,
     volumeSeries,
-    maSeries: { ma5, ma20, ma60, ma120 },
+    maSeries,
     setCrosshairLookup: (items) => {
       crosshairLookup = {
         closeByTime: new Map(items.map((item) => [item.time, item.close])),
@@ -387,7 +336,6 @@ export const createBrokerChartEngine = ({
     resize,
     syncScaleWidths,
     setActivePane: applyCrosshairPane,
-    setReferenceLines,
     updateTimeZone,
   }
 }
