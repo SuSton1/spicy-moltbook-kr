@@ -69,24 +69,6 @@ const MOCK_KR_INDICES = [
     updatedAt: "2024-01-01T00:00:00Z",
   },
 ]
-const MOCK_US_INDICES = [
-  {
-    code: "NASDAQ",
-    name: "NASDAQ",
-    price: 16234.56,
-    change: 123.45,
-    changeRate: 0.77,
-    updatedAt: "2024-01-01T00:00:00Z",
-  },
-  {
-    code: "DOWJONES",
-    name: "DOW JONES",
-    price: 38901.23,
-    change: -210.12,
-    changeRate: -0.54,
-    updatedAt: "2024-01-01T00:00:00Z",
-  },
-]
 
 const buildRankingItemsForSymbols = (symbols: SymbolItem[]) =>
   symbols.map((item, index) => {
@@ -160,9 +142,7 @@ beforeEach(() => {
   mockFetchSymbols.mockReset()
   mockFetchIndices.mockReset()
   mockFetchRankings.mockReset()
-  mockFetchIndices.mockImplementation(async (market) => ({
-    indices: market === "US" ? MOCK_US_INDICES : MOCK_KR_INDICES,
-  }))
+  mockFetchIndices.mockResolvedValue({ indices: MOCK_KR_INDICES })
   mockFetchRankings.mockImplementation(
     async ({ mode, sortKey, sortDir, limit = 50, cursor }) => {
       const resolved = resolveModeSort(mode, sortKey, sortDir)
@@ -404,44 +384,14 @@ describe("App", () => {
     })
   })
 
-  it("requests US rankings without split tabs", async () => {
+  it("does not render overseas tab on market page", () => {
     render(
       <MemoryRouter initialEntries={["/market"]}>
         <App />
       </MemoryRouter>,
     )
 
-    fireEvent.click(screen.getByRole("button", { name: "해외" }))
-
-    await waitFor(() => {
-      expect(mockFetchRankings).toHaveBeenCalled()
-    })
-
-    expect(screen.queryByTestId("market-group-nasdaq")).toBeNull()
-    expect(screen.queryByTestId("market-group-dowjones")).toBeNull()
-
-    const calls = mockFetchRankings.mock.calls
-    const lastCall = calls.length > 0 ? calls[calls.length - 1][0] : undefined
-    expect(lastCall?.region).toBe("US")
-    expect(lastCall?.mode).toBe("market_cap")
-  })
-
-  it("renders US index labels on overseas tab", async () => {
-    render(
-      <MemoryRouter initialEntries={["/market"]}>
-        <App />
-      </MemoryRouter>,
-    )
-
-    fireEvent.click(screen.getByRole("button", { name: "해외" }))
-
-    await waitFor(() => {
-      expect(screen.getByTestId("index-nasdaq")).toBeTruthy()
-    })
-
-    expect(screen.getByTestId("index-dowjones")).toBeTruthy()
-    expect(screen.queryByText("코스피")).toBeNull()
-    expect(screen.queryByText("코스닥")).toBeNull()
+    expect(screen.queryByRole("button", { name: "해외" })).toBeNull()
   })
 
   it("keeps loaded list size when switching modes", async () => {

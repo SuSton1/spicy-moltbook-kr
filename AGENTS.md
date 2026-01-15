@@ -108,22 +108,32 @@ Whenever a fix changes behavior intentionally, update invariants and update test
 - NXT session uses 08:00~20:00 KST (metadata in server/data/symbols.nxt.json).
 - Timestamps must align to the correct market session timezone (KR: Asia/Seoul, US: America/New_York).
 - Contract mode must never emit UPSTREAM_ERROR for intraday endpoints.
-- No request spam: avoid <1s polling, abort/debounce rapid switches, use batch quotes, and keep intraday upstream fan-out bounded.
+- Chart UX invariants:
+  - Price+Volume 2-pane must be time-axis aligned (no horizontal drift).
+  - Crosshair vertical dotted line must align across price+volume panes.
+  - OHLC/Change% panel must not cover candle plot area (dock above or non-blocking).
+  - Zoom/pan must work (wheel zoom, drag pan, touch drag/pinch on mobile).
+  - Mobile chart should occupy most of viewport height by default.
+- No request storms:
+  - Avoid <1s polling for quotes/charts; abort/debounce rapid switches.
+  - Market list quotes must be batched; no per-row `/api/stocks/:symbol/quote` calls from rankings/market pages.
+  - Server SWR refresh retries must use capped exponential backoff; never infinite loops.
+  - Server KIS fan-out must be bounded with cache + in-flight dedup + global RPS limiter.
 
 ## Regression Guardrails (Must Pass)
-- Rankings MUST be full-universe (KR+US) and always use /api/market/rankings (no local subset sorting).
-- Overseas must not have NASDAQ/DOW split tabs; US list is US_ALL union.
+- Rankings MUST be full-universe (KR: KOSPI+KOSDAQ) and always use /api/market/rankings (no local subset sorting).
+- Market tab must not expose overseas (US) rankings/toggles.
 - Home search is at top; Market tab has same shared search at top; search queries full universe server-side.
 - Overview click must not freeze; no infinite loops or heavy sync work on click.
 - Performance invariants: rankings page 1 served from cache/SWR when possible; no per-row network calls in rankings pipeline.
-- Overseas quotes must use KIS batch pipeline (price + marketCap); missing fields show “—” with dev-only warnings.
+- US quotes must use KIS batch pipeline (price + marketCap); missing fields show “—” with dev-only warnings.
 - Intraday chart must expose 8 intervals (1m/3m/5m/10m/15m/30m/1h/4h) and /api/chart/intraday supports up to 5 days with correct timezone alignment.
+- No request storms: opening detail/market pages must not trigger repeated identical `/api/chart/intraday` calls in a tight loop.
 - Any change touching Market/Rankings/Search/Detail MUST run unit + Playwright contract tests.
 
 ## Pre-merge Checklist (Market/Home/Search/Detail)
 - [ ] KR: turnover/volume/gainers/losers global (full universe)
-- [ ] US: turnover/volume/gainers/losers global (US_ALL union)
-- [ ] Overseas split tabs removed (single combined list)
+- [ ] Market: overseas(US) tab removed
 - [ ] Home search at top
 - [ ] Market search at top (shared component)
 - [ ] Viewed/searched actions do NOT influence rankings
@@ -151,11 +161,12 @@ Whenever a fix changes behavior intentionally, update invariants and update test
   - Add a test that would have caught it.
 
 ## Feature Invariants Ledger
-- Rankings: global full-universe ordering for KR/US via /api/market/rankings; query filters apply server-side.
+- Rankings: KR full-universe ordering via /api/market/rankings; query filters apply server-side.
 - Search: shared SymbolSearchBox at top of Home + Market; local cache for instant results, server search for full universe.
-- Overseas UI: no NASDAQ/DOW split tabs; US_ALL union list only.
+- Market: overseas(US) rankings UI not exposed.
 - Detail pages: Overview click never blocks UI; chart render stays async and responsive.
-- Overseas quotes: KIS batch source for US price + marketCap with ticker normalization.
+- BrokerChart: 2-pane(가격+거래량) time-axis 정렬 + 크로스헤어 정렬 + OHLC 패널 도킹(캔들 가림 금지) + 줌/팬 동작 + 모바일 확대 유지.
+- NXT symbols: UI shows NXT session window; KIS requests use the NXT market div code.
 - Intraday chart: interval list stays at 8 options; /api/chart/intraday supports days=1..5 with timezone-safe timestamps.
 
 ============================================================

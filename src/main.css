@@ -492,46 +492,6 @@ textarea {
   font-weight: 600;
 }
 
-.chart-wrap {
-  background: #0f1422;
-  border-radius: var(--radius-lg);
-  padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.chart-canvas {
-  height: 220px;
-}
-
-.chart-volume-canvas {
-  height: 90px;
-}
-
-.chart-indicator {
-  height: 140px;
-  margin-top: 2px;
-}
-
-.chart-tooltip {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  background: rgba(8, 12, 24, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  font-size: 11px;
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  pointer-events: none;
-}
-
 .chart-overlay {
   position: absolute;
   inset: 0;
@@ -542,6 +502,104 @@ textarea {
   font-size: 13px;
   color: var(--muted);
   border-radius: var(--radius-lg);
+}
+
+.broker-chart-toolbar {
+  margin-bottom: 10px;
+}
+
+.broker-chart-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.broker-chart-wrap {
+  background: #0f1422;
+  border-radius: var(--radius-lg);
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+
+.broker-chart-canvas {
+  width: 100%;
+  touch-action: none;
+  user-select: none;
+}
+
+.broker-chart-price {
+  height: 360px;
+}
+
+.broker-chart-volume {
+  height: 180px;
+}
+
+.broker-chart-panels {
+  position: relative;
+  inset: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+  z-index: auto;
+}
+
+.broker-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.broker-chart-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.broker-chart-ohlc {
+  max-width: 320px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(8, 12, 24, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.broker-chart-ohlc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.broker-chart-ohlc-grid {
+  display: grid;
+  grid-template-columns: 16px 1fr 16px 1fr;
+  gap: 4px 8px;
+}
+
+@media (max-width: 520px) {
+  .broker-chart-price {
+    height: 58vh;
+    height: 58dvh;
+  }
+
+  .broker-chart-volume {
+    height: 22vh;
+    height: 22dvh;
+  }
 }
 
 .modal-backdrop {

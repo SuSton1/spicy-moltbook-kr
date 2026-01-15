@@ -595,6 +595,10 @@ const createApiProxy = (
   let rateNextAt = 0
   const cache = new Map<string, { expiresAt: number; value: unknown }>()
   const inflight = new Map<string, Promise<unknown>>()
+  const swrBackoff = new Map<
+    string,
+    { failures: number; nextAllowedAt: number }
+  >()
   const symbolCache: {
     kospi?: SymbolCacheEntry
     kosdaq?: SymbolCacheEntry
@@ -611,6 +615,7 @@ const createApiProxy = (
     string,
     { item: BatchQuoteItem; expiresAt: number; staleAt: number }
   >()
+  const quoteRefreshInflight = new Map<string, Promise<void>>()
   const usMarketCapCache = new Map<
     string,
     { value: number | null; expiresAt: number }
@@ -873,6 +878,43 @@ const createApiProxy = (
   }
 
   const kisRequestCounts = new Map<string, number>()
+  const stormDebugEnabled =
+    isDevServer &&
+    readEnvValue(env, ["KIS_DEBUG_STORM", "DEBUG_STORM", "VITE_DEBUG_STORM"])
+      .trim()
+      .toLowerCase() === "1"
+  const createWindowCounter = (label: string) => {
+    const counts = new Map<string, number>()
+    let windowStartedAt = Date.now()
+    const record = (key: string) => {
+      if (!stormDebugEnabled) {
+        return
+      }
+      const now = Date.now()
+      if (now - windowStartedAt >= 10000) {
+        flush(now)
+        counts.clear()
+        windowStartedAt = now
+      }
+      counts.set(key, (counts.get(key) ?? 0) + 1)
+    }
+    const flush = (now = Date.now()) => {
+      if (!stormDebugEnabled || counts.size === 0) {
+        return
+      }
+      const top = Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 12)
+        .map(([key, count]) => `${count} ${key}`)
+        .join(" | ")
+      console.info(`[storm] ${label} window=10s ${top}`)
+      windowStartedAt = now
+      counts.clear()
+    }
+    return { record, flush }
+  }
+  const stormEndpointCounter = createWindowCounter("endpoint")
+  const stormUpstreamCounter = createWindowCounter("upstream")
 
   const logKisEvent = (event: KisClientEvent) => {
     if (!isDevServer) {
@@ -885,6 +927,11 @@ const createApiProxy = (
         requestId,
         (kisRequestCounts.get(requestId) ?? 0) + 1,
       )
+      if (meta?.endpoint) {
+        stormUpstreamCounter.record(
+          `${meta.endpoint}:${meta.symbol ?? "-"}:${meta.interval ?? "-"}:${meta.days ?? "-"}`,
+        )
+      }
     }
     const base = [
       `requestId=${requestId ?? "-"}`,
@@ -905,6 +952,12 @@ const createApiProxy = (
     if (event.type === "rate_limit") {
       console.warn(
         `[kis] rate_limit ${base} retryAfterMs=${event.retryAfterMs ?? "-"}`,
+      )
+      return
+    }
+    if (event.type === "retry") {
+      console.warn(
+        `[kis] retry ${base} retryAfterMs=${event.retryAfterMs ?? "-"}`,
       )
       return
     }
@@ -986,15 +1039,34 @@ const createApiProxy = (
         return cached.value as T
       }
       if (now - cached.expiresAt <= staleMs) {
+        const backoff = swrBackoff.get(key)
+        if (backoff && backoff.nextAllowedAt > now) {
+          return cached.value as T
+        }
         if (!inflight.has(key)) {
           const refresh = fetcher()
             .then((value) => {
               cache.set(key, { value, expiresAt: Date.now() + ttlMs })
               inflight.delete(key)
+              swrBackoff.delete(key)
               return value
             })
             .catch((error) => {
               inflight.delete(key)
+              const prev = swrBackoff.get(key)
+              const failures = (prev?.failures ?? 0) + 1
+              const jitter = Math.random() * 120
+              const delay = Math.min(
+                staleMs,
+                Math.max(
+                  0,
+                  Math.round(300 * 2 ** Math.min(failures, 6) + jitter),
+                ),
+              )
+              swrBackoff.set(key, {
+                failures,
+                nextAllowedAt: Date.now() + delay,
+              })
               if (isDevServer) {
                 console.warn(`[cache] swr refresh failed: ${key}`, error)
               }
@@ -1407,10 +1479,11 @@ const createApiProxy = (
     contractQuotes?.[symbol]?.output ?? null
 
   const fetchQuote = async (symbol: string) => {
+    const marketDivCode = resolveKrMarketDivCode(symbol)
     const url = new URL(
       `${baseUrl}/uapi/domestic-stock/v1/quotations/inquire-price`,
     )
-    url.searchParams.set("FID_COND_MRKT_DIV_CODE", "J")
+    url.searchParams.set("FID_COND_MRKT_DIV_CODE", marketDivCode)
     url.searchParams.set("FID_INPUT_ISCD", symbol)
 
     const { response, payload } = await requestKisJson(
@@ -1784,6 +1857,28 @@ const createApiProxy = (
     return results
   }
 
+  const scheduleQuoteRefresh = (region: MarketRegion, symbols: string[]) => {
+    const pending = symbols
+      .map((symbol) => symbol.trim())
+      .filter(Boolean)
+      .filter((symbol) => !quoteRefreshInflight.has(`${region}:${symbol}`))
+      .slice(0, QUOTE_BATCH_LIMIT)
+    if (pending.length === 0) {
+      return
+    }
+    const promise = fetchQuoteItems(region, pending)
+      .then(() => undefined)
+      .catch(() => undefined)
+      .finally(() => {
+        pending.forEach((symbol) => {
+          quoteRefreshInflight.delete(`${region}:${symbol}`)
+        })
+      })
+    pending.forEach((symbol) => {
+      quoteRefreshInflight.set(`${region}:${symbol}`, promise)
+    })
+  }
+
   const resolveBatchQuotes = async (
     region: MarketRegion,
     symbols: string[],
@@ -1809,7 +1904,7 @@ const createApiProxy = (
       Object.assign(results, fetched)
     }
     if (refresh.length > 0) {
-      void fetchQuoteItems(region, refresh)
+      scheduleQuoteRefresh(region, refresh)
     }
     return results
   }
@@ -2119,7 +2214,10 @@ const createApiProxy = (
     const url = new URL(
       `${baseUrl}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice`,
     )
-    url.searchParams.set("FID_COND_MRKT_DIV_CODE", "J")
+    url.searchParams.set(
+      "FID_COND_MRKT_DIV_CODE",
+      resolveKrMarketDivCode(symbol),
+    )
     url.searchParams.set("FID_INPUT_ISCD", symbol)
     url.searchParams.set("FID_INPUT_DATE_1", formatDate(start))
     url.searchParams.set("FID_INPUT_DATE_2", formatDate(end))
@@ -2882,6 +2980,9 @@ const createApiProxy = (
                   .filter(Boolean),
               ),
             ).slice(0, QUOTE_BATCH_LIMIT)
+            stormEndpointCounter.record(
+              `/api/quotes/batch:${region}:n=${symbols.length}`,
+            )
             if (symbols.length === 0) {
               sendError(res, 400, "BAD_REQUEST", "Symbols required", requestId)
               return
@@ -3137,6 +3238,9 @@ const createApiProxy = (
             if (quoteMatch) {
               const code = decodeURIComponent(quoteMatch[1])
               const isUsSymbol = !/^[0-9]{6}$/.test(code)
+              const region: MarketRegion = isUsSymbol ? "US" : "KR"
+              stormEndpointCounter.record(`/api/stocks/quote:${region}:${code}`)
+              const session = resolveSessionForSymbol(region, code)
               if (isUsSymbol) {
                 const quoteItem = resolveFixtureBatchQuote("US", code)
                 if (quoteItem) {
@@ -3144,6 +3248,7 @@ const createApiProxy = (
                     ok: true,
                     source: fixtureSource,
                     quote: buildQuoteFromBatchItem(code, quoteItem),
+                    session,
                   })
                   return
                 }
@@ -3156,6 +3261,7 @@ const createApiProxy = (
                     ok: true,
                     source: fixtureSource,
                     quote: entry.quote,
+                    session,
                   })
                   return
                 }
@@ -3167,6 +3273,7 @@ const createApiProxy = (
                 ok: true,
                 source: fixtureSource,
                 quote,
+                session,
               })
               return
             }
@@ -3179,6 +3286,9 @@ const createApiProxy = (
               const limit = Math.max(
                 Number(url.searchParams.get("limit") ?? "0"),
                 0,
+              )
+              stormEndpointCounter.record(
+                `/api/stocks/candles:${code}:limit=${limit}`,
               )
               const points =
                 fixtures.candles[code] ??
@@ -3201,6 +3311,9 @@ const createApiProxy = (
               const days = Math.min(
                 Math.max(Number(url.searchParams.get("days") ?? "1"), 1),
                 5,
+              )
+              stormEndpointCounter.record(
+                `/api/chart/intraday:${region}:${symbol}:${interval.key}:${days}`,
               )
               intradayContext = {
                 region,
@@ -3298,6 +3411,9 @@ const createApiProxy = (
             const days = Math.min(
               Math.max(Number(url.searchParams.get("days") ?? "1"), 1),
               5,
+            )
+            stormEndpointCounter.record(
+              `/api/chart/intraday:${region}:${symbol}:${interval.key}:${days}`,
             )
             intradayContext = {
               region,
@@ -3587,6 +3703,9 @@ const createApiProxy = (
           if (quoteMatch) {
             const symbol = decodeURIComponent(quoteMatch[1])
             const isUsSymbol = !/^[0-9]{6}$/.test(symbol)
+            const region: MarketRegion = isUsSymbol ? "US" : "KR"
+            stormEndpointCounter.record(`/api/stocks/quote:${region}:${symbol}`)
+            const session = resolveSessionForSymbol(region, symbol)
             if (isUsSymbol) {
               if (!ensureTrId(res, "usPrice", requestId)) {
                 return
@@ -3603,6 +3722,7 @@ const createApiProxy = (
                 ok: true,
                 source: "kis",
                 quote: buildQuoteFromBatchItem(symbol, quoteItem),
+                session,
               })
               return
             }
@@ -3616,6 +3736,7 @@ const createApiProxy = (
               ok: true,
               source: "kis",
               quote: quote.quote,
+              session,
             })
             return
           }
@@ -3629,6 +3750,9 @@ const createApiProxy = (
             const limit = Math.max(
               Number(url.searchParams.get("limit") ?? "0"),
               0,
+            )
+            stormEndpointCounter.record(
+              `/api/stocks/candles:${symbol}:${tf}:limit=${limit}`,
             )
             const intradayFrames = ["1m", "5m", "30m", "1h"]
             const isIntraday = intradayFrames.includes(tf)

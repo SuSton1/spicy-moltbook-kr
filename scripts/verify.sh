@@ -26,10 +26,36 @@ else
 fi
 
 if [ -f package-lock.json ]; then
-  if [ ! -f node_modules/.package-lock.json ]; then
-    needs_install=1
+  LOCK_HASH_FILE="node_modules/.verify-package-lock.sha256"
+
+  lock_hash() {
+    if command -v sha256sum >/dev/null 2>&1; then
+      sha256sum package-lock.json | awk '{print $1}'
+      return
+    fi
+    if command -v shasum >/dev/null 2>&1; then
+      shasum -a 256 package-lock.json | awk '{print $1}'
+      return
+    fi
+    node - <<'NODE'
+const fs = require("node:fs");
+const crypto = require("node:crypto");
+const hash = crypto.createHash("sha256");
+hash.update(fs.readFileSync("package-lock.json"));
+process.stdout.write(hash.digest("hex"));
+NODE
+  }
+
+  current_lock_hash="$(lock_hash)"
+  if [ -f "$LOCK_HASH_FILE" ]; then
+    saved_lock_hash="$(cat "$LOCK_HASH_FILE" | tr -d '\r\n' || true)"
+    if [ "$saved_lock_hash" != "$current_lock_hash" ]; then
+      needs_install=1
+    fi
   else
-    if ! cmp -s package-lock.json node_modules/.package-lock.json; then
+    if [ "$needs_install" -eq 0 ]; then
+      echo "$current_lock_hash" >"$LOCK_HASH_FILE"
+    else
       needs_install=1
     fi
   fi
@@ -41,6 +67,11 @@ if [ "$needs_install" -eq 1 ]; then
     npm ci
   else
     npm install
+  fi
+  if [ -f package-lock.json ]; then
+    if [ -n "${LOCK_HASH_FILE:-}" ] && [ -n "${current_lock_hash:-}" ]; then
+      echo "$current_lock_hash" >"$LOCK_HASH_FILE"
+    fi
   fi
 fi
 

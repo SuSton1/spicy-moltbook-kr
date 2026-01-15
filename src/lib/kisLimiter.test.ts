@@ -87,6 +87,57 @@ describe("kis limiter", () => {
     })
     await expect(promise).rejects.toBeInstanceOf(KisRateLimitError)
   })
+
+  it("retries transient errors with exponential backoff", async () => {
+    const client = createKisClient({ rps: 50, burst: 10, random: () => 0 })
+    const starts: number[] = []
+    let failures = 0
+    const task = async () => {
+      starts.push(Date.now())
+      if (failures < 2) {
+        failures += 1
+        const error = new Error("other side closed") as Error & {
+          code?: string
+        }
+        error.code = "UND_ERR_SOCKET"
+        throw error
+      }
+      return { ok: true }
+    }
+    const promise = client.request({
+      key: "transient",
+      task,
+      maxRetries: 2,
+      baseDelayMs: 100,
+    })
+    const assertion = expect(promise).resolves.toEqual({ ok: true })
+    await vi.advanceTimersByTimeAsync(1000)
+    await assertion
+    expect(starts).toHaveLength(3)
+    expect(starts[1] - starts[0]).toBeGreaterThanOrEqual(100)
+    expect(starts[2] - starts[1]).toBeGreaterThanOrEqual(200)
+  })
+
+  it("caps transient retries when no cache exists", async () => {
+    const client = createKisClient({ rps: 50, burst: 10, random: () => 0 })
+    let calls = 0
+    const task = async () => {
+      calls += 1
+      const error = new Error("socket hang up") as Error & { code?: string }
+      error.code = "ECONNRESET"
+      throw error
+    }
+    const promise = client.request({
+      key: "transient-fail",
+      task,
+      maxRetries: 1,
+      baseDelayMs: 50,
+    })
+    const assertion = expect(promise).rejects.toBeInstanceOf(Error)
+    await vi.advanceTimersByTimeAsync(1000)
+    await assertion
+    expect(calls).toBe(2)
+  })
 })
 
 describe("rate limit payload detection", () => {

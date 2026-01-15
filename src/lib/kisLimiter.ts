@@ -8,7 +8,7 @@ export type KisRequestMeta = {
 }
 
 export type KisClientEvent = {
-  type: "start" | "end" | "rate_limit" | "error"
+  type: "start" | "end" | "rate_limit" | "retry" | "error"
   key: string
   meta?: KisRequestMeta
   attempt?: number
@@ -113,6 +113,44 @@ const calcRetryDelayMs = (
   baseDelayMs: number,
   jitter: number,
 ) => Math.max(0, Math.round(baseDelayMs * 2 ** attempt + jitter))
+
+export const isTransientNetworkError = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return false
+  }
+  const anyError = error as {
+    code?: unknown
+    message?: unknown
+    cause?: { code?: unknown; message?: unknown } | null
+  }
+  const parts = [
+    anyError.code,
+    anyError.message,
+    anyError.cause?.code,
+    anyError.cause?.message,
+  ]
+    .filter(
+      (value): value is string | number =>
+        typeof value === "string" || typeof value === "number",
+    )
+    .map((value) => String(value).toLowerCase())
+  const haystack = parts.join(" ")
+  const tokens = [
+    "und_err_socket",
+    "und_err_connect_timeout",
+    "und_err_headers_timeout",
+    "und_err_body_timeout",
+    "ecconnreset",
+    "econnreset",
+    "etimedout",
+    "eai_again",
+    "enotfound",
+    "econnrefused",
+    "socket hang up",
+    "other side closed",
+  ]
+  return tokens.some((token) => haystack.includes(token))
+}
 
 export const createKisClient = (options: KisClientOptions) => {
   const now = options.now ?? Date.now
@@ -292,8 +330,18 @@ export const createKisClient = (options: KisClientOptions) => {
     baseDelayMs: number
     meta?: KisRequestMeta
   }) => {
-    let attempt = 0
-    while (true) {
+    function scheduleAttempt(attempt: number): Promise<T> {
+      return new Promise((resolve, reject) => {
+        schedule({
+          key,
+          task: () => runAttempt(attempt),
+          resolve,
+          reject,
+        })
+      })
+    }
+
+    async function runAttempt(attempt: number): Promise<T> {
       const startedAt = now()
       emit({ type: "start", key, meta, attempt })
       try {
@@ -302,13 +350,7 @@ export const createKisClient = (options: KisClientOptions) => {
         if (isRateLimit?.(value)) {
           const jitter = random() * 80
           const retryAfterMs = calcRetryDelayMs(attempt, baseDelayMs, jitter)
-          emit({
-            type: "rate_limit",
-            key,
-            meta,
-            attempt,
-            retryAfterMs,
-          })
+          emit({ type: "rate_limit", key, meta, attempt, retryAfterMs })
           if (cached) {
             return cached.value
           }
@@ -323,8 +365,7 @@ export const createKisClient = (options: KisClientOptions) => {
             })
           }
           await sleep(retryAfterMs)
-          attempt += 1
-          continue
+          return scheduleAttempt(attempt + 1)
         }
         if (cacheTtlMs) {
           cache.set(key, { value, expiresAt: now() + cacheTtlMs })
@@ -332,10 +373,27 @@ export const createKisClient = (options: KisClientOptions) => {
         emit({ type: "end", key, meta, attempt, durationMs })
         return value
       } catch (error) {
+        const isTransient = isTransientNetworkError(error)
+        if (isTransient) {
+          const jitter = random() * 80
+          const retryAfterMs = calcRetryDelayMs(attempt, baseDelayMs, jitter)
+          emit({ type: "retry", key, meta, attempt, retryAfterMs })
+          if (attempt >= maxRetries) {
+            if (cached) {
+              return cached.value
+            }
+            emit({ type: "error", key, meta, attempt })
+            throw error
+          }
+          await sleep(retryAfterMs)
+          return scheduleAttempt(attempt + 1)
+        }
         emit({ type: "error", key, meta, attempt })
         throw error
       }
     }
+
+    return runAttempt(0)
   }
 
   return {

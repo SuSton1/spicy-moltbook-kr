@@ -355,37 +355,6 @@ export const useIndices = (market: "KR" | "US", pollMs = 10000) => {
   return { data, status, error }
 }
 
-export const useRankings = (
-  market: "KR" | "US",
-  category: string,
-  pollMs = 12000,
-) => {
-  const { data, status, error, onError, onSuccess, setStatus } = useAsyncState<
-    RankingItem[]
-  >([])
-  const { sortKey, sortDir, apiMode } = resolveLegacyCategory(category)
-
-  const load = useCallback(async () => {
-    try {
-      setStatus("loading")
-      const payload = await fetchRankings({
-        region: market,
-        mode: apiMode,
-        sortKey,
-        sortDir,
-        limit: 50,
-      })
-      onSuccess(payload.items)
-    } catch (err) {
-      onError(err)
-    }
-  }, [apiMode, market, onError, onSuccess, setStatus, sortDir, sortKey])
-
-  usePolling(load, pollMs)
-
-  return { data, status, error }
-}
-
 export type RankingMode =
   | "market_cap"
   | "volume"
@@ -431,22 +400,6 @@ const rankingModeSortMap: Record<
     sortDir: "asc",
     apiMode: "losers",
   },
-}
-
-const resolveLegacyCategory = (category: string) => {
-  switch (category) {
-    case "value":
-      return rankingModeSortMap.trading_value
-    case "mcap":
-      return rankingModeSortMap.market_cap
-    case "up":
-      return rankingModeSortMap.gainers
-    case "down":
-      return rankingModeSortMap.losers
-    case "volume":
-    default:
-      return rankingModeSortMap.volume
-  }
 }
 
 const createRankingState = (
@@ -1209,90 +1162,6 @@ export const useSymbolsSearch = (
     notice,
     hasMore,
     canSearch,
-    loadMore,
-  }
-}
-
-export const useMarketSymbols = (
-  market: "KOSPI" | "KOSDAQ" | "ALL",
-  limit = 20,
-) => {
-  const [items, setItems] = useState<SymbolSearchItem[]>([])
-  const [cursor, setCursor] = useState<string | null>(null)
-  const [status, setStatus] = useState<ApiStatus>("idle")
-  const [error, setError] = useState<string | null>(null)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const abortRef = useRef<AbortController | null>(null)
-
-  const load = useCallback(
-    async (nextCursor?: string | null, append = false) => {
-      abortRef.current?.abort()
-      const controller = new AbortController()
-      abortRef.current = controller
-      try {
-        setStatus("loading")
-        setIsLoadingMore(append)
-        const payload = await fetchSymbols({
-          market,
-          query: "",
-          limit,
-          cursor: nextCursor ?? undefined,
-          mode: "list",
-          signal: controller.signal,
-        })
-        if (payload.ok === false) {
-          setStatus("error")
-          setError(payload.message ?? "시장 종목 데이터를 불러오지 못했습니다.")
-          if (!append) {
-            setItems([])
-            setCursor(null)
-          }
-          return
-        }
-        setItems((prev) =>
-          append ? mergeSymbolItems(prev, payload.items) : payload.items,
-        )
-        setCursor(payload.nextCursor)
-        setStatus("ready")
-        setError(null)
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") {
-          return
-        }
-        const message = err instanceof Error ? err.message : "데이터 오류"
-        setStatus("error")
-        setError(message)
-      } finally {
-        setIsLoadingMore(false)
-      }
-    },
-    [limit, market],
-  )
-
-  useEffect(() => {
-    setItems([])
-    setCursor(null)
-    setStatus("idle")
-    setError(null)
-    load(null, false)
-    return () => {
-      abortRef.current?.abort()
-    }
-  }, [load, market])
-
-  const loadMore = useCallback(() => {
-    if (status === "loading" || isLoadingMore || !cursor) {
-      return
-    }
-    load(cursor, true)
-  }, [cursor, isLoadingMore, load, status])
-
-  return {
-    items,
-    status,
-    error,
-    hasMore: Boolean(cursor),
-    isLoadingMore,
     loadMore,
   }
 }

@@ -3,6 +3,7 @@ import {
   isIntradayInterval,
   resolveIntradayInterval,
 } from "../lib/chartIntervals"
+import type { SessionWindow } from "../lib/session"
 import type { SymbolSearchItem } from "../lib/symbols"
 
 export type Quote = {
@@ -13,6 +14,7 @@ export type Quote = {
   changeRate: number
   volume: number | null
   updatedAt?: string
+  session?: SessionWindow
 }
 
 export type BatchQuoteItem = {
@@ -513,7 +515,14 @@ export const fetchRankings = async (params: RankingQuery) => {
 
 export const fetchQuote = async (symbol: string) => {
   const { primary, fallback } = buildApiUrl(`/api/stocks/${symbol}/quote`)
-  return fetchJson<{ quote: Quote }>(primary, fallback)
+  const payload = await fetchJson<{ quote: Quote; session?: SessionWindow }>(
+    primary,
+    fallback,
+  )
+  const session = payload.session ?? payload.quote.session
+  return {
+    quote: session ? { ...payload.quote, session } : payload.quote,
+  }
 }
 
 export const fetchCandles = async (

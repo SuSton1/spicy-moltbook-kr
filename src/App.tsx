@@ -9,7 +9,7 @@ import {
   useParams,
 } from "react-router-dom"
 import { List, type RowComponentProps } from "react-window"
-import { StockChart, type IndicatorState } from "./components/StockChart"
+import { BrokerChart } from "./components/chart/BrokerChart/BrokerChart"
 import { SymbolSearchBox } from "./components/SymbolSearchBox"
 import { useLocalStorage } from "./hooks/useLocalStorage"
 import {
@@ -29,12 +29,8 @@ import {
   formatSigned,
   formatSignedPercent,
 } from "./lib/format"
-import {
-  INTRADAY_INTERVALS,
-  isIntradayInterval,
-  resolveIntradayInterval,
-} from "./lib/chartIntervals"
 import { getMarketSession } from "./lib/market"
+import { resolveSessionWindow } from "./lib/session"
 import { preloadSymbolCache } from "./lib/symbolCache"
 import type { Candle, IndexItem, RankingItem } from "./services/api"
 
@@ -44,12 +40,6 @@ const MARKET_ROW_GAP = 10
 const MARKET_ROW_HEIGHT = 76
 const MARKET_ROW_SIZE = MARKET_ROW_HEIGHT + MARKET_ROW_GAP
 const MARKET_LIST_MAX_HEIGHT = 520
-
-const DAILY_TIMEFRAMES = [
-  { label: "일", value: "1d", testId: "tf-1d", poll: 60000 },
-  { label: "주", value: "1w", testId: "tf-1w", poll: 60000 },
-  { label: "월", value: "1mo", testId: "tf-1mo", poll: 60000 },
-]
 
 const MARKET_RANKING_OPTIONS: {
   mode: RankingMode
@@ -269,7 +259,7 @@ const HomePage = () => {
 }
 
 const MarketPage = () => {
-  const [market, setMarket] = useState<"KR" | "US">("KR")
+  const market = "KR" as const
   const [rankingMode, setRankingMode] = useState<RankingMode>("market_cap")
   const [isSortOpen, setIsSortOpen] = useState(false)
   const indices = useIndices(market)
@@ -284,13 +274,12 @@ const MarketPage = () => {
   const rankingIsLoadingMore = rankings.isLoadingMore
   const loadMoreRankings = rankings.loadMore
 
-  const primaryIndexCode = market === "US" ? "NASDAQ" : "KOSPI"
-  const secondaryIndexCode = market === "US" ? "DOWJONES" : "KOSDAQ"
-  const primaryIndexLabel = market === "US" ? "NASDAQ" : "코스피"
-  const secondaryIndexLabel = market === "US" ? "DOW JONES" : "코스닥"
-  const primaryIndexTestId = market === "US" ? "index-nasdaq" : "index-kospi"
-  const secondaryIndexTestId =
-    market === "US" ? "index-dowjones" : "index-kosdaq"
+  const primaryIndexCode = "KOSPI"
+  const secondaryIndexCode = "KOSDAQ"
+  const primaryIndexLabel = "코스피"
+  const secondaryIndexLabel = "코스닥"
+  const primaryIndexTestId = "index-kospi"
+  const secondaryIndexTestId = "index-kosdaq"
   const primaryIndex = indices.data.find(
     (item) => item.code === primaryIndexCode,
   )
@@ -434,25 +423,6 @@ const MarketPage = () => {
         <span className="tag">{market}</span>
       </div>
       <SymbolSearchBox />
-
-      <div className="market-tabs">
-        <button
-          className={market === "KR" ? "active" : ""}
-          onClick={() => {
-            setMarket("KR")
-          }}
-        >
-          국내
-        </button>
-        <button
-          className={market === "US" ? "active" : ""}
-          onClick={() => {
-            setMarket("US")
-          }}
-        >
-          해외
-        </button>
-      </div>
       <div className="card-grid two">
         {renderIndexCard(primaryIndex, primaryIndexLabel, primaryIndexTestId)}
         {renderIndexCard(
@@ -671,10 +641,6 @@ const StockDetailPage = () => {
   const [activeTab, setActiveTab] = useState("차트")
   const [subTab, setSubTab] = useState("뉴스")
   const [trendTab, setTrendTab] = useState("일별시세")
-  const [tf, setTf] = useState("1d")
-  const [showIntervalMenu, setShowIntervalMenu] = useState(false)
-  const [showIndicatorModal, setShowIndicatorModal] = useState(false)
-  const [showHelp, setShowHelp] = useState(false)
   const [showAi, setShowAi] = useState(false)
   const [showSimilar, setShowSimilar] = useState(false)
 
@@ -683,32 +649,11 @@ const StockDetailPage = () => {
   >("favorites", [])
   const isFavorite = favorites.includes(symbol)
 
-  const [indicatorState, setIndicatorState] = useState<IndicatorState>({
-    macd: false,
-    cci: false,
-    obv: false,
-    ichimoku: false,
-    supportResistance: false,
-    trendLine: false,
-    channel: false,
-    convergence: false,
-    volumeProfile: false,
-  })
-  const [draftIndicators, setDraftIndicators] = useState(indicatorState)
-
   const region = resolveSymbolRegion(symbol)
-  const intradayInterval = resolveIntradayInterval(
-    isIntradayInterval(tf) ? tf : INTRADAY_INTERVALS[0].key,
-  )
-  const dailyInterval =
-    DAILY_TIMEFRAMES.find((item) => item.value === tf) ?? DAILY_TIMEFRAMES[0]
-  const pollMs = isIntradayInterval(tf)
-    ? intradayInterval.pollMs
-    : dailyInterval.poll
   const chartTimeZone = resolveChartTimeZone(region)
 
   const quote = useQuote(symbol)
-  const candles = useCandles(symbol, tf, pollMs, region)
+  const candles = useCandles(symbol, "1d", 60000, region)
   const news = useNews(symbol, "KR")
   const disclosures = useDisclosures(symbol, "KR")
   const memo = useMemoStorage(symbol)
@@ -716,7 +661,8 @@ const StockDetailPage = () => {
   const [memoBody, setMemoBody] = useState("")
 
   const changeClass = formatChangeClass(quote.data?.changeRate)
-  const session = getMarketSession()
+  const sessionWindow = quote.data?.session ?? resolveSessionWindow(region)
+  const session = getMarketSession(sessionWindow)
   const quoteHasValue = (quote.data?.price ?? 0) > 0
   const quoteErrorLabel =
     quote.status === "error"
@@ -742,10 +688,6 @@ const StockDetailPage = () => {
     const day = String(date.getDate()).padStart(2, "0")
     return `${year}.${month}.${day}`
   }
-  const candleErrorLabel =
-    candles.status === "error"
-      ? `차트 조회 실패${candles.error ? `: ${candles.error}` : ""}`
-      : ""
   const newsErrorLabel =
     news.status === "error"
       ? `뉴스 조회 실패${news.error ? `: ${news.error}` : ""}`
@@ -813,7 +755,7 @@ const StockDetailPage = () => {
             </div>
           )}
           <div className="pill-row" data-testid="quote-session">
-            <span className="pill">KRX</span>
+            <span className="pill">{sessionWindow.label}</span>
             <span className={`pill ${session.isOpen ? "active" : ""}`}>
               {session.label}
             </span>
@@ -828,78 +770,14 @@ const StockDetailPage = () => {
       </div>
 
       <div className="card">
-        <div className="tf-row">
-          <div className="interval-control">
-            <button
-              className={isIntradayInterval(tf) ? "active" : ""}
-              data-testid="intraday-interval-trigger"
-              onClick={() => setShowIntervalMenu((prev) => !prev)}
-            >
-              {intradayInterval.label}
-            </button>
-            {showIntervalMenu && (
-              <div
-                className="interval-menu"
-                data-testid="intraday-interval-menu"
-              >
-                {INTRADAY_INTERVALS.map((item) => (
-                  <button
-                    key={item.key}
-                    className={`btn ${tf === item.key ? "active" : ""}`}
-                    data-testid={`intraday-interval-option-${item.key}`}
-                    onClick={() => {
-                      setTf(item.key)
-                      setShowIntervalMenu(false)
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          {DAILY_TIMEFRAMES.map((item) => (
-            <button
-              key={item.value}
-              className={tf === item.value ? "active" : ""}
-              data-testid={item.testId}
-              onClick={() => {
-                setTf(item.value)
-                setShowIntervalMenu(false)
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
-          <button
-            className="btn icon"
-            onClick={() => {
-              setDraftIndicators(indicatorState)
-              setShowIndicatorModal(true)
-            }}
-          >
-            ⚙
-          </button>
-          <button className="btn icon" onClick={() => setShowHelp(true)}>
-            ?
-          </button>
-        </div>
-        <StockChart
-          candles={candles.data}
-          loading={candles.status === "loading"}
-          indicators={indicatorState}
-          perfKey={`chart:${symbol}:${tf}`}
+        <BrokerChart
+          symbol={symbol}
+          region={region}
           timeZone={chartTimeZone}
+          quote={quote.data}
+          session={sessionWindow}
+          name={quote.data?.name}
         />
-        {candleErrorLabel && (
-          <div
-            className="note-box"
-            style={{ marginTop: "12px" }}
-            data-testid="chart-error"
-          >
-            {candleErrorLabel}
-          </div>
-        )}
       </div>
 
       <div className="tab-row">
@@ -1114,95 +992,6 @@ const StockDetailPage = () => {
                 </span>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {showIndicatorModal && (
-        <div
-          className="modal-backdrop"
-          onClick={() => setShowIndicatorModal(false)}
-        >
-          <div className="modal" onClick={(event) => event.stopPropagation()}>
-            <div className="card-row">
-              <h3>지표 설정</h3>
-              <button
-                className="btn icon"
-                onClick={() => setShowIndicatorModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-            {(
-              [
-                ["macd", "MACD"],
-                ["cci", "CCI"],
-                ["obv", "OBV"],
-                ["ichimoku", "일목균형표"],
-                ["supportResistance", "지지/저항선"],
-                ["trendLine", "추세선"],
-                ["channel", "채널"],
-                ["convergence", "수렴 패턴"],
-                ["volumeProfile", "매물대"],
-              ] as const
-            ).map(([key, label]) => (
-              <div key={key} className="toggle-row">
-                <span>{label}</span>
-                <button
-                  className={`toggle ${draftIndicators[key] ? "on" : ""}`}
-                  onClick={() =>
-                    setDraftIndicators({
-                      ...draftIndicators,
-                      [key]: !draftIndicators[key],
-                    })
-                  }
-                />
-              </div>
-            ))}
-            <div className="card-row" style={{ marginTop: "12px" }}>
-              <button
-                className="btn ghost"
-                onClick={() =>
-                  setDraftIndicators({
-                    macd: false,
-                    cci: false,
-                    obv: false,
-                    ichimoku: false,
-                    supportResistance: false,
-                    trendLine: false,
-                    channel: false,
-                    convergence: false,
-                    volumeProfile: false,
-                  })
-                }
-              >
-                초기화
-              </button>
-              <button
-                className="btn primary"
-                onClick={() => {
-                  setIndicatorState(draftIndicators)
-                  setShowIndicatorModal(false)
-                }}
-              >
-                적용
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showHelp && (
-        <div className="modal-backdrop" onClick={() => setShowHelp(false)}>
-          <div className="modal" onClick={(event) => event.stopPropagation()}>
-            <h3>차트 도움말</h3>
-            <p className="small-text">
-              차트에서 드래그로 범위를 이동하고, 캔들을 터치하면 상세 툴팁이
-              표시됩니다.
-            </p>
-            <button className="btn primary" onClick={() => setShowHelp(false)}>
-              확인
-            </button>
           </div>
         </div>
       )}
