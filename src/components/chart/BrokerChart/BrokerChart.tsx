@@ -29,11 +29,10 @@ import { findNearestCandleAtOrBefore, useChartData } from "./useChartData"
 const DAILY_TIMEFRAMES: {
   label: string
   value: BrokerChartTimeframe
-  poll: number
 }[] = [
-  { label: "일봉", value: "1d", poll: 60000 },
-  { label: "주봉", value: "1w", poll: 60000 },
-  { label: "월봉", value: "1mo", poll: 60000 },
+  { label: "일봉", value: "1d" },
+  { label: "주봉", value: "1w" },
+  { label: "월봉", value: "1mo" },
 ]
 
 const buildCandles = (candles: BrokerCandle[]): CandlestickData[] =>
@@ -88,9 +87,14 @@ export const BrokerChart = ({
   const [intradayDays, setIntradayDays] = useState<1 | 3 | 5>(1)
   const { value: maSettingsRaw, setValue: setMaSettingsRaw } =
     useLocalStorage<MaSettings>("brokerChart:maSettings", DEFAULT_MA_SETTINGS)
+  const [maDraft, setMaDraft] = useState<MaSettings | null>(null)
   const maSettings = useMemo(
     () => normalizeMaSettings(maSettingsRaw),
     [maSettingsRaw],
+  )
+  const maDraftSettings = useMemo(
+    () => normalizeMaSettings(maDraft ?? maSettingsRaw),
+    [maDraft, maSettingsRaw],
   )
   const [crosshairActive, setCrosshairActive] = useState(false)
   const crosshairTimeRef = useRef<BrokerCandle["time"] | null>(null)
@@ -103,11 +107,6 @@ export const BrokerChart = ({
   const intradayInterval = resolveIntradayInterval(
     isIntradayInterval(tf) ? tf : INTRADAY_INTERVALS[0].key,
   )
-  const dailyInterval =
-    DAILY_TIMEFRAMES.find((item) => item.value === tf) ?? DAILY_TIMEFRAMES[0]
-  const pollMs = isIntradayInterval(tf)
-    ? intradayInterval.pollMs
-    : dailyInterval.poll
   const days = isIntradayInterval(tf) ? intradayDays : 1
   const viewKey = `${symbol}:${tf}:${days}`
 
@@ -116,7 +115,6 @@ export const BrokerChart = ({
     region,
     tf,
     timeZone,
-    pollMs,
     days,
   })
 
@@ -249,15 +247,7 @@ export const BrokerChart = ({
     if (!syncReady) {
       fitKeyRef.current = null
     }
-  }, [
-    candleData,
-    crosshairLookupItems,
-    lastPrice,
-    maSeries,
-    prevClose,
-    viewKey,
-    volumeData,
-  ])
+  }, [candleData, crosshairLookupItems, maSeries, viewKey, volumeData])
 
   const loadingOverlay = chartData.status === "loading" && candles.length === 0
   const candleErrorLabel =
@@ -275,6 +265,7 @@ export const BrokerChart = ({
             onClick={() => {
               setShowIntervalMenu((prev) => !prev)
               setShowMaMenu(false)
+              setMaDraft(null)
             }}
             type="button"
           >
@@ -292,6 +283,7 @@ export const BrokerChart = ({
                     setShowIntervalMenu(false)
                     setShowDaysMenu(false)
                     setShowMaMenu(false)
+                    setMaDraft(null)
                   }}
                   type="button"
                 >
@@ -310,6 +302,7 @@ export const BrokerChart = ({
                 setShowDaysMenu((prev) => !prev)
                 setShowIntervalMenu(false)
                 setShowMaMenu(false)
+                setMaDraft(null)
               }}
               type="button"
             >
@@ -327,6 +320,7 @@ export const BrokerChart = ({
                       setShowDaysMenu(false)
                       setShowIntervalMenu(false)
                       setShowMaMenu(false)
+                      setMaDraft(null)
                     }}
                     type="button"
                   >
@@ -347,6 +341,7 @@ export const BrokerChart = ({
               setShowIntervalMenu(false)
               setShowDaysMenu(false)
               setShowMaMenu(false)
+              setMaDraft(null)
             }}
             type="button"
           >
@@ -359,7 +354,11 @@ export const BrokerChart = ({
               maSettings.lines.some((line) => line.enabled) ? "active" : ""
             }
             onClick={() => {
-              setShowMaMenu((prev) => !prev)
+              setShowMaMenu((prev) => {
+                const next = !prev
+                setMaDraft(next ? maSettingsRaw : null)
+                return next
+              })
               setShowIntervalMenu(false)
               setShowDaysMenu(false)
             }}
@@ -369,15 +368,17 @@ export const BrokerChart = ({
           </button>
           {showMaMenu && (
             <div className="interval-menu ma-menu" data-testid="ma-menu">
-              {maSettings.lines.map((line, index) => (
+              {maDraftSettings.lines.map((line, index) => (
                 <div className="ma-setting-row" key={line.id}>
                   <label className="ma-setting-toggle">
                     <input
                       checked={line.enabled}
                       data-testid={`ma-enabled-${index}`}
                       onChange={() => {
-                        setMaSettingsRaw((prev) =>
-                          updateMaLine(prev, index, { enabled: !line.enabled }),
+                        setMaDraft((prev) =>
+                          updateMaLine(prev ?? maSettingsRaw, index, {
+                            enabled: !line.enabled,
+                          }),
                         )
                       }}
                       type="checkbox"
@@ -393,8 +394,10 @@ export const BrokerChart = ({
                     min={1}
                     onChange={(event) => {
                       const nextValue = Number(event.target.value)
-                      setMaSettingsRaw((prev) =>
-                        updateMaLine(prev, index, { period: nextValue }),
+                      setMaDraft((prev) =>
+                        updateMaLine(prev ?? maSettingsRaw, index, {
+                          period: nextValue,
+                        }),
                       )
                     }}
                     type="number"
@@ -402,6 +405,31 @@ export const BrokerChart = ({
                   />
                 </div>
               ))}
+              <div className="ma-menu-actions">
+                <button
+                  className="btn primary"
+                  data-testid="ma-apply"
+                  onClick={() => {
+                    setMaSettingsRaw(maDraftSettings)
+                    setShowMaMenu(false)
+                    setMaDraft(null)
+                  }}
+                  type="button"
+                >
+                  설정 완료
+                </button>
+                <button
+                  className="btn"
+                  data-testid="ma-cancel"
+                  onClick={() => {
+                    setShowMaMenu(false)
+                    setMaDraft(null)
+                  }}
+                  type="button"
+                >
+                  취소
+                </button>
+              </div>
             </div>
           )}
         </div>

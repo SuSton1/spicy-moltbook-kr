@@ -113,16 +113,20 @@ Whenever a fix changes behavior intentionally, update invariants and update test
   - Crosshair vertical dotted line must align across price+volume panes.
   - OHLC/등락 패널은 차트 내부 반투명 overlay(pointer-events:none)이며 캔들을 과도하게 가리지 않는다.
   - OHLC 라벨은 한국어(시간/시가/고가/저가/종가/거래량/등락/등락률).
+  - Hover 등락/등락률은 hover 캔들 종가 기준(prevClose 대비)이며 현재 quote 기반 계산 금지.
+  - 가격/거래량/등락 표기는 천 단위 구분자(예: 50,000) 포함.
   - 전일/prev-close reference line(전일/현재가 price line) 표시 금지.
-  - MA 기본 5/10/20/60/120 (5개) + 설정 변경/영구 저장.
+  - MA 기본 5/10/20/60/120 (5개) + 지표 설정은 draft 편집 후 [설정 완료]에서만 적용/영구 저장(취소 가능).
   - Zoom/pan must work (wheel zoom, drag pan, touch drag/pinch on mobile).
   - Mobile chart should occupy most of viewport height by default.
 - No request storms:
   - Avoid <1s polling for quotes/charts; abort/debounce rapid switches.
   - Quotes must be batched (/api/quotes/batch); no per-row/per-symbol `/api/stocks/:symbol/quote` calls from detail/rankings/market pages.
   - Intraday defaults to days=1 (supports days=1..5); avoid multi-day fan-out on initial load.
+  - TOKEN(oauth2/tokenP) must be cached by expiry + in-flight dedup; requestId must never be "-".
   - Server SWR refresh retries must use capped exponential backoff; never infinite loops.
   - Server KIS fan-out must be bounded with cache + in-flight dedup + global RPS limiter.
+  - Daily/Weekly/Monthly candles must not be hard-capped to 120 days; server must page/merge/dedup and cache by range/limit.
 
 ## Regression Guardrails (Must Pass)
 - Rankings MUST be full-universe (KR: KOSPI+KOSDAQ) and always use /api/market/rankings (no local subset sorting).

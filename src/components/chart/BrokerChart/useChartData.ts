@@ -4,10 +4,21 @@ import { fetchCandles, type Candle as ApiCandle } from "../../../services/api"
 import { isIntradayInterval } from "../../../lib/chartIntervals"
 import { toEpochMsInZone } from "../../../lib/timezone"
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue"
-import { usePolling } from "../../../hooks/usePolling"
 import type { BrokerCandle, BrokerChartTimeframe } from "./types"
 
 export type ChartDataStatus = "idle" | "loading" | "ready" | "error"
+
+type IdleCallbackDeadline = {
+  didTimeout: boolean
+  timeRemaining: () => number
+}
+
+type RequestIdleCallback = (
+  callback: (deadline: IdleCallbackDeadline) => void,
+  options?: { timeout?: number },
+) => number
+
+type CancelIdleCallback = (handle: number) => void
 
 type CacheEntry = {
   data: BrokerCandle[]
@@ -16,6 +27,7 @@ type CacheEntry = {
 }
 
 const chartCache = new Map<string, CacheEntry>()
+const chartPrefetchDone = new Set<string>()
 
 const resolveCandleLimit = (tf: BrokerChartTimeframe) => {
   switch (tf) {
@@ -143,23 +155,28 @@ export const useChartData = ({
   region,
   tf,
   timeZone,
-  pollMs,
   days,
 }: {
   symbol: string
   region: "KR" | "US"
   tf: BrokerChartTimeframe
   timeZone: string
-  pollMs: number
   days: number
 }) => {
   const debugStorm = import.meta.env.VITE_DEBUG_STORM === "1"
-  const [data, setData] = useState<BrokerCandle[]>([])
-  const [status, setStatus] = useState<ChartDataStatus>("idle")
+  const initialKey = `brokerChart:${region}:${symbol}:${tf}:${days}:${timeZone}`
+  const initialCache = chartCache.get(initialKey)
+  const [data, setData] = useState<BrokerCandle[]>(
+    () => initialCache?.data ?? [],
+  )
+  const [status, setStatus] = useState<ChartDataStatus>(() =>
+    initialCache?.data?.length ? "ready" : "idle",
+  )
   const [error, setError] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const inflightRef = useRef(false)
   const inflightKeyRef = useRef<string | null>(null)
+  const activeKeyRef = useRef(initialKey)
   const requestIdRef = useRef(0)
   const backoffRef = useRef<{
     key: string
@@ -169,31 +186,56 @@ export const useChartData = ({
 
   const debouncedTf = useDebouncedValue(tf, 200)
   const debouncedDays = useDebouncedValue(days, 200)
-  const debouncedPollMs = useDebouncedValue(pollMs, 200)
 
-  const limit = useMemo(() => resolveCandleLimit(debouncedTf), [debouncedTf])
-  const cacheKey = useMemo(
-    () => `brokerChart:${region}:${symbol}:${debouncedTf}:${debouncedDays}`,
-    [debouncedDays, debouncedTf, region, symbol],
+  const activeKey = useMemo(
+    () => `brokerChart:${region}:${symbol}:${tf}:${days}:${timeZone}`,
+    [days, region, symbol, tf, timeZone],
   )
+  const fetchKey = useMemo(
+    () =>
+      `brokerChart:${region}:${symbol}:${debouncedTf}:${debouncedDays}:${timeZone}`,
+    [debouncedDays, debouncedTf, region, symbol, timeZone],
+  )
+  const limit = useMemo(() => resolveCandleLimit(debouncedTf), [debouncedTf])
   const ttlMs = useMemo(() => resolveClientTtl(debouncedTf), [debouncedTf])
+
+  useEffect(() => {
+    activeKeyRef.current = activeKey
+    abortRef.current?.abort()
+    inflightRef.current = false
+    inflightKeyRef.current = null
+    const cached = chartCache.get(activeKey)
+    if (cached?.data.length) {
+      setData(cached.data)
+      setStatus("ready")
+      setError(null)
+    } else if (symbol) {
+      setData([])
+      setStatus("loading")
+      setError(null)
+    } else {
+      setData([])
+      setStatus("idle")
+      setError(null)
+    }
+  }, [activeKey, symbol])
 
   const load = useCallback(async () => {
     if (!symbol) {
       return
     }
-    if (inflightRef.current && inflightKeyRef.current === cacheKey) {
+    if (inflightRef.current && inflightKeyRef.current === fetchKey) {
       if (debugStorm) {
-        console.info(`[storm] chart skip inflight key=${cacheKey}`)
+        console.info(`[storm] chart skip inflight key=${fetchKey}`)
       }
       return
     }
     const backoff = backoffRef.current
     const nowMs = Date.now()
-    if (backoff.key === cacheKey && backoff.nextAllowedAt > nowMs) {
+    if (backoff.key === fetchKey && backoff.nextAllowedAt > nowMs) {
       if (debugStorm) {
         console.info(
-          `[storm] chart skip backoff key=${cacheKey} waitMs=${Math.max(
+          `[storm] chart skip backoff key=${fetchKey} waitMs=${Math.max(
             0,
             backoff.nextAllowedAt - nowMs,
           )}`,
@@ -202,26 +244,25 @@ export const useChartData = ({
       return
     }
     const now = Date.now()
-    const cached = chartCache.get(cacheKey)
+    const cached = chartCache.get(fetchKey)
     if (
       cached &&
       now - cached.updatedAt <= cached.ttlMs &&
       cached.data.length
     ) {
       if (debugStorm) {
-        console.info(`[storm] chart cache hit key=${cacheKey}`)
+        console.info(`[storm] chart cache hit key=${fetchKey}`)
       }
-      setData(cached.data)
-      setStatus("ready")
-      setError(null)
+      if (activeKeyRef.current === fetchKey) {
+        setData(cached.data)
+        setStatus("ready")
+        setError(null)
+      }
       return
     }
 
-    if (cached && cached.data.length) {
-      setData(cached.data)
-      setStatus("ready")
-      setError(null)
-    } else {
+    const shouldUpdateState = activeKeyRef.current === fetchKey
+    if (shouldUpdateState && !(cached && cached.data.length)) {
       setData([])
       setStatus("loading")
     }
@@ -232,7 +273,7 @@ export const useChartData = ({
     const controller = new AbortController()
     abortRef.current = controller
     inflightRef.current = true
-    inflightKeyRef.current = cacheKey
+    inflightKeyRef.current = fetchKey
     try {
       if (debugStorm) {
         console.info(
@@ -251,38 +292,42 @@ export const useChartData = ({
         return
       }
       const normalized = normalizeCandleSeries(payload.series.points, timeZone)
-      chartCache.set(cacheKey, {
+      chartCache.set(fetchKey, {
         data: normalized,
         updatedAt: Date.now(),
         ttlMs,
       })
-      setData(normalized)
-      setStatus("ready")
-      setError(null)
-      if (backoffRef.current.key === cacheKey) {
-        backoffRef.current = { key: cacheKey, failures: 0, nextAllowedAt: 0 }
+      if (activeKeyRef.current === fetchKey) {
+        setData(normalized)
+        setStatus("ready")
+        setError(null)
+      }
+      if (backoffRef.current.key === fetchKey) {
+        backoffRef.current = { key: fetchKey, failures: 0, nextAllowedAt: 0 }
       }
     } catch (err) {
       if (controller.signal.aborted || requestId !== requestIdRef.current) {
         return
       }
       const message = err instanceof Error ? err.message : "차트 데이터 오류"
-      setStatus("error")
-      setError(message)
+      if (activeKeyRef.current === fetchKey) {
+        setStatus("error")
+        setError(message)
+      }
       if (debugStorm) {
         console.warn(
           `[storm] chart fetch failed symbol=${symbol} region=${region} tf=${debouncedTf} days=${debouncedDays} err=${message}`,
         )
       }
       const current = backoffRef.current
-      const failures = current.key === cacheKey ? current.failures + 1 : 1
+      const failures = current.key === fetchKey ? current.failures + 1 : 1
       const jitter = Math.random() * 200
       const delay = Math.min(
         60000,
         Math.round(500 * 2 ** Math.min(failures, 6) + jitter),
       )
       backoffRef.current = {
-        key: cacheKey,
+        key: fetchKey,
         failures,
         nextAllowedAt: Date.now() + delay,
       }
@@ -293,7 +338,7 @@ export const useChartData = ({
       }
     }
   }, [
-    cacheKey,
+    fetchKey,
     debugStorm,
     debouncedDays,
     debouncedTf,
@@ -304,7 +349,90 @@ export const useChartData = ({
     ttlMs,
   ])
 
-  usePolling(load, debouncedPollMs)
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  useEffect(() => {
+    if (!symbol) {
+      return
+    }
+    if (
+      typeof document !== "undefined" &&
+      document.visibilityState === "hidden"
+    ) {
+      return
+    }
+    const prefetchTf = isIntradayInterval(tf)
+      ? ("1d" as const)
+      : ("15m" as const)
+    const prefetchDays = 1
+    const prefetchKey = `brokerChart:${region}:${symbol}:${prefetchTf}:${prefetchDays}:${timeZone}`
+    if (chartPrefetchDone.has(prefetchKey)) {
+      return
+    }
+    const cached = chartCache.get(prefetchKey)
+    const now = Date.now()
+    if (
+      cached &&
+      now - cached.updatedAt <= cached.ttlMs &&
+      cached.data.length
+    ) {
+      return
+    }
+    let timer = 0
+    const run = () => {
+      if (
+        typeof document !== "undefined" &&
+        document.visibilityState === "hidden"
+      ) {
+        return
+      }
+      chartPrefetchDone.add(prefetchKey)
+      const ttl = resolveClientTtl(prefetchTf)
+      const existing = chartCache.get(prefetchKey)
+      const nowTs = Date.now()
+      if (
+        existing &&
+        nowTs - existing.updatedAt <= existing.ttlMs &&
+        existing.data.length
+      ) {
+        return
+      }
+      void fetchCandles(
+        symbol,
+        prefetchTf,
+        resolveCandleLimit(prefetchTf),
+        region,
+        prefetchDays,
+      )
+        .then((payload) => {
+          const normalized = normalizeCandleSeries(
+            payload.series.points,
+            timeZone,
+          )
+          chartCache.set(prefetchKey, {
+            data: normalized,
+            updatedAt: Date.now(),
+            ttlMs: ttl,
+          })
+        })
+        .catch(() => {
+          chartPrefetchDone.delete(prefetchKey)
+          return undefined
+        })
+    }
+    const idleApi = window as unknown as {
+      requestIdleCallback?: RequestIdleCallback
+      cancelIdleCallback?: CancelIdleCallback
+    }
+    if (typeof idleApi.requestIdleCallback === "function") {
+      const handle = idleApi.requestIdleCallback(() => run(), { timeout: 1500 })
+      return () => idleApi.cancelIdleCallback?.(handle)
+    }
+    timer = window.setTimeout(run, 800)
+    return () => window.clearTimeout(timer)
+  }, [region, symbol, tf, timeZone])
 
   useEffect(
     () => () => {

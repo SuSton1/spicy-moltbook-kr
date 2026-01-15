@@ -505,6 +505,19 @@ textarea {
   font-size: 12px;
 }
 
+.ma-menu-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ma-menu-actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+
 .tf-row button {
   padding: 6px 10px;
   border-radius: 999px;
@@ -595,7 +608,7 @@ textarea {
 .broker-chart-ohlc {
   padding: 6px 8px;
   border-radius: var(--radius-sm);
-  background: rgba(8, 12, 24, 0.45);
+  background: rgba(8, 12, 24, 0.38);
   backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 11px;
@@ -603,6 +616,13 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.broker-chart-ohlc-condensed {
+  display: none;
+  gap: 6px;
+  align-items: baseline;
+  flex-wrap: wrap;
 }
 
 .broker-chart-ohlc-overlay {
@@ -636,6 +656,14 @@ textarea {
   .broker-chart-volume {
     height: 22vh;
     height: 22dvh;
+  }
+
+  .broker-chart-ohlc-grid {
+    display: none;
+  }
+
+  .broker-chart-ohlc-condensed {
+    display: flex;
   }
 }
 

@@ -8,7 +8,7 @@ import {
   type TimeChartOptions,
   type UTCTimestamp,
 } from "lightweight-charts"
-import { formatTimeLabel } from "../../../lib/format"
+import { formatTimeLabel, numberFormat } from "../../../lib/format"
 import type { BrokerChartPane } from "./types"
 
 type CrosshairPayload = {
@@ -44,6 +44,18 @@ export const createBrokerChartEngine = ({
   timeZone: string
   onCrosshair: (payload: CrosshairPayload) => void
 }): BrokerChartEngine => {
+  const formatAxisNumber = (value: number) => {
+    if (!Number.isFinite(value)) {
+      return ""
+    }
+    return numberFormat.format(value)
+  }
+  const formatVolumeNumber = (value: number) => {
+    if (!Number.isFinite(value)) {
+      return ""
+    }
+    return numberFormat.format(Math.round(value))
+  }
   const baseOptions: DeepPartial<TimeChartOptions> = {
     layout: {
       background: { color: "#0f1422" },
@@ -80,6 +92,7 @@ export const createBrokerChartEngine = ({
     },
     localization: {
       timeFormatter: (time: number) => formatTimeLabel(time, timeZone),
+      priceFormatter: formatAxisNumber,
     },
     handleScroll: {
       pressedMouseMove: true,
@@ -121,10 +134,17 @@ export const createBrokerChartEngine = ({
     borderVisible: false,
     wickUpColor: "#ff6d6d",
     wickDownColor: "#4ea7ff",
+    priceFormat: {
+      type: "custom",
+      formatter: formatAxisNumber,
+    },
   })
 
   const volumeSeries = volumeChart.addHistogramSeries({
-    priceFormat: { type: "volume" },
+    priceFormat: {
+      type: "custom",
+      formatter: formatVolumeNumber,
+    },
   })
 
   const maSeries = [

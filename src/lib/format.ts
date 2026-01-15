@@ -1,4 +1,19 @@
 export const numberFormat = new Intl.NumberFormat("ko-KR")
+const fixedNumberFormats = new Map<number, Intl.NumberFormat>()
+
+const getFixedNumberFormat = (digits: number) => {
+  const normalized = Math.max(0, Math.min(6, Math.floor(digits)))
+  const cached = fixedNumberFormats.get(normalized)
+  if (cached) {
+    return cached
+  }
+  const formatter = new Intl.NumberFormat("ko-KR", {
+    minimumFractionDigits: normalized,
+    maximumFractionDigits: normalized,
+  })
+  fixedNumberFormats.set(normalized, formatter)
+  return formatter
+}
 
 export const formatNumber = (value?: number, fallback = "-") => {
   if (value === undefined || value === null || Number.isNaN(value)) {
@@ -12,7 +27,7 @@ export const formatSigned = (value?: number, digits = 2) => {
     return "-"
   }
   const sign = value > 0 ? "+" : value < 0 ? "-" : ""
-  return `${sign}${Math.abs(value).toFixed(digits)}`
+  return `${sign}${getFixedNumberFormat(digits).format(Math.abs(value))}`
 }
 
 export const formatSignedPercent = (value?: number, digits = 2) => {
@@ -20,7 +35,7 @@ export const formatSignedPercent = (value?: number, digits = 2) => {
     return "-"
   }
   const sign = value > 0 ? "+" : value < 0 ? "-" : ""
-  return `${sign}${Math.abs(value).toFixed(digits)}%`
+  return `${sign}${getFixedNumberFormat(digits).format(Math.abs(value))}%`
 }
 
 export const formatDateLabel = (value?: string) => {

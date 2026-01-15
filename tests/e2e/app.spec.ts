@@ -254,6 +254,15 @@ test("contract OHLC 패널이 캔들을 가리지 않음", async ({ page }) => {
     (node) => window.getComputedStyle(node).pointerEvents,
   )
   expect(pointerEvents).toBe("none")
+  const backgroundColor = await panel.evaluate(
+    (node) => window.getComputedStyle(node).backgroundColor,
+  )
+  expect(backgroundColor.startsWith("rgba(")).toBe(true)
+  const alpha = Number(
+    backgroundColor.split(",").pop()?.replace(")", "").trim(),
+  )
+  expect(alpha).toBeGreaterThan(0)
+  expect(alpha).toBeLessThan(1)
   expect(panelBox.height).toBeLessThanOrEqual(priceBox.height * 0.35)
   expect(panelBox.width).toBeLessThanOrEqual(priceBox.width * 0.75)
 })
@@ -443,6 +452,12 @@ test("contract MA 설정 변경 시 영구 저장", async ({ page }) => {
   await expect(page.getByTestId("ma-period-0")).toHaveValue("5")
   await page.getByTestId("ma-period-0").fill("7")
   await expect(page.getByTestId("ma-period-0")).toHaveValue("7")
+  await page.reload()
+  await page.getByRole("button", { name: "지표" }).click()
+  await expect(page.getByTestId("ma-period-0")).toHaveValue("5")
+
+  await page.getByTestId("ma-period-0").fill("7")
+  await page.getByTestId("ma-apply").click()
   await page.reload()
   await page.getByRole("button", { name: "지표" }).click()
   await expect(page.getByTestId("ma-period-0")).toHaveValue("7")

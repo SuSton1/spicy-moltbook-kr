@@ -115,6 +115,12 @@ export const OhlcOverlayPanel = ({
           </span>
         )}
       </div>
+      <div className="broker-chart-ohlc-condensed">
+        <span className="muted">종가</span>
+        <span>{ohlc ? formatNumber(ohlc.close) : "-"}</span>
+        <span className="muted">거래량</span>
+        <span>{ohlc ? formatNumber(ohlc.volume) : "-"}</span>
+      </div>
       <div className="broker-chart-ohlc-grid">
         <span className="muted">시가</span>
         <span>{ohlc ? formatNumber(ohlc.open) : "-"}</span>

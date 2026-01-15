@@ -6,6 +6,7 @@ import crypto from "node:crypto"
 import dotenv from "dotenv"
 import iconv from "iconv-lite"
 import * as cheerio from "cheerio"
+import { Agent, setGlobalDispatcher } from "undici"
 import {
   buildRankingCacheKey,
   decodeRankingCursor,
@@ -43,6 +44,13 @@ import {
   type KisRequestMeta,
 } from "./src/lib/kisLimiter"
 import {
+  mergeCandlePointsByTime,
+  resolveHistoryWindowDays,
+  subtractDaysYmd,
+  type DailyCandlePoint,
+} from "./src/lib/candleHistory"
+import { createKisTokenManager } from "./src/lib/kisToken"
+import {
   formatDateInZone,
   formatTimeInZone,
   toEpochMsInZone,
@@ -59,10 +67,13 @@ import {
   type UsSymbolGroup,
 } from "./server/usSymbolMaster"
 
-type KisTokenCache = {
-  token: string
-  expiresAt: number
-}
+setGlobalDispatcher(
+  new Agent({
+    connections: 32,
+    keepAliveTimeout: 10_000,
+    keepAliveMaxTimeout: 60_000,
+  }),
+)
 
 type FetchOptions = {
   method: string
@@ -592,9 +603,6 @@ const createApiProxy = (
       ]) || "HHDFS76950200",
   }
 
-  let tokenCache: KisTokenCache | null = null
-  let tokenPromise: Promise<string> | null = null
-  let rateNextAt = 0
   const cache = new Map<string, { expiresAt: number; value: unknown }>()
   const inflight = new Map<string, Promise<unknown>>()
   const swrBackoff = new Map<
@@ -628,7 +636,7 @@ const createApiProxy = (
   const rankingCacheTtl = dataMode === "kis" ? 4000 : 15000
   const rankingCacheStaleTtl = dataMode === "kis" ? 15000 : 30000
   const metricsTtl = 15000
-  const quoteTtl = dataMode === "kis" ? 4000 : 15000
+  const quoteTtl = dataMode === "kis" ? 5000 : 15000
   const quoteStaleTtl = dataMode === "kis" ? 20000 : 30000
   const usMarketCapTtl = dataMode === "kis" ? 60 * 60 * 1000 : 20 * 60 * 1000
 
@@ -788,65 +796,6 @@ const createApiProxy = (
     return true
   }
 
-  const scheduleRate = async () => {
-    const now = Date.now()
-    const wait = Math.max(0, rateNextAt - now)
-    rateNextAt = Math.max(now, rateNextAt) + 120
-    if (wait > 0) {
-      await new Promise((resolve) => setTimeout(resolve, wait))
-    }
-  }
-
-  const getToken = async () => {
-    const now = Date.now()
-    if (tokenCache && tokenCache.expiresAt - now > 60_000) {
-      return tokenCache.token
-    }
-    if (tokenPromise) {
-      return tokenPromise
-    }
-    tokenPromise = (async () => {
-      await scheduleRate()
-      const { response, payload } = await requestKisJson(
-        `${baseUrl}/oauth2/tokenP`,
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json; charset=UTF-8",
-          },
-          body: JSON.stringify({
-            grant_type: "client_credentials",
-            appkey: appKey,
-            appsecret: appSecret,
-          }),
-        },
-        {
-          trId: "TOKEN",
-          endpoint: "oauth2/tokenP",
-        },
-      )
-
-      if (!response.ok) {
-        const message =
-          payload?.msg1 || payload?.error_description || "KIS token error"
-        throw new Error(message)
-      }
-
-      const expiresIn = Number(payload?.expires_in)
-      tokenCache = {
-        token: payload.access_token as string,
-        expiresAt:
-          now + (Number.isFinite(expiresIn) ? expiresIn * 1000 : 3600_000),
-      }
-      return tokenCache.token
-    })()
-    try {
-      return await tokenPromise
-    } finally {
-      tokenPromise = null
-    }
-  }
-
   const fetchJson = async (
     url: string,
     options: FetchOptions,
@@ -1003,6 +952,14 @@ const createApiProxy = (
     rps: kisRpsLimit,
     burst: kisBurstLimit,
     onEvent: logKisEvent,
+  })
+
+  const tokenManager = createKisTokenManager({
+    baseUrl,
+    appKey: appKey ?? "",
+    appSecret: appSecret ?? "",
+    kisClient,
+    fetchJson,
   })
 
   const buildKisRequestKey = (
@@ -1457,8 +1414,8 @@ const createApiProxy = (
     }
   }
 
-  const buildHeaders = async (trId: string) => {
-    const token = await getToken()
+  const buildHeaders = async (trId: string, meta?: KisRequestMeta) => {
+    const token = await tokenManager.getToken(meta)
     return {
       authorization: `Bearer ${token}`,
       appkey: appKey,
@@ -1511,7 +1468,7 @@ const createApiProxy = (
       url.toString(),
       {
         method: "GET",
-        headers: await buildHeaders(trIds.quote),
+        headers: await buildHeaders(trIds.quote, meta),
       },
       {
         ...meta,
@@ -1544,7 +1501,7 @@ const createApiProxy = (
       url.toString(),
       {
         method: "GET",
-        headers: await buildHeaders(trIds.usPrice),
+        headers: await buildHeaders(trIds.usPrice, meta),
       },
       {
         ...meta,
@@ -1577,7 +1534,7 @@ const createApiProxy = (
       url.toString(),
       {
         method: "GET",
-        headers: await buildHeaders(trIds.usPriceDetail),
+        headers: await buildHeaders(trIds.usPriceDetail, meta),
       },
       {
         ...meta,
@@ -2244,14 +2201,13 @@ const createApiProxy = (
   const resolveKrMarketDivCode = (symbol: string) =>
     nxtSymbolSet.has(symbol) ? "UN" : "J"
 
-  const fetchDailySeries = async (
+  const fetchDailySeriesPage = async (
     symbol: string,
-    period: string,
+    period: "D" | "W" | "M",
+    startYmd: string,
+    endYmd: string,
     meta?: KisRequestMeta,
   ) => {
-    const end = new Date()
-    const start = new Date(end)
-    start.setDate(end.getDate() - 120)
     const url = new URL(
       `${baseUrl}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice`,
     )
@@ -2260,8 +2216,8 @@ const createApiProxy = (
       resolveKrMarketDivCode(symbol),
     )
     url.searchParams.set("FID_INPUT_ISCD", symbol)
-    url.searchParams.set("FID_INPUT_DATE_1", formatDate(start))
-    url.searchParams.set("FID_INPUT_DATE_2", formatDate(end))
+    url.searchParams.set("FID_INPUT_DATE_1", startYmd)
+    url.searchParams.set("FID_INPUT_DATE_2", endYmd)
     url.searchParams.set("FID_PERIOD_DIV_CODE", period)
     url.searchParams.set("FID_ORG_ADJ_PRC", "0")
 
@@ -2269,7 +2225,7 @@ const createApiProxy = (
       url.toString(),
       {
         method: "GET",
-        headers: await buildHeaders(trIds.daily),
+        headers: await buildHeaders(trIds.daily, meta),
       },
       {
         trId: trIds.daily,
@@ -2286,14 +2242,16 @@ const createApiProxy = (
 
     const output2 = coerceArray(payload.output2 ?? payload.Output2)
     const points = output2
-      .map((item) => ({
-        time: readString(item, "stck_bsop_date"),
-        open: parseNumber(readField(item, "stck_oprc")),
-        high: parseNumber(readField(item, "stck_hgpr")),
-        low: parseNumber(readField(item, "stck_lwpr")),
-        close: parseNumber(readField(item, "stck_clpr")),
-        volume: parseNumber(readField(item, "acml_vol")),
-      }))
+      .map(
+        (item): DailyCandlePoint => ({
+          time: readString(item, "stck_bsop_date"),
+          open: parseNumber(readField(item, "stck_oprc")),
+          high: parseNumber(readField(item, "stck_hgpr")),
+          low: parseNumber(readField(item, "stck_lwpr")),
+          close: parseNumber(readField(item, "stck_clpr")),
+          volume: parseNumber(readField(item, "acml_vol")),
+        }),
+      )
       .filter(
         (item) =>
           item.time &&
@@ -2304,7 +2262,54 @@ const createApiProxy = (
           item.high >= item.low,
       )
       .sort((a, b) => a.time.localeCompare(b.time))
-    return { points }
+    return points
+  }
+
+  const fetchDailySeries = async (
+    symbol: string,
+    period: "D" | "W" | "M",
+    minPoints: number | null,
+    meta?: KisRequestMeta,
+  ) => {
+    const timeZone = "Asia/Seoul"
+    const maxPages = 12
+    let endYmd = formatDateInZone(new Date(), timeZone)
+    const windowDays = resolveHistoryWindowDays(period, minPoints)
+    const pages: DailyCandlePoint[][] = []
+    let lastEarliest = ""
+    for (let page = 0; page < maxPages; page += 1) {
+      const startYmd = subtractDaysYmd(endYmd, windowDays, timeZone)
+      if (!startYmd) {
+        break
+      }
+      const points = await fetchDailySeriesPage(
+        symbol,
+        period,
+        startYmd,
+        endYmd,
+        meta,
+      )
+      if (points.length === 0) {
+        break
+      }
+      pages.push(points)
+      const merged = mergeCandlePointsByTime(pages)
+      if (minPoints && merged.length >= minPoints) {
+        return { points: merged }
+      }
+      const earliest = merged[0]?.time ?? ""
+      if (!earliest || earliest === lastEarliest) {
+        break
+      }
+      lastEarliest = earliest
+      const nextEnd = subtractDaysYmd(earliest, 1, timeZone)
+      if (!nextEnd || nextEnd === endYmd) {
+        break
+      }
+      endYmd = nextEnd
+    }
+    const merged = mergeCandlePointsByTime(pages)
+    return { points: merged }
   }
 
   const fetchIntradaySeries = async (
@@ -2326,7 +2331,7 @@ const createApiProxy = (
       url.toString(),
       {
         method: "GET",
-        headers: await buildHeaders(trIds.intraday),
+        headers: await buildHeaders(trIds.intraday, meta),
       },
       9000,
       {
@@ -2383,7 +2388,7 @@ const createApiProxy = (
       url.toString(),
       {
         method: "GET",
-        headers: await buildHeaders(trIds.dailyIntraday),
+        headers: await buildHeaders(trIds.dailyIntraday, meta),
       },
       9000,
       {
@@ -2538,7 +2543,7 @@ const createApiProxy = (
         url.toString(),
         {
           method: "GET",
-          headers: await buildHeaders(trIds.usIntraday),
+          headers: await buildHeaders(trIds.usIntraday, meta),
         },
         9000,
         {
@@ -2685,7 +2690,7 @@ const createApiProxy = (
       url.toString(),
       {
         method: "GET",
-        headers: await buildHeaders(trIds.index),
+        headers: await buildHeaders(trIds.index, meta),
       },
       {
         trId: trIds.index,
@@ -2734,7 +2739,7 @@ const createApiProxy = (
       url.toString(),
       {
         method: "GET",
-        headers: await buildHeaders(trIds.indexDaily),
+        headers: await buildHeaders(trIds.indexDaily, meta),
       },
       {
         trId: trIds.indexDaily,
@@ -3896,14 +3901,16 @@ const createApiProxy = (
             if (!isIntraday && !ensureTrId(res, "daily", requestId)) {
               return
             }
-            const period = tf === "1w" ? "W" : tf === "1mo" ? "M" : "D"
+            const period: "D" | "W" | "M" =
+              tf === "1w" ? "W" : tf === "1mo" ? "M" : "D"
+            const rangeKey = limit > 0 ? `limit=${limit}` : "max"
             const requestTime = isIntraday
               ? formatTimeInZone(new Date(), "Asia/Seoul")
               : ""
             const marketDivCode = resolveKrMarketDivCode(symbol)
             const series = await fetchWithCacheSWR(
-              `candles:${symbol}:${tf}`,
-              isIntraday ? 10000 : 60000,
+              `candles:${symbol}:${tf}:${rangeKey}`,
+              isIntraday ? 10000 : 300000,
               () =>
                 isIntraday
                   ? fetchIntradaySeries(symbol, requestTime, marketDivCode, {
@@ -3912,12 +3919,12 @@ const createApiProxy = (
                       symbol,
                       interval: tf,
                     })
-                  : fetchDailySeries(symbol, period, {
+                  : fetchDailySeries(symbol, period, limit > 0 ? limit : null, {
                       requestId,
                       endpoint: "/api/stocks/:symbol/candles",
                       symbol,
                     }),
-              isIntraday ? 20000 : 180000,
+              isIntraday ? 20000 : 1800000,
             )
             const points =
               limit > 0 ? series.points.slice(-limit) : series.points
