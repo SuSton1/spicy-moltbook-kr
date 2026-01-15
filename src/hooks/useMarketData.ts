@@ -33,6 +33,7 @@ import {
 import type { RankingSortDir, RankingSortKey } from "../lib/rankings"
 import { perfMark, perfStart } from "../lib/perf"
 import { usePolling } from "./usePolling"
+import { useDebouncedValue } from "./useDebouncedValue"
 
 export type ApiStatus = "idle" | "loading" | "ready" | "error"
 
@@ -884,38 +885,54 @@ export const useCandles = (
     Candle[]
   >([])
   const abortRef = useRef<AbortController | null>(null)
-  const limit = resolveCandleLimit(tf)
-  const perfKey = `chart:${symbol}:${tf}`
+  const inflightRef = useRef(false)
+  const inflightKeyRef = useRef<string | null>(null)
+  const requestIdRef = useRef(0)
+  const debouncedTf = useDebouncedValue(tf, 200)
+  const debouncedPollMs = useDebouncedValue(pollMs, 200)
+  const limit = resolveCandleLimit(debouncedTf)
+  const perfKey = `chart:${symbol}:${debouncedTf}`
   const cacheKey = useMemo(
-    () => `chart:${region}:${symbol}:${tf}`,
-    [region, symbol, tf],
+    () => `chart:${region}:${symbol}:${debouncedTf}`,
+    [debouncedTf, region, symbol],
   )
 
   const load = useCallback(async () => {
     if (!symbol) {
       return
     }
+    if (inflightRef.current && inflightKeyRef.current === cacheKey) {
+      return
+    }
+    const requestId = requestIdRef.current + 1
+    requestIdRef.current = requestId
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    inflightRef.current = true
+    inflightKeyRef.current = cacheKey
     try {
-      abortRef.current?.abort()
-      const controller = new AbortController()
-      abortRef.current = controller
       const cached = readChartCache(cacheKey)
       if (cached && cached.data.length > 0) {
-        startTransition(() => onSuccess(cached.data))
+        onSuccess(cached.data)
       } else {
         setStatus("loading")
       }
       perfStart(perfKey)
-      const days = isIntradayInterval(tf) ? 5 : 1
+      const days = isIntradayInterval(debouncedTf)
+        ? region === "US"
+          ? 5
+          : 1
+        : 1
       const payload = await fetchCandles(
         symbol,
-        tf,
+        debouncedTf,
         limit,
         region,
         days,
         controller.signal,
       )
-      if (controller.signal.aborted) {
+      if (controller.signal.aborted || requestId !== requestIdRef.current) {
         return
       }
       perfMark(perfKey, "response")
@@ -934,17 +951,26 @@ export const useCandles = (
         }
         return String(a.time).localeCompare(String(b.time))
       })
-      startTransition(() => onSuccess(sorted))
+      onSuccess(sorted)
       writeChartCache(cacheKey, sorted)
     } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") {
+      if (controller.signal.aborted) {
+        return
+      }
+      if (requestId !== requestIdRef.current) {
         return
       }
       perfMark(perfKey, "error", true)
       onError(err)
+    } finally {
+      if (requestId === requestIdRef.current) {
+        inflightRef.current = false
+        inflightKeyRef.current = null
+      }
     }
   }, [
     cacheKey,
+    debouncedTf,
     limit,
     onError,
     onSuccess,
@@ -952,12 +978,22 @@ export const useCandles = (
     region,
     setStatus,
     symbol,
-    tf,
   ])
 
-  usePolling(load, pollMs)
+  useEffect(() => {
+    void load()
+  }, [load])
 
-  useEffect(() => () => abortRef.current?.abort(), [])
+  usePolling(load, debouncedPollMs, false)
+
+  useEffect(
+    () => () => {
+      abortRef.current?.abort()
+      inflightRef.current = false
+      inflightKeyRef.current = null
+    },
+    [],
+  )
 
   return { data, status, error }
 }

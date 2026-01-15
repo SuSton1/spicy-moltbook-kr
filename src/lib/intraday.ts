@@ -14,6 +14,9 @@ const pad2 = (value: number) => String(value).padStart(2, "0")
 
 const normalizeTime = (value: string) => {
   const digits = value.replace(/\D/g, "")
+  if (digits.length >= 14) {
+    return digits.slice(0, 14)
+  }
   if (digits.length >= 12) {
     return digits.slice(0, 12)
   }
@@ -36,11 +39,16 @@ export const buildIntradayTimeKey = (dateRaw: string, timeRaw: string) => {
   if (date.length < 8) {
     return ""
   }
-  const time = timeRaw.replace(/\D/g, "").padStart(6, "0").slice(0, 6)
-  if (!time) {
+  const timeDigits = timeRaw.replace(/\D/g, "")
+  if (!timeDigits) {
     return date
   }
-  return `${date}${time.slice(0, 4)}`
+  if (timeDigits.length >= 6) {
+    const hhmmss = timeDigits.padStart(6, "0").slice(0, 6)
+    return `${date}${hhmmss}`
+  }
+  const hhmm = timeDigits.padStart(4, "0").slice(0, 4)
+  return `${date}${hhmm}00`
 }
 
 export const normalizeCandleSeries = (candles: IntradayCandle[]) => {
@@ -69,7 +77,8 @@ export const normalizeCandleSeries = (candles: IntradayCandle[]) => {
     ) {
       return
     }
-    if (!map.has(time)) {
+    const existing = map.get(time)
+    if (!existing) {
       map.set(time, {
         time,
         open,
@@ -78,7 +87,12 @@ export const normalizeCandleSeries = (candles: IntradayCandle[]) => {
         close,
         volume,
       })
+      return
     }
+    existing.high = Math.max(existing.high, high)
+    existing.low = Math.min(existing.low, low)
+    existing.close = close
+    existing.volume += volume
   })
   return Array.from(map.values()).sort((a, b) => a.time.localeCompare(b.time))
 }
@@ -87,9 +101,6 @@ export const aggregateIntradayCandles = (
   candles: IntradayCandle[],
   intervalMinutes: number,
 ) => {
-  if (intervalMinutes <= 1) {
-    return normalizeCandleSeries(candles)
-  }
   const normalized = normalizeCandleSeries(candles)
   const buckets = new Map<string, IntradayCandle>()
   normalized.forEach((candle) => {

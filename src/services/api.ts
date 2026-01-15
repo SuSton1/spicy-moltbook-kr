@@ -260,6 +260,7 @@ export const buildApiErrorMessage = (
   const upstreamStatus = payload.upstreamStatus as number | undefined
   const upstreamCode = payload.upstreamCode as string | undefined
   const upstreamMessage = payload.upstreamMessage as string | undefined
+  const retryAfterMs = payload.retryAfterMs as number | undefined
   const meta: string[] = []
   if (requestId) {
     meta.push(`requestId=${requestId}`)
@@ -272,6 +273,9 @@ export const buildApiErrorMessage = (
   }
   if (upstreamMessage) {
     meta.push(`upstreamMessage=${upstreamMessage}`)
+  }
+  if (retryAfterMs) {
+    meta.push(`retryAfterMs=${retryAfterMs}`)
   }
   const suffix = meta.length ? ` (${meta.join(" ")})` : ""
   return code ? `${code}: ${message}${suffix}` : `${message}${suffix}`

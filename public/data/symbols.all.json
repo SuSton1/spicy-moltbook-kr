@@ -8635,16 +8635,6 @@
     "market": "KOSPI"
   },
   {
-    "symbol": "450140",
-    "name": "코오롱모빌리티그룹",
-    "market": "KOSPI"
-  },
-  {
-    "symbol": "45014K",
-    "name": "코오롱모빌리티그룹우",
-    "market": "KOSPI"
-  },
-  {
     "symbol": "450180",
     "name": "KODEX 한중전기차(합성)",
     "market": "KOSPI"
@@ -10287,6 +10277,11 @@
   {
     "symbol": "J29012",
     "name": "DH오토리드 9WR",
+    "market": "KOSPI"
+  },
+  {
+    "symbol": "J36860",
+    "name": "아이씨에이치 5R",
     "market": "KOSPI"
   },
   {

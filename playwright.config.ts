@@ -10,7 +10,7 @@ export default defineConfig({
   webServer: {
     command: "npm run dev -- --host 127.0.0.1 --port 4173",
     url: "http://127.0.0.1:4173",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     env: {
       DATA_MODE: process.env.E2E_DATA_MODE ?? "contract",
       VITE_DATA_MODE: process.env.E2E_DATA_MODE ?? "contract",

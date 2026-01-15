@@ -256,6 +256,13 @@ test("contract 차트 분봉 간격 선택", async ({ page }) => {
   expect(rangeText ?? "").toMatch(/09:00/)
   expect(rangeText ?? "").toMatch(/15:/)
   expect(rangeText ?? "").not.toMatch(/22:/)
+  await expect(page.getByTestId("chart-error")).toHaveCount(0)
+
+  await page.getByTestId("intraday-interval-trigger").click()
+  await page.getByTestId("intraday-interval-option-5m").click()
+  await page.getByTestId("intraday-interval-trigger").click()
+  await page.getByTestId("intraday-interval-option-10m").click()
+  await expect(page.getByTestId("chart-error")).toHaveCount(0)
 
   await page.getByTestId("intraday-interval-trigger").click()
   await page.getByTestId("intraday-interval-option-3m").click()
@@ -264,6 +271,26 @@ test("contract 차트 분봉 간격 선택", async ({ page }) => {
   await page.getByTestId("intraday-interval-trigger").click()
   await page.getByTestId("intraday-interval-option-1h").click()
   await expect(page.getByTestId("chart-candle-count")).not.toHaveText("0")
+})
+
+test("contract 분봉 전환 시 요청 스팸 없음", async ({ page }) => {
+  const intradayRequests: string[] = []
+  page.on("request", (request) => {
+    if (request.url().includes("/api/chart/intraday")) {
+      intradayRequests.push(request.url())
+    }
+  })
+
+  await page.goto(`/stocks/${symbol}`)
+  await page.getByTestId("intraday-interval-trigger").click()
+  await page.getByTestId("intraday-interval-option-1m").click()
+  await page.getByTestId("intraday-interval-trigger").click()
+  await page.getByTestId("intraday-interval-option-5m").click()
+  await page.getByTestId("intraday-interval-trigger").click()
+  await page.getByTestId("intraday-interval-option-3m").click()
+  await page.waitForTimeout(600)
+
+  expect(intradayRequests.length).toBeLessThanOrEqual(2)
 })
 
 test("contract 종목 상세 개요 탭 클릭", async ({ page }) => {

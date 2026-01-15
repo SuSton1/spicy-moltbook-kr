@@ -57,6 +57,10 @@ Common root-cause checklists:
   - wrong TR_ID, wrong headers, wrong region/exchange mapping
   - interval/days mapping invalid
   - rate limit / timeout -> needs backoff + concurrency limits
+- If upstreamCode == EGW00201 (rate limit):
+  - implement server-side limiter/queue + in-flight dedup + cache/SWR
+  - implement client abort/debounce
+  - add limiter tests and verify RPS via dev logs
 - Data Correctness:
   - string sorting instead of numeric
   - unit conversion bug (억/조, commas, scaling)
@@ -104,6 +108,7 @@ Whenever a fix changes behavior intentionally, update invariants and update test
 - NXT session uses 08:00~20:00 KST (metadata in server/data/symbols.nxt.json).
 - Timestamps must align to the correct market session timezone (KR: Asia/Seoul, US: America/New_York).
 - Contract mode must never emit UPSTREAM_ERROR for intraday endpoints.
+- No request spam: avoid <1s polling, abort/debounce rapid switches, use batch quotes, and keep intraday upstream fan-out bounded.
 
 ## Regression Guardrails (Must Pass)
 - Rankings MUST be full-universe (KR+US) and always use /api/market/rankings (no local subset sorting).
@@ -124,6 +129,7 @@ Whenever a fix changes behavior intentionally, update invariants and update test
 - [ ] Viewed/searched actions do NOT influence rankings
 - [ ] More paginates globally
 - [ ] Rankings page 1 loads fast (warm cache verified)
+- [ ] No upstream burst on chart switches; RPS limiter verified
 - [ ] Detail Overview click works (no hang)
 - [ ] Unit tests pass
 - [ ] Playwright contract tests pass

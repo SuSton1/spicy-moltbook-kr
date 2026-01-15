@@ -25,8 +25,10 @@ const buildCandle = (
 
 describe("intraday helpers", () => {
   it("builds a compact time key", () => {
-    expect(buildIntradayTimeKey("2024-02-01", "09:30:05")).toBe("202402010930")
-    expect(buildIntradayTimeKey("20240201", "930")).toBe("202402010009")
+    expect(buildIntradayTimeKey("2024-02-01", "09:30:05")).toBe(
+      "20240201093005",
+    )
+    expect(buildIntradayTimeKey("20240201", "930")).toBe("20240201093000")
   })
 
   it("normalizes and de-duplicates candles", () => {
@@ -38,6 +40,11 @@ describe("intraday helpers", () => {
     const normalized = normalizeCandleSeries(candles)
     expect(normalized).toHaveLength(2)
     expect(normalized[0].time).toBe("202402190900")
+    expect(normalized[0].open).toBe(10)
+    expect(normalized[0].close).toBe(12)
+    expect(normalized[0].high).toBeGreaterThanOrEqual(12)
+    expect(normalized[0].low).toBeLessThanOrEqual(10)
+    expect(normalized[0].volume).toBe(220)
     expect(normalized[1].time).toBe("202402190901")
   })
 
@@ -55,6 +62,21 @@ describe("intraday helpers", () => {
     expect(aggregated[0].time).toBe("202402190900")
     expect(aggregated[0].volume).toBe(600)
     expect(aggregated[1].time).toBe("202402190905")
+  })
+
+  it("aggregates tick-level candles into 1m buckets", () => {
+    const candles: IntradayCandle[] = [
+      buildCandle("20240219090001", 10, 11, 100),
+      buildCandle("20240219090020", 11, 12, 120),
+      buildCandle("20240219090105", 12, 13, 130),
+    ]
+    const aggregated = aggregateIntradayCandles(candles, 1)
+    expect(aggregated).toHaveLength(2)
+    expect(aggregated[0].time).toBe("202402190900")
+    expect(aggregated[0].open).toBe(10)
+    expect(aggregated[0].close).toBe(12)
+    expect(aggregated[0].volume).toBe(220)
+    expect(aggregated[1].time).toBe("202402190901")
   })
 
   it("limits candles to the most recent days", () => {

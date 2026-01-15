@@ -36,6 +36,13 @@ import {
   shiftIntradayToSessionStart,
 } from "./src/lib/intraday"
 import {
+  createKisClient,
+  isRateLimitPayload,
+  KisRateLimitError,
+  type KisClientEvent,
+  type KisRequestMeta,
+} from "./src/lib/kisLimiter"
+import {
   formatDateInZone,
   formatTimeInZone,
   toEpochMsInZone,
@@ -183,6 +190,10 @@ const ENV_MODE_KEYS = ["KIS_ENV", "VITE_KIS_ENV"]
 
 const BASE_URL_KEYS = ["KIS_BASE_URL", "VITE_KIS_BASE_URL"]
 
+const KIS_RPS_LIMIT_KEYS = ["KIS_RPS_LIMIT", "VITE_KIS_RPS_LIMIT"]
+
+const KIS_BURST_KEYS = ["KIS_BURST", "VITE_KIS_BURST"]
+
 const readEnvValue = (env: Record<string, string>, keys: string[]) => {
   for (const key of keys) {
     const value = env[key]
@@ -191,6 +202,19 @@ const readEnvValue = (env: Record<string, string>, keys: string[]) => {
     }
   }
   return ""
+}
+
+const readEnvNumber = (
+  env: Record<string, string>,
+  keys: string[],
+  fallback: number,
+) => {
+  const raw = readEnvValue(env, keys)
+  if (!raw) {
+    return fallback
+  }
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) ? parsed : fallback
 }
 
 const resolveDataMode = (env: Record<string, string>) => {
@@ -469,6 +493,8 @@ const createApiProxy = (
     (envMode === "mock"
       ? "https://openapivts.koreainvestment.com:29443"
       : "https://openapi.koreainvestment.com:9443")
+  const kisRpsLimit = readEnvNumber(env, KIS_RPS_LIMIT_KEYS, 3)
+  const kisBurstLimit = readEnvNumber(env, KIS_BURST_KEYS, 1)
 
   const trIds = {
     quote: readEnvValue(env, [
@@ -495,6 +521,17 @@ const createApiProxy = (
       "VITE_KIS_TR_INTRADAY",
       "VITE_KIS_TR_ID_INTRADAY",
     ]),
+    dailyIntraday:
+      readEnvValue(env, [
+        "KIS_TR_DAILY_INTRADAY",
+        "KIS_TR_INTRADAY_DAILY",
+        "KIS_TR_ID_DAILY_INTRADAY",
+        "KIS_TR_ID_INTRADAY_DAILY",
+        "VITE_KIS_TR_DAILY_INTRADAY",
+        "VITE_KIS_TR_INTRADAY_DAILY",
+        "VITE_KIS_TR_ID_DAILY_INTRADAY",
+        "VITE_KIS_TR_ID_INTRADAY_DAILY",
+      ]) || "FHKST03010230",
     index: readEnvValue(env, [
       "KIS_TR_INDEX_INTRADAY",
       "KIS_TR_INDEX",
@@ -569,10 +606,6 @@ const createApiProxy = (
     { value: RankingCachePayload; expiresAt: number; staleAt: number }
   >()
   const rankingRefreshInflight = new Map<string, Promise<RankingCachePayload>>()
-  const globalMetricsRefresh = new Map<
-    MarketRegion,
-    { inflight: Promise<void> | null; lastRunAt: number }
-  >()
   const metricsCache = new Map<string, MetricsCacheEntry>()
   const quoteCache = new Map<
     string,
@@ -587,7 +620,6 @@ const createApiProxy = (
     null
   const rankingCacheTtl = dataMode === "kis" ? 4000 : 15000
   const rankingCacheStaleTtl = dataMode === "kis" ? 15000 : 30000
-  const metricsRefreshTtl = dataMode === "kis" ? 20000 : 60000
   const metricsTtl = 15000
   const quoteTtl = dataMode === "kis" ? 4000 : 15000
   const quoteStaleTtl = dataMode === "kis" ? 20000 : 30000
@@ -768,7 +800,7 @@ const createApiProxy = (
     }
     tokenPromise = (async () => {
       await scheduleRate()
-      const { response, payload } = await fetchJson(
+      const { response, payload } = await requestKisJson(
         `${baseUrl}/oauth2/tokenP`,
         {
           method: "POST",
@@ -780,6 +812,10 @@ const createApiProxy = (
             appkey: appKey,
             appsecret: appSecret,
           }),
+        },
+        {
+          trId: "TOKEN",
+          endpoint: "oauth2/tokenP",
         },
       )
 
@@ -834,6 +870,80 @@ const createApiProxy = (
     } finally {
       clearTimeout(timer)
     }
+  }
+
+  const kisRequestCounts = new Map<string, number>()
+
+  const logKisEvent = (event: KisClientEvent) => {
+    if (!isDevServer) {
+      return
+    }
+    const meta = event.meta
+    const requestId = meta?.requestId
+    if (event.type === "start" && requestId) {
+      kisRequestCounts.set(
+        requestId,
+        (kisRequestCounts.get(requestId) ?? 0) + 1,
+      )
+    }
+    const base = [
+      `requestId=${requestId ?? "-"}`,
+      `trId=${meta?.trId ?? "-"}`,
+      `endpoint=${meta?.endpoint ?? "-"}`,
+      `symbol=${meta?.symbol ?? "-"}`,
+      `interval=${meta?.interval ?? "-"}`,
+      `days=${meta?.days ?? "-"}`,
+    ].join(" ")
+    if (event.type === "start") {
+      console.info(`[kis] start ${base}`)
+      return
+    }
+    if (event.type === "end") {
+      console.info(`[kis] end ${base} duration=${event.durationMs ?? "-"}ms`)
+      return
+    }
+    if (event.type === "rate_limit") {
+      console.warn(
+        `[kis] rate_limit ${base} retryAfterMs=${event.retryAfterMs ?? "-"}`,
+      )
+      return
+    }
+    console.warn(`[kis] error ${base}`)
+  }
+
+  const flushKisRequestCount = (requestId: string, label: string) => {
+    if (!isDevServer) {
+      return
+    }
+    const count = kisRequestCounts.get(requestId)
+    if (count === undefined) {
+      return
+    }
+    console.info(
+      `[kis] requestId=${requestId} label=${label} upstreamCalls=${count}`,
+    )
+    kisRequestCounts.delete(requestId)
+  }
+
+  const kisClient = createKisClient({
+    rps: kisRpsLimit,
+    burst: kisBurstLimit,
+    onEvent: logKisEvent,
+  })
+
+  const buildKisRequestKey = (
+    trId: string | undefined,
+    url: string,
+    options: FetchOptions,
+  ) => {
+    const method = options.method ?? "GET"
+    const body =
+      options.body === undefined
+        ? ""
+        : typeof options.body === "string"
+          ? options.body
+          : JSON.stringify(options.body)
+    return `${trId ?? "NO_TR"}:${method}:${url}:${body}`
   }
 
   const fetchWithCache = async <T>(
@@ -926,6 +1036,46 @@ const createApiProxy = (
       }
     }
     return ""
+  }
+
+  const requestKisJson = async (
+    url: string,
+    options: FetchOptions,
+    meta: KisRequestMeta & {
+      trId?: string
+      cacheTtlMs?: number
+      staleMs?: number
+      maxRetries?: number
+      baseDelayMs?: number
+    } = {},
+    timeoutMs = 9000,
+  ) => {
+    const key = buildKisRequestKey(meta.trId, url, options)
+    return kisClient.request({
+      key,
+      task: () => fetchJson(url, options, timeoutMs),
+      cacheTtlMs: meta.cacheTtlMs,
+      staleMs: meta.staleMs,
+      maxRetries: meta.maxRetries,
+      baseDelayMs: meta.baseDelayMs,
+      isRateLimit: (result) => isRateLimitPayload(result.payload ?? {}),
+      getRateLimitMeta: (result) => ({
+        upstreamStatus: result.response?.status,
+        upstreamCode: readFirstString(result.payload ?? {}, [
+          "msg_cd",
+          "rt_cd",
+          "code",
+          "errorCode",
+        ]),
+        upstreamMessage: readFirstString(result.payload ?? {}, [
+          "msg1",
+          "message",
+          "error",
+          "detail",
+        ]),
+      }),
+      meta,
+    })
   }
 
   class UpstreamError extends Error {
@@ -1263,10 +1413,18 @@ const createApiProxy = (
     url.searchParams.set("FID_COND_MRKT_DIV_CODE", "J")
     url.searchParams.set("FID_INPUT_ISCD", symbol)
 
-    const { response, payload } = await fetchJson(url.toString(), {
-      method: "GET",
-      headers: await buildHeaders(trIds.quote),
-    })
+    const { response, payload } = await requestKisJson(
+      url.toString(),
+      {
+        method: "GET",
+        headers: await buildHeaders(trIds.quote),
+      },
+      {
+        trId: trIds.quote,
+        endpoint: "domestic-quote",
+        symbol,
+      },
+    )
 
     if (!response.ok || payload?.rt_cd !== "0") {
       const message = payload?.msg1 || payload?.message || "KIS quote error"
@@ -1286,10 +1444,18 @@ const createApiProxy = (
     url.searchParams.set("EXCD", exchangeCode)
     url.searchParams.set("SYMB", symbol)
 
-    const { response, payload } = await fetchJson(url.toString(), {
-      method: "GET",
-      headers: await buildHeaders(trIds.usPrice),
-    })
+    const { response, payload } = await requestKisJson(
+      url.toString(),
+      {
+        method: "GET",
+        headers: await buildHeaders(trIds.usPrice),
+      },
+      {
+        trId: trIds.usPrice,
+        endpoint: "overseas-price",
+        symbol,
+      },
+    )
 
     if (!response.ok || payload?.rt_cd !== "0") {
       const message = payload?.msg1 || payload?.message || "KIS US quote error"
@@ -1309,10 +1475,18 @@ const createApiProxy = (
     url.searchParams.set("EXCD", exchangeCode)
     url.searchParams.set("SYMB", symbol)
 
-    const { response, payload } = await fetchJson(url.toString(), {
-      method: "GET",
-      headers: await buildHeaders(trIds.usPriceDetail),
-    })
+    const { response, payload } = await requestKisJson(
+      url.toString(),
+      {
+        method: "GET",
+        headers: await buildHeaders(trIds.usPriceDetail),
+      },
+      {
+        trId: trIds.usPriceDetail,
+        endpoint: "overseas-price-detail",
+        symbol,
+      },
+    )
 
     if (!response.ok || payload?.rt_cd !== "0") {
       const message =
@@ -1358,38 +1532,19 @@ const createApiProxy = (
     }
   }
 
-  const sleep = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms))
-
-  const shouldRetryStatus = (status: number) => status === 429 || status >= 500
-
   const fetchJsonWithRetry = async (
     url: string,
     options: FetchOptions,
     timeoutMs = 9000,
+    meta?: KisRequestMeta & {
+      trId?: string
+      cacheTtlMs?: number
+      staleMs?: number
+      maxRetries?: number
+      baseDelayMs?: number
+    },
   ) => {
-    let attempt = 0
-    let lastError: unknown = null
-    while (attempt < 2) {
-      try {
-        const result = await fetchJson(url, options, timeoutMs)
-        if (attempt === 0 && shouldRetryStatus(result.response.status)) {
-          await sleep(120 + Math.random() * 200)
-          attempt += 1
-          continue
-        }
-        return result
-      } catch (error) {
-        lastError = error
-        if (attempt === 0) {
-          await sleep(120 + Math.random() * 200)
-          attempt += 1
-          continue
-        }
-        throw error
-      }
-    }
-    throw lastError ?? new Error("Upstream fetch failed")
+    return requestKisJson(url, options, meta ?? {}, timeoutMs)
   }
 
   const normalizeNullable = (value?: number | null) => {
@@ -1523,7 +1678,6 @@ const createApiProxy = (
   }
 
   const METRICS_CONCURRENCY = 4
-  const METRICS_BATCH_DELAY_MS = 120
   const QUOTE_BATCH_LIMIT = 100
 
   const runWithConcurrency = async <T>(
@@ -1628,69 +1782,6 @@ const createApiProxy = (
       }
     })
     return results
-  }
-
-  const refreshGlobalMetrics = async (
-    region: MarketRegion,
-    symbols: SymbolItem[],
-  ) => {
-    if (dataMode !== "kis" || region !== "KR") {
-      return
-    }
-    const now = Date.now()
-    const staleCodes = symbols
-      .map((item) => item.symbol)
-      .filter((code) => {
-        const cached = metricsCache.get(code)
-        if (cached && now - cached.updatedAt <= metricsTtl) {
-          return false
-        }
-        const quoteCached = readQuoteCacheEntry(region, code, now)
-        if (quoteCached && quoteCached.isFresh) {
-          return false
-        }
-        return true
-      })
-
-    if (staleCodes.length === 0) {
-      return
-    }
-    for (let i = 0; i < staleCodes.length; i += QUOTE_BATCH_LIMIT) {
-      const batch = staleCodes.slice(i, i + QUOTE_BATCH_LIMIT)
-      await fetchQuoteItems(region, batch)
-      if (i + QUOTE_BATCH_LIMIT < staleCodes.length) {
-        await sleep(METRICS_BATCH_DELAY_MS)
-      }
-    }
-  }
-
-  const startGlobalMetricsRefresh = (
-    region: MarketRegion,
-    symbols: SymbolItem[],
-  ) => {
-    if (dataMode !== "kis" || region !== "KR") {
-      return
-    }
-    const now = Date.now()
-    const current = globalMetricsRefresh.get(region) ?? {
-      inflight: null,
-      lastRunAt: 0,
-    }
-    if (current.inflight) {
-      return
-    }
-    if (now - current.lastRunAt < metricsRefreshTtl) {
-      return
-    }
-    const inflight = refreshGlobalMetrics(region, symbols)
-      .catch(() => undefined)
-      .finally(() => {
-        globalMetricsRefresh.set(region, {
-          inflight: null,
-          lastRunAt: Date.now(),
-        })
-      })
-    globalMetricsRefresh.set(region, { inflight, lastRunAt: current.lastRunAt })
   }
 
   const resolveBatchQuotes = async (
@@ -2014,7 +2105,14 @@ const createApiProxy = (
     await fetchQuoteItems(region, stale.slice(0, QUOTE_BATCH_LIMIT))
   }
 
-  const fetchDailySeries = async (symbol: string, period: string) => {
+  const resolveKrMarketDivCode = (symbol: string) =>
+    nxtSymbolSet.has(symbol) ? "UN" : "J"
+
+  const fetchDailySeries = async (
+    symbol: string,
+    period: string,
+    meta?: KisRequestMeta,
+  ) => {
     const end = new Date()
     const start = new Date(end)
     start.setDate(end.getDate() - 120)
@@ -2028,10 +2126,19 @@ const createApiProxy = (
     url.searchParams.set("FID_PERIOD_DIV_CODE", period)
     url.searchParams.set("FID_ORG_ADJ_PRC", "0")
 
-    const { response, payload } = await fetchJson(url.toString(), {
-      method: "GET",
-      headers: await buildHeaders(trIds.daily),
-    })
+    const { response, payload } = await requestKisJson(
+      url.toString(),
+      {
+        method: "GET",
+        headers: await buildHeaders(trIds.daily),
+      },
+      {
+        trId: trIds.daily,
+        endpoint: "domestic-daily",
+        symbol,
+        ...meta,
+      },
+    )
 
     if (!response.ok || payload?.rt_cd !== "0") {
       const message = payload?.msg1 || payload?.message || "KIS chart error"
@@ -2039,59 +2146,152 @@ const createApiProxy = (
     }
 
     const output2 = coerceArray(payload.output2 ?? payload.Output2)
-    return {
-      points: output2.map((item) => ({
+    const points = output2
+      .map((item) => ({
         time: readString(item, "stck_bsop_date"),
         open: parseNumber(readField(item, "stck_oprc")),
         high: parseNumber(readField(item, "stck_hgpr")),
         low: parseNumber(readField(item, "stck_lwpr")),
         close: parseNumber(readField(item, "stck_clpr")),
         volume: parseNumber(readField(item, "acml_vol")),
-      })),
-    }
+      }))
+      .filter(
+        (item) =>
+          item.time &&
+          item.open > 0 &&
+          item.high > 0 &&
+          item.low > 0 &&
+          item.close > 0 &&
+          item.high >= item.low,
+      )
+      .sort((a, b) => a.time.localeCompare(b.time))
+    return { points }
   }
 
-  const fetchIntradaySeries = async (symbol: string, inputTime: string) => {
+  const fetchIntradaySeries = async (
+    symbol: string,
+    inputTime: string,
+    marketDivCode: string,
+    meta?: KisRequestMeta,
+  ) => {
     const url = new URL(
       `${baseUrl}/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice`,
     )
-    url.searchParams.set("FID_COND_MRKT_DIV_CODE", "J")
+    url.searchParams.set("FID_COND_MRKT_DIV_CODE", marketDivCode)
     url.searchParams.set("FID_INPUT_ISCD", symbol)
     url.searchParams.set("FID_INPUT_HOUR_1", inputTime)
     url.searchParams.set("FID_PW_DATA_INCU_YN", "Y")
     url.searchParams.set("FID_ETC_CLS_CODE", "0")
 
-    const { response, payload } = await fetchJsonWithRetry(url.toString(), {
-      method: "GET",
-      headers: await buildHeaders(trIds.intraday),
-    })
+    const { response, payload } = await fetchJsonWithRetry(
+      url.toString(),
+      {
+        method: "GET",
+        headers: await buildHeaders(trIds.intraday),
+      },
+      9000,
+      {
+        trId: trIds.intraday,
+        endpoint: "domestic-intraday",
+        symbol,
+        ...meta,
+      },
+    )
 
     if (!response.ok || payload?.rt_cd !== "0") {
       throw buildUpstreamError(response, payload, "KIS chart error")
     }
 
     const output2 = coerceArray(payload.output2 ?? payload.Output2)
-    return {
-      points: output2.map((item) => ({
-        time: `${readString(item, "stck_bsop_date")}${readString(item, "stck_cntg_hour")}`,
-        open: parseNumber(readField(item, "stck_oprc")),
-        high: parseNumber(readField(item, "stck_hgpr")),
-        low: parseNumber(readField(item, "stck_lwpr")),
-        close: parseNumber(readField(item, "stck_prpr")),
+    const rawPoints = output2.map((item) => {
+      const date = readString(item, "stck_bsop_date")
+      const time = readString(item, "stck_cntg_hour")
+      const price = parseNumber(readField(item, "stck_prpr"))
+      const open = parseNumber(readField(item, "stck_oprc")) || price
+      const high = parseNumber(readField(item, "stck_hgpr")) || price
+      const low = parseNumber(readField(item, "stck_lwpr")) || price
+      return {
+        time: buildIntradayTimeKey(date, time),
+        open,
+        high,
+        low,
+        close: price,
         volume: parseNumber(readField(item, "cntg_vol")),
-      })),
+      }
+    })
+    const points = normalizeCandleSeries(toIntradayCandles(rawPoints))
+    return { points }
+  }
+
+  const fetchDailyIntradaySeries = async (
+    symbol: string,
+    date: string,
+    inputTime: string,
+    marketDivCode: string,
+    meta?: KisRequestMeta,
+  ) => {
+    const url = new URL(
+      `${baseUrl}/uapi/domestic-stock/v1/quotations/inquire-time-dailychartprice`,
+    )
+    url.searchParams.set("FID_COND_MRKT_DIV_CODE", marketDivCode)
+    url.searchParams.set("FID_INPUT_ISCD", symbol)
+    url.searchParams.set("FID_INPUT_DATE_1", date)
+    url.searchParams.set("FID_INPUT_HOUR_1", inputTime)
+    url.searchParams.set("FID_PW_DATA_INCU_YN", "Y")
+    url.searchParams.set("FID_FAKE_TICK_INCU_YN", "N")
+
+    const { response, payload } = await fetchJsonWithRetry(
+      url.toString(),
+      {
+        method: "GET",
+        headers: await buildHeaders(trIds.dailyIntraday),
+      },
+      9000,
+      {
+        trId: trIds.dailyIntraday,
+        endpoint: "domestic-daily-intraday",
+        symbol,
+        ...meta,
+      },
+    )
+
+    if (!response.ok || payload?.rt_cd !== "0") {
+      throw buildUpstreamError(response, payload, "KIS daily intraday error")
     }
+
+    const output2 = coerceArray(payload.output2 ?? payload.Output2)
+    const rawPoints = output2.map((item) => {
+      const dateValue = readString(item, "stck_bsop_date")
+      const time = readString(item, "stck_cntg_hour")
+      const price = parseNumber(readField(item, "stck_prpr"))
+      const open = parseNumber(readField(item, "stck_oprc")) || price
+      const high = parseNumber(readField(item, "stck_hgpr")) || price
+      const low = parseNumber(readField(item, "stck_lwpr")) || price
+      return {
+        time: buildIntradayTimeKey(dateValue, time),
+        open,
+        high,
+        low,
+        close: price,
+        volume: parseNumber(readField(item, "cntg_vol")),
+      }
+    })
+    const points = normalizeCandleSeries(toIntradayCandles(rawPoints))
+    return { points }
   }
 
   const fetchKrIntradayCandles = async (
     symbol: string,
     session: SessionWindow,
     days: number,
+    meta?: KisRequestMeta,
   ) => {
     const targetDays = Math.min(Math.max(days, 1), 5)
     const sessionMinutes = sessionDurationMinutes(session)
     const targetBars = Math.max(60, Math.ceil(sessionMinutes * targetDays))
-    const maxLoops = Math.min(120, Math.ceil(targetBars / 25) + 10)
+    const useDailyEndpoint = envMode !== "mock"
+    const recordsPerCall = useDailyEndpoint ? 120 : 30
+    const maxLoops = Math.min(60, Math.ceil(targetBars / recordsPerCall) + 5)
     const collected: CandlePoint[] = []
     const uniqueDays = new Set<string>()
     const currentDateKey = formatDateInZone(new Date(), session.timeZone)
@@ -2103,16 +2303,23 @@ const createApiProxy = (
     const requestEpoch = sessionCloseEpoch
       ? Math.min(nowEpoch, sessionCloseEpoch)
       : nowEpoch
+    let requestDate = formatDateInZone(new Date(requestEpoch), session.timeZone)
     let requestTime = formatTimeInZone(new Date(requestEpoch), session.timeZone)
     let lastEarliest = ""
     const sessionOpenMinutes = session.open.hour * 60 + session.open.minute
+    const marketDivCode = resolveKrMarketDivCode(symbol)
 
     for (let i = 0; i < maxLoops && collected.length < targetBars; i += 1) {
-      const series = await fetchIntradaySeries(symbol, requestTime)
-      const points = series.points.map((point) => ({
-        ...point,
-        time: buildIntradayTimeKey(point.time.slice(0, 8), point.time.slice(8)),
-      }))
+      const series = useDailyEndpoint
+        ? await fetchDailyIntradaySeries(
+            symbol,
+            requestDate,
+            requestTime,
+            marketDivCode,
+            meta,
+          )
+        : await fetchIntradaySeries(symbol, requestTime, marketDivCode, meta)
+      const points = series.points
       if (points.length === 0) {
         break
       }
@@ -2138,7 +2345,8 @@ const createApiProxy = (
       if (!earliestEpoch) {
         break
       }
-      const nextEpoch = earliestEpoch - 60_000
+      const nextEpoch = earliestEpoch - 1000
+      requestDate = formatDateInZone(new Date(nextEpoch), session.timeZone)
       requestTime = formatTimeInZone(new Date(nextEpoch), session.timeZone)
 
       const hour = Number(earliest.slice(8, 10))
@@ -2150,7 +2358,6 @@ const createApiProxy = (
       ) {
         break
       }
-      await sleep(120)
     }
 
     return normalizeCandleSeries(toIntradayCandles(collected))
@@ -2162,6 +2369,7 @@ const createApiProxy = (
     requestMinutes: number,
     aggregateMinutes: number,
     days: number,
+    meta?: KisRequestMeta,
   ) => {
     const normalized = normalizeUsTickerForProvider("kis", symbol)
     const recordsPerCall = 120
@@ -2187,10 +2395,20 @@ const createApiProxy = (
       url.searchParams.set("FILL", "")
       url.searchParams.set("KEYB", keyb)
 
-      const { response, payload } = await fetchJsonWithRetry(url.toString(), {
-        method: "GET",
-        headers: await buildHeaders(trIds.usIntraday),
-      })
+      const { response, payload } = await fetchJsonWithRetry(
+        url.toString(),
+        {
+          method: "GET",
+          headers: await buildHeaders(trIds.usIntraday),
+        },
+        9000,
+        {
+          trId: trIds.usIntraday,
+          endpoint: "overseas-intraday",
+          symbol,
+          ...meta,
+        },
+      )
 
       if (!response.ok || payload?.rt_cd !== "0") {
         throw buildUpstreamError(response, payload, "KIS US intraday error")
@@ -2248,8 +2466,14 @@ const createApiProxy = (
     requestMinutes: number,
     aggregateMinutes: number,
     days: number,
+    meta?: KisRequestMeta,
   ) => {
     const session = resolveSessionForSymbol(region, symbol)
+    const requestMeta = {
+      ...meta,
+      interval: `${aggregateMinutes}m`,
+      days,
+    }
     if (region === "US") {
       const exchangeCode = resolveUsExchangeCode(symbol)
       const candles = await fetchUsIntradayCandles(
@@ -2258,6 +2482,7 @@ const createApiProxy = (
         requestMinutes,
         aggregateMinutes,
         days,
+        requestMeta,
       )
       const shifted = shiftIntradayToSessionStart(
         candles,
@@ -2269,12 +2494,14 @@ const createApiProxy = (
       return { points }
     }
     const targetDays = Math.min(Math.max(days, 1), 5)
-    const candles = await fetchKrIntradayCandles(symbol, session, targetDays)
+    const candles = await fetchKrIntradayCandles(
+      symbol,
+      session,
+      targetDays,
+      requestMeta,
+    )
     const limited = limitCandlesByDays(candles, targetDays)
-    const aggregated =
-      aggregateMinutes > 1
-        ? aggregateIntradayCandles(limited, aggregateMinutes)
-        : limited
+    const aggregated = aggregateIntradayCandles(limited, aggregateMinutes)
     const shifted = shiftIntradayToSessionStart(
       aggregated,
       aggregateMinutes,
@@ -2301,7 +2528,7 @@ const createApiProxy = (
     return { points }
   }
 
-  const fetchIndexSnapshot = async (code: string) => {
+  const fetchIndexSnapshot = async (code: string, meta?: KisRequestMeta) => {
     const url = new URL(
       `${baseUrl}/uapi/domestic-stock/v1/quotations/inquire-time-indexchartprice`,
     )
@@ -2311,10 +2538,19 @@ const createApiProxy = (
     url.searchParams.set("FID_INPUT_HOUR_1", "60")
     url.searchParams.set("FID_PW_DATA_INCU_YN", "Y")
 
-    const { response, payload } = await fetchJson(url.toString(), {
-      method: "GET",
-      headers: await buildHeaders(trIds.index),
-    })
+    const { response, payload } = await requestKisJson(
+      url.toString(),
+      {
+        method: "GET",
+        headers: await buildHeaders(trIds.index),
+      },
+      {
+        trId: trIds.index,
+        endpoint: "index-intraday",
+        symbol: code,
+        ...meta,
+      },
+    )
 
     if (!response.ok || payload?.rt_cd !== "0") {
       const message = payload?.msg1 || payload?.message || "KIS index error"
@@ -2338,7 +2574,7 @@ const createApiProxy = (
     }
   }
 
-  const fetchIndexDailySeries = async (code: string) => {
+  const fetchIndexDailySeries = async (code: string, meta?: KisRequestMeta) => {
     const end = new Date()
     const start = new Date(end)
     start.setDate(end.getDate() - 20)
@@ -2351,10 +2587,19 @@ const createApiProxy = (
     url.searchParams.set("FID_INPUT_DATE_2", formatDate(end))
     url.searchParams.set("FID_PERIOD_DIV_CODE", "D")
 
-    const { response, payload } = await fetchJson(url.toString(), {
-      method: "GET",
-      headers: await buildHeaders(trIds.indexDaily),
-    })
+    const { response, payload } = await requestKisJson(
+      url.toString(),
+      {
+        method: "GET",
+        headers: await buildHeaders(trIds.indexDaily),
+      },
+      {
+        trId: trIds.indexDaily,
+        endpoint: "index-daily",
+        symbol: code,
+        ...meta,
+      },
+    )
 
     if (!response.ok || payload?.rt_cd !== "0") {
       const message = payload?.msg1 || payload?.message || "KIS index error"
@@ -2510,6 +2755,7 @@ const createApiProxy = (
       upstreamStatus?: number
       upstreamCode?: string
       upstreamMessage?: string
+      retryAfterMs?: number
     },
   ) => {
     sendJson(res, status, {
@@ -3071,8 +3317,15 @@ const createApiProxy = (
               if (!ensureTrId(res, "usIntraday", requestId)) {
                 return
               }
-            } else if (!ensureTrId(res, "intraday", requestId)) {
-              return
+            } else {
+              const useDailyEndpoint = envMode !== "mock"
+              if (
+                useDailyEndpoint
+                  ? !ensureTrId(res, "dailyIntraday", requestId)
+                  : !ensureTrId(res, "intraday", requestId)
+              ) {
+                return
+              }
             }
             const ttl = interval.minutes <= 15 ? 10000 : 30000
             const cacheKey = `intraday:${region}:${symbol}:${interval.key}:${resolvedDays}`
@@ -3086,6 +3339,11 @@ const createApiProxy = (
                   requestMinutes,
                   aggregateMinutes,
                   resolvedDays,
+                  {
+                    requestId,
+                    endpoint: "/api/chart/intraday",
+                    symbol,
+                  },
                 ),
               ttl * 2,
             )
@@ -3094,6 +3352,7 @@ const createApiProxy = (
               source: "kis",
               series,
             })
+            flushKisRequestCount(requestId, "/api/chart/intraday")
             return
           }
 
@@ -3114,7 +3373,11 @@ const createApiProxy = (
                   outputCode: "KOSPI" | "KOSDAQ",
                   name: string,
                 ): Promise<MarketIndex> => {
-                  const snapshot = await fetchIndexSnapshot(sourceCode)
+                  const snapshot = await fetchIndexSnapshot(sourceCode, {
+                    requestId,
+                    endpoint: "/api/market/indices",
+                    symbol: sourceCode,
+                  })
                   const base = {
                     price: snapshot.snapshot?.price ?? snapshot.lastClose,
                     change: snapshot.snapshot?.change ?? 0,
@@ -3134,7 +3397,12 @@ const createApiProxy = (
                   const daily = await fetchWithCache(
                     `indices:daily:${sourceCode}`,
                     180000,
-                    () => fetchIndexDailySeries(sourceCode),
+                    () =>
+                      fetchIndexDailySeries(sourceCode, {
+                        requestId,
+                        endpoint: "/api/market/indices",
+                        symbol: sourceCode,
+                      }),
                   )
                   const resolved = resolveIndexFallback(
                     base,
@@ -3223,7 +3491,6 @@ const createApiProxy = (
               cacheKey,
               limit,
             })
-            startGlobalMetricsRefresh(region, cacheEntry.items)
             logPerf(`rankings:kis:${region}:${mode}`, perfStartAt)
             sendJson(res, 200, {
               ok: true,
@@ -3375,13 +3642,23 @@ const createApiProxy = (
             const requestTime = isIntraday
               ? formatTimeInZone(new Date(), "Asia/Seoul")
               : ""
+            const marketDivCode = resolveKrMarketDivCode(symbol)
             const series = await fetchWithCacheSWR(
               `candles:${symbol}:${tf}`,
               isIntraday ? 10000 : 60000,
               () =>
                 isIntraday
-                  ? fetchIntradaySeries(symbol, requestTime)
-                  : fetchDailySeries(symbol, period),
+                  ? fetchIntradaySeries(symbol, requestTime, marketDivCode, {
+                      requestId,
+                      endpoint: "/api/stocks/:symbol/candles",
+                      symbol,
+                      interval: tf,
+                    })
+                  : fetchDailySeries(symbol, period, {
+                      requestId,
+                      endpoint: "/api/stocks/:symbol/candles",
+                      symbol,
+                    }),
               isIntraday ? 20000 : 180000,
             )
             const points =
@@ -3425,6 +3702,10 @@ const createApiProxy = (
           sendError(res, 404, "NOT_FOUND", "Unknown endpoint", requestId)
         } catch (error) {
           const message = error instanceof Error ? error.message : "Proxy error"
+          const isRateLimit =
+            error instanceof KisRateLimitError ||
+            (error instanceof UpstreamError &&
+              error.upstreamCode === "EGW00201")
           const upstreamMeta =
             error instanceof UpstreamError
               ? {
@@ -3432,7 +3713,14 @@ const createApiProxy = (
                   upstreamCode: error.upstreamCode,
                   upstreamMessage: error.upstreamMessage,
                 }
-              : undefined
+              : error instanceof KisRateLimitError
+                ? {
+                    upstreamStatus: error.upstreamStatus,
+                    upstreamCode: error.upstreamCode,
+                    upstreamMessage: error.upstreamMessage,
+                    retryAfterMs: error.retryAfterMs,
+                  }
+                : undefined
           if (isDevServer && intradayContext) {
             const { region, symbol, interval, days } = intradayContext
             const metaText = upstreamMeta
@@ -3441,6 +3729,18 @@ const createApiProxy = (
             console.warn(
               `[intraday:error] requestId=${requestId} region=${region} symbol=${symbol} interval=${interval} days=${days}${metaText}`,
             )
+          }
+          if (isRateLimit) {
+            sendError(
+              res,
+              429,
+              "RATE_LIMIT",
+              "요청이 많아 잠시 후 다시 시도해 주세요.",
+              requestId,
+              undefined,
+              upstreamMeta,
+            )
+            return
           }
           sendError(
             res,

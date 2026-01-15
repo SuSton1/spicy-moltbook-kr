@@ -18,6 +18,13 @@ export const usePolling = (
       if (!active) {
         return
       }
+      if (
+        typeof document !== "undefined" &&
+        document.visibilityState === "hidden"
+      ) {
+        timer = window.setTimeout(run, intervalMs)
+        return
+      }
       await taskRef.current()
       if (!active) {
         return
