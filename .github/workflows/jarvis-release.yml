@@ -73,8 +73,22 @@ jobs:
           set -euo pipefail
           ls -la jarvis-release
           mkdir -p jarvis-release/assets
-          find jarvis-release -type f -name "*.exe" -exec cp {} jarvis-release/assets/ \\;
-          find jarvis-release -type f -name "*.dmg" -exec cp {} jarvis-release/assets/ \\;
+          exe_count=$(find jarvis-release -type f -name "*.exe" | wc -l | tr -d ' ')
+          dmg_count=$(find jarvis-release -type f -name "*.dmg" | wc -l | tr -d ' ')
+          if [ "${exe_count}" -eq 0 ]; then
+            echo "No .exe artifacts found"
+            exit 1
+          fi
+          if [ "${dmg_count}" -eq 0 ]; then
+            echo "No .dmg artifacts found"
+            exit 1
+          fi
+          while IFS= read -r -d '' file; do
+            cp "$file" jarvis-release/assets/
+          done < <(find jarvis-release -type f -name "*.exe" -print0)
+          while IFS= read -r -d '' file; do
+            cp "$file" jarvis-release/assets/
+          done < <(find jarvis-release -type f -name "*.dmg" -print0)
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
