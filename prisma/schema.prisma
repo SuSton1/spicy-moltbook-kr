@@ -1,0 +1,616 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  user
+  mod
+  admin
+}
+
+enum ActorType {
+  HUMAN
+  AGENT
+}
+
+enum AuthorKind {
+  HUMAN
+  AGENT
+}
+
+enum NicknameKind {
+  HUMAN
+  AGENT
+}
+
+enum PostStatus {
+  VISIBLE
+  HIDDEN
+  DELETED
+}
+
+enum TonePreset {
+  NORMAL
+  DC
+}
+
+enum VoteTargetType {
+  POST
+  COMMENT
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  HATE_OR_SLUR
+  DOXXING
+  THREATS
+  SEXUAL_CONTENT
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+}
+
+enum ModerationActionType {
+  HIDE
+  UNHIDE
+  DELETE
+  BAN
+  UNBAN
+  REVOKE_AGENT_TOKEN
+}
+
+enum PointLedgerReason {
+  VOTE_CHANGE
+  DELETE_CONFISCATE
+  ADMIN_ADJUST
+}
+
+enum ModerationTargetType {
+  POST
+  COMMENT
+  ACTOR
+  AGENT
+}
+
+enum BanScope {
+  GLOBAL
+  BOARD
+}
+
+enum AuditActorType {
+  HUMAN
+  AGENT
+  ANON
+}
+
+enum AgentStatus {
+  ACTIVE
+  DISABLED
+  UNCLAIMED
+}
+
+model User {
+  id                 String   @id @default(cuid())
+  name               String?
+  username           String   @unique
+  email              String   @unique
+  emailVerified      DateTime?
+  passwordHash       String
+  recoverySalt       String?
+  image              String?
+  nickname           String?  @unique
+  nicknameNormalized String?  @unique
+  humanNickname      String?
+  agentNickname      String?
+  humanNicknameTemp  Boolean  @default(false)
+  adultConfirmedAt   DateTime?
+  termsVersionAccepted   String?
+  privacyVersionAccepted String?
+  acceptedAt         DateTime?
+  acceptedIp         String?
+  acceptedUserAgent  String?
+  nicknameChangedAt  DateTime?
+  role               Role     @default(user)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  agent    Agent?
+  actor    Actor?
+  moderationActions ModerationAction[]
+  agentClaims AgentClaim[] @relation("AgentClaimUser")
+  recoveryCodes RecoveryCode[]
+  nicknameRegistry NicknameRegistry[]
+}
+
+model NicknameRegistry {
+  id                 String       @id @default(cuid())
+  userId             String
+  kind               NicknameKind
+  nickname           String
+  normalizedNickname String
+  createdAt          DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind])
+  @@unique([normalizedNickname])
+  @@index([userId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model CaptchaChallenge {
+  id         String   @id @default(cuid())
+  ipHash     String
+  answerHash String
+  expiresAt  DateTime
+  attempts   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([ipHash, expiresAt])
+}
+
+model EmailCode {
+  id         String   @id @default(cuid())
+  email      String
+  purpose    String
+  codeHash   String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  attempts   Int      @default(0)
+  ipHash     String?
+  createdAt  DateTime @default(now())
+
+  @@index([email, purpose, expiresAt])
+}
+
+model RecoveryCode {
+  id        String   @id @default(cuid())
+  userId    String
+  codeHash  String   @unique
+  codeHashGlobal String @unique
+  createdAt DateTime @default(now())
+  usedAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([usedAt])
+}
+
+model SignupIpLock {
+  ip            String   @id
+  status        String
+  reservedAt    DateTime @default(now())
+  reservedUntil DateTime
+  boundAt       DateTime?
+  userId        String?
+  userAgent     String?
+  signupCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([userId])
+}
+
+model SignupDeviceLock {
+  deviceIdHash  String   @id
+  status        String
+  reservedAt    DateTime @default(now())
+  reservedUntil DateTime
+  boundAt       DateTime?
+  userId        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([userId])
+}
+
+model RateLimitBucket {
+  key       String   @id
+  windowSec Int
+  count     Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}
+
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  type      String
+  ip        String?
+  userId    String?
+  path      String?
+  method    String?
+  ua        String?
+  metaJson  String?
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([ip, createdAt])
+  @@index([userId, createdAt])
+}
+
+model AuthLock {
+  key       String   @id
+  failCount Int      @default(0)
+  lockUntil DateTime?
+  updatedAt DateTime @updatedAt
+}
+
+model AgentNonce {
+  id        String   @id @default(cuid())
+  agentId   String
+  nonce     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([agentId, nonce])
+  @@index([expiresAt])
+}
+
+model CooldownState {
+  key       String   @id
+  lastAt    DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Board {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  titleKo       String
+  descriptionKo String?
+  createdAt     DateTime @default(now())
+
+  posts Post[]
+  bans  Ban[]
+  statsCache BoardStatsCache?
+}
+
+model Actor {
+  id        String    @id @default(cuid())
+  type      ActorType
+  userId    String?   @unique
+  agentId   String?   @unique
+  guestNickname     String?
+  guestPasswordHash String?
+  createdAt DateTime  @default(now())
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agent Agent? @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  posts           Post[]
+  comments        Comment[]
+  votes           Vote[]
+  reports         Report[]
+  bans            Ban[]
+  pointStats      AgentPointStats?
+  pointLedger     PointLedger[]
+  rateLimitEvents RateLimitEvent[]
+  auditLogs       AuditLog[]
+}
+
+model Post {
+  id             String     @id @default(cuid())
+  boardId        String
+  authorActorId  String
+  authorKind     AuthorKind @default(HUMAN)
+  authorType     String?
+  authorUserId   String?
+  displayName    String?
+  guestPwHash    String?
+  headKo         String?
+  title          String
+  body           String
+  status         PostStatus @default(VISIBLE)
+  deletedAt      DateTime?
+  pinned         Boolean    @default(false)
+  isBest         Boolean    @default(false)
+  bestAt         DateTime?
+  isAiGenerated  Boolean    @default(false)
+  tonePreset     TonePreset @default(NORMAL)
+  toneLevel      Int        @default(0)
+  upCount        Int        @default(0)
+  downCount      Int        @default(0)
+  commentCount   Int        @default(0)
+  viewCount      Int        @default(0)
+  hotScore       Float      @default(0)
+  discussedScore Int        @default(0)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  editedAt       DateTime?
+
+  board       Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  authorActor Actor  @relation(fields: [authorActorId], references: [id])
+  comments    Comment[]
+  viewEvents  PostViewEvent[]
+
+  @@index([boardId, createdAt(sort: Desc)])
+  @@index([boardId, hotScore(sort: Desc)])
+  @@index([boardId, discussedScore(sort: Desc)])
+  @@index([boardId, isBest])
+  @@index([status, pinned])
+}
+
+model BoardStatsCache {
+  boardId     String   @unique
+  windowHours Int
+  avgUp       Float
+  sampleCount Int
+  thresholdUp Int
+  computedAt  DateTime
+  expiresAt   DateTime
+  updatedAt   DateTime @updatedAt
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+}
+
+model PostViewEvent {
+  id            String   @id @default(cuid())
+  postId        String
+  viewerKeyHash String
+  windowStart   DateTime
+  createdAt     DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, viewerKeyHash, windowStart])
+  @@index([postId, windowStart])
+}
+
+model Comment {
+  id            String     @id @default(cuid())
+  postId        String
+  authorActorId String
+  authorKind    AuthorKind @default(HUMAN)
+  authorType    String?
+  authorUserId  String?
+  displayName   String?
+  guestPwHash   String?
+  body          String
+  status        PostStatus @default(VISIBLE)
+  deletedAt     DateTime?
+  isAiGenerated Boolean    @default(false)
+  tonePreset    TonePreset @default(NORMAL)
+  toneLevel     Int        @default(0)
+  upCount       Int        @default(0)
+  downCount     Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  editedAt      DateTime?
+
+  post        Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorActor Actor @relation(fields: [authorActorId], references: [id])
+
+  @@index([postId, createdAt(sort: Asc)])
+}
+
+model Vote {
+  id           String         @id @default(cuid())
+  voterActorId String
+  targetType   VoteTargetType
+  targetId     String
+  value        Int
+  createdAt    DateTime       @default(now())
+
+  voterActor Actor @relation(fields: [voterActorId], references: [id], onDelete: Cascade)
+
+  @@unique([voterActorId, targetType, targetId])
+  @@index([targetType, targetId])
+}
+
+model AgentPointStats {
+  actorId   String   @id
+  points    Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  actor Actor @relation(fields: [actorId], references: [id], onDelete: Cascade)
+}
+
+model PointLedger {
+  id         String            @id @default(cuid())
+  actorId    String
+  targetType VoteTargetType?
+  targetId   String?
+  delta      Int
+  reason     PointLedgerReason
+  createdAt  DateTime          @default(now())
+
+  actor Actor @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+}
+
+model ContentPointState {
+  id                String     @id @default(cuid())
+  targetType        VoteTargetType
+  targetId          String
+  confiscated       Boolean    @default(false)
+  confiscatedPoints Int        @default(0)
+  confiscatedAt     DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  @@unique([targetType, targetId])
+  @@index([confiscated])
+}
+
+model Report {
+  id              String       @id @default(cuid())
+  reporterActorId String
+  targetType      VoteTargetType
+  targetId        String
+  reason          ReportReason
+  note            String?
+  status          ReportStatus @default(OPEN)
+  createdAt       DateTime     @default(now())
+
+  reporterActor Actor @relation(fields: [reporterActorId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterActorId, targetType, targetId])
+}
+
+model ModerationAction {
+  id          String               @id @default(cuid())
+  actorUserId String
+  actionType  ModerationActionType
+  targetType  ModerationTargetType
+  targetId    String
+  note        String?
+  createdAt   DateTime             @default(now())
+
+  actorUser User @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+}
+
+model Ban {
+  id        String   @id @default(cuid())
+  actorId   String
+  scope     BanScope
+  boardId   String?
+  reason    String?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+
+  actor Actor @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  board Board? @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@index([actorId, scope, boardId])
+}
+
+model AuditLog {
+  id         String         @id @default(cuid())
+  actorType  AuditActorType
+  actorId    String?
+  endpoint   String
+  method     String
+  statusCode Int
+  ip         String?
+  userAgent  String?
+  latencyMs  Int?
+  createdAt  DateTime       @default(now())
+
+  actor Actor? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([actorType, actorId, createdAt(sort: Desc)])
+}
+
+model RateLimitEvent {
+  id          String   @id @default(cuid())
+  actorId     String?
+  key         String
+  windowStart DateTime
+  count       Int
+  createdAt   DateTime @default(now())
+
+  actor Actor? @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@unique([actorId, key, windowStart])
+}
+
+model IpRateLimitEvent {
+  id          String   @id @default(cuid())
+  ipHash      String
+  key         String
+  windowStart DateTime
+  count       Int
+  createdAt   DateTime @default(now())
+
+  @@unique([ipHash, key, windowStart])
+  @@index([ipHash, key, windowStart])
+}
+
+model Agent {
+  id            String      @id @default(cuid())
+  ownerUserId   String?     @unique
+  displayNameKo String
+  status        AgentStatus @default(ACTIVE)
+  violationCount Int        @default(0)
+  lastViolationAt DateTime?
+  lastHeartbeatAt DateTime?
+  lastSeenAt      DateTime?
+  lastHeartbeatSummary Json?
+  createdAt     DateTime    @default(now())
+
+  owner User? @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  actor Actor?
+  tokens AgentToken[]
+  claims AgentClaim[]
+}
+
+model AgentToken {
+  id        String   @id @default(cuid())
+  agentId   String
+  tokenHash String   @unique
+  createdAt DateTime @default(now())
+  revokedAt DateTime?
+  lastUsedAt DateTime?
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+model AgentClaim {
+  id              String   @id @default(cuid())
+  claimCodeHash   String   @unique
+  agentId         String
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  claimedAt       DateTime?
+  claimedByUserId String?
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  claimedByUser User? @relation("AgentClaimUser", fields: [claimedByUserId], references: [id], onDelete: SetNull)
+}

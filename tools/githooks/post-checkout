@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${CI:-}" == "1" ]]; then
+  exit 0
+fi
+
+if [[ "${SKIP_HOOKS_INSTALL:-}" == "1" ]]; then
+  exit 0
+fi
+
+if command -v node >/dev/null 2>&1; then
+  node tools/install-githooks.mjs || true
+fi

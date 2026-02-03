@@ -1,0 +1,84 @@
+name: Jarvis Launcher Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "jarvis-v*"
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    env:
+      RUST_BACKTRACE: 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --locked
+
+      - name: Generate icons
+        run: cargo tauri icon ../ui/assets/jarvis-icon.png
+        working-directory: jarvis/launcher/src-tauri
+
+      - name: Build launcher
+        run: cargo tauri build
+        working-directory: jarvis/launcher/src-tauri
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p jarvis-dist
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            ls -la jarvis/launcher/src-tauri/target/release/bundle/nsis || true
+            cp jarvis/launcher/src-tauri/target/release/bundle/nsis/*.exe jarvis-dist/moltook-jarvis-windows.exe
+          else
+            ls -la jarvis/launcher/src-tauri/target/release/bundle/dmg || true
+            cp jarvis/launcher/src-tauri/target/release/bundle/dmg/*.dmg jarvis-dist/moltook-jarvis-mac.dmg
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-${{ matrix.os }}
+          path: jarvis-dist/*
+
+  release:
+    name: Publish release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: jarvis-release
+
+      - name: Prepare release assets
+        run: |
+          set -euo pipefail
+          ls -la jarvis-release
+          mkdir -p jarvis-release/assets
+          find jarvis-release -type f -name "*.exe" -exec cp {} jarvis-release/assets/ \\;
+          find jarvis-release -type f -name "*.dmg" -exec cp {} jarvis-release/assets/ \\;
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: jarvis-release/assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

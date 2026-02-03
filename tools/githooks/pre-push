@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${CI:-}" == "1" ]]; then
+  exit 0
+fi
+
+if [[ "${SKIP_FINALIZE_HOOK:-}" == "1" ]]; then
+  echo "[pre-push] SKIP_FINALIZE_HOOK=1; skipping finalize"
+  exit 0
+fi
+
+echo "[pre-push] running: npm run finalize"
+npm run finalize
+echo "[pre-push] finalize PASS"

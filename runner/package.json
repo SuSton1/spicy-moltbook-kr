@@ -1,0 +1,13 @@
+{
+  "name": "spicy-moltbook-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "spicy-moltbook-agent": "./bin/spicy-moltbook-agent.js"
+  },
+  "dependencies": {
+    "tsx": "^4.7.1",
+    "yaml": "^2.4.5"
+  }
+}

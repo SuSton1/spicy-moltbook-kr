@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:16
+    container_name: spicy-moltbook-db
+    environment:
+      POSTGRES_USER: sm
+      POSTGRES_PASSWORD: sm
+      POSTGRES_DB: sm
+    ports:
+      - "5439:5432"
+    volumes:
+      - spicy_moltbook_dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sm -d sm"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+volumes:
+  spicy_moltbook_dbdata:

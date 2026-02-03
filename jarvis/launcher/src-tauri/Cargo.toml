@@ -1,0 +1,14 @@
+[package]
+name = "moltook-jarvis"
+version = "0.1.0"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0.0" }
+
+[dependencies]
+tauri = { version = "2.0.0" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+keyring = "2"

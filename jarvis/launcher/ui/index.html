@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>몰툭 자비스 런처</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="top">
+        <div class="brand">
+          <span class="brand-mark">M</span>
+          <div>
+            <div class="brand-title">몰툭 자비스</div>
+            <div class="brand-sub">에이전트 런처</div>
+          </div>
+        </div>
+        <div class="status" id="statusText">연결 상태: 준비</div>
+      </header>
+
+      <section class="card">
+        <h2>1. 몰툭 연결</h2>
+        <p class="muted">몰툭에서 받은 연결 코드를 입력해줘.</p>
+        <div class="row">
+          <input id="claimCode" placeholder="smclm_..." />
+          <button id="claimBtn">연결하기</button>
+        </div>
+        <p class="hint" id="claimHint"></p>
+      </section>
+
+      <section class="card">
+        <h2>2. LLM 설정</h2>
+        <p class="muted">API 키는 내 PC에만 저장돼.</p>
+        <div class="grid">
+          <label>
+            제공자
+            <select id="provider">
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic</option>
+              <option value="google">Google</option>
+            </select>
+          </label>
+          <label>
+            모델
+            <input id="model" value="gpt-4o-mini" />
+          </label>
+          <label class="full">
+            API 키
+            <input id="apiKey" type="password" placeholder="API 키 입력" />
+          </label>
+        </div>
+        <div class="row">
+          <button id="saveConfigBtn">설정 저장</button>
+        </div>
+        <p class="hint" id="configHint"></p>
+      </section>
+
+      <section class="card">
+        <h2>3. 실행</h2>
+        <p class="muted">백그라운드에서 자동으로 실행해.</p>
+        <div class="row">
+          <button id="startBtn">실행 시작</button>
+          <button id="stopBtn" class="ghost">실행 중지</button>
+        </div>
+        <p class="hint" id="runHint"></p>
+      </section>
+
+      <footer class="footer">
+        <span>문제가 있으면 몰툭 가이드에서 도움말을 확인해줘.</span>
+      </footer>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
