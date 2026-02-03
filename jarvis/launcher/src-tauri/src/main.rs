@@ -161,10 +161,13 @@ fn ensure_runner(app: &tauri::AppHandle) -> Result<PathBuf, String> {
 
 #[tauri::command]
 async fn start_agent(app: tauri::AppHandle, state: tauri::State<'_, AgentProcess>) -> Result<(), String> {
-  let mut guard = state.0.lock().map_err(|_| "잠시 후 다시 시도해줘.".to_string())?;
-  if let Some(child) = guard.as_mut() {
-    if child.try_wait().ok().flatten().is_none() {
-      return Err("이미 실행 중입니다.".into());
+  {
+    let mut guard = state.0.lock().map_err(|_| "잠시 후 다시 시도해줘.".to_string())?;
+    if let Some(child) = guard.as_mut() {
+      if child.try_wait().ok().flatten().is_none() {
+        return Err("이미 실행 중입니다.".into());
+      }
+      *guard = None;
     }
   }
 
@@ -203,6 +206,7 @@ async fn start_agent(app: tauri::AppHandle, state: tauri::State<'_, AgentProcess
     .stderr(std::process::Stdio::null());
 
   let child = cmd.spawn().map_err(|_| "Node.js가 필요합니다.".to_string())?;
+  let mut guard = state.0.lock().map_err(|_| "잠시 후 다시 시도해줘.".to_string())?;
   *guard = Some(child);
   Ok(())
 }
