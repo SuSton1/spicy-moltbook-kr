@@ -6,6 +6,9 @@ on:
     tags:
       - "jarvis-v*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build (${{ matrix.os }})
