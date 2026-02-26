@@ -1,0 +1,94 @@
+{
+  "version": "cloud_hyper_profile_v1",
+  "executionLane": "codex_cloud",
+  "shards": 128,
+  "topPerTrack": 5000,
+  "coverageSeedLanes": 512,
+  "symbolBucketTotal": 256,
+  "symbolBucketStride": 17,
+  "stage1MaxRounds": 640,
+  "stage1PlateauRounds": 240,
+  "stage2MaxRounds": 640,
+  "stage2PlateauRounds": 280,
+  "poolsetCountByTrack": {
+    "SURGE_EOD": 96,
+    "GAP_15_BET": 64,
+    "MOONSHOT": 48
+  },
+  "poolsetCountMaxByTrack": {
+    "SURGE_EOD": 192,
+    "GAP_15_BET": 128,
+    "MOONSHOT": 96
+  },
+  "poolsetActiveSizeByTrack": {
+    "SURGE_EOD": 24,
+    "GAP_15_BET": 16,
+    "MOONSHOT": 12
+  },
+  "poolsetBenchSizeByTrack": {
+    "SURGE_EOD": 64,
+    "GAP_15_BET": 48,
+    "MOONSHOT": 32
+  },
+  "poolsetMinAliveByTrack": {
+    "SURGE_EOD": 8,
+    "GAP_15_BET": 6,
+    "MOONSHOT": 4
+  },
+  "poolsetRefillCountByTrack": {
+    "SURGE_EOD": 12,
+    "GAP_15_BET": 8,
+    "MOONSHOT": 6
+  },
+  "stage2TopKByTrack": {
+    "SURGE_EOD": 24,
+    "GAP_15_BET": 16,
+    "MOONSHOT": 12
+  },
+  "dailyPassTopNByTrack": {
+    "SURGE_EOD": 600,
+    "GAP_15_BET": 400,
+    "MOONSHOT": 300
+  },
+  "dailyPassPoolsetCountByTrack": {
+    "SURGE_EOD": 256,
+    "GAP_15_BET": 192,
+    "MOONSHOT": 128
+  },
+  "dailyPassRecombineRounds": 32,
+  "poolsetBatchSize": 256,
+  "poolsetMaxConcurrentEval": 64,
+  "maxParallelShards": 128,
+  "maxWorkers": 128,
+  "stage2EvalConcurrency": 64,
+  "stage2ResultCacheEnabled": true,
+  "stage2SkipDuplicatePoolSetSignature": true,
+  "stage2ScheduleMode": "champion_first",
+  "stage2ContinueAfterFirstPass": true,
+  "poolExpandEnabled": false,
+  "poolExpandStepTopPerTrack": 128,
+  "poolExpandCapTopPerTrack": 100000,
+  "poolExpandCapStage2TopK": 256,
+  "speedProfileEnabled": true,
+  "speedProfileRequireParity": true,
+  "speedProfileExpansionGuard": false,
+  "speedProfileMaxStage2TopK": {
+    "SURGE_EOD": 64,
+    "GAP_15_BET": 48,
+    "MOONSHOT": 32
+  },
+  "dataSyncEnabled": false,
+  "dataSyncTradingDayOnly": false,
+  "dataSyncOncePerTradingDay": false,
+  "dataSyncSkipRetryAttempts": true,
+  "forceDataSyncNextAttempt": false,
+  "limits": {
+    "minShards": 2,
+    "maxShards": 512,
+    "minTopPerTrack": 8,
+    "maxTopPerTrack": 100000,
+    "maxStage1MaxRounds": 5000,
+    "maxStage2MaxRounds": 5000
+  },
+  "deriveEnabled": false
+}

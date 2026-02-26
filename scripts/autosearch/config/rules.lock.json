@@ -1,0 +1,17 @@
+{
+  "version": "autosearch_automation_rules_v1",
+  "asOfInput": "2026-02-13",
+  "tracks": ["SURGE_EOD", "GAP_15_BET"],
+  "requiredTracks": ["SURGE_EOD", "GAP_15_BET"],
+  "passMode": "all",
+  "targetPct": 5,
+  "minWorst2wAvgPct": -1.5,
+  "highWeekPct": 10,
+  "minHighWeeks": 0,
+  "nearHighWeeks": 0,
+  "minOtherWeekPct": 0.01,
+  "requireCompletedTradesEveryWeek": 1,
+  "requireLockboxOk": true,
+  "requireMaxTargetPassed": 5,
+  "noKisRequired": true
+}
