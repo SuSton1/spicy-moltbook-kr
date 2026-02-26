@@ -142,11 +142,12 @@ echo -e "env\ttask_id\ttask_url" > "$TASK_FILE"
 echo "[cloud-multi] launch started ts=$TS envCount=${#ENVS[@]}" | tee -a "$STATUS_FILE"
 
 for env in "${ENVS[@]}"; do
-  cmd="bash tools/cloud/run_cloud_hyper_burst.sh --sessions=${SESSIONS} --mode=${MODE} --asof=${ASOF} --max-attempts=${MAX_ATTEMPTS} --verify-once=${VERIFY_ONCE} --verify-profile=${VERIFY_PROFILE} --immutable-data=${IMMUTABLE_DATA} --auto-resource-max=${AUTO_RESOURCE_MAX} --enforce-cloud-resource-floor=${ENFORCE_CLOUD_RESOURCE_FLOOR} --min-cloud-cpu=${MIN_CLOUD_CPU} --min-cloud-mem-mb=${MIN_CLOUD_MEM_MB} --restore-after=1 --apply-profile=1"
+  burst_cmd="bash tools/cloud/run_cloud_hyper_burst.sh --sessions=${SESSIONS} --mode=${MODE} --asof=${ASOF} --max-attempts=${MAX_ATTEMPTS} --verify-once=${VERIFY_ONCE} --verify-profile=${VERIFY_PROFILE} --immutable-data=${IMMUTABLE_DATA} --auto-resource-max=${AUTO_RESOURCE_MAX} --enforce-cloud-resource-floor=${ENFORCE_CLOUD_RESOURCE_FLOOR} --min-cloud-cpu=${MIN_CLOUD_CPU} --min-cloud-mem-mb=${MIN_CLOUD_MEM_MB} --restore-after=1 --apply-profile=1"
   if [[ -n "$SNAPSHOT_ID" ]]; then
-    cmd+=" --snapshot-id=${SNAPSHOT_ID}"
+    burst_cmd+=" --snapshot-id=${SNAPSHOT_ID}"
   fi
-  task_url="$(codex cloud exec --env "$env" "$cmd" | tail -n 1)"
+  query="In terminal only: cd /workspace/spicy-moltbook-kr && mkdir -p artifacts/cloud_profiles && run_id=${TS} && run_log=artifacts/cloud_profiles/multi_env_exec_\${run_id}.log && eval '${burst_cmd}' > \"\${run_log}\" 2>&1; ec=\$?; RUN_LOG=\"\${run_log}\" EC=\"\${ec}\" node -e \"const fs=require('fs');const cp=require('child_process');function sh(c){try{return cp.execSync(c,{encoding:'utf8'}).trim()}catch{return ''}};const logs=sh('ls -1t artifacts/cloud_profiles/cloud_hyper_burst_*.log 2>/dev/null | head -n 3').split(/\\n/).filter(Boolean);const runs=sh('ls -1t artifacts/autosearch_sharded 2>/dev/null | head -n 5').split(/\\n/).filter(Boolean);const runLog=process.env.RUN_LOG||'';const exitCode=Number(process.env.EC||-1);const payload={capturedAt:new Date().toISOString(),exitCode,runLog,runLogExists:runLog?fs.existsSync(runLog):false,burstLogCount:logs.length,latestBurstLogs:logs.slice(0,3),runCount:runs.length,latestRuns:runs.slice(0,5)};fs.writeFileSync('artifacts/cloud_profiles/multi_env_exec_${TS}.json',JSON.stringify(payload,null,2));\"; echo done"
+  task_url="$(codex cloud exec --env "$env" "$query" | tail -n 1)"
   task_id="${task_url##*/}"
   echo -e "${env}\t${task_id}\t${task_url}" >> "$TASK_FILE"
   echo "[cloud-multi] launched env=${env} task=${task_id}" | tee -a "$STATUS_FILE"
