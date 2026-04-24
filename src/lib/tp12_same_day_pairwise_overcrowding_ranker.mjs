@@ -101,6 +101,15 @@ const RANK_FIELDS = [
   'closeLocation',
   'tradedValue',
   'tradedValueRel20',
+  'd0ClosePressurePct',
+  'd0TradingValue',
+  'd0TradingValueRel20',
+  'd0CloseLocation',
+  'd0RangePct',
+  'd0SideDailyAlignment',
+  'd0SideDailyPressure',
+  'd0IntradayCloseStrength',
+  'd0IntradayVwapHoldRatio',
   'closeFromLow20Pct',
   'closeToHigh20Pct',
 ];
@@ -109,8 +118,8 @@ function buildRanks(rows) {
   const ranks = new Map();
   for (const field of RANK_FIELDS) {
     const sorted = [...rows].sort((a, b) => {
-      const av = optionalFiniteNumber(a[field]);
-      const bv = optionalFiniteNumber(b[field]);
+      const av = parseFiniteNumber(a[field], `${rowKey(a)} ${field}`);
+      const bv = parseFiniteNumber(b[field], `${rowKey(b)} ${field}`);
       if (av !== bv) return av - bv;
       return stableRowSort(a, b);
     });
@@ -131,7 +140,7 @@ function buildRanks(rows) {
 
 function rank(row, ranks, field, direction = 'High') {
   const item = ranks.get(rowKey(row));
-  return optionalFiniteNumber(item?.[`${field}${direction}`]);
+  return parseFiniteNumber(item?.[`${field}${direction}`], `${rowKey(row)} rank.${field}${direction}`);
 }
 
 function currentScore(row) {
@@ -215,6 +224,22 @@ const DEFAULT_POLICIES = [
       0.3 * rank(row, ranks, 'tradedValueRel20', 'High') -
       1.1 * rank(row, ranks, 'supportClusterCount', 'High') -
       0.3 * rank(row, ranks, 'returnVol20', 'High')
+    ),
+    preferLowerCrowdOnTie: true,
+  },
+  {
+    id: 'd0_close_side_quality_v1',
+    description: 'Use D0 close pressure, D0 liquidity, side-daily alignment, and D0 intraday close strength.',
+    score: (row, ranks) => (
+      0.8 * rank(row, ranks, 'maxClusterRowWilsonLB', 'High') +
+      0.65 * rank(row, ranks, 'd0ClosePressurePct', 'High') +
+      0.55 * rank(row, ranks, 'd0CloseLocation', 'High') +
+      0.45 * rank(row, ranks, 'd0TradingValueRel20', 'High') +
+      0.45 * rank(row, ranks, 'd0SideDailyAlignment', 'High') +
+      0.35 * rank(row, ranks, 'd0IntradayCloseStrength', 'High') +
+      0.25 * rank(row, ranks, 'd0IntradayVwapHoldRatio', 'High') -
+      0.8 * rank(row, ranks, 'supportClusterCount', 'High') -
+      0.35 * rank(row, ranks, 'returnVol20', 'High')
     ),
     preferLowerCrowdOnTie: true,
   },
@@ -305,6 +330,7 @@ function validateCandidateRow(row, options, lineNumber) {
   parseFiniteNumber(row.maxClusterRowEb, 'maxClusterRowEb');
   parseFiniteNumber(row.maxClusterRowWilsonLB, 'maxClusterRowWilsonLB');
   parseFiniteNumber(row.supportClusterCount ?? row.supportPatternCount, 'supportClusterCount');
+  for (const field of RANK_FIELDS) parseFiniteNumber(row[field], `${rowKey(row)} ${field}`);
   return row;
 }
 
@@ -399,6 +425,11 @@ export async function runTp12SameDayPairwiseOvercrowdingRanker(options = {}) {
         supportPatternCount: optionalFiniteNumber(selected.row.supportPatternCount),
         maxClusterRowEb: optionalFiniteNumber(selected.row.maxClusterRowEb),
         maxClusterRowWilsonLB: optionalFiniteNumber(selected.row.maxClusterRowWilsonLB),
+        d0ClosePressurePct: optionalFiniteNumber(selected.row.d0ClosePressurePct),
+        d0TradingValueRel20: optionalFiniteNumber(selected.row.d0TradingValueRel20),
+        d0CloseLocation: optionalFiniteNumber(selected.row.d0CloseLocation),
+        d0SideDailyAlignment: optionalFiniteNumber(selected.row.d0SideDailyAlignment),
+        d0IntradayCloseStrength: optionalFiniteNumber(selected.row.d0IntradayCloseStrength),
         topClusterId: topClusterId(selected.row) || null,
         dayCandidateRows: rows.length,
         dayHasHit,

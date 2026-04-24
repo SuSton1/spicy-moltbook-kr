@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T02:28:57Z",
+  "updatedAt": "2026-04-24T03:32:36Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,32 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_train100_positive_motif_contrastive_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_train100_positive_motif_contrastive",
-      "probeId": null,
-      "status": "completed_train_only_bounded_incomplete_no_survivor_found",
-      "runs": [
-        "tp12_train100_positive_motif_contrastive_v1_bounded_train_only"
-      ],
-      "primaryMetrics": {
-        "trainRows": 149896,
-        "hitRows": 32793,
-        "hitRate": 0.21877168169931152,
-        "uniqueMotifAtomCount": 74,
-        "generatedAnchorCount": 572,
-        "train100AnchorCount": 0,
-        "foundPatternCount": 0,
-        "verifiedPatternCount": 0,
-        "anchorSearchComplete": true,
-        "vetoSearchComplete": false,
-        "oosRead": false,
-        "lockedSelectorEmitted": false
-      },
-      "summary": "Train-only positive motif contrastive bounded run completed on 149,896 candidate-union rows. Anchor search maxAnchorAtoms=2 completed with 572 anchors and 0 pure train100 anchors. Top-10 conditional veto bounded set-cover found 0 candidates and remained incomplete; exact verifier verified 0 survivors. Certificate conclusion incomplete_no_survivor_found; no OOS read, no locked selector, no fallback."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_year2hit_chart_microcontrast_v1",
@@ -500,6 +474,22 @@
         "nonhitPurgeMaxOperationalMissRows": 0
       },
       "summary": "Implemented train/internal-validation only TP12 executable year2hit pattern bundle bank path. Added operational event builder, executable pattern bank, non-hit purge gate, bundle selector, CLIs, contract, smoke, and verify integration. The path keeps non-executable rows as operational misses, fails on locked-future rows and forbidden entry/future fields, requires every selected pattern to already satisfy per-year operational 2-hit coverage, and does not read OOS or emit a locked selector."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_selector_feature_source_repair_v1",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "probeId": null,
+      "status": "completed",
+      "runs": [],
+      "primaryMetrics": {
+        "localVerify": "passed",
+        "serverVerify": "passed",
+        "monthlyGoal": "min_5_recommendations_full_month",
+        "target": "operational_tp12"
+      },
+      "summary": "D0 \ub9c8\uac10/\uac70\ub798\ub300\uae08/\uc885\uac00\uc704\uce58/\uc218\uae09/\uc778\ud2b8\ub77c\ub370\uc774 \uc120\ud0dd\uae30 \uc785\ub825 \uacc4\uc57d\uc744 \ucd94\uac00\ud558\uace0, D+1\u00b7entry\u00b7\ubbf8\ub798 \ud544\ub4dc \ubc0f \ub204\ub77d\uac12 0 \ub300\uccb4\ub97c \uae08\uc9c0\ud588\ub2e4. local/server verify \ud1b5\uacfc."
     }
   ],
   "recentExperimentLog": [
@@ -7039,6 +7029,17 @@
         "tp12_year2hit_executable_pattern_bundle_bank_v1_code_verify"
       ],
       "summary": "Implemented train/internal-validation only TP12 executable year2hit pattern bundle bank path. Added operational event builder, executable pattern bank, non-hit purge gate, bundle selector, CLIs, contract, smoke, and verify integration. The path keeps non-executable rows as operational misses, fails on locked-future rows and forbidden entry/future fields, requires every selected pattern to already satisfy per-year operational 2-hit coverage, and does not read OOS or emit a locked selector."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_selector_feature_source_repair_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "status": "completed",
+      "runs": [],
+      "summary": "D0 \ub9c8\uac10/\uac70\ub798\ub300\uae08/\uc885\uac00\uc704\uce58/\uc218\uae09/\uc778\ud2b8\ub77c\ub370\uc774 \uc120\ud0dd\uae30 \uc785\ub825 \uacc4\uc57d\uc744 \ucd94\uac00\ud558\uace0, D+1\u00b7entry\u00b7\ubbf8\ub798 \ud544\ub4dc \ubc0f \ub204\ub77d\uac12 0 \ub300\uccb4\ub97c \uae08\uc9c0\ud588\ub2e4. local/server verify \ud1b5\uacfc."
     }
   ],
   "doNotRepeat": [

@@ -38,6 +38,15 @@ const REQUIRED_NUMERIC_FIELDS = [
   "closeLocation",
   "tradedValue",
   "tradedValueRel20",
+  "d0ClosePressurePct",
+  "d0TradingValue",
+  "d0TradingValueRel20",
+  "d0CloseLocation",
+  "d0RangePct",
+  "d0SideDailyAlignment",
+  "d0SideDailyPressure",
+  "d0IntradayCloseStrength",
+  "d0IntradayVwapHoldRatio",
   "rangeRel20",
   "returnVol20",
   "closeToHigh20Pct",
@@ -73,6 +82,15 @@ const RANK_FIELDS = [
   "closeLocation",
   "tradedValue",
   "tradedValueRel20",
+  "d0ClosePressurePct",
+  "d0TradingValue",
+  "d0TradingValueRel20",
+  "d0CloseLocation",
+  "d0RangePct",
+  "d0SideDailyAlignment",
+  "d0SideDailyPressure",
+  "d0IntradayCloseStrength",
+  "d0IntradayVwapHoldRatio",
   "rangeRel20",
   "returnVol20",
   "closeToHigh20Pct",
@@ -273,7 +291,7 @@ const validateCandidateRow = ({ row, contextLabel, labels, options }) => {
 
 const percentileRanks = (rows, field) => {
   const sorted = [...rows].sort((left, right) => {
-    const diff = optionalNumeric(left[field]) - optionalNumeric(right[field])
+    const diff = numeric(left, field, "rank row") - numeric(right, field, "rank row")
     if (diff !== 0) return diff
     return left.symbol.localeCompare(right.symbol)
   })
@@ -286,7 +304,7 @@ const percentileRanks = (rows, field) => {
 }
 
 const meanAndStd = (rows, field) => {
-  const values = rows.map((row) => optionalNumeric(row[field], 0))
+  const values = rows.map((row) => numeric(row, field, "rank row"))
   const mean = values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length)
   const variance = values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / Math.max(1, values.length)
   return { mean, std: Math.sqrt(variance) || 1 }
@@ -303,11 +321,12 @@ const attachDateRelativeFeatures = (rows) => {
     row.rank = {}
     row.z = {}
     for (const field of RANK_FIELDS) {
-      const rankHigh = rankMaps.get(field).get(row.key) ?? 0
+      const rankHigh = rankMaps.get(field).get(row.key)
+      if (!Number.isFinite(rankHigh)) throw new Error(`missing rank for ${row.key} field ${field}`)
       const { mean, std } = statMaps.get(field)
       row.rank[`${field}High`] = rankHigh
       row.rank[`${field}Low`] = 1 - rankHigh
-      row.z[field] = (optionalNumeric(row[field], 0) - mean) / std
+      row.z[field] = (numeric(row, field, "rank row") - mean) / std
     }
     row.rank.exhaustionLow = 1 - row.rank.exhaustionScoreRawHigh
     row.rank.supportOvercrowdLow = 1 - row.rank.supportOvercrowdRatioHigh
@@ -317,9 +336,9 @@ const attachDateRelativeFeatures = (rows) => {
 
 const topClusterId = (row) => row.topClusterId || (Array.isArray(row.supportClusterIds) ? toText(row.supportClusterIds[0]) || null : null)
 
-const policyFeature = (row, key) => optionalNumeric(row.rank?.[key] ?? row[key], 0)
+const policyFeature = (row, key) => numeric(row.rank ?? row, key, `policy ${row.decisionDateKey}::${row.symbol}`)
 
-const rawFeature = (row, key) => optionalNumeric(row[key], 0)
+const rawFeature = (row, key) => numeric(row, key, `policy ${row.decisionDateKey}::${row.symbol}`)
 
 const POLICY_SET = [
   {
@@ -426,6 +445,21 @@ const POLICY_SET = [
       0.55 * policyFeature(row, "return1dHigh") -
       0.4 * policyFeature(row, "gapPctHigh") -
       0.35 * policyFeature(row, "supportOvercrowdRatioHigh")
+    ),
+  },
+  {
+    id: "listwise_d0_close_side_quality_v1",
+    description: "D0 close-pressure selector using close strength, trading value, side alignment, and intraday D0 close confirmation.",
+    score: (row) => (
+      0.9 * policyFeature(row, "maxClusterRowWilsonLBHigh") +
+      0.65 * policyFeature(row, "d0ClosePressurePctHigh") +
+      0.55 * policyFeature(row, "d0CloseLocationHigh") +
+      0.45 * policyFeature(row, "d0TradingValueRel20High") +
+      0.45 * policyFeature(row, "d0SideDailyAlignmentHigh") +
+      0.35 * policyFeature(row, "d0IntradayCloseStrengthHigh") +
+      0.25 * policyFeature(row, "d0IntradayVwapHoldRatioHigh") -
+      0.75 * policyFeature(row, "supportOvercrowdRatioHigh") -
+      0.4 * policyFeature(row, "returnVol20High")
     ),
   },
   {
@@ -630,6 +664,15 @@ const featureOutputRow = (row) => ({
   closeLocation: rawFeature(row, "closeLocation"),
   tradedValue: rawFeature(row, "tradedValue"),
   tradedValueRel20: rawFeature(row, "tradedValueRel20"),
+  d0ClosePressurePct: rawFeature(row, "d0ClosePressurePct"),
+  d0TradingValue: rawFeature(row, "d0TradingValue"),
+  d0TradingValueRel20: rawFeature(row, "d0TradingValueRel20"),
+  d0CloseLocation: rawFeature(row, "d0CloseLocation"),
+  d0RangePct: rawFeature(row, "d0RangePct"),
+  d0SideDailyAlignment: rawFeature(row, "d0SideDailyAlignment"),
+  d0SideDailyPressure: rawFeature(row, "d0SideDailyPressure"),
+  d0IntradayCloseStrength: rawFeature(row, "d0IntradayCloseStrength"),
+  d0IntradayVwapHoldRatio: rawFeature(row, "d0IntradayVwapHoldRatio"),
   rangeRel20: rawFeature(row, "rangeRel20"),
   returnVol20: rawFeature(row, "returnVol20"),
   marketUpRatio: rawFeature(row, "marketUpRatio"),

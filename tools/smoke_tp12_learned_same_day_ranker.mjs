@@ -37,6 +37,14 @@ const rankKeys = [
   "closeLocationHigh",
   "tradedValueRel20High",
   "tradedValueRel20Low",
+  "d0ClosePressurePctHigh",
+  "d0TradingValueRel20High",
+  "d0CloseLocationHigh",
+  "d0RangePctHigh",
+  "d0SideDailyAlignmentHigh",
+  "d0SideDailyPressureHigh",
+  "d0IntradayCloseStrengthHigh",
+  "d0IntradayVwapHoldRatioHigh",
   "rangeRel20High",
   "returnVol20High",
   "returnVol20Low",
@@ -82,6 +90,14 @@ const makeRank = ({ quality = 0.2, crowded = 0.8, exhausted = 0.8 } = {}) => {
   rank.closeLocationHigh = quality
   rank.tradedValueRel20High = quality
   rank.tradedValueRel20Low = 1 - quality
+  rank.d0ClosePressurePctHigh = quality
+  rank.d0TradingValueRel20High = quality
+  rank.d0CloseLocationHigh = quality
+  rank.d0RangePctHigh = quality
+  rank.d0SideDailyAlignmentHigh = quality
+  rank.d0SideDailyPressureHigh = quality
+  rank.d0IntradayCloseStrengthHigh = quality
+  rank.d0IntradayVwapHoldRatioHigh = quality
   rank.rangeRel20High = quality
   rank.returnVol20High = exhausted
   rank.returnVol20Low = 1 - exhausted
