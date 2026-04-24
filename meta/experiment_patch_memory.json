@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T04:06:19Z",
+  "updatedAt": "2026-04-24T04:36:59Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,27 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_zero_fp_full_train_replay_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_zero_fp_full_train_replay",
-      "probeId": null,
-      "status": "completed_full_train_replay_zero_fp_rules_failed",
-      "runs": [
-        "tp12_year2hit_zero_fp_full_train_replay_v1"
-      ],
-      "primaryMetrics": {
-        "sourceRuleCount": 469,
-        "scopedRowCount": 149896,
-        "eventRowCount": 536550,
-        "observedYearCount": 9,
-        "replayZeroFalsePositiveRuleCount": 0,
-        "replayZeroFalsePositiveYear2hitRuleCount": 0,
-        "replayRuleCountWithFalsePositive": 469
-      },
-      "summary": "Replayed 469 train-OOF zero-false-positive TP12 year2hit rules against full 2016-2024 train in-sample consensus rows. All 469 picked up false positives; zero rules remained both falsePositiveRows=0 and min 2 unique hit dates per observed year across 2016-2024."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_year2hit_zero_fp_micro_split_v1",
@@ -479,6 +458,28 @@
         "fullMonthPolicy": "explicit_full_months_only"
       },
       "summary": "Connected TP12 gated catalog OOS replay to the monthly quota scheduler path. Operational fields now survive tokenizer and candidate materialization, one-pick replay rows carry train-catalog-only schedulerScore, and the OOS replay wrapper can fail-fast run monthlyQuotaSchedule with explicit full-month keys. Local and server verify passed."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_year2hit_monthly_coverage_bundle_optimizer_v1",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_year2hit_monthly_coverage_bundle_optimizer",
+      "probeId": null,
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_year2hit_monthly_coverage_bundle_optimizer_v1"
+      ],
+      "primaryMetrics": {
+        "localVerify": true,
+        "serverVerify": true,
+        "minOperationalHitDatesPerYear": 2,
+        "minPatternOperationalPrecision": 1,
+        "maxPatternOperationalMissRows": 0,
+        "targetOperationalHitsPerFullMonth": 5,
+        "targetRecommendationsPerFullMonth": 5,
+        "lockedFutureFrom": "2025-01-02"
+      },
+      "summary": "Added train-period 100pct operational year2hit monthly coverage bundle optimizer. It accepts only passed year2hit patterns with zero operational misses/non-executable rows, greedily combines multiple patterns to reduce explicit full-month recommendation/hit deficits, fails instead of relaxing thresholds, and blocks locked-future rows."
     }
   ],
   "recentExperimentLog": [
@@ -7055,6 +7056,19 @@
         "tp12_monthly_quota_replay_integration_v1_code_verify"
       ],
       "summary": "Connected TP12 gated catalog OOS replay to the monthly quota scheduler path. Operational fields now survive tokenizer and candidate materialization, one-pick replay rows carry train-catalog-only schedulerScore, and the OOS replay wrapper can fail-fast run monthlyQuotaSchedule with explicit full-month keys. Local and server verify passed."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_year2hit_monthly_coverage_bundle_optimizer_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_year2hit_monthly_coverage_bundle_optimizer",
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_year2hit_monthly_coverage_bundle_optimizer_v1"
+      ],
+      "summary": "Added train-period 100pct operational year2hit monthly coverage bundle optimizer. It accepts only passed year2hit patterns with zero operational misses/non-executable rows, greedily combines multiple patterns to reduce explicit full-month recommendation/hit deficits, fails instead of relaxing thresholds, and blocks locked-future rows."
     }
   ],
   "doNotRepeat": [

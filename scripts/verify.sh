@@ -122,6 +122,8 @@ node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
   meta/tp12_year2hit_executable_pattern_bundle_bank_contract.json
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
+  meta/tp12_year2hit_monthly_coverage_bundle_optimizer_contract.json
+node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
   meta/tp12_selector_feature_source_repair_contract.json
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
   meta/tp12_monthly_quota_precision_scheduler_contract.json
@@ -777,6 +779,7 @@ node --check tools/build_tp12_year2hit_operational_events.mjs
 node --check tools/build_tp12_year2hit_executable_pattern_bank.mjs
 node --check tools/build_tp12_year2hit_executable_nonhit_purge_gate.mjs
 node --check tools/build_tp12_year2hit_pattern_bundle_bank.mjs
+node --check tools/build_tp12_year2hit_monthly_coverage_bundle_optimizer.mjs
 node --check tools/build_tp12_entry_feasibility_audit.mjs
 node --check tools/build_tp12_nested_split_plan.mjs
 node --check tools/build_tp12_pattern_clusters.mjs
@@ -797,6 +800,7 @@ node --check tools/smoke_tp12_operational_hit_contract.mjs
 node --check tools/smoke_tp12_operational_monthly_gate.mjs
 node --check tools/smoke_tp12_locked_future_eval_protocol.mjs
 node --check tools/smoke_tp12_year2hit_executable_pattern_bundle_bank.mjs
+node --check tools/smoke_tp12_year2hit_monthly_coverage_bundle_optimizer.mjs
 node --check tools/audit_tp12_side_daily_coverage.mjs
 node --check tools/assert_tp12_h80_train_gate.mjs
 node --check tools/assert_tp12_h80_wilson_contrastive_contract.mjs
@@ -868,6 +872,7 @@ node tools/smoke_tp12_operational_hit_contract.mjs
 node tools/smoke_tp12_operational_monthly_gate.mjs
 node tools/smoke_tp12_locked_future_eval_protocol.mjs
 node tools/smoke_tp12_year2hit_executable_pattern_bundle_bank.mjs
+node tools/smoke_tp12_year2hit_monthly_coverage_bundle_optimizer.mjs
 node tools/smoke_tp12_year2hit_train_gate.mjs
 node tools/smoke_tp12_h80_foundation.mjs
 node tools/smoke_tp12_hard_negative_dataset.mjs
