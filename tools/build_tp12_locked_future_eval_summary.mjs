@@ -54,6 +54,7 @@ export const buildTp12LockedFutureEvalSummary = async ({
     "foldAuditHash",
     "patternBundleHash",
     "monthlyQuotaHash",
+    "integrationGateHash",
     "selectorPolicyHash",
     "selectedPatternIdsSha256",
   ]

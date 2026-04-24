@@ -28,6 +28,7 @@ export const buildTp12InternalValidationGateSummary = async ({
   foldStabilityGateSummaryPath = "",
   patternBundleSummaryPath = "",
   monthlyQuotaSummaryPath = "",
+  integrationGateSummaryPath = "",
   outPath,
 } = {}) => {
   if (!toText(outPath)) throw new Error("outPath is required")
@@ -43,6 +44,9 @@ export const buildTp12InternalValidationGateSummary = async ({
   }
   if (toText(patternBundleSummaryPath)) optional.push(await readRequiredSummary(patternBundleSummaryPath, "patternBundleSummary"))
   if (toText(monthlyQuotaSummaryPath)) optional.push(await readRequiredSummary(monthlyQuotaSummaryPath, "monthlyQuotaSummary"))
+  if (toText(integrationGateSummaryPath)) {
+    optional.push(await readRequiredSummary(integrationGateSummaryPath, "integrationGateSummary"))
+  }
   const summaries = [trainGate, ...optional]
   const failures = []
   for (const item of summaries) {
@@ -71,6 +75,9 @@ export const buildTp12InternalValidationGateSummary = async ({
     patternBundleSummarySha256: optional.find((item) => item.path === path.resolve(patternBundleSummaryPath))?.sha256 ?? null,
     monthlyQuotaSummaryPath: optional.find((item) => item.path === path.resolve(monthlyQuotaSummaryPath))?.path ?? null,
     monthlyQuotaSummarySha256: optional.find((item) => item.path === path.resolve(monthlyQuotaSummaryPath))?.sha256 ?? null,
+    integrationGateSummaryPath: optional.find((item) => item.path === path.resolve(integrationGateSummaryPath))?.path ?? null,
+    integrationGateSummarySha256:
+      optional.find((item) => item.path === path.resolve(integrationGateSummaryPath))?.sha256 ?? null,
     selectorHash: toText(trainGate.summary.selectorHash ?? trainGate.summary.survivorPatternIdsSha256),
     catalogHash: toText(trainGate.summary.catalogHash ?? trainGate.summary.survivorPatternIdsSha256),
     trainGateHash: trainGate.sha256,
@@ -81,8 +88,14 @@ export const buildTp12InternalValidationGateSummary = async ({
     ),
     patternBundleHash: optional.find((item) => item.path === path.resolve(patternBundleSummaryPath))?.sha256 ?? "",
     monthlyQuotaHash: optional.find((item) => item.path === path.resolve(monthlyQuotaSummaryPath))?.sha256 ?? "",
+    integrationGateHash: toText(
+      optional.find((item) => item.path === path.resolve(integrationGateSummaryPath))?.summary?.integrationGateHash ??
+        optional.find((item) => item.path === path.resolve(integrationGateSummaryPath))?.sha256,
+    ),
     selectedPatternIdsSha256: toText(
-      optional.find((item) => item.path === path.resolve(foldStabilityGateSummaryPath))?.summary?.selectedPatternIdsSha256 ??
+      optional.find((item) => item.path === path.resolve(integrationGateSummaryPath))?.summary?.finalSelection?.selectedPatternIdsSha256 ??
+        optional.find((item) => item.path === path.resolve(integrationGateSummaryPath))?.summary?.selectedPatternIdsSha256 ??
+        optional.find((item) => item.path === path.resolve(foldStabilityGateSummaryPath))?.summary?.selectedPatternIdsSha256 ??
         optional.find((item) => item.path === path.resolve(patternBundleSummaryPath))?.summary?.selectedPatternIdsSha256 ??
         trainGate.summary.survivorPatternIdsSha256,
     ),
@@ -117,6 +130,9 @@ export const main = async (argv = process.argv.slice(2), { cwd = process.cwd() }
       : "",
     monthlyQuotaSummaryPath: toText(getFlag(flags, "monthly-quota-summary", ""))
       ? path.resolve(cwd, toText(getFlag(flags, "monthly-quota-summary", "")))
+      : "",
+    integrationGateSummaryPath: toText(getFlag(flags, "integration-gate-summary", ""))
+      ? path.resolve(cwd, toText(getFlag(flags, "integration-gate-summary", "")))
       : "",
     outPath: path.resolve(cwd, outPath),
   })

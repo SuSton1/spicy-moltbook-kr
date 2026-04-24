@@ -1,0 +1,64 @@
+{
+  "kind": "tp12_pattern_bank_fold_monthly_integration_contract_v1",
+  "contractId": "tp12_pattern_bank_fold_monthly_integration_v1",
+  "patchKey": "tp12_pattern_bank_fold_monthly_integration_v1",
+  "updatedAt": "2026-04-24T00:00:00+09:00",
+  "goal": {
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "entryRule": "NEXT_DAY_OPEN",
+    "finalTarget": "Combine multiple train-period year2hit patterns so every explicit full month has at least five operational TP12 recommendations and five operational hits before locked future evaluation."
+  },
+  "dateRanges": {
+    "internalValidation": {
+      "from": "2016-01-01",
+      "to": "2024-12-31"
+    },
+    "lockedFuture": {
+      "from": "2025-01-02",
+      "to": null
+    }
+  },
+  "hitContract": {
+    "hitDefinition": "operational_hit_v1",
+    "hitField": "operationalHitTarget",
+    "chartHitField": "chartHitTarget",
+    "entryExecutableField": "entryExecutable",
+    "executionPolicyId": "tp12_executable_hit_next_open_gap29p5_volume_v1",
+    "nonExecutableRowsCountAsMisses": true
+  },
+  "requiredInputs": {
+    "patternBankSummary": true,
+    "nonhitPurgeSummary": true,
+    "foldStabilitySummary": true,
+    "monthlyCoverageSummary": true,
+    "patternBundleSummary": false,
+    "monthlyQuotaSummary": false
+  },
+  "gates": {
+    "minPatternBankSurvivors": 1,
+    "minNonhitPurgeSurvivors": 1,
+    "minFoldStablePatterns": 1,
+    "minSelectedPatterns": 2,
+    "requireSelectedSubsetOfPatternBank": true,
+    "requireSelectedSubsetOfNonhitPurge": true,
+    "requireSelectedSubsetOfFoldStable": true,
+    "requireHashConsistency": true,
+    "requireExplicitFullMonthKeys": true,
+    "targetRecommendationsPerFullMonth": 5,
+    "targetOperationalHitsPerFullMonth": 5,
+    "minOperationalPrecision": 1,
+    "maxOperationalMissRows": 0,
+    "maxNonExecutableRows": 0,
+    "requireMonthlyCoveragePassed": true,
+    "requireMonthlyQuotaPassedWhenProvided": true,
+    "failOnGateFailure": true
+  },
+  "hardStops": [
+    "OOS or 2025-01-02-or-later data must not enter this integration gate.",
+    "The final selected pattern set must be a subset of non-hit-purged patterns and fold-stable patterns.",
+    "Monthly coverage is checked per explicit full month, never by average.",
+    "Operational misses and non-executable recommendations are failures, not rows to delete.",
+    "If the monthly five-hit target cannot be met, fail instead of relaxing thresholds."
+  ]
+}

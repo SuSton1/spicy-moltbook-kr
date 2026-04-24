@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T07:04:37Z",
+  "updatedAt": "2026-04-24T07:25:25Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,33 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_zero_fp_micro_split_oos_executable_reaudit_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_zero_fp_micro_split_executable_reaudit",
-      "probeId": null,
-      "status": "completed_oos_executable_reaudit_entry_feasibility_breaks_chart_hits",
-      "runs": [
-        "tp12_year2hit_zero_fp_micro_split_oos_executable_reaudit_v1/oos_reaudit"
-      ],
-      "primaryMetrics": {
-        "totalRows": 15,
-        "chartHitRows": 8,
-        "chartPrecision": 0.5333333333333333,
-        "entryExecutableRows": 9,
-        "nonExecutableRows": 6,
-        "executableHitRows": 4,
-        "executableMissRows": 5,
-        "nonExecutableChartHitRows": 4,
-        "nonExecutableChartMissRows": 2,
-        "executablePrecisionExcludingNonExecutable": 0.4444444444444444,
-        "executablePrecisionPenalizingNonExecutable": 0.26666666666666666,
-        "year2ExecutableHitPassedOnObservedYears": true,
-        "minExecutableHitsPerObservedYear": 2
-      },
-      "summary": "Reaudited the 40 fixed zero-FP micro-split OOS covers with strict next-open entry executability. Entry volume zero and upper-limit gap opens >=29.5pct are treated as non-executable. Original chart precision 8/15=53.33%; executable-only precision 4/9=44.44%; penalizing non-executable recommendations gives 4/15=26.67%. Four chart hits were non-executable, so the previous OOS HIT count was materially inflated by unbuyable/invalid entries."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_year2hit_zero_fp_micro_split_train_executable_reaudit_v1",
@@ -491,6 +464,30 @@
         "futureRowsFailFast": true
       },
       "summary": "TP12 \ub0b4\ubd80\uac80\uc99d \uc7a0\uae08 \uac8c\uc774\ud2b8\ub97c \ucd94\uac00\ud588\ub2e4. operationalHitTarget \uae30\uc900 leave-one-year-out fold \uc548\uc815\uc131, \uad6c\uc870\uc801 \ucde8\uc57d\uc131 reject, optional full-month gate, locked future hash comparison\uc744 \ucf54\ub4dc \uacbd\ub85c\ub85c \uace0\uc815\ud588\uace0 local/server verify\ub97c \ud1b5\uacfc\ud588\ub2e4."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_pattern_bank_fold_monthly_integration_v1",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_pattern_bank_fold_monthly_integration",
+      "probeId": null,
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_pattern_bank_fold_monthly_integration_v1_local_verify",
+        "tp12_pattern_bank_fold_monthly_integration_v1_server_verify"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "oosRead": false,
+        "lockedSelectorEmitted": false,
+        "hitField": "operationalHitTarget",
+        "monthlyTargetRecommendationsPerFullMonth": 5,
+        "monthlyTargetOperationalHitsPerFullMonth": 5,
+        "selectedSubsetOfFoldStableEnforced": true,
+        "selectedSubsetOfNonhitPurgedEnforced": true
+      },
+      "summary": "Added a train-only integration gate tying executable year2hit pattern bank, non-hit purge, fold stability, and monthly coverage outputs together before locked future evaluation. The gate fails if selected monthly patterns are not subsets of both non-hit-purged and fold-stable patterns, if monthly full-month 5 recommendation/5 operational-hit coverage is not met, or if any summary enters locked future data. Local and server verify passed."
     }
   ],
   "recentExperimentLog": [
@@ -7120,6 +7117,20 @@
         "tp12_train_internal_validation_protocol_v1_server_verify"
       ],
       "summary": "TP12 \ub0b4\ubd80\uac80\uc99d \uc7a0\uae08 \uac8c\uc774\ud2b8\ub97c \ucd94\uac00\ud588\ub2e4. operationalHitTarget \uae30\uc900 leave-one-year-out fold \uc548\uc815\uc131, \uad6c\uc870\uc801 \ucde8\uc57d\uc131 reject, optional full-month gate, locked future hash comparison\uc744 \ucf54\ub4dc \uacbd\ub85c\ub85c \uace0\uc815\ud588\uace0 local/server verify\ub97c \ud1b5\uacfc\ud588\ub2e4."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_pattern_bank_fold_monthly_integration_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_pattern_bank_fold_monthly_integration",
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_pattern_bank_fold_monthly_integration_v1_local_verify",
+        "tp12_pattern_bank_fold_monthly_integration_v1_server_verify"
+      ],
+      "summary": "Added a train-only integration gate tying executable year2hit pattern bank, non-hit purge, fold stability, and monthly coverage outputs together before locked future evaluation. The gate fails if selected monthly patterns are not subsets of both non-hit-purged and fold-stable patterns, if monthly full-month 5 recommendation/5 operational-hit coverage is not met, or if any summary enters locked future data. Local and server verify passed."
     }
   ],
   "doNotRepeat": [
