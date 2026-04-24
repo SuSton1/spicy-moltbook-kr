@@ -688,6 +688,7 @@ node --check src/lib/tp12_year2hit_executable_pattern_bank.mjs
 node --check src/lib/tp12_year2hit_executable_nonhit_purge_gate.mjs
 node --check src/lib/tp12_year2hit_pattern_bundle_selector.mjs
 node --check src/lib/tp12_year2hit_cover_replay_operational_bridge.mjs
+node --check src/lib/tp12_year2hit_operational_fold_stability_gate.mjs
 node --check src/lib/tp12_entry_feasibility_audit.mjs
 node --check src/lib/tp12_nested_split_plan.mjs
 node --check src/lib/tp12_pattern_cluster_dedupe.mjs
@@ -782,6 +783,7 @@ node --check tools/build_tp12_year2hit_executable_nonhit_purge_gate.mjs
 node --check tools/build_tp12_year2hit_pattern_bundle_bank.mjs
 node --check tools/build_tp12_year2hit_cover_replay_operational_bridge.mjs
 node --check tools/build_tp12_year2hit_monthly_coverage_bundle_optimizer.mjs
+node --check tools/build_tp12_year2hit_operational_fold_stability_gate.mjs
 node --check tools/build_tp12_entry_feasibility_audit.mjs
 node --check tools/build_tp12_nested_split_plan.mjs
 node --check tools/build_tp12_pattern_clusters.mjs
@@ -804,6 +806,7 @@ node --check tools/smoke_tp12_locked_future_eval_protocol.mjs
 node --check tools/smoke_tp12_year2hit_executable_pattern_bundle_bank.mjs
 node --check tools/smoke_tp12_year2hit_cover_replay_operational_bridge.mjs
 node --check tools/smoke_tp12_year2hit_monthly_coverage_bundle_optimizer.mjs
+node --check tools/smoke_tp12_year2hit_operational_fold_stability_gate.mjs
 node --check tools/audit_tp12_side_daily_coverage.mjs
 node --check tools/assert_tp12_h80_train_gate.mjs
 node --check tools/assert_tp12_h80_wilson_contrastive_contract.mjs
@@ -877,6 +880,7 @@ node tools/smoke_tp12_locked_future_eval_protocol.mjs
 node tools/smoke_tp12_year2hit_executable_pattern_bundle_bank.mjs
 node tools/smoke_tp12_year2hit_cover_replay_operational_bridge.mjs
 node tools/smoke_tp12_year2hit_monthly_coverage_bundle_optimizer.mjs
+node tools/smoke_tp12_year2hit_operational_fold_stability_gate.mjs
 node tools/smoke_tp12_year2hit_train_gate.mjs
 node tools/smoke_tp12_h80_foundation.mjs
 node tools/smoke_tp12_hard_negative_dataset.mjs

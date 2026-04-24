@@ -24,6 +24,10 @@ export const buildTp12InternalValidationGateSummary = async ({
   trainGateSummaryPath,
   qualityGateSummaryPath = "",
   operatingGateSummaryPath = "",
+  splitPlanSummaryPath = "",
+  foldStabilityGateSummaryPath = "",
+  patternBundleSummaryPath = "",
+  monthlyQuotaSummaryPath = "",
   outPath,
 } = {}) => {
   if (!toText(outPath)) throw new Error("outPath is required")
@@ -33,6 +37,12 @@ export const buildTp12InternalValidationGateSummary = async ({
   const optional = []
   if (toText(qualityGateSummaryPath)) optional.push(await readRequiredSummary(qualityGateSummaryPath, "qualityGateSummary"))
   if (toText(operatingGateSummaryPath)) optional.push(await readRequiredSummary(operatingGateSummaryPath, "operatingGateSummary"))
+  if (toText(splitPlanSummaryPath)) optional.push(await readRequiredSummary(splitPlanSummaryPath, "splitPlanSummary"))
+  if (toText(foldStabilityGateSummaryPath)) {
+    optional.push(await readRequiredSummary(foldStabilityGateSummaryPath, "foldStabilityGateSummary"))
+  }
+  if (toText(patternBundleSummaryPath)) optional.push(await readRequiredSummary(patternBundleSummaryPath, "patternBundleSummary"))
+  if (toText(monthlyQuotaSummaryPath)) optional.push(await readRequiredSummary(monthlyQuotaSummaryPath, "monthlyQuotaSummary"))
   const summaries = [trainGate, ...optional]
   const failures = []
   for (const item of summaries) {
@@ -51,9 +61,31 @@ export const buildTp12InternalValidationGateSummary = async ({
     qualityGateSummarySha256: optional.find((item) => item.path === path.resolve(qualityGateSummaryPath))?.sha256 ?? null,
     operatingGateSummaryPath: optional.find((item) => item.path === path.resolve(operatingGateSummaryPath))?.path ?? null,
     operatingGateSummarySha256: optional.find((item) => item.path === path.resolve(operatingGateSummaryPath))?.sha256 ?? null,
+    splitPlanSummaryPath: optional.find((item) => item.path === path.resolve(splitPlanSummaryPath))?.path ?? null,
+    splitPlanSummarySha256: optional.find((item) => item.path === path.resolve(splitPlanSummaryPath))?.sha256 ?? null,
+    foldStabilityGateSummaryPath:
+      optional.find((item) => item.path === path.resolve(foldStabilityGateSummaryPath))?.path ?? null,
+    foldStabilityGateSummarySha256:
+      optional.find((item) => item.path === path.resolve(foldStabilityGateSummaryPath))?.sha256 ?? null,
+    patternBundleSummaryPath: optional.find((item) => item.path === path.resolve(patternBundleSummaryPath))?.path ?? null,
+    patternBundleSummarySha256: optional.find((item) => item.path === path.resolve(patternBundleSummaryPath))?.sha256 ?? null,
+    monthlyQuotaSummaryPath: optional.find((item) => item.path === path.resolve(monthlyQuotaSummaryPath))?.path ?? null,
+    monthlyQuotaSummarySha256: optional.find((item) => item.path === path.resolve(monthlyQuotaSummaryPath))?.sha256 ?? null,
     selectorHash: toText(trainGate.summary.selectorHash ?? trainGate.summary.survivorPatternIdsSha256),
     catalogHash: toText(trainGate.summary.catalogHash ?? trainGate.summary.survivorPatternIdsSha256),
     trainGateHash: trainGate.sha256,
+    splitPlanHash: optional.find((item) => item.path === path.resolve(splitPlanSummaryPath))?.sha256 ?? "",
+    foldAuditHash: toText(
+      optional.find((item) => item.path === path.resolve(foldStabilityGateSummaryPath))?.summary?.foldAuditHash ??
+        optional.find((item) => item.path === path.resolve(foldStabilityGateSummaryPath))?.sha256,
+    ),
+    patternBundleHash: optional.find((item) => item.path === path.resolve(patternBundleSummaryPath))?.sha256 ?? "",
+    monthlyQuotaHash: optional.find((item) => item.path === path.resolve(monthlyQuotaSummaryPath))?.sha256 ?? "",
+    selectedPatternIdsSha256: toText(
+      optional.find((item) => item.path === path.resolve(foldStabilityGateSummaryPath))?.summary?.selectedPatternIdsSha256 ??
+        optional.find((item) => item.path === path.resolve(patternBundleSummaryPath))?.summary?.selectedPatternIdsSha256 ??
+        trainGate.summary.survivorPatternIdsSha256,
+    ),
     failures,
   }
   await writeJson(outPath, payload)
@@ -73,6 +105,18 @@ export const main = async (argv = process.argv.slice(2), { cwd = process.cwd() }
       : "",
     operatingGateSummaryPath: toText(getFlag(flags, "operating-gate-summary", ""))
       ? path.resolve(cwd, toText(getFlag(flags, "operating-gate-summary", "")))
+      : "",
+    splitPlanSummaryPath: toText(getFlag(flags, "split-plan-summary", ""))
+      ? path.resolve(cwd, toText(getFlag(flags, "split-plan-summary", "")))
+      : "",
+    foldStabilityGateSummaryPath: toText(getFlag(flags, "fold-stability-gate-summary", ""))
+      ? path.resolve(cwd, toText(getFlag(flags, "fold-stability-gate-summary", "")))
+      : "",
+    patternBundleSummaryPath: toText(getFlag(flags, "pattern-bundle-summary", ""))
+      ? path.resolve(cwd, toText(getFlag(flags, "pattern-bundle-summary", "")))
+      : "",
+    monthlyQuotaSummaryPath: toText(getFlag(flags, "monthly-quota-summary", ""))
+      ? path.resolve(cwd, toText(getFlag(flags, "monthly-quota-summary", "")))
       : "",
     outPath: path.resolve(cwd, outPath),
   })

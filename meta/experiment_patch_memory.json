@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T05:26:38Z",
+  "updatedAt": "2026-04-24T07:04:37Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,29 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_zero_fp_micro_split_oos_replay_v1_metrics_correction",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_zero_fp_micro_split_oos_replay",
-      "probeId": null,
-      "status": "completed_registry_metric_correction",
-      "runs": [
-        "tp12_year2hit_zero_fp_micro_split_oos_replay_v1"
-      ],
-      "primaryMetrics": {
-        "correctedEntryFor": "tp12_year2hit_zero_fp_micro_split_oos_replay_v1",
-        "unionMatchRows": 15,
-        "unionHitRows": 8,
-        "unionFalsePositiveRows": 7,
-        "unionPrecision": 0.5333333333333333,
-        "bestGroupMatchRows": 14,
-        "bestGroupHitRows": 8,
-        "bestGroupFalsePositiveRows": 6,
-        "bestGroupPrecision": 0.5714285714285714
-      },
-      "summary": "Correction to the immediately previous tp12_year2hit_zero_fp_micro_split_oos_replay_v1 registry entry: the cover replay metrics were correct, but the secondary scopedConsensus baseline was mistakenly written from a candidate-event style count. The actual OOS consensus symbol-date baseline in oos_micro_split_replay_summary.json is 9,210 hits out of 42,171 scoped consensus symbol-date rows (21.84%). The fixed 40-cover replay result remains unchanged: union 8/15=53.33%; best 19-cover group 8/14=57.14%; observed-year hit counts 2025=6 and 2026=2."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_year2hit_zero_fp_micro_split_oos_executable_reaudit_v1",
@@ -493,6 +470,27 @@
         "zeroOperationalFalsePositiveCoverCount": 0
       },
       "summary": "Replayed the frozen 40 train-100pct operational year2hit covers on OOS 2025-01-02..2026-04-14. All 40 matched OOS rows, but OOS precision collapsed: summed per-pattern 120/398=30.15%, unique union 5/17=29.41%, zero non-executable rows, observed-year min hit dates=1, year2 OOS failed."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_train_internal_validation_protocol_v1",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "probeId": null,
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_train_internal_validation_protocol_v1_local_verify",
+        "tp12_train_internal_validation_protocol_v1_server_verify"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "hitField": "operationalHitTarget",
+        "lockedFutureFrom": "2025-01-02",
+        "foldStabilityGateAdded": true,
+        "futureRowsFailFast": true
+      },
+      "summary": "TP12 \ub0b4\ubd80\uac80\uc99d \uc7a0\uae08 \uac8c\uc774\ud2b8\ub97c \ucd94\uac00\ud588\ub2e4. operationalHitTarget \uae30\uc900 leave-one-year-out fold \uc548\uc815\uc131, \uad6c\uc870\uc801 \ucde8\uc57d\uc131 reject, optional full-month gate, locked future hash comparison\uc744 \ucf54\ub4dc \uacbd\ub85c\ub85c \uace0\uc815\ud588\uace0 local/server verify\ub97c \ud1b5\uacfc\ud588\ub2e4."
     }
   ],
   "recentExperimentLog": [
@@ -7108,6 +7106,20 @@
         "tp12_year2hit_train100_all40_oos_operational_eval_v1/oos"
       ],
       "summary": "Replayed the frozen 40 train-100pct operational year2hit covers on OOS 2025-01-02..2026-04-14. All 40 matched OOS rows, but OOS precision collapsed: summed per-pattern 120/398=30.15%, unique union 5/17=29.41%, zero non-executable rows, observed-year min hit dates=1, year2 OOS failed."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_train_internal_validation_protocol_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_train_internal_validation_protocol_v1_local_verify",
+        "tp12_train_internal_validation_protocol_v1_server_verify"
+      ],
+      "summary": "TP12 \ub0b4\ubd80\uac80\uc99d \uc7a0\uae08 \uac8c\uc774\ud2b8\ub97c \ucd94\uac00\ud588\ub2e4. operationalHitTarget \uae30\uc900 leave-one-year-out fold \uc548\uc815\uc131, \uad6c\uc870\uc801 \ucde8\uc57d\uc131 reject, optional full-month gate, locked future hash comparison\uc744 \ucf54\ub4dc \uacbd\ub85c\ub85c \uace0\uc815\ud588\uace0 local/server verify\ub97c \ud1b5\uacfc\ud588\ub2e4."
     }
   ],
   "doNotRepeat": [

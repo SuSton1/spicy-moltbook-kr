@@ -1,0 +1,78 @@
+{
+  "kind": "tp12_train_internal_validation_protocol_contract_v1",
+  "contractId": "tp12_train_internal_validation_protocol_v1",
+  "patchKey": "tp12_train_internal_validation_protocol_v1",
+  "updatedAt": "2026-04-24T00:00:00+09:00",
+  "goal": {
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "entryRule": "NEXT_DAY_OPEN",
+    "monthlyMinimumRecommendationTarget": 5
+  },
+  "dateRanges": {
+    "internalValidation": {
+      "from": "2016-01-04",
+      "to": "2024-12-30"
+    },
+    "lockedFuture": {
+      "from": "2025-01-02",
+      "to": null
+    }
+  },
+  "hitContract": {
+    "hitDefinition": "operational_hit_v1",
+    "hitField": "operationalHitTarget",
+    "chartHitField": "chartHitTarget",
+    "entryExecutableField": "entryExecutable",
+    "executionPolicyId": "tp12_executable_hit_next_open_gap29p5_volume_v1",
+    "nonExecutableRowsCountAsMisses": true
+  },
+  "foldValidation": {
+    "foldModes": [
+      "leave_one_year_out"
+    ],
+    "coreYears": [
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024
+    ],
+    "minValidationOperationalHitDatesPerYear": 2,
+    "minValidationOperationalHitSymbolDatesPerYear": 2,
+    "maxValidationOperationalMissRows": 0,
+    "maxValidationNotChartHitRows": 0,
+    "minStablePatternCount": 1,
+    "failOnGateFailure": true
+  },
+  "structuralFragilityGate": {
+    "requirePatternMetadata": false,
+    "rejectFlags": [
+      "small_tile_dominated",
+      "year_stitched_cover",
+      "all_tiles_year2_incomplete",
+      "extreme_rank_heavy",
+      "single_tile_drop_year_zero"
+    ]
+  },
+  "monthlyGate": {
+    "requireExplicitFullMonthKeys": true,
+    "requireMonthlyGate": false,
+    "targetRecommendationsPerFullMonth": 5,
+    "targetOperationalHitsPerFullMonth": 5,
+    "maxRecommendationsPerDecisionDate": 1
+  },
+  "hardStops": [
+    "Rows dated 2025-01-02 or later must not enter train/internal validation.",
+    "Only operationalHitTarget may be used as the hit field.",
+    "Any validation operational miss fails the fold gate.",
+    "Any validation not_chart_hit miss fails the fold gate.",
+    "Zero stable survivors must fail instead of relaxing thresholds.",
+    "Monthly quota must be checked by explicit full months, not averages, when enabled.",
+    "OOS results must not tune fold thresholds, pattern ordering, or monthly gates."
+  ]
+}

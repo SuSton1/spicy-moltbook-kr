@@ -13,6 +13,18 @@ const requireHash = ({ manifest, field }) => {
   return value
 }
 
+const compareOptionalHash = ({ manifest, internal, field, failures }) => {
+  const expected = toText(manifest?.[field])
+  if (!expected) return null
+  const actual = toText(internal?.[field])
+  if (!actual) {
+    failures.push(`${field}_missing_internal`)
+    return { field, expected, actual: "" }
+  }
+  if (actual !== expected) failures.push(`${field}_mismatch`)
+  return { field, expected, actual }
+}
+
 export const buildTp12LockedFutureEvalSummary = async ({
   contractPath = "meta/tp12_locked_future_eval_protocol_contract.json",
   lockedManifestPath,
@@ -37,6 +49,16 @@ export const buildTp12LockedFutureEvalSummary = async ({
   if (toText(internal.selectorHash) && toText(internal.selectorHash) !== selectorHash) failures.push("selector_hash_mismatch")
   if (toText(internal.catalogHash) && toText(internal.catalogHash) !== catalogHash) failures.push("catalog_hash_mismatch")
   if (toText(internal.trainGateHash) !== trainGateHash) failures.push("train_gate_hash_mismatch")
+  const optionalHashComparisons = [
+    "splitPlanHash",
+    "foldAuditHash",
+    "patternBundleHash",
+    "monthlyQuotaHash",
+    "selectorPolicyHash",
+    "selectedPatternIdsSha256",
+  ]
+    .map((field) => compareOptionalHash({ manifest, internal, field, failures }))
+    .filter(Boolean)
   if (toText(replay.status) && !["measured", "passed"].includes(toText(replay.status))) failures.push("locked_replay_not_measured")
   if (manifest.thresholdLocked !== true) failures.push("threshold_not_locked")
   const payload = {
@@ -51,6 +73,7 @@ export const buildTp12LockedFutureEvalSummary = async ({
     selectorHash,
     catalogHash,
     trainGateHash,
+    optionalHashComparisons,
     thresholdLocked: manifest.thresholdLocked === true,
     failures,
     replaySummary: replay,
