@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T01:25:09Z",
+  "updatedAt": "2026-04-24T02:28:57Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,25 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_train100_positive_motif_contrastive_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_train100_positive_motif_contrastive",
-      "probeId": null,
-      "status": "completed_code_path_verified_no_authoritative_train_run",
-      "runs": [
-        "tp12_train100_positive_motif_contrastive_v1_code_verify"
-      ],
-      "primaryMetrics": {
-        "authoritativeTrainRunExecuted": false,
-        "oosRead": false,
-        "lockedSelectorEmitted": false,
-        "localVerifyPassed": true,
-        "serverVerifyPassed": true
-      },
-      "summary": "Implemented explicit train-only TP12 positive pre-hit motif contrastive certificate path. Added contract, motif feature/snapshot/catalog builders, positive motif anchor miner, matched/hard-negative controls, full-negative verifier, false-positive contrast analyzer, conditional veto set-cover miner, exact train100 verifier, certificate writer, CLIs, smokes, and verify integration. Local and server verify passed; no OOS read, no locked selector, and no authoritative full-train mining run was executed in this turn."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_train100_positive_motif_contrastive_v1",
@@ -497,6 +478,28 @@
         "verifyServer": 1
       },
       "summary": "2\ucc28 \ubbf8\ub798\uad6c\uac04 \uc7a0\uae08: 2025-01-02 \uc774\ud6c4 \ud29c\ub2dd \ub204\uc218 \uac80\uc0ac, \ub0b4\ubd80\uac80\uc99d/\uc7a0\uae08\ud3c9\uac00 \uc694\uc57d \ub3c4\uad6c, \ub85c\uceec \ubc0f \uc11c\ubc84 verify \ud1b5\uacfc"
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_year2hit_executable_pattern_bundle_bank_v1",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_year2hit_executable_pattern_bundle_bank",
+      "probeId": null,
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_year2hit_executable_pattern_bundle_bank_v1_code_verify"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "oosRead": false,
+        "lockedSelectorEmitted": false,
+        "operationalHitField": "operationalHitTarget",
+        "minOperationalHitDatesPerYear": 2,
+        "minOperationalHitSymbolDatesPerYear": 2,
+        "nonhitPurgeMaxOperationalMissRows": 0
+      },
+      "summary": "Implemented train/internal-validation only TP12 executable year2hit pattern bundle bank path. Added operational event builder, executable pattern bank, non-hit purge gate, bundle selector, CLIs, contract, smoke, and verify integration. The path keeps non-executable rows as operational misses, fails on locked-future rows and forbidden entry/future fields, requires every selected pattern to already satisfy per-year operational 2-hit coverage, and does not read OOS or emit a locked selector."
     }
   ],
   "recentExperimentLog": [
@@ -7023,6 +7026,19 @@
       "status": "completed",
       "runs": [],
       "summary": "2\ucc28 \ubbf8\ub798\uad6c\uac04 \uc7a0\uae08: 2025-01-02 \uc774\ud6c4 \ud29c\ub2dd \ub204\uc218 \uac80\uc0ac, \ub0b4\ubd80\uac80\uc99d/\uc7a0\uae08\ud3c9\uac00 \uc694\uc57d \ub3c4\uad6c, \ub85c\uceec \ubc0f \uc11c\ubc84 verify \ud1b5\uacfc"
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_year2hit_executable_pattern_bundle_bank_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_year2hit_executable_pattern_bundle_bank",
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_year2hit_executable_pattern_bundle_bank_v1_code_verify"
+      ],
+      "summary": "Implemented train/internal-validation only TP12 executable year2hit pattern bundle bank path. Added operational event builder, executable pattern bank, non-hit purge gate, bundle selector, CLIs, contract, smoke, and verify integration. The path keeps non-executable rows as operational misses, fails on locked-future rows and forbidden entry/future fields, requires every selected pattern to already satisfy per-year operational 2-hit coverage, and does not read OOS or emit a locked selector."
     }
   ],
   "doNotRepeat": [

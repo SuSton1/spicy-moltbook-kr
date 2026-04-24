@@ -1,0 +1,95 @@
+{
+  "kind": "tp12_year2hit_executable_pattern_bundle_bank_contract_v1",
+  "contractId": "tp12_year2hit_executable_pattern_bundle_bank_v1",
+  "patchKey": "tp12_year2hit_executable_pattern_bundle_bank_v1",
+  "updatedAt": "2026-04-24T00:00:00+09:00",
+  "goal": {
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "entryRule": "NEXT_DAY_OPEN",
+    "monthlyMinimumRecommendationTarget": 5
+  },
+  "dateRanges": {
+    "internalValidation": {
+      "from": "2016-01-01",
+      "to": "2024-12-31"
+    },
+    "lockedFuture": {
+      "from": "2025-01-02",
+      "to": null
+    }
+  },
+  "hitContract": {
+    "hitDefinition": "operational_hit_v1",
+    "hitField": "operationalHitTarget",
+    "chartHitField": "chartHitTarget",
+    "entryExecutableField": "entryExecutable",
+    "executionPolicyId": "tp12_executable_hit_next_open_gap29p5_volume_v1",
+    "nonExecutableRowsCountAsMisses": true
+  },
+  "operationalEventBuilder": {
+    "inputRowMode": "operational_consensus_rows",
+    "explodeSupportPatternIds": true,
+    "keepNonExecutableRows": true,
+    "forbiddenTopLevelFields": [
+      "entryOpen",
+      "entryHigh",
+      "entryLow",
+      "entryClose",
+      "entryVolume",
+      "entryGapPct",
+      "hitDateKey",
+      "futureHigh",
+      "futureLow",
+      "maxForwardReturn",
+      "minForwardReturn",
+      "chartMaxForwardReturn"
+    ],
+    "forbiddenFeatureFields": [
+      "entryOpen",
+      "entryGapPct",
+      "entryVolume",
+      "hitDateKey",
+      "futureHigh",
+      "futureLow"
+    ]
+  },
+  "patternBank": {
+    "coreYears": [
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024
+    ],
+    "minOperationalHitDatesPerYear": 2,
+    "minOperationalHitSymbolDatesPerYear": 2,
+    "failOnZeroSurvivors": true
+  },
+  "nonhitPurgeGate": {
+    "maxOperationalMissRows": 0,
+    "maxNonExecutableRows": 0,
+    "requireYear2HitPreserved": true,
+    "failOnZeroSurvivors": true
+  },
+  "bundleSelector": {
+    "minPatterns": 1,
+    "maxPatterns": 25,
+    "minOperationalHitDatesPerYear": 2,
+    "minOperationalHitSymbolDatesPerYear": 2,
+    "maxTopPatternHitShare": 0.75,
+    "forbidYearFillerFragments": true,
+    "failOnZeroBundles": true
+  },
+  "hardStops": [
+    "entryOpen, entryGapPct, entryVolume, hitDateKey, and future high/low fields must not be used as features",
+    "2025-01-02 or later rows must not enter pattern mining, non-hit purging, or bundle selection",
+    "OOS performance must not reorder or relax the internal validation bundle bank",
+    "Non-executable rows must remain operational misses, not deleted wins",
+    "Zero survivor outcomes must fail instead of relaxing thresholds"
+  ]
+}

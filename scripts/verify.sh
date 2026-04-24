@@ -120,6 +120,8 @@ node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
   meta/tp12_locked_future_eval_protocol_contract.json
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
+  meta/tp12_year2hit_executable_pattern_bundle_bank_contract.json
+node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
   meta/tp12_year2hit_executable_zero_fp_tile_pool_audit_contract.json
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
   meta/tp12_h80_conjunctive_veto_rule_grid_rules.json
@@ -673,6 +675,10 @@ node --check src/lib/tp12_survivor_catalog_freeze.mjs
 node --check src/lib/tp12_year2hit_candidate_replay_report.mjs
 node --check src/lib/tp12_year2hit_trainfold_selector_audit.mjs
 node --check src/lib/tp12_year2hit_operating_gate.mjs
+node --check src/lib/tp12_year2hit_operational_event_enricher.mjs
+node --check src/lib/tp12_year2hit_executable_pattern_bank.mjs
+node --check src/lib/tp12_year2hit_executable_nonhit_purge_gate.mjs
+node --check src/lib/tp12_year2hit_pattern_bundle_selector.mjs
 node --check src/lib/tp12_entry_feasibility_audit.mjs
 node --check src/lib/tp12_nested_split_plan.mjs
 node --check src/lib/tp12_pattern_cluster_dedupe.mjs
@@ -760,6 +766,10 @@ node --check tools/build_tp12_year2hit_operating_gate_summary.mjs
 node --check tools/assert_tp12_no_future_tuning_leakage.mjs
 node --check tools/build_tp12_internal_validation_gate_summary.mjs
 node --check tools/build_tp12_locked_future_eval_summary.mjs
+node --check tools/build_tp12_year2hit_operational_events.mjs
+node --check tools/build_tp12_year2hit_executable_pattern_bank.mjs
+node --check tools/build_tp12_year2hit_executable_nonhit_purge_gate.mjs
+node --check tools/build_tp12_year2hit_pattern_bundle_bank.mjs
 node --check tools/build_tp12_entry_feasibility_audit.mjs
 node --check tools/build_tp12_nested_split_plan.mjs
 node --check tools/build_tp12_pattern_clusters.mjs
@@ -777,6 +787,7 @@ node --check tools/run_tp12_learned_same_day_ranker.mjs
 node --check tools/smoke_tp12_operational_hit_contract.mjs
 node --check tools/smoke_tp12_operational_monthly_gate.mjs
 node --check tools/smoke_tp12_locked_future_eval_protocol.mjs
+node --check tools/smoke_tp12_year2hit_executable_pattern_bundle_bank.mjs
 node --check tools/audit_tp12_side_daily_coverage.mjs
 node --check tools/assert_tp12_h80_train_gate.mjs
 node --check tools/assert_tp12_h80_wilson_contrastive_contract.mjs
@@ -844,6 +855,7 @@ node tools/smoke_tp12_year2hit_operating_gate.mjs
 node tools/smoke_tp12_operational_hit_contract.mjs
 node tools/smoke_tp12_operational_monthly_gate.mjs
 node tools/smoke_tp12_locked_future_eval_protocol.mjs
+node tools/smoke_tp12_year2hit_executable_pattern_bundle_bank.mjs
 node tools/smoke_tp12_year2hit_train_gate.mjs
 node tools/smoke_tp12_h80_foundation.mjs
 node tools/smoke_tp12_hard_negative_dataset.mjs
