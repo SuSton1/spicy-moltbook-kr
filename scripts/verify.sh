@@ -124,6 +124,8 @@ node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
   meta/tp12_selector_feature_source_repair_contract.json
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
+  meta/tp12_monthly_quota_precision_scheduler_contract.json
+node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
   meta/tp12_year2hit_executable_zero_fp_tile_pool_audit_contract.json
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
   meta/tp12_h80_conjunctive_veto_rule_grid_rules.json
@@ -779,6 +781,7 @@ node --check tools/build_tp12_pattern_clusters.mjs
 node --check tools/build_tp12_pattern_reliability_by_fold.mjs
 node --check tools/build_tp12_symbol_date_consensus_features.mjs
 node --check tools/build_tp12_selector_feature_source_repair.mjs
+node --check tools/build_tp12_monthly_quota_precision_scheduler.mjs
 node --check tools/build_tp12_hard_negative_dataset.mjs
 node --check tools/build_tp12_context_features.mjs
 node --check tools/build_tp12_context_consensus_features.mjs
@@ -803,6 +806,7 @@ node --check tools/smoke_tp12_hard_negative_dataset.mjs
 node --check tools/smoke_tp12_context_features.mjs
 node --check tools/smoke_tp12_context_consensus_features.mjs
 node --check tools/smoke_tp12_selector_feature_source_repair.mjs
+node --check tools/smoke_tp12_monthly_quota_precision_scheduler.mjs
 node --check tools/smoke_tp12_abstention_selector_cv.mjs
 node --check tools/smoke_tp12_h80_wilson_contrastive_contract.mjs
 node --check tools/smoke_tp12_train100_closeout.mjs
@@ -867,6 +871,7 @@ node tools/smoke_tp12_hard_negative_dataset.mjs
 node tools/smoke_tp12_context_features.mjs
 node tools/smoke_tp12_context_consensus_features.mjs
 node tools/smoke_tp12_selector_feature_source_repair.mjs
+node tools/smoke_tp12_monthly_quota_precision_scheduler.mjs
 node tools/smoke_tp12_abstention_selector_cv.mjs
 node tools/smoke_tp12_h80_wilson_contrastive_contract.mjs
 node tools/smoke_tp12_train100_closeout.mjs

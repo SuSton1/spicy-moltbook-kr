@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T03:32:36Z",
+  "updatedAt": "2026-04-24T03:49:44Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,32 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_chart_microcontrast_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_chart_microcontrast",
-      "probeId": null,
-      "status": "completed_train_only_microcontrast_diagnostic",
-      "runs": [
-        "tp12_year2hit_chart_microcontrast_v1_train_only_diagnostic"
-      ],
-      "primaryMetrics": {
-        "enrichedRows": 74061,
-        "includedHitRows": 15245,
-        "includedFalsePositiveRows": 58816,
-        "nearMissRows": 8902,
-        "easyNegativeRows": 16308,
-        "hardNegativeRows": 33606,
-        "selectedRows": 978,
-        "selectedHitRows": 434,
-        "selectedFalsePositiveRows": 544,
-        "selectedHitRate": 0.443763,
-        "topFeature": "returnVol20",
-        "topFeatureRankDelta": 0.14395
-      },
-      "summary": "Train-only microcontrast diagnostic for gated year2hit survivor chart rows vs non-hit rows; no OOS read and no locked selector emitted."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_year2hit_nonhit_purge_gate_v1",
@@ -490,6 +464,27 @@
         "target": "operational_tp12"
       },
       "summary": "D0 \ub9c8\uac10/\uac70\ub798\ub300\uae08/\uc885\uac00\uc704\uce58/\uc218\uae09/\uc778\ud2b8\ub77c\ub370\uc774 \uc120\ud0dd\uae30 \uc785\ub825 \uacc4\uc57d\uc744 \ucd94\uac00\ud558\uace0, D+1\u00b7entry\u00b7\ubbf8\ub798 \ud544\ub4dc \ubc0f \ub204\ub77d\uac12 0 \ub300\uccb4\ub97c \uae08\uc9c0\ud588\ub2e4. local/server verify \ud1b5\uacfc."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_monthly_quota_precision_scheduler_v1",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_monthly_quota_precision_scheduler",
+      "probeId": null,
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_monthly_quota_precision_scheduler_v1_code_verify"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "targetRecommendationsPerFullMonth": 5,
+        "selectionUsesEntryExecutable": false,
+        "selectionUsesHitTarget": false,
+        "scoreThresholdRelaxed": false,
+        "fullMonthPolicy": "explicit_full_months_only"
+      },
+      "summary": "Implemented fixed-threshold TP12 monthly quota precision scheduler. It requires explicit full-month keys, selects only by fixed scheduler score and concentration caps, never uses entryExecutable or hit fields for selection, and fails when any full month has fewer than five selected executable recommendations. Local and server verify passed."
     }
   ],
   "recentExperimentLog": [
@@ -7040,6 +7035,19 @@
       "status": "completed",
       "runs": [],
       "summary": "D0 \ub9c8\uac10/\uac70\ub798\ub300\uae08/\uc885\uac00\uc704\uce58/\uc218\uae09/\uc778\ud2b8\ub77c\ub370\uc774 \uc120\ud0dd\uae30 \uc785\ub825 \uacc4\uc57d\uc744 \ucd94\uac00\ud558\uace0, D+1\u00b7entry\u00b7\ubbf8\ub798 \ud544\ub4dc \ubc0f \ub204\ub77d\uac12 0 \ub300\uccb4\ub97c \uae08\uc9c0\ud588\ub2e4. local/server verify \ud1b5\uacfc."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_monthly_quota_precision_scheduler_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_monthly_quota_precision_scheduler",
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_monthly_quota_precision_scheduler_v1_code_verify"
+      ],
+      "summary": "Implemented fixed-threshold TP12 monthly quota precision scheduler. It requires explicit full-month keys, selects only by fixed scheduler score and concentration caps, never uses entryExecutable or hit fields for selection, and fails when any full month has fewer than five selected executable recommendations. Local and server verify passed."
     }
   ],
   "doNotRepeat": [

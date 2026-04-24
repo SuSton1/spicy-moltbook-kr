@@ -1,0 +1,81 @@
+{
+  "kind": "tp12_monthly_quota_precision_scheduler_contract_v1",
+  "contractId": "tp12_monthly_quota_precision_scheduler_v1",
+  "patchKey": "tp12_monthly_quota_precision_scheduler_v1",
+  "updatedAt": "2026-04-24T00:00:00+09:00",
+  "goal": {
+    "target": "At least five operational TP12 recommendations per full month without lowering selection quality.",
+    "monthlyMinimumExecutableRecommendations": 5,
+    "targetMovePct": 0.12,
+    "hitDefinition": "operational_hit_v1"
+  },
+  "inputContract": {
+    "rowLevel": "deduped_symbol_date_candidates",
+    "decisionDateField": "decisionDateKey",
+    "symbolField": "symbol",
+    "patternIdFields": [
+      "patternId",
+      "primaryPatternId",
+      "ruleId"
+    ],
+    "scoreField": "schedulerScore",
+    "fullMonthPolicy": "explicit_full_months_only",
+    "fullMonthKeysRequired": true,
+    "missingScorePolicy": "fail_fast",
+    "duplicateSymbolDatePolicy": "fail_fast"
+  },
+  "operationalHit": {
+    "hitDefinition": "operational_hit_v1",
+    "hitField": "operationalHitTarget",
+    "chartHitField": "chartHitTarget",
+    "entryExecutableField": "entryExecutable",
+    "executionPolicyId": "tp12_executable_hit_next_open_gap29p5_volume_v1",
+    "entryExecutableMayOnlyBeUsedAfterSelection": true,
+    "entryExecutableSelectionFilterForbidden": true,
+    "nonExecutableSelectedRowsCountAsOperationalMisses": true
+  },
+  "scheduler": {
+    "selectionKey": "monthlyQuotaSchedule",
+    "targetRecommendationsPerFullMonth": 5,
+    "maxRecommendationsPerFullMonth": 5,
+    "maxRecommendationsPerDay": 1,
+    "minSchedulerScore": 0,
+    "scoreThresholdRelaxationForbidden": true,
+    "shortageIsFailure": true,
+    "zeroCandidateMonthIsFailure": true
+  },
+  "performanceGate": {
+    "targetObservedHitRate": 0.8,
+    "minWilsonLowerBound95": 0,
+    "minSelectedRows": 10
+  },
+  "concentrationGate": {
+    "maxTopSymbolShare": 0.4,
+    "maxTopPatternShare": 0.6,
+    "maxTopMonthShare": 0.6,
+    "maxSymbolPerFullMonth": 2,
+    "maxPatternPerFullMonth": 3
+  },
+  "forbiddenSelectionFields": [
+    "entryExecutable",
+    "entryOpen",
+    "entryGapPct",
+    "entryVolume",
+    "entryDateKey",
+    "operationalHitTarget",
+    "chartHitTarget",
+    "hitTarget",
+    "hitDateKey",
+    "futureHigh",
+    "futureLow",
+    "maxForwardReturn",
+    "minForwardReturn"
+  ],
+  "hardStops": [
+    "Do not lower scheduler score thresholds when a month has fewer than five recommendations.",
+    "Do not use entryExecutable, entry gap, entry volume, operationalHitTarget, chartHitTarget, or hitTarget to choose rows.",
+    "A full month with fewer than five selected executable recommendations must fail.",
+    "A concentration violation must fail; do not widen caps automatically.",
+    "Zero survivor or zero candidate months must fail."
+  ]
+}
