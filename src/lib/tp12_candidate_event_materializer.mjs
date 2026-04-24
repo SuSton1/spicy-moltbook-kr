@@ -125,6 +125,14 @@ const resolveOptions = ({
 const copyOptionalLabelMetrics = (event) => {
   const out = {}
   for (const key of [
+    "hitDefinition",
+    "executionPolicyId",
+    "chartHitTarget",
+    "entryExecutable",
+    "operationalHitTarget",
+    "executableHitTarget",
+    "operationalMissReasons",
+    "operationalMissReason",
     "entryPrice",
     "targetPrice",
     "hitDateKey",

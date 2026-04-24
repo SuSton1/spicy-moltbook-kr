@@ -6,6 +6,10 @@ import os from "node:os"
 import path from "node:path"
 
 import { materializeTp12CandidateEvents } from "../src/lib/tp12_candidate_event_materializer.mjs"
+import {
+  TP12_EXECUTION_POLICY_ID,
+  TP12_OPERATIONAL_HIT_DEFINITION,
+} from "../src/lib/tp12_operational_hit_contract.mjs"
 
 const writeJsonl = async (filePath, rows) => {
   await fs.writeFile(filePath, `${rows.map((row) => JSON.stringify(row)).join("\n")}\n`, "utf8")
@@ -37,14 +41,38 @@ try {
       eventId: "e1",
       symbol: "000001",
       decisionDateKey: "2020-01-03",
+      entryDateKey: "2020-01-06",
       hitTarget: true,
+      hitDefinition: TP12_OPERATIONAL_HIT_DEFINITION,
+      executionPolicyId: TP12_EXECUTION_POLICY_ID,
+      chartHitTarget: true,
+      entryExecutable: true,
+      operationalHitTarget: true,
+      executableHitTarget: true,
+      operationalMissReasons: [],
+      operationalMissReason: null,
       tokens: ["a", "b", "c"],
       maxForwardReturn: 0.13,
       minForwardReturn: -0.02,
       targetBeforeStop: true,
     },
     { eventId: "e2", symbol: "000002", decisionDateKey: "2020-01-04", hitTarget: false, tokens: ["a"] },
-    { eventId: "e3", symbol: "000003", decisionDateKey: "2020-01-05", hitTarget: true, tokens: ["b", "a"] },
+    {
+      eventId: "e3",
+      symbol: "000003",
+      decisionDateKey: "2020-01-05",
+      entryDateKey: "2020-01-06",
+      hitTarget: true,
+      hitDefinition: TP12_OPERATIONAL_HIT_DEFINITION,
+      executionPolicyId: TP12_EXECUTION_POLICY_ID,
+      chartHitTarget: true,
+      entryExecutable: true,
+      operationalHitTarget: true,
+      executableHitTarget: true,
+      operationalMissReasons: [],
+      operationalMissReason: null,
+      tokens: ["b", "a"],
+    },
   ])
   const summary = await materializeTp12CandidateEvents({
     candidateCatalogPath: catalogPath,
@@ -69,6 +97,13 @@ try {
   assert.equal(rowE1.maxForwardReturn, 0.13)
   assert.equal(rowE1.minForwardReturn, -0.02)
   assert.equal(rowE1.targetBeforeStop, true)
+  assert.equal(rowE1.hitDefinition, TP12_OPERATIONAL_HIT_DEFINITION)
+  assert.equal(rowE1.executionPolicyId, TP12_EXECUTION_POLICY_ID)
+  assert.equal(rowE1.entryDateKey, "2020-01-06")
+  assert.equal(rowE1.chartHitTarget, true)
+  assert.equal(rowE1.entryExecutable, true)
+  assert.equal(rowE1.operationalHitTarget, true)
+  assert.deepEqual(rowE1.operationalMissReasons, [])
 } finally {
   await fs.rm(tmp, { recursive: true, force: true })
 }

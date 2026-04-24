@@ -25,6 +25,11 @@ OOS_FROM=""
 OOS_TO=""
 LABEL_HORIZON_TO=""
 REQUIRE_EXTENDED_MANIFESTS="false"
+HIT_DEFINITION=""
+HIT_FIELD="hitTarget"
+RUN_MONTHLY_QUOTA_SCHEDULER="false"
+MONTHLY_QUOTA_FULL_MONTH_KEYS=""
+MONTHLY_QUOTA_FAIL_ON_GATE_FAILURE="true"
 
 usage() {
   cat <<'EOF'
@@ -38,6 +43,9 @@ preflight -> OOS label events -> OOS tokenized events -> gated-catalog materiali
 This wrapper does not mine new candidates and does not delegate to the fixed-window remine runner.
 Pass --require-extended-manifests=true with train label/token/event and survivor manifests for the
 strict frozen-survivor preflight path.
+For operational monthly quota evaluation, pass --hit-definition=operational_hit_v1,
+--hit-field=operationalHitTarget, --run-monthly-quota-scheduler=true, and explicit
+--monthly-quota-full-month-keys=YYYY-MM,YYYY-MM.
 EOF
 }
 
@@ -64,6 +72,12 @@ while [[ $# -gt 0 ]]; do
     --oos-to=*) OOS_TO="${1#*=}"; shift ;;
     --label-horizon-to=*) LABEL_HORIZON_TO="${1#*=}"; shift ;;
     --require-extended-manifests=*) REQUIRE_EXTENDED_MANIFESTS="${1#*=}"; shift ;;
+    --hit-definition=*) HIT_DEFINITION="${1#*=}"; shift ;;
+    --hit-field=*) HIT_FIELD="${1#*=}"; shift ;;
+    --run-monthly-quota-scheduler=*) RUN_MONTHLY_QUOTA_SCHEDULER="${1#*=}"; shift ;;
+    --monthly-quota-full-month-keys=*) MONTHLY_QUOTA_FULL_MONTH_KEYS="${1#*=}"; shift ;;
+    --monthly-quota-full-months=*) MONTHLY_QUOTA_FULL_MONTH_KEYS="${1#*=}"; shift ;;
+    --monthly-quota-fail-on-gate-failure=*) MONTHLY_QUOTA_FAIL_ON_GATE_FAILURE="${1#*=}"; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown arg: ${1}" >&2; exit 1 ;;
   esac
@@ -155,6 +169,8 @@ REPLAY_SUMMARY="$OUT_ROOT/oos_replay_summary.json"
 REPLAY_REPORT="$OUT_ROOT/oos_replay_report.md"
 SYMBOL_DATE_UNION="$OUT_ROOT/oos_symbol_date_union.jsonl"
 ONE_PICK_PER_DAY="$OUT_ROOT/oos_one_pick_per_day.jsonl"
+MONTHLY_QUOTA_SUMMARY="$OUT_ROOT/oos_monthly_quota_scheduler_summary.json"
+MONTHLY_QUOTA_SELECTIONS="$OUT_ROOT/oos_monthly_quota_scheduler_selections.jsonl"
 
 preflight_args=(
   "tools/assert_tp12_year2hit_oos_preflight.mjs"
@@ -232,6 +248,8 @@ node tools/build_tp12_year2hit_candidate_replay_report.mjs \
   "--candidate-catalog=$GATED_CATALOG" \
   "--date-from=$OOS_FROM" \
   "--date-to=$OOS_TO" \
+  "--hit-definition=$HIT_DEFINITION" \
+  "--hit-field=$HIT_FIELD" \
   "--label-summary=$LABEL_SUMMARY" \
   "--tokenized-summary=$TOKENIZED_SUMMARY" \
   "--materialize-summary=$MATERIALIZE_SUMMARY" \
@@ -240,5 +258,27 @@ node tools/build_tp12_year2hit_candidate_replay_report.mjs \
   "--out-report=$REPLAY_REPORT" \
   "--out-symbol-date-union=$SYMBOL_DATE_UNION" \
   "--out-one-pick-per-day=$ONE_PICK_PER_DAY"
+
+if [[ "$RUN_MONTHLY_QUOTA_SCHEDULER" == "true" ]]; then
+  [[ "$HIT_DEFINITION" == "operational_hit_v1" ]] || {
+    echo "monthly quota scheduler requires --hit-definition=operational_hit_v1" >&2
+    exit 4
+  }
+  [[ "$HIT_FIELD" == "operationalHitTarget" ]] || {
+    echo "monthly quota scheduler requires --hit-field=operationalHitTarget" >&2
+    exit 4
+  }
+  [[ -n "$MONTHLY_QUOTA_FULL_MONTH_KEYS" ]] || {
+    echo "monthly quota scheduler requires --monthly-quota-full-month-keys" >&2
+    exit 4
+  }
+  node tools/build_tp12_monthly_quota_precision_scheduler.mjs \
+    "--candidates=$ONE_PICK_PER_DAY" \
+    "--out-summary=$MONTHLY_QUOTA_SUMMARY" \
+    "--out-selections=$MONTHLY_QUOTA_SELECTIONS" \
+    "--full-month-keys=$MONTHLY_QUOTA_FULL_MONTH_KEYS" \
+    "--score-field=schedulerScore" \
+    "--fail-on-gate-failure=$MONTHLY_QUOTA_FAIL_ON_GATE_FAILURE"
+fi
 
 echo "[done] tp12 year2hit gated catalog OOS replay out=$OUT_ROOT"

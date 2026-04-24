@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T03:49:44Z",
+  "updatedAt": "2026-04-24T04:06:19Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,32 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_nonhit_purge_gate_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_nonhit_purge_gate",
-      "probeId": null,
-      "status": "completed_train_only_nonhit_purge_zero_fp_rules_found",
-      "runs": [
-        "tp12_year2hit_nonhit_purge_gate_v1_train_only_diagnostic"
-      ],
-      "primaryMetrics": {
-        "enrichedRows": 74061,
-        "observedYears": 4,
-        "rowHitRows": 15245,
-        "rowFalsePositiveRows": 58816,
-        "candidateAtomCount": 434,
-        "searchedAtomCount": 360,
-        "baseCount": 214,
-        "zeroFalsePositiveRuleCount": 469,
-        "baseWithZeroRuleCount": 21,
-        "maxZeroRuleHitRows": 12,
-        "maxZeroRuleHitDates": 11,
-        "bestZeroRulePrecision": 1
-      },
-      "summary": "Train-only non-hit purge gate search found strict zero-false-positive year2hit-preserving rules on the OOF enriched train-validation table. No OOS read and no locked selector emitted; full 2016-2024 replay is still required before promotion."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_year2hit_zero_fp_full_train_replay_v1",
@@ -485,6 +459,26 @@
         "fullMonthPolicy": "explicit_full_months_only"
       },
       "summary": "Implemented fixed-threshold TP12 monthly quota precision scheduler. It requires explicit full-month keys, selects only by fixed scheduler score and concentration caps, never uses entryExecutable or hit fields for selection, and fails when any full month has fewer than five selected executable recommendations. Local and server verify passed."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_monthly_quota_replay_integration_v1",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_monthly_quota_replay_integration",
+      "probeId": null,
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_monthly_quota_replay_integration_v1_code_verify"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "monthlyQuotaSchedulerIntegrated": true,
+        "operationalFieldPropagationVerified": true,
+        "schedulerScoreSource": "train_catalog_quality_v1",
+        "fullMonthPolicy": "explicit_full_months_only"
+      },
+      "summary": "Connected TP12 gated catalog OOS replay to the monthly quota scheduler path. Operational fields now survive tokenizer and candidate materialization, one-pick replay rows carry train-catalog-only schedulerScore, and the OOS replay wrapper can fail-fast run monthlyQuotaSchedule with explicit full-month keys. Local and server verify passed."
     }
   ],
   "recentExperimentLog": [
@@ -7048,6 +7042,19 @@
         "tp12_monthly_quota_precision_scheduler_v1_code_verify"
       ],
       "summary": "Implemented fixed-threshold TP12 monthly quota precision scheduler. It requires explicit full-month keys, selects only by fixed scheduler score and concentration caps, never uses entryExecutable or hit fields for selection, and fails when any full month has fewer than five selected executable recommendations. Local and server verify passed."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_monthly_quota_replay_integration_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_monthly_quota_replay_integration",
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_monthly_quota_replay_integration_v1_code_verify"
+      ],
+      "summary": "Connected TP12 gated catalog OOS replay to the monthly quota scheduler path. Operational fields now survive tokenizer and candidate materialization, one-pick replay rows carry train-catalog-only schedulerScore, and the OOS replay wrapper can fail-fast run monthlyQuotaSchedule with explicit full-month keys. Local and server verify passed."
     }
   ],
   "doNotRepeat": [

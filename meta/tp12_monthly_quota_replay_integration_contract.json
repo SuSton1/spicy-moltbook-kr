@@ -1,0 +1,65 @@
+{
+  "kind": "tp12_monthly_quota_replay_integration_contract_v1",
+  "contractId": "tp12_monthly_quota_replay_integration_v1",
+  "patchKey": "tp12_monthly_quota_replay_integration_v1",
+  "updatedAt": "2026-04-24T00:00:00+09:00",
+  "goal": {
+    "target": "Connect gated catalog OOS replay to the fixed monthly quota scheduler for operational TP12 evaluation.",
+    "monthlyMinimumExecutableRecommendations": 5,
+    "targetMovePct": 0.12,
+    "hitDefinition": "operational_hit_v1"
+  },
+  "operationalReplay": {
+    "requiredHitDefinition": "operational_hit_v1",
+    "requiredHitField": "operationalHitTarget",
+    "chartHitField": "chartHitTarget",
+    "entryExecutableField": "entryExecutable",
+    "nonExecutableRowsRemainFailures": true,
+    "tokenizerMustPreserveOperationalFields": true,
+    "materializerMustPreserveOperationalFields": true
+  },
+  "schedulerInput": {
+    "sourceArtifact": "oos_one_pick_per_day.jsonl",
+    "requiredScoreField": "schedulerScore",
+    "scoreSource": "train_catalog_quality_v1",
+    "scoreMayUseOnlyTrainCatalogMetrics": [
+      "rowPrecision",
+      "datePrecision",
+      "minYearHitDates",
+      "hitRows",
+      "matchRows"
+    ],
+    "scoreMustNotUseFields": [
+      "entryExecutable",
+      "entryOpen",
+      "entryGapPct",
+      "entryVolume",
+      "entryDateKey",
+      "operationalHitTarget",
+      "chartHitTarget",
+      "hitTarget",
+      "hitDateKey",
+      "futureHigh",
+      "futureLow",
+      "maxForwardReturn",
+      "minForwardReturn"
+    ]
+  },
+  "wrapper": {
+    "path": "tools/run_tp12_year2hit_gated_catalog_oos_replay.sh",
+    "monthlyQuotaSchedulerFlag": "--run-monthly-quota-scheduler=true",
+    "fullMonthKeysFlag": "--monthly-quota-full-month-keys=YYYY-MM,YYYY-MM",
+    "failFastRules": [
+      "scheduler run requires explicit full-month keys",
+      "scheduler run requires hit-definition operational_hit_v1",
+      "scheduler run requires hit-field operationalHitTarget",
+      "scheduler failure exits non-zero unless explicitly disabled"
+    ]
+  },
+  "hardStops": [
+    "Do not derive full months implicitly inside the scheduler path.",
+    "Do not use OOS hit results or executability fields to compute schedulerScore.",
+    "Do not drop non-executable recommendations before evaluation.",
+    "Do not lower monthly quota or precision thresholds to make a replay pass."
+  ]
+}

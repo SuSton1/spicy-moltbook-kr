@@ -123,6 +123,32 @@ const candidateTrainScore = (candidate) => ({
   matchRows: toNumber(candidate?.matchRows, 0),
 })
 
+const requireFiniteCatalogMetric = ({ candidate, field, patternId }) => {
+  if (!Object.prototype.hasOwnProperty.call(candidate ?? {}, field)) {
+    throw new Error(`candidate ${patternId} missing train metric for schedulerScore: ${field}`)
+  }
+  const value = toNumber(candidate[field])
+  if (!Number.isFinite(value)) throw new Error(`candidate ${patternId} has non-finite train metric ${field}: ${candidate[field]}`)
+  return value
+}
+
+export const buildTp12ReplaySchedulerScore = (candidate) => {
+  const patternId = resolvePatternId(candidate)
+  if (!patternId) throw new Error("candidate missing patternId for schedulerScore")
+  const rowPrecision = requireFiniteCatalogMetric({ candidate, field: "rowPrecision", patternId })
+  const datePrecision = requireFiniteCatalogMetric({ candidate, field: "datePrecision", patternId })
+  const minYearHitDates = requireFiniteCatalogMetric({ candidate, field: "minYearHitDates", patternId })
+  const hitRows = requireFiniteCatalogMetric({ candidate, field: "hitRows", patternId })
+  const matchRows = requireFiniteCatalogMetric({ candidate, field: "matchRows", patternId })
+  return (
+    rowPrecision * 1_000_000 +
+    datePrecision * 10_000 +
+    minYearHitDates * 100 +
+    hitRows +
+    1 / (1 + Math.max(0, matchRows))
+  )
+}
+
 const compareReplayRows = (left, right, catalog) => {
   const leftCandidate = catalog.get(left.patternId)
   const rightCandidate = catalog.get(right.patternId)
@@ -267,6 +293,13 @@ export const buildTp12Year2hitCandidateReplayReport = async ({
         [activeHitField]: hit,
         chartHitTarget: Object.prototype.hasOwnProperty.call(event, "chartHitTarget") ? event.chartHitTarget === true : undefined,
         entryExecutable: Object.prototype.hasOwnProperty.call(event, "entryExecutable") ? event.entryExecutable === true : undefined,
+        hitDefinition: Object.prototype.hasOwnProperty.call(event, "hitDefinition") ? toText(event.hitDefinition) : undefined,
+        executionPolicyId: Object.prototype.hasOwnProperty.call(event, "executionPolicyId") ? toText(event.executionPolicyId) : undefined,
+        entryDateKey: Object.prototype.hasOwnProperty.call(event, "entryDateKey") ? toText(event.entryDateKey) : undefined,
+        operationalMissReasons: Array.isArray(event.operationalMissReasons) ? event.operationalMissReasons : undefined,
+        operationalMissReason: Object.prototype.hasOwnProperty.call(event, "operationalMissReason")
+          ? event.operationalMissReason
+          : undefined,
       }
       addMetricRow(rawState, replayRow)
       const patternState = patternStates.get(patternId) ?? emptyMetricState()
@@ -307,6 +340,9 @@ export const buildTp12Year2hitCandidateReplayReport = async ({
         selectedPatternTrainRowPrecision: toNumber(candidate?.rowPrecision, 0),
         selectedPatternTrainDatePrecision: toNumber(candidate?.datePrecision, 0),
         selectedPatternMinYearHitDates: toNumber(candidate?.minYearHitDates, 0),
+        schedulerScore: buildTp12ReplaySchedulerScore(candidate),
+        schedulerScoreSource: "train_catalog_quality_v1",
+        schedulerScoreSelectionFieldContract: "no_entry_no_hit_selection_fields_v1",
       }
     })
   const symbolDateState = emptyMetricState()

@@ -8,6 +8,10 @@ import path from "node:path"
 import { promisify } from "node:util"
 
 import { buildTp12TokenizedEvents } from "../src/lib/tp12_feature_tokenizer.mjs"
+import {
+  TP12_EXECUTION_POLICY_ID,
+  TP12_OPERATIONAL_HIT_DEFINITION,
+} from "../src/lib/tp12_operational_hit_contract.mjs"
 
 const execFileAsync = promisify(execFile)
 
@@ -51,6 +55,14 @@ try {
       asOfFeatureDateKey: "2020-01-25",
       entryDateKey: "2020-01-26",
       hitTarget: true,
+      hitDefinition: TP12_OPERATIONAL_HIT_DEFINITION,
+      executionPolicyId: TP12_EXECUTION_POLICY_ID,
+      chartHitTarget: true,
+      entryExecutable: true,
+      operationalHitTarget: true,
+      executableHitTarget: true,
+      operationalMissReasons: [],
+      operationalMissReason: null,
       labelStatus: "valid",
       maxForwardReturn: 0.13,
       minForwardReturn: -0.02,
@@ -76,6 +88,12 @@ try {
   assert.equal(row.maxForwardReturn, 0.13)
   assert.equal(row.minForwardReturn, -0.02)
   assert.equal(row.availableForwardBars, 3)
+  assert.equal(row.hitDefinition, TP12_OPERATIONAL_HIT_DEFINITION)
+  assert.equal(row.executionPolicyId, TP12_EXECUTION_POLICY_ID)
+  assert.equal(row.chartHitTarget, true)
+  assert.equal(row.entryExecutable, true)
+  assert.equal(row.operationalHitTarget, true)
+  assert.deepEqual(row.operationalMissReasons, [])
 
   const sparseLabelsPath = path.join(tmp, "sparse_labels.jsonl")
   const sparseOutPath = path.join(tmp, "sparse_tokenized.jsonl")
