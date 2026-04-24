@@ -1,0 +1,108 @@
+{
+  "contractId": "tp12_operational_nonhit_purge_precision_lab_contract_v1",
+  "patchKey": "tp12_operational_nonhit_purge_precision_lab_v1",
+  "purpose": "Train-only frontier lab for removing operational nonhits from year-2-hit daily OHLCV seed patterns.",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "lockedFuture": {
+    "from": "2025-01-02",
+    "failOnForbiddenFutureRows": true
+  },
+  "defaultInputs": {
+    "candidateCatalogPath": "artifacts/runs/tp12_daily_ohlcv_operational_seed_probe_run_v1_r5/candidate_catalog.jsonl",
+    "tokenizedEventsPath": "artifacts/runs/tp12_daily_ohlcv_operational_seed_probe_run_v1_r2/tokenized_events.jsonl",
+    "candlePath": "data/candle_daily.jsonl"
+  },
+  "candidateFrontier": {
+    "frontierId": "low_fp_high_precision_balanced_frontier_v1",
+    "allowedStatuses": [
+      "raw_survivor",
+      "quality_seed_passed"
+    ],
+    "maxCandidateCount": 220,
+    "maxCandidateMatchRows": 10000,
+    "lowFalsePositiveCount": 120,
+    "highPrecisionCount": 80,
+    "balancedCount": 120,
+    "lowFalsePositiveMaxRows": 1500,
+    "highPrecisionMinRowPrecision": 0.24,
+    "requireYear2hitPassed": true
+  },
+  "supportMaterializer": {
+    "hitField": "operationalHitTarget",
+    "maxSupportRowsTotal": 2000000,
+    "maxSupportRowsPerCandidate": 75000,
+    "failOnMissingCandle": true,
+    "failOnMissingOperationalHitField": true,
+    "writeBaseTokens": true,
+    "writeMicroTerms": true
+  },
+  "microFeatureBank": {
+    "featureBankId": "tp12_operational_micro_feature_bank_v1",
+    "allowedSource": "D0_CLOSE_AND_PAST_DAILY_OHLCV_ONLY",
+    "forbiddenFields": [
+      "entryOpen",
+      "entryGapPct",
+      "entryVolume",
+      "hitDateKey",
+      "futureHigh",
+      "futureLow",
+      "maxForwardHighPct",
+      "maxForwardReturn",
+      "minForwardLowPct",
+      "oosScore",
+      "flow",
+      "program",
+      "news",
+      "theme",
+      "sector"
+    ],
+    "families": [
+      "shape",
+      "return",
+      "range",
+      "volume",
+      "amount",
+      "moving_average",
+      "breakout",
+      "reclaim"
+    ]
+  },
+  "vetoMining": {
+    "coreYears": [
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024
+    ],
+    "minHitsPerYear": 2,
+    "maxFalsePositiveRows": 0,
+    "requiredRowPrecision": 1,
+    "maxRequireTerms": 2,
+    "maxVetoTerms": 2,
+    "topRequireTermsPerPattern": 24,
+    "topVetoTermsPerPattern": 30,
+    "minRuleHitRows": 18,
+    "minUniqueHitSymbols": 9,
+    "maxRuleEvaluationsPerPattern": 200000,
+    "failOnSearchBudgetExceeded": true,
+    "failOnZeroVerifiedSeeds": false
+  },
+  "outputs": {
+    "runDir": "artifacts/runs/tp12_operational_nonhit_purge_precision_lab_v1",
+    "supportRows": "support_rows.jsonl",
+    "supportSummary": "support_summary.json",
+    "nonhitReport": "nonhit_anatomy_report.json",
+    "vetoCandidates": "veto_seed_candidates.jsonl",
+    "vetoSummary": "veto_seed_mining_summary.json",
+    "verifiedSeeds": "verified_operational100_seeds.jsonl",
+    "verifiedSummary": "verified_operational100_seed_summary.json"
+  }
+}

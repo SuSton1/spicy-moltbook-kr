@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T11:56:19Z",
+  "updatedAt": "2026-04-24T13:13:57Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,28 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_executable_global_greedy_stability_gated_cover_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_executable_global_greedy_stability_gated_cover",
-      "probeId": null,
-      "status": "completed_train_only_no_stable_survivor_found",
-      "runs": [
-        "tp12_year2hit_executable_global_greedy_stability_gated_cover_v1"
-      ],
-      "primaryMetrics": {
-        "scopedRowCount": 149896,
-        "sourceRuleCount": 469,
-        "candidateTileCount": 8066450,
-        "zeroFpTileCount": 17248,
-        "globalGreedyFinalSurvivorCount": 0,
-        "trainReplaySurvivorCoverCount": 0,
-        "oosRead": false,
-        "lockedSelectorEmitted": false
-      },
-      "summary": "Train-only executable global greedy re-search with minimum tile support and single-tile-drop year coverage gates found zero stable year2-hit zero-FP survivors on 2016-2024 train."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_year2hit_executable_zero_fp_tile_pool_audit_v1",
@@ -473,6 +451,27 @@
         "lockedSelectorEmitted": false
       },
       "summary": "Train-only 2016-2024 daily OHLCV D0 seed probe completed: 11,326 year2hit raw survivors were found, but zero strict operational 100pct seeds survived because every raw survivor still contained operational false positives. No OOS/future rows were used."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_operational_nonhit_purge_precision_lab_v1",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "probeId": null,
+      "status": "completed_zero_verified_operational100_seed",
+      "runs": [],
+      "primaryMetrics": {
+        "selectedCandidateCount": 131,
+        "supportRows": 11984,
+        "hitRows": 1281,
+        "missRows": 10703,
+        "rowPrecision": 0.10689252336448599,
+        "patternCount": 21,
+        "evaluatedRuleCount": 575976,
+        "acceptedCount": 0,
+        "verifiedOperational100SeedCount": 0
+      },
+      "summary": "2016-2024 train-only operationalHitTarget \uae30\uc900 \ub17c\ud788\ud2b8 \uc815\ubc00 \uc81c\uac70 \ud504\ub7f0\ud2f0\uc5b4 \uc2e4\ud5d8. \uc120\ud0dd \ud6c4\ubcf4 131\uac1c, \uc2e4\uc81c \uc9c0\uc9c0\ud589 11984\uac1c, \uaddc\uce59\ud3c9\uac00 575976\uac1c\ub97c \uac80\uc99d\ud588\uc73c\ub098 \uc5f02\ud788\ud2b8 100% operational seed\ub294 0\uac1c."
     }
   ],
   "recentExperimentLog": [
@@ -7199,6 +7198,17 @@
         "tp12_daily_ohlcv_operational_seed_probe_run_v1_r5"
       ],
       "summary": "Train-only 2016-2024 daily OHLCV D0 seed probe completed: 11,326 year2hit raw survivors were found, but zero strict operational 100pct seeds survived because every raw survivor still contained operational false positives. No OOS/future rows were used."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_operational_nonhit_purge_precision_lab_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "status": "completed_zero_verified_operational100_seed",
+      "runs": [],
+      "summary": "2016-2024 train-only operationalHitTarget \uae30\uc900 \ub17c\ud788\ud2b8 \uc815\ubc00 \uc81c\uac70 \ud504\ub7f0\ud2f0\uc5b4 \uc2e4\ud5d8. \uc120\ud0dd \ud6c4\ubcf4 131\uac1c, \uc2e4\uc81c \uc9c0\uc9c0\ud589 11984\uac1c, \uaddc\uce59\ud3c9\uac00 575976\uac1c\ub97c \uac80\uc99d\ud588\uc73c\ub098 \uc5f02\ud788\ud2b8 100% operational seed\ub294 0\uac1c."
     }
   ],
   "doNotRepeat": [

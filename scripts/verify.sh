@@ -685,6 +685,10 @@ node --check src/lib/tp12_label_event_builder.mjs
 node --check src/lib/tp12_daily_ohlcv_d0_feature_whitelist.mjs
 node --check src/lib/tp12_feature_tokenizer.mjs
 node --check src/lib/tp12_year2hit_candidate_miner.mjs
+node --check src/lib/tp12_operational_micro_feature_bank.mjs
+node --check src/lib/tp12_operational_seed_support_materializer.mjs
+node --check src/lib/tp12_operational_nonhit_anatomy_report.mjs
+node --check src/lib/tp12_operational_veto_term_miner.mjs
 node --check src/lib/tp12_pattern_dedupe_similarity_gate.mjs
 node --check src/lib/tp12_candidate_event_materializer.mjs
 node --check src/lib/tp12_year2hit_quality_gate.mjs
@@ -744,6 +748,10 @@ node --check src/lib/tp12_train100_positive_motif_certificate_writer.mjs
 node --check tools/build_tp12_label_events.mjs
 node --check tools/build_tp12_tokenized_events.mjs
 node --check tools/mine_tp12_year2hit_candidates.mjs
+node --check tools/build_tp12_operational_seed_support_rows.mjs
+node --check tools/analyze_tp12_operational_nonhits.mjs
+node --check tools/mine_tp12_operational_nonhit_veto_terms.mjs
+node --check tools/verify_tp12_operational_veto_seeds.mjs
 node --check tools/build_tp12_pattern_dedupe_similarity_gate.mjs
 node --check tools/assert_tp12_train100_preflight.mjs
 node --check tools/build_tp12_train100_atom_table.mjs
@@ -817,6 +825,7 @@ node --check tools/smoke_tp12_operational_hit_contract.mjs
 node --check tools/smoke_tp12_operational_monthly_gate.mjs
 node --check tools/smoke_tp12_daily_ohlcv_d0_token_surface.mjs
 node --check tools/smoke_tp12_year2hit_operational_seed_existence_probe.mjs
+node --check tools/smoke_tp12_operational_nonhit_purge_precision_lab.mjs
 node --check tools/smoke_tp12_pattern_dedupe_similarity_gate.mjs
 node --check tools/smoke_tp12_locked_future_eval_protocol.mjs
 node --check tools/smoke_tp12_year2hit_executable_pattern_bundle_bank.mjs
@@ -895,6 +904,7 @@ node tools/smoke_tp12_operational_hit_contract.mjs
 node tools/smoke_tp12_operational_monthly_gate.mjs
 node tools/smoke_tp12_daily_ohlcv_d0_token_surface.mjs
 node tools/smoke_tp12_year2hit_operational_seed_existence_probe.mjs
+node tools/smoke_tp12_operational_nonhit_purge_precision_lab.mjs
 node tools/smoke_tp12_pattern_dedupe_similarity_gate.mjs
 node tools/smoke_tp12_locked_future_eval_protocol.mjs
 node tools/smoke_tp12_year2hit_executable_pattern_bundle_bank.mjs
