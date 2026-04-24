@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T04:55:53Z",
+  "updatedAt": "2026-04-24T05:26:38Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,35 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_zero_fp_micro_split_oos_replay_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_zero_fp_micro_split_oos_replay",
-      "probeId": null,
-      "status": "completed_oos_replay_fixed_survivor_covers_precision_degraded",
-      "runs": [
-        "tp12_year2hit_zero_fp_micro_split_oos_replay_v1"
-      ],
-      "primaryMetrics": {
-        "dateFrom": "2025-01-02",
-        "dateTo": "2026-04-14",
-        "survivorCoverCount": 40,
-        "coverCountWithMatches": 40,
-        "uniqueMetricGroupCount": 2,
-        "uniqueMatchedRowSetCount": 2,
-        "unionMatchRows": 15,
-        "unionHitRows": 8,
-        "unionFalsePositiveRows": 7,
-        "unionPrecision": 0.5333333333333333,
-        "bestGroupCoverCount": 19,
-        "bestGroupMatchRows": 14,
-        "bestGroupHitRows": 8,
-        "bestGroupFalsePositiveRows": 6,
-        "bestGroupPrecision": 0.5714285714285714
-      },
-      "summary": "Replayed the 40 fixed train-only TP12 zero-FP micro-split survivor covers on OOS 2025-01-02..2026-04-14 without OOS refit. Pattern reliability was sourced from train events only; OOS labels were used only for evaluation. All 40 covers matched OOS rows. They collapsed into two metric/row-set groups: 21 covers matched 15 rows with 8 hits and 7 misses (53.33% precision), while 19 covers matched 14 rows with 8 hits and 6 misses (57.14% precision). Union across covers was 8/15=53.33%, with hit dates 2025=6 and 2026=2, so OOS still meets observed-year >=2 hits but loses the train zero-FP property."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_year2hit_zero_fp_micro_split_oos_replay_v1_metrics_correction",
@@ -489,6 +460,39 @@
         "monthlyGatePassed": false
       },
       "summary": "Converted existing 2016-2024 train 100pct operational year2hit greedy covers into operational pattern/events and tested monthly 5-hit bundle gate. Train precision stayed 100pct with zero misses, but coverage failed: unique union rows only 43 across 108 full months, 107 months below 5 hits."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_year2hit_train100_all40_oos_operational_eval_v1",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "probeId": null,
+      "status": "completed_oos_operational_eval_failed",
+      "runs": [
+        "tp12_year2hit_train100_all40_oos_operational_eval_v1/oos"
+      ],
+      "primaryMetrics": {
+        "dateFrom": "2025-01-02",
+        "dateTo": "2026-04-14",
+        "patternCount": 40,
+        "coverCountWithMatches": 40,
+        "summedPatternRows": 398,
+        "summedPatternHitRows": 120,
+        "summedPatternMissRows": 278,
+        "summedPatternPrecision": 0.3015075376884422,
+        "unionRows": 17,
+        "unionOperationalHitRows": 5,
+        "unionOperationalMissRows": 12,
+        "unionOperationalPrecision": 0.29411764705882354,
+        "entryExecutableRows": 17,
+        "nonExecutableRows": 0,
+        "hitDates2025": 1,
+        "hitDates2026": 4,
+        "minHitDatesPerObservedYear": 1,
+        "year2HitPassedOnObservedYears": false,
+        "zeroOperationalFalsePositiveCoverCount": 0
+      },
+      "summary": "Replayed the frozen 40 train-100pct operational year2hit covers on OOS 2025-01-02..2026-04-14. All 40 matched OOS rows, but OOS precision collapsed: summed per-pattern 120/398=30.15%, unique union 5/17=29.41%, zero non-executable rows, observed-year min hit dates=1, year2 OOS failed."
     }
   ],
   "recentExperimentLog": [
@@ -7091,6 +7095,19 @@
         "tp12_year2hit_train100_monthly_coverage_eval_v1/train_only"
       ],
       "summary": "Converted existing 2016-2024 train 100pct operational year2hit greedy covers into operational pattern/events and tested monthly 5-hit bundle gate. Train precision stayed 100pct with zero misses, but coverage failed: unique union rows only 43 across 108 full months, 107 months below 5 hits."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_year2hit_train100_all40_oos_operational_eval_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "status": "completed_oos_operational_eval_failed",
+      "runs": [
+        "tp12_year2hit_train100_all40_oos_operational_eval_v1/oos"
+      ],
+      "summary": "Replayed the frozen 40 train-100pct operational year2hit covers on OOS 2025-01-02..2026-04-14. All 40 matched OOS rows, but OOS precision collapsed: summed per-pattern 120/398=30.15%, unique union 5/17=29.41%, zero non-executable rows, observed-year min hit dates=1, year2 OOS failed."
     }
   ],
   "doNotRepeat": [
@@ -8578,6 +8595,17 @@
       "area": "RESEARCH_CONTROL_PLANE",
       "status": "completed_eval_gate_failed",
       "reason": "Converted existing 2016-2024 train 100pct operational year2hit greedy covers into operational pattern/events and tested monthly 5-hit bundle gate. Train precision stayed 100pct with zero misses, but coverage failed: unique union rows only 43 across 108 full months, 107 months below 5 hits."
+    },
+    {
+      "probeId": null,
+      "patchKey": "tp12_year2hit_train100_all40_oos_operational_eval_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "area": "RESEARCH_CONTROL_PLANE",
+      "status": "completed_oos_operational_eval_failed",
+      "reason": "Replayed the frozen 40 train-100pct operational year2hit covers on OOS 2025-01-02..2026-04-14. All 40 matched OOS rows, but OOS precision collapsed: summed per-pattern 120/398=30.15%, unique union 5/17=29.41%, zero non-executable rows, observed-year min hit dates=1, year2 OOS failed."
     }
   ],
   "goalModePolicy": {
