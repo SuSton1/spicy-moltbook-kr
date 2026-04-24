@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T07:25:25Z",
+  "updatedAt": "2026-04-24T07:46:17Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,33 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_zero_fp_micro_split_train_executable_reaudit_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_zero_fp_micro_split_train_executable_reaudit",
-      "probeId": null,
-      "status": "completed_train_executable_micro_split_survivors_found",
-      "runs": [
-        "tp12_year2hit_zero_fp_micro_split_train_executable_reaudit_v1/train_only_reaudit"
-      ],
-      "primaryMetrics": {
-        "scopedRows": 149896,
-        "executableRows": 148002,
-        "nonExecutableRows": 1894,
-        "nonExecutableHitRows": 440,
-        "sourceRuleCount": 469,
-        "sourceReplayZeroFpYear2RuleCount": 0,
-        "microSplitFinalSurvivorCount": 120,
-        "uniqueBaseCount": 6,
-        "uniqueHitSignatureCount": 8,
-        "bestHitRows": 28,
-        "bestFalsePositiveRows": 0,
-        "bestMinHitDatesPerYear": 2,
-        "bestMinHitSymbolDatesPerYear": 2
-      },
-      "summary": "Train 2016-2024 rerun with strict entry executability filter. Existing 469 source rules have zero executable-only zero-FP year2 survivors, but executable-only micro-split found 120 final survivors across 6 bases and 8 unique hit signatures; best cover is 28/28 hits, falsePositiveRows=0, minHitDatesPerYear=2."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_year2hit_zero_fp_micro_split_train_executable_oos_replay_v1",
@@ -488,6 +461,36 @@
         "selectedSubsetOfNonhitPurgedEnforced": true
       },
       "summary": "Added a train-only integration gate tying executable year2hit pattern bank, non-hit purge, fold stability, and monthly coverage outputs together before locked future evaluation. The gate fails if selected monthly patterns are not subsets of both non-hit-purged and fold-stable patterns, if monthly full-month 5 recommendation/5 operational-hit coverage is not met, or if any summary enters locked future data. Local and server verify passed."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_fresh_year2hit_operational_train_discovery_v1",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_fresh_year2hit_operational_train_discovery",
+      "probeId": null,
+      "status": "completed_train_only_operational_recheck_not_oos_ready",
+      "runs": [
+        "tp12_fresh_year2hit_operational_train_discovery_v1"
+      ],
+      "primaryMetrics": {
+        "sourcePatternCount": 107,
+        "operationalYear2HitPatternCount": 107,
+        "nonhitPurgeSurvivorCount": 0,
+        "foldStablePatternCount": 0,
+        "operationalCandidateRows": 536550,
+        "operationalHitRows": 147417,
+        "operationalMissRows": 389133,
+        "operationalPrecision": 0.27474979032708974,
+        "nonExecutableRows": 12002,
+        "unionSymbolDates": 149896,
+        "unionHitSymbolDates": 32353,
+        "unionPrecision": 0.21583631317713614,
+        "fullMonthCount": 108,
+        "minMonthUnionRecommendations": 368,
+        "minMonthUnionHits": 56,
+        "oosRead": false
+      },
+      "summary": "Rebuilt train-only 2016-2024 labels/tokenized events under the operational hit contract and rematerialized the existing 107 H80/global-next-session year2hit candidates without reading OOS. All 107 still satisfy operational year2hit coverage, but every one has operational misses and non-executable rows; strict nonhit purge leaves 0 survivors and fold stability leaves 0 stable patterns. This confirms the broad 107 source is coverage-rich but not precision-safe, so it must not be sent to locked future/OOS; next work should mine smaller train-only subpatterns with fold stability before any OOS replay."
     }
   ],
   "recentExperimentLog": [
@@ -7131,6 +7134,19 @@
         "tp12_pattern_bank_fold_monthly_integration_v1_server_verify"
       ],
       "summary": "Added a train-only integration gate tying executable year2hit pattern bank, non-hit purge, fold stability, and monthly coverage outputs together before locked future evaluation. The gate fails if selected monthly patterns are not subsets of both non-hit-purged and fold-stable patterns, if monthly full-month 5 recommendation/5 operational-hit coverage is not met, or if any summary enters locked future data. Local and server verify passed."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_fresh_year2hit_operational_train_discovery_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_fresh_year2hit_operational_train_discovery",
+      "status": "completed_train_only_operational_recheck_not_oos_ready",
+      "runs": [
+        "tp12_fresh_year2hit_operational_train_discovery_v1"
+      ],
+      "summary": "Rebuilt train-only 2016-2024 labels/tokenized events under the operational hit contract and rematerialized the existing 107 H80/global-next-session year2hit candidates without reading OOS. All 107 still satisfy operational year2hit coverage, but every one has operational misses and non-executable rows; strict nonhit purge leaves 0 survivors and fold stability leaves 0 stable patterns. This confirms the broad 107 source is coverage-rich but not precision-safe, so it must not be sent to locked future/OOS; next work should mine smaller train-only subpatterns with fold stability before any OOS replay."
     }
   ],
   "doNotRepeat": [
