@@ -1,0 +1,56 @@
+{
+  "kind": "tp12_daily_ohlcv_d0_token_surface_contract_v1",
+  "contractId": "tp12_daily_ohlcv_d0_token_surface_v1",
+  "patchKey": "tp12_daily_ohlcv_d0_token_surface_v1",
+  "updatedAt": "2026-04-24T00:00:00+09:00",
+  "tokenizerVersion": "tp12_daily_ohlcv_d0_tokenizer_v1",
+  "featureSurfaceId": "daily_ohlcv_d0_only_v1",
+  "maxDistinctTokenCount": 63,
+  "minDistinctTokenCount": 50,
+  "sourcePolicy": {
+    "allowedSources": [
+      "daily_ohlcv_d0",
+      "daily_ohlcv_history"
+    ],
+    "forbiddenTokenFamilies": [
+      "flow",
+      "program",
+      "intraday",
+      "news",
+      "theme",
+      "sector",
+      "liq",
+      "cap"
+    ],
+    "forbiddenFeatureFields": [
+      "entryOpen",
+      "entryPrice",
+      "entryVolume",
+      "entryGapPct",
+      "entryDateKey",
+      "targetPrice",
+      "hitDateKey",
+      "stopDateKey",
+      "targetBeforeStop",
+      "stopBeforeTarget",
+      "sameBarAmbiguous",
+      "availableForwardBars",
+      "maxForwardReturn",
+      "maxForwardHighPct",
+      "minForwardReturn",
+      "minForwardLowPct",
+      "maxForwardDrawdown",
+      "hitTarget",
+      "chartHitTarget",
+      "operationalHitTarget"
+    ],
+    "requireUniverse": false
+  },
+  "hardStops": [
+    "Only D0 and prior daily OHLCV may feed tokens.",
+    "Universe liquidity, market cap, flow, program, intraday, news, theme, and sector tokens are forbidden.",
+    "Label and execution fields may be copied to the tokenized event row for downstream labels, but they must not influence tokens.",
+    "Distinct token count must remain <= 63 until a non-mask exact index is used.",
+    "Changing label/outcome fields must not change the token list."
+  ]
+}

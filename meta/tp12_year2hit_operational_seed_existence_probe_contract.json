@@ -1,0 +1,105 @@
+{
+  "kind": "tp12_year2hit_operational_seed_existence_probe_contract_v1",
+  "contractId": "tp12_year2hit_operational_seed_existence_probe_v1",
+  "patchKey": "tp12_year2hit_operational_seed_existence_probe_v1",
+  "updatedAt": "2026-04-24T00:00:00+09:00",
+  "decisionWindow": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "lockedFuture": {
+    "from": "2025-01-02"
+  },
+  "coreYearsRequested": [
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "labelEvent": {
+    "labelConfigId": "tp12_target12_next_open_hold3_no_stop_v1",
+    "entryRule": "NEXT_DAY_OPEN",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "stopLossPct": 0,
+    "stopPolicy": "no_stop",
+    "labelHorizonDateTo": "2024-12-30",
+    "horizonBoundaryPolicy": "skip_cross_boundary",
+    "terminalForwardPolicy": "skip_terminal_incomplete_forward",
+    "failOnInvalidLabels": true
+  },
+  "featureTokenizer": {
+    "tokenizerVersion": "tp12_daily_ohlcv_d0_tokenizer_v1",
+    "featureSurfaceId": "daily_ohlcv_d0_only_v1",
+    "requireUniverse": false,
+    "includeFeatureSnapshot": false,
+    "minTokenCount": 1,
+    "belowMinTokenPolicy": "skip_below_min",
+    "minDistinctTokenCount": 50,
+    "maxDistinctTokenCount": 63,
+    "forbiddenTokenFamilies": [
+      "flow",
+      "program",
+      "intraday",
+      "news",
+      "theme",
+      "sector",
+      "liq",
+      "cap"
+    ]
+  },
+  "candidateMining": {
+    "generationMode": "operational_small_precision_seed_v1",
+    "hitField": "operationalHitTarget",
+    "requiredTrainPrecision": 1,
+    "maxFalsePositiveRows": 0,
+    "maxNonExecutableRows": 0,
+    "minHitsPerYear": 2,
+    "maxPatternSize": 4,
+    "minSeedHitRows": 18,
+    "minSeedMatchRows": 18,
+    "minSeedPrecision": 0,
+    "maxTokensPerPositiveEvent": 64,
+    "maxPairCandidates": 1000000,
+    "beamWidthPerSize": 5000,
+    "maxExtensionsPerParent": 128,
+    "maxEvaluatedCandidates": 50000,
+    "minCandidatePrecision": 1,
+    "minCandidateDatePrecision": 1,
+    "minCandidateHitRows": 18,
+    "minCandidateHitDates": 18,
+    "maxTop1HitDateShare": 0.25,
+    "maxTop1MatchDateShare": 0.25,
+    "maxCandidateMatchRows": 0,
+    "minUniqueHitSymbols": 3,
+    "failOnZeroOperational100Seed": true,
+    "failOnTruncationAsFullSearch": true,
+    "lockedFutureFrom": "2025-01-02",
+    "earlyDedupe": {
+      "enabled": true,
+      "exactSupport": true,
+      "nearSupportJaccard": 0.98,
+      "containment": 0.985,
+      "minContainmentSizeRatio": 0.9
+    }
+  },
+  "oosPreflight": {
+    "enabled": false,
+    "blockedBeforeSeedExistencePass": true
+  },
+  "hardStops": [
+    "The seed probe must use operationalHitTarget as the hit field.",
+    "The seed probe must not read 2025-01-02 or later rows.",
+    "If zero operational 100pct year2hit seeds are found, stop before broad or full search.",
+    "Do not relax thresholds after a zero-survivor result."
+  ]
+}

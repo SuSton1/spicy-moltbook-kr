@@ -40,6 +40,10 @@ export const main = async (argv = process.argv.slice(2), { cwd = process.cwd() }
     includeFeatureSnapshot: optionalBool(getFlag(flags, "include-feature-snapshot", undefined)),
     minTokenCount: optionalNumber(getFlag(flags, "min-token-count", "")),
     belowMinTokenPolicy: toText(getFlag(flags, "below-min-token-policy", "")) || undefined,
+    featureSurfaceId: toText(getFlag(flags, "feature-surface-id", "")) || undefined,
+    minDistinctTokenCount: optionalNumber(getFlag(flags, "min-distinct-token-count", "")),
+    maxDistinctTokenCount: optionalNumber(getFlag(flags, "max-distinct-token-count", "")),
+    forbiddenTokenFamilies: toText(getFlag(flags, "forbidden-token-families", "")) || undefined,
   })
   console.log(
     JSON.stringify(

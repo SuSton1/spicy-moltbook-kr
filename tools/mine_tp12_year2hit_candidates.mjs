@@ -57,6 +57,21 @@ export const main = async (argv = process.argv.slice(2), { cwd = process.cwd() }
     maxTop1MatchDateShare: optionalNumber(getFlag(flags, "max-top1-match-date-share", "")),
     maxCandidateMatchRows: optionalNumber(getFlag(flags, "max-candidate-match-rows", "")),
     minUniqueHitSymbols: optionalNumber(getFlag(flags, "min-unique-hit-symbols", "")),
+    hitField: toText(getFlag(flags, "hit-field", "")) || undefined,
+    requiredTrainPrecision: optionalNumber(getFlag(flags, "required-train-precision", "")),
+    maxFalsePositiveRows: optionalNumber(getFlag(flags, "max-false-positive-rows", "")),
+    maxNonExecutableRows: optionalNumber(getFlag(flags, "max-non-executable-rows", "")),
+    maxEvaluatedCandidates: optionalNumber(getFlag(flags, "max-evaluated-candidates", "")),
+    failOnZeroOperational100Seed: optionalBool(getFlag(flags, "fail-on-zero-operational-100-seed", undefined)),
+    lockedFutureFrom: toText(getFlag(flags, "locked-future-from", "")) || undefined,
+    failOnForbiddenFutureRows: optionalBool(getFlag(flags, "fail-on-forbidden-future-rows", undefined)),
+    earlyDedupe: {
+      enabled: optionalBool(getFlag(flags, "early-dedupe", undefined)),
+      exactSupport: optionalBool(getFlag(flags, "early-dedupe-exact-support", undefined)),
+      nearSupportJaccard: optionalNumber(getFlag(flags, "early-dedupe-near-support-jaccard", "")),
+      containment: optionalNumber(getFlag(flags, "early-dedupe-containment", "")),
+      minContainmentSizeRatio: optionalNumber(getFlag(flags, "early-dedupe-min-containment-size-ratio", "")),
+    },
     emitRejected: optionalBool(getFlag(flags, "emit-rejected", undefined)),
   })
   console.log(

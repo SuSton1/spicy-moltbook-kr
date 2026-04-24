@@ -1,0 +1,47 @@
+{
+  "kind": "tp12_pattern_dedupe_similarity_gate_contract_v1",
+  "contractId": "tp12_pattern_dedupe_similarity_gate_v1",
+  "patchKey": "tp12_pattern_dedupe_similarity_gate_v1",
+  "updatedAt": "2026-04-24T00:00:00+09:00",
+  "dateRanges": {
+    "internalValidation": {
+      "from": "2016-01-01",
+      "to": "2024-12-31"
+    },
+    "lockedFuture": {
+      "from": "2025-01-02"
+    }
+  },
+  "dedupePolicy": {
+    "supportKey": "decisionDateKey<TAB>symbol",
+    "exactSupportSignature": true,
+    "nearSupportJaccard": 0.9,
+    "sameFamilySupportJaccard": 0.85,
+    "tokenJaccard": 0.8,
+    "containment": 0.98,
+    "patternTopSymbolShareMax": 0.25,
+    "patternTopYearShareMax": 0.3,
+    "bundleTopSymbolShareMax": 0.2,
+    "bundleTop3SymbolShareMax": 0.5,
+    "failOnMissingConditionAtoms": true
+  },
+  "representativeTieBreak": [
+    "operationalMissRows_asc",
+    "nonExecutableRows_asc",
+    "operationalPrecision_desc",
+    "minOperationalHitDatesPerYear_desc",
+    "minOperationalHitSymbolDatesPerYear_desc",
+    "coveredFullMonthCount_desc",
+    "topSymbolShare_asc",
+    "topYearShare_asc",
+    "conditionAtomCount_asc",
+    "operationalHitRows_desc",
+    "patternId_asc"
+  ],
+  "hardStops": [
+    "Dedupe must run on train/internal rows only.",
+    "A rejected duplicate pattern must not be selected by monthly bundle optimization.",
+    "Selected monthly patterns must be a subset of dedupe survivors.",
+    "Missing condition atoms are a data-contract failure, not an unknown fallback family."
+  ]
+}

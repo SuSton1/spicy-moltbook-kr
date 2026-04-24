@@ -23,6 +23,8 @@ import {
 const stablePatternId = (tokens) =>
   `tp12_y2h_${createHash("sha256").update(tokens.join("\n")).digest("hex").slice(0, 16)}`
 
+const sha256Lines = (values) => createHash("sha256").update(values.join("\n")).digest("hex")
+
 const normalizeYears = ({ coreYears, coreYearFrom = 2016, coreYearTo = 2024 }) => {
   if (Array.isArray(coreYears) && coreYears.length > 0) {
     return [...new Set(coreYears.map((year) => Number(year)).filter((year) => Number.isInteger(year)))].sort(
@@ -59,6 +61,15 @@ export const deriveTp12CandidateMiningOptionsFromContract = (contract = {}) => {
     maxTop1MatchDateShare: mining.maxTop1MatchDateShare ?? quality.maxTop1MatchDateShare,
     maxCandidateMatchRows: mining.maxCandidateMatchRows ?? quality.maxMatchRows,
     minUniqueHitSymbols: mining.minUniqueHitSymbols,
+    hitField: mining.hitField,
+    requiredTrainPrecision: mining.requiredTrainPrecision,
+    maxFalsePositiveRows: mining.maxFalsePositiveRows,
+    maxNonExecutableRows: mining.maxNonExecutableRows,
+    maxEvaluatedCandidates: mining.maxEvaluatedCandidates,
+    failOnZeroOperational100Seed: mining.failOnZeroOperational100Seed,
+    lockedFutureFrom: mining.lockedFutureFrom,
+    failOnForbiddenFutureRows: mining.failOnForbiddenFutureRows,
+    earlyDedupe: mining.earlyDedupe,
     emitRejected: mining.emitRejected,
   }
 }
@@ -85,6 +96,15 @@ const resolveOptions = ({
   maxTop1MatchDateShare,
   maxCandidateMatchRows,
   minUniqueHitSymbols,
+  hitField,
+  requiredTrainPrecision,
+  maxFalsePositiveRows,
+  maxNonExecutableRows,
+  maxEvaluatedCandidates,
+  failOnZeroOperational100Seed,
+  lockedFutureFrom,
+  failOnForbiddenFutureRows,
+  earlyDedupe,
   emitRejected,
 }) => {
   const contractOptions = contract ? deriveTp12CandidateMiningOptionsFromContract(contract) : {}
@@ -97,6 +117,12 @@ const resolveOptions = ({
   if (!Number.isInteger(minHits) || minHits < 1) throw new Error(`minHitsPerYear must be positive integer: ${minHits}`)
   const patternSize = Number(maxPatternSize ?? contractOptions.maxPatternSize ?? 3)
   if (!Number.isInteger(patternSize) || patternSize < 1) throw new Error(`maxPatternSize must be positive integer: ${patternSize}`)
+  const resolvedHitField = toText(hitField ?? contractOptions.hitField ?? "hitTarget")
+  if (!resolvedHitField) throw new Error("hitField is required")
+  const resolvedLockedFutureFrom = toText(lockedFutureFrom ?? contractOptions.lockedFutureFrom)
+  if (resolvedLockedFutureFrom && !validDateKey(resolvedLockedFutureFrom)) {
+    throw new Error(`invalid lockedFutureFrom: ${resolvedLockedFutureFrom}`)
+  }
   return {
     trainDateFrom: from,
     trainDateTo: to,
@@ -118,6 +144,30 @@ const resolveOptions = ({
     maxTop1MatchDateShare: Math.min(1, Math.max(0, Number(maxTop1MatchDateShare ?? contractOptions.maxTop1MatchDateShare ?? 1))),
     maxCandidateMatchRows: Math.max(0, Number(maxCandidateMatchRows ?? contractOptions.maxCandidateMatchRows ?? 0)),
     minUniqueHitSymbols: Math.max(0, Number(minUniqueHitSymbols ?? contractOptions.minUniqueHitSymbols ?? 0)),
+    hitField: resolvedHitField,
+    requiredTrainPrecision: Math.max(0, Number(requiredTrainPrecision ?? contractOptions.requiredTrainPrecision ?? 0)),
+    maxFalsePositiveRows: Math.max(
+      0,
+      Number(maxFalsePositiveRows ?? contractOptions.maxFalsePositiveRows ?? Number.MAX_SAFE_INTEGER),
+    ),
+    maxNonExecutableRows: Math.max(
+      0,
+      Number(maxNonExecutableRows ?? contractOptions.maxNonExecutableRows ?? Number.MAX_SAFE_INTEGER),
+    ),
+    maxEvaluatedCandidates: Math.max(0, Number(maxEvaluatedCandidates ?? contractOptions.maxEvaluatedCandidates ?? 0)),
+    failOnZeroOperational100Seed: toBool(failOnZeroOperational100Seed ?? contractOptions.failOnZeroOperational100Seed, false),
+    lockedFutureFrom: resolvedLockedFutureFrom,
+    failOnForbiddenFutureRows: toBool(failOnForbiddenFutureRows ?? contractOptions.failOnForbiddenFutureRows, true),
+    earlyDedupe: {
+      enabled: toBool(earlyDedupe?.enabled ?? contractOptions.earlyDedupe?.enabled, false),
+      exactSupport: toBool(earlyDedupe?.exactSupport ?? contractOptions.earlyDedupe?.exactSupport, true),
+      nearSupportJaccard: Math.min(1, Math.max(0, Number(earlyDedupe?.nearSupportJaccard ?? contractOptions.earlyDedupe?.nearSupportJaccard ?? 0))),
+      containment: Math.min(1, Math.max(0, Number(earlyDedupe?.containment ?? contractOptions.earlyDedupe?.containment ?? 0))),
+      minContainmentSizeRatio: Math.min(
+        1,
+        Math.max(0, Number(earlyDedupe?.minContainmentSizeRatio ?? contractOptions.earlyDedupe?.minContainmentSizeRatio ?? 0)),
+      ),
+    },
     emitRejected: toBool(emitRejected ?? contractOptions.emitRejected, false),
   }
 }
@@ -136,7 +186,9 @@ const getOrCreateId = (lookup, values, value) => {
 const readCompactTokenizedDataset = async ({ tokenizedEventsPath, options }) => {
   let inputRowCount = 0
   let outsideTrainRowCount = 0
+  let forbiddenFutureRowCount = 0
   let trainEventCount = 0
+  let maxDecisionDateSeen = ""
   const tokenIdByToken = new Map()
   const tokenById = []
   const matchCounts = []
@@ -157,12 +209,24 @@ const readCompactTokenizedDataset = async ({ tokenizedEventsPath, options }) => 
       if (!validDateKey(decisionDateKey)) {
         throw new Error(`invalid tokenized event decisionDateKey at ${context.filePath}:${context.lineNumber}: ${decisionDateKey}`)
       }
+      if (!maxDecisionDateSeen || decisionDateKey > maxDecisionDateSeen) maxDecisionDateSeen = decisionDateKey
+      if (options.lockedFutureFrom && decisionDateKey >= options.lockedFutureFrom) {
+        forbiddenFutureRowCount += 1
+        if (options.failOnForbiddenFutureRows) {
+          throw new Error(
+            `forbidden future tuning row at ${context.filePath}:${context.lineNumber}: decisionDateKey=${decisionDateKey} lockedFutureFrom=${options.lockedFutureFrom}`,
+          )
+        }
+      }
       if (decisionDateKey < options.trainDateFrom || decisionDateKey > options.trainDateTo) {
         outsideTrainRowCount += 1
         return
       }
-      if (!Object.prototype.hasOwnProperty.call(row, "hitTarget")) {
-        throw new Error(`tokenized event missing hitTarget at ${context.filePath}:${context.lineNumber}`)
+      if (!Object.prototype.hasOwnProperty.call(row, options.hitField)) {
+        throw new Error(`tokenized event missing ${options.hitField} at ${context.filePath}:${context.lineNumber}`)
+      }
+      if (options.hitField === "operationalHitTarget" && !Object.prototype.hasOwnProperty.call(row, "entryExecutable")) {
+        throw new Error(`tokenized event missing entryExecutable for operational mining at ${context.filePath}:${context.lineNumber}`)
       }
       const tokens = uniqueSorted(Array.isArray(row?.tokens) ? row.tokens : [])
       if (tokens.length < 1) return
@@ -181,7 +245,7 @@ const readCompactTokenizedDataset = async ({ tokenizedEventsPath, options }) => 
           hitSymbolsByToken[tokenId] = new Set()
         }
         matchCounts[tokenId] += 1
-        if (row.hitTarget === true) {
+        if (row[options.hitField] === true) {
           hitCounts[tokenId] += 1
           const yearKey = String(year)
           if (!hitDatesByTokenYear[tokenId].has(yearKey)) hitDatesByTokenYear[tokenId].set(yearKey, new Set())
@@ -197,6 +261,7 @@ const readCompactTokenizedDataset = async ({ tokenizedEventsPath, options }) => 
   }
   const tokenMasks = new BigUint64Array(trainEventCount)
   const hitFlags = new Uint8Array(trainEventCount)
+  const entryExecutableFlags = new Uint8Array(trainEventCount)
   const yearValues = new Uint16Array(trainEventCount)
   const dateIds = new Uint32Array(trainEventCount)
   const symbolIds = new Uint32Array(trainEventCount)
@@ -214,13 +279,21 @@ const readCompactTokenizedDataset = async ({ tokenizedEventsPath, options }) => 
       if (!validDateKey(decisionDateKey)) {
         throw new Error(`invalid tokenized event decisionDateKey at ${context.filePath}:${context.lineNumber}: ${decisionDateKey}`)
       }
+      if (options.lockedFutureFrom && decisionDateKey >= options.lockedFutureFrom && options.failOnForbiddenFutureRows) {
+        throw new Error(
+          `forbidden future tuning row at ${context.filePath}:${context.lineNumber}: decisionDateKey=${decisionDateKey} lockedFutureFrom=${options.lockedFutureFrom}`,
+        )
+      }
       if (decisionDateKey < options.trainDateFrom || decisionDateKey > options.trainDateTo) return
-      if (!Object.prototype.hasOwnProperty.call(row, "hitTarget")) {
-        throw new Error(`tokenized event missing hitTarget at ${context.filePath}:${context.lineNumber}`)
+      if (!Object.prototype.hasOwnProperty.call(row, options.hitField)) {
+        throw new Error(`tokenized event missing ${options.hitField} at ${context.filePath}:${context.lineNumber}`)
+      }
+      if (options.hitField === "operationalHitTarget" && !Object.prototype.hasOwnProperty.call(row, "entryExecutable")) {
+        throw new Error(`tokenized event missing entryExecutable for operational mining at ${context.filePath}:${context.lineNumber}`)
       }
       const tokens = uniqueSorted(Array.isArray(row?.tokens) ? row.tokens : [])
       if (tokens.length < 1) return
-      const hitTarget = row.hitTarget === true
+      const hitTarget = row[options.hitField] === true
       let mask = 0n
       for (const token of tokens) {
         const tokenId = tokenIdByToken.get(token)
@@ -235,6 +308,7 @@ const readCompactTokenizedDataset = async ({ tokenizedEventsPath, options }) => 
       }
       tokenMasks[eventIndex] = mask
       hitFlags[eventIndex] = hitTarget ? 1 : 0
+      entryExecutableFlags[eventIndex] = row.entryExecutable === false ? 0 : 1
       yearValues[eventIndex] = dateYear(decisionDateKey)
       dateIds[eventIndex] = dateIdByDateKey.get(decisionDateKey)
       symbolIds[eventIndex] = symbolIdBySymbol.get(symbol)
@@ -261,6 +335,7 @@ const readCompactTokenizedDataset = async ({ tokenizedEventsPath, options }) => 
       length: trainEventCount,
       tokenMasks,
       hitFlags,
+      entryExecutableFlags,
       yearValues,
       dateIds,
       symbolIds,
@@ -272,6 +347,8 @@ const readCompactTokenizedDataset = async ({ tokenizedEventsPath, options }) => 
     postings,
     inputRowCount,
     outsideTrainRowCount,
+    forbiddenFutureRowCount,
+    maxDecisionDateSeen,
   }
 }
 
@@ -315,15 +392,22 @@ const supportMetrics = ({ tokens, supportIndices, dataset, options, patternKind 
   const hitSymbols = new Set()
   const matchRowsByDate = new Map()
   const hitRowsByDate = new Map()
+  const supportKeys = []
+  const positiveSupportKeys = []
   let hitRows = 0
+  let nonExecutableRows = 0
   for (const index of supportIndices) {
     const decisionDateKey = dataset.dateKeys[dataset.dateIds[index]]
     const symbol = dataset.symbols[dataset.symbolIds[index]]
+    const supportKey = `${decisionDateKey}\t${symbol}`
+    supportKeys.push(supportKey)
     matchedDates.add(decisionDateKey)
     matchedSymbols.add(symbol)
     incrementMap(matchRowsByDate, decisionDateKey)
+    if (dataset.entryExecutableFlags[index] === 0) nonExecutableRows += 1
     if (dataset.hitFlags[index] === 1) {
       hitRows += 1
+      positiveSupportKeys.push(supportKey)
       hitDates.add(decisionDateKey)
       hitSymbols.add(symbol)
       incrementMap(hitRowsByDate, decisionDateKey)
@@ -342,6 +426,9 @@ const supportMetrics = ({ tokens, supportIndices, dataset, options, patternKind 
     if (dates.length < options.minHitsPerYear) belowMinYears.push(year)
   }
   const matchRows = supportIndices.length
+  supportKeys.sort()
+  positiveSupportKeys.sort()
+  const falsePositiveRows = matchRows - hitRows
   const rowPrecision = matchRows > 0 ? hitRows / matchRows : 0
   const matchedDateCount = matchedDates.size
   const hitDateCount = hitDates.size
@@ -351,6 +438,9 @@ const supportMetrics = ({ tokens, supportIndices, dataset, options, patternKind 
   const year2hitPassed = belowMinYears.length === 0
   const qualityRejectReasons = []
   if (rowPrecision < options.minCandidatePrecision) qualityRejectReasons.push("row_precision_below_min")
+  if (rowPrecision < options.requiredTrainPrecision) qualityRejectReasons.push("train_precision_below_required")
+  if (falsePositiveRows > options.maxFalsePositiveRows) qualityRejectReasons.push("false_positive_rows_above_max")
+  if (nonExecutableRows > options.maxNonExecutableRows) qualityRejectReasons.push("non_executable_rows_above_max")
   if (datePrecision < options.minCandidateDatePrecision) qualityRejectReasons.push("date_precision_below_min")
   if (hitRows < options.minCandidateHitRows) qualityRejectReasons.push("hit_rows_below_min")
   if (hitDateCount < options.minCandidateHitDates) qualityRejectReasons.push("hit_dates_below_min")
@@ -369,6 +459,8 @@ const supportMetrics = ({ tokens, supportIndices, dataset, options, patternKind 
     qualityPassed,
     matchRows,
     hitRows,
+    falsePositiveRows,
+    nonExecutableRows,
     rowPrecision,
     matchedDateCount,
     hitDateCount,
@@ -382,6 +474,10 @@ const supportMetrics = ({ tokens, supportIndices, dataset, options, patternKind 
     yearHitDates: yearHitDateLists,
     belowMinYears,
     qualityRejectReasons,
+    supportSignature: sha256Lines(supportKeys),
+    supportRowCount: supportKeys.length,
+    positiveSupportSignature: sha256Lines(positiveSupportKeys),
+    positiveSupportRowCount: positiveSupportKeys.length,
   }
 }
 
@@ -392,6 +488,7 @@ const evaluateCandidate = ({ tokens, postings, dataset, options, patternKind }) 
   const positiveSupportIndices = row.hitRows > 0 ? intersectPostings({ tokens: tokenSet, postings, field: "hitIndices" }) : []
   return {
     row,
+    supportIndices,
     positiveSupportIndices,
   }
 }
@@ -462,6 +559,56 @@ const buildPositivePairKeys = ({ dataset, seedTokenRows, options }) => {
 
 const candidateKey = (tokens) => uniqueSorted(tokens).join("\u0001")
 
+const supportOverlapCount = (left, right) => {
+  let i = 0
+  let j = 0
+  let count = 0
+  while (i < left.length && j < right.length) {
+    const a = left[i]
+    const b = right[j]
+    if (a === b) {
+      count += 1
+      i += 1
+      j += 1
+    } else if (a < b) {
+      i += 1
+    } else {
+      j += 1
+    }
+  }
+  return count
+}
+
+const duplicateSupportReason = ({ supportIndices, representatives, options }) => {
+  if (!options.earlyDedupe.enabled) return ""
+  const nearThreshold = options.earlyDedupe.nearSupportJaccard
+  const containmentThreshold = options.earlyDedupe.containment
+  if (nearThreshold <= 0 && containmentThreshold <= 0) return ""
+  for (const representative of representatives) {
+    const leftLength = supportIndices.length
+    const rightLength = representative.supportIndices.length
+    if (leftLength < 1 || rightLength < 1) continue
+    const minLength = Math.min(leftLength, rightLength)
+    const maxLength = Math.max(leftLength, rightLength)
+    if (nearThreshold > 0 && minLength / maxLength < nearThreshold) {
+      if (containmentThreshold <= 0 || minLength / maxLength < options.earlyDedupe.minContainmentSizeRatio) continue
+    }
+    const overlap = supportOverlapCount(supportIndices, representative.supportIndices)
+    const union = leftLength + rightLength - overlap
+    const jaccard = union > 0 ? overlap / union : 0
+    const containment = minLength > 0 ? overlap / minLength : 0
+    if (nearThreshold > 0 && jaccard >= nearThreshold) return "near_support_jaccard_duplicate"
+    if (
+      containmentThreshold > 0 &&
+      containment >= containmentThreshold &&
+      minLength / maxLength >= options.earlyDedupe.minContainmentSizeRatio
+    ) {
+      return "support_containment_duplicate"
+    }
+  }
+  return ""
+}
+
 const buildBeamChildren = ({ parentResults, dataset, seedTokenRows, options, size }) => {
   const scored = new Map()
   for (const result of parentResults) {
@@ -503,7 +650,7 @@ export const mineTp12Year2hitCandidates = async ({
   if (!toText(outCatalogPath)) throw new Error("outCatalogPath is required")
   const contract = await loadTp12Contract(contractPath)
   const options = resolveOptions({ contract, ...rawOptions })
-  const { dataset, postings, inputRowCount, outsideTrainRowCount } = await readCompactTokenizedDataset({
+  const { dataset, postings, inputRowCount, outsideTrainRowCount, forbiddenFutureRowCount, maxDecisionDateSeen } = await readCompactTokenizedDataset({
     tokenizedEventsPath,
     options,
   })
@@ -520,17 +667,47 @@ export const mineTp12Year2hitCandidates = async ({
   await ensureDir(path.dirname(outCatalogPath))
   const stream = fs.createWriteStream(outCatalogPath, { encoding: "utf8" })
   const seen = new Set()
+  const exactSupportSignatures = new Set()
+  const supportRepresentatives = []
   const statusCounts = new Map()
   const kindCounts = new Map()
+  const earlyDedupeReasonCounts = new Map()
   const survivorResultsBySize = new Map()
   let evaluatedCandidateCount = 0
   let emittedCandidateCount = 0
+  let earlyDedupedCandidateCount = 0
   const evaluateAndMaybeEmit = async ({ tokens, patternKind }) => {
     const key = candidateKey(tokens)
     if (seen.has(key)) return null
     seen.add(key)
+    if (options.maxEvaluatedCandidates > 0 && evaluatedCandidateCount >= options.maxEvaluatedCandidates) {
+      throw new Error(`evaluated candidate count exceeds maxEvaluatedCandidates=${options.maxEvaluatedCandidates}`)
+    }
     const result = evaluateCandidate({ tokens, postings, dataset, options, patternKind })
     evaluatedCandidateCount += 1
+    if (options.earlyDedupe.enabled) {
+      let duplicateReason = ""
+      if (options.earlyDedupe.exactSupport && exactSupportSignatures.has(result.row.supportSignature)) {
+        duplicateReason = "exact_support_duplicate"
+      } else {
+        duplicateReason = duplicateSupportReason({
+          supportIndices: result.supportIndices,
+          representatives: supportRepresentatives,
+          options,
+        })
+      }
+      if (duplicateReason) {
+        earlyDedupedCandidateCount += 1
+        incrementMap(earlyDedupeReasonCounts, duplicateReason)
+        return null
+      }
+      exactSupportSignatures.add(result.row.supportSignature)
+      supportRepresentatives.push({
+        supportSignature: result.row.supportSignature,
+        supportIndices: result.supportIndices,
+        patternId: result.row.patternId,
+      })
+    }
     incrementMap(statusCounts, result.row.status)
     incrementMap(kindCounts, patternKind)
     if (result.row.year2hitPassed || options.emitRejected) {
@@ -592,11 +769,16 @@ export const mineTp12Year2hitCandidates = async ({
     inputRowCount,
     trainEventCount: dataset.length,
     outsideTrainRowCount,
+    forbiddenFutureRowCount,
+    maxDecisionDateSeen,
     tokenCount: postings.size,
     compactEventIndexMode: "uint64_token_mask",
     seedTokenCount: seeds.length,
     evaluatedCandidateCount,
     emittedCandidateCount,
+    earlyDedupedCandidateCount,
+    earlyDedupeReasonCounts: mapToSortedObject(earlyDedupeReasonCounts),
+    supportRepresentativeCount: supportRepresentatives.length,
     survivorCount,
     statusCounts: mapToSortedObject(statusCounts),
     patternKindCounts: mapToSortedObject(kindCounts),
@@ -605,5 +787,8 @@ export const mineTp12Year2hitCandidates = async ({
   }
   const manifestPath = outManifestPath || path.join(path.dirname(outCatalogPath), "candidate_mining_manifest.json")
   await writeJson(manifestPath, manifest)
+  if (options.failOnZeroOperational100Seed && survivorCount < 1) {
+    throw new Error("zero operational 100pct year2hit seed after candidate mining")
+  }
   return { manifest }
 }

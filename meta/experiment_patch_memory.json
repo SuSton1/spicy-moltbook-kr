@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T07:46:17Z",
+  "updatedAt": "2026-04-24T09:18:13Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,36 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_zero_fp_micro_split_train_executable_oos_replay_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_zero_fp_micro_split_train_executable_oos_replay",
-      "probeId": null,
-      "status": "completed_oos_executable_replay_fixed_train_executable_survivors_precision_degraded",
-      "runs": [
-        "tp12_year2hit_zero_fp_micro_split_train_executable_reaudit_v1/train_only_reaudit",
-        "tp12_year2hit_zero_fp_micro_split_train_executable_oos_replay_v1/oos_replay"
-      ],
-      "primaryMetrics": {
-        "dateFrom": "2025-01-02",
-        "dateTo": "2026-04-14",
-        "survivorCoverCount": 120,
-        "coverCountWithMatches": 120,
-        "unionMatchRows": 32,
-        "unionChartHitRows": 17,
-        "unionChartPrecision": 0.53125,
-        "unionExecutableRows": 17,
-        "unionNonExecutableRows": 15,
-        "unionExecutableHitRows": 7,
-        "unionExecutableMissRows": 10,
-        "executablePrecisionExcludingNonExecutable": 0.4117647058823529,
-        "executablePrecisionPenalizingNonExecutable": 0.21875,
-        "year2ExecutableHitPassedOnObservedYears": true,
-        "minExecutableHitsPerObservedYear": 2
-      },
-      "summary": "Replayed the 120 train-executable zero-FP micro-split survivor covers on OOS 2025-01-02..2026-04-14 with strict next-open entry executability. Chart-only result was 17/32=53.13%, but 15/32 recommendations were non-executable. Executable-only result was 7/17=41.18%, and penalizing non-executable recommendations gives 7/32=21.88%. The observed-year >=2 executable-hit condition still passes, but the strategy is not clean because many chart hits come from gap/volume entries that cannot be bought."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_year2hit_executable_nested_micro_split_v1",
@@ -491,6 +461,32 @@
         "oosRead": false
       },
       "summary": "Rebuilt train-only 2016-2024 labels/tokenized events under the operational hit contract and rematerialized the existing 107 H80/global-next-session year2hit candidates without reading OOS. All 107 still satisfy operational year2hit coverage, but every one has operational misses and non-executable rows; strict nonhit purge leaves 0 survivors and fold stability leaves 0 stable patterns. This confirms the broad 107 source is coverage-rich but not precision-safe, so it must not be sent to locked future/OOS; next work should mine smaller train-only subpatterns with fold stability before any OOS replay."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_daily_ohlcv_operational_seed_search_stack_v1",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_daily_ohlcv_operational_seed_search",
+      "probeId": null,
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_daily_ohlcv_operational_seed_search_stack_v1_local_verify",
+        "tp12_daily_ohlcv_operational_seed_search_stack_v1_server_verify"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "hitField": "operationalHitTarget",
+        "requiredTrainPrecision": 1,
+        "maxFalsePositiveRows": 0,
+        "maxNonExecutableRows": 0,
+        "dailyOhlcvD0TokenCount": 63,
+        "lockedFutureFrom": "2025-01-02",
+        "earlyDedupeEnabled": true,
+        "patternDedupeGateAdded": true,
+        "usesSideDailyOrProgramFlow": false
+      },
+      "summary": "Added daily-OHLCV-only D0 token surface, operational 100pct year2hit seed mining controls, future-lock fail-fast, early support dedupe, and final pattern similarity dedupe gate. Local and server verify passed."
     }
   ],
   "recentExperimentLog": [
@@ -7147,6 +7143,20 @@
         "tp12_fresh_year2hit_operational_train_discovery_v1"
       ],
       "summary": "Rebuilt train-only 2016-2024 labels/tokenized events under the operational hit contract and rematerialized the existing 107 H80/global-next-session year2hit candidates without reading OOS. All 107 still satisfy operational year2hit coverage, but every one has operational misses and non-executable rows; strict nonhit purge leaves 0 survivors and fold stability leaves 0 stable patterns. This confirms the broad 107 source is coverage-rich but not precision-safe, so it must not be sent to locked future/OOS; next work should mine smaller train-only subpatterns with fold stability before any OOS replay."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_daily_ohlcv_operational_seed_search_stack_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_daily_ohlcv_operational_seed_search",
+      "status": "completed_code_path_verified",
+      "runs": [
+        "tp12_daily_ohlcv_operational_seed_search_stack_v1_local_verify",
+        "tp12_daily_ohlcv_operational_seed_search_stack_v1_server_verify"
+      ],
+      "summary": "Added daily-OHLCV-only D0 token surface, operational 100pct year2hit seed mining controls, future-lock fail-fast, early support dedupe, and final pattern similarity dedupe gate. Local and server verify passed."
     }
   ],
   "doNotRepeat": [

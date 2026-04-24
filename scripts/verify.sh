@@ -138,6 +138,12 @@ node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
   meta/tp12_execution_learning_fixed_support_contract.json
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
+  meta/tp12_daily_ohlcv_d0_token_surface_contract.json
+node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
+  meta/tp12_year2hit_operational_seed_existence_probe_contract.json
+node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
+  meta/tp12_pattern_dedupe_similarity_gate_contract.json
+node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
   meta/tp12_year2x8_bank_discovery_research_contract.json
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' \
   meta/technique_grammar_contract.json
@@ -676,8 +682,10 @@ python3 tools/smoke_tp12_asof_clean_daily_inputs.py
 log "verify: TP12 year2hit train gate syntax"
 node --check src/lib/tp12_year2hit_foundation_io.mjs
 node --check src/lib/tp12_label_event_builder.mjs
+node --check src/lib/tp12_daily_ohlcv_d0_feature_whitelist.mjs
 node --check src/lib/tp12_feature_tokenizer.mjs
 node --check src/lib/tp12_year2hit_candidate_miner.mjs
+node --check src/lib/tp12_pattern_dedupe_similarity_gate.mjs
 node --check src/lib/tp12_candidate_event_materializer.mjs
 node --check src/lib/tp12_year2hit_quality_gate.mjs
 node --check src/lib/tp12_operational_hit_contract.mjs
@@ -736,6 +744,7 @@ node --check src/lib/tp12_train100_positive_motif_certificate_writer.mjs
 node --check tools/build_tp12_label_events.mjs
 node --check tools/build_tp12_tokenized_events.mjs
 node --check tools/mine_tp12_year2hit_candidates.mjs
+node --check tools/build_tp12_pattern_dedupe_similarity_gate.mjs
 node --check tools/assert_tp12_train100_preflight.mjs
 node --check tools/build_tp12_train100_atom_table.mjs
 node --check tools/mine_tp12_train100_exact_candidates.mjs
@@ -806,6 +815,9 @@ node --check tools/run_tp12_same_day_listwise_context_abstention.mjs
 node --check tools/run_tp12_learned_same_day_ranker.mjs
 node --check tools/smoke_tp12_operational_hit_contract.mjs
 node --check tools/smoke_tp12_operational_monthly_gate.mjs
+node --check tools/smoke_tp12_daily_ohlcv_d0_token_surface.mjs
+node --check tools/smoke_tp12_year2hit_operational_seed_existence_probe.mjs
+node --check tools/smoke_tp12_pattern_dedupe_similarity_gate.mjs
 node --check tools/smoke_tp12_locked_future_eval_protocol.mjs
 node --check tools/smoke_tp12_year2hit_executable_pattern_bundle_bank.mjs
 node --check tools/smoke_tp12_year2hit_cover_replay_operational_bridge.mjs
@@ -881,6 +893,9 @@ node tools/smoke_tp12_year2hit_trainfold_selector_audit.mjs
 node tools/smoke_tp12_year2hit_operating_gate.mjs
 node tools/smoke_tp12_operational_hit_contract.mjs
 node tools/smoke_tp12_operational_monthly_gate.mjs
+node tools/smoke_tp12_daily_ohlcv_d0_token_surface.mjs
+node tools/smoke_tp12_year2hit_operational_seed_existence_probe.mjs
+node tools/smoke_tp12_pattern_dedupe_similarity_gate.mjs
 node tools/smoke_tp12_locked_future_eval_protocol.mjs
 node tools/smoke_tp12_year2hit_executable_pattern_bundle_bank.mjs
 node tools/smoke_tp12_year2hit_cover_replay_operational_bridge.mjs
