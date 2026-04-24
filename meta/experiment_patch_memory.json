@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T09:18:13Z",
+  "updatedAt": "2026-04-24T11:56:19Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,109 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_executable_nested_micro_split_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_executable_nested_micro_split",
-      "probeId": null,
-      "status": "invalid_or_inconclusive",
-      "runs": [
-        "tp12_year2hit_executable_nested_micro_split_v1"
-      ],
-      "primaryMetrics": {
-        "trainScopedRows": 149896,
-        "trainExecutableRows": 148002,
-        "trainNonExecutableRows": 1894,
-        "trainChartHitRows": 32793,
-        "trainExecutableHitRows": 32353,
-        "sourceRuleCount": 469,
-        "sourceOperationalZeroFpYear2RuleCount": 0,
-        "candidateTileCount": 8066450,
-        "zeroFpTileCount": 17248,
-        "coverCandidateCount": 0,
-        "finalSurvivorCount": 0
-      },
-      "summary": "Operational executable-hit rerun over 2016-01-04..2024-12-30 kept non-executable matches in the denominator as misses. The previous 469 chart-hit zero-FP rules replayed to 0 operational zero-FP year2hit rules; nested micro-split evaluated 8,066,450 candidate tiles, found 17,248 zero-FP tiles, but 0 year2 cover candidates and 0 final survivors. No OOS replay was run because train produced no survivor covers."
-    },
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_executable_global_zero_fp_cover_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_executable_global_zero_fp_cover",
-      "probeId": null,
-      "status": "invalid_or_inconclusive",
-      "runs": [
-        "tp12_year2hit_executable_global_zero_fp_cover_v1"
-      ],
-      "primaryMetrics": {
-        "trainScopedRows": 149896,
-        "sourceRuleCount": 469,
-        "enabledParentCount": 20,
-        "candidateTileCount": 8066450,
-        "zeroFpTileCount": 17248,
-        "globalCoverCandidateCount": 0,
-        "globalFinalSurvivorCount": 0,
-        "trainReplaySurvivorCoverCount": 0
-      },
-      "summary": "Global beam cover over strict executable zero-FP tiles found no train survivor. It processed 149896 train rows, 469 source rules, 8066450 candidate tiles, and 17248 zero-FP tiles, but top-pool beam globalCoverCandidateCount and globalFinalSurvivorCount were both 0. Superseded by greedy all-tile cover test."
-    },
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_executable_global_zero_fp_greedy_cover_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_executable_global_zero_fp_greedy_cover",
-      "probeId": null,
-      "status": "invalid_or_inconclusive",
-      "runs": [
-        "tp12_year2hit_executable_global_zero_fp_greedy_cover_v1"
-      ],
-      "primaryMetrics": {
-        "trainScopedRows": 149896,
-        "sourceRuleCount": 469,
-        "candidateTileCount": 8066450,
-        "zeroFpTileCount": 17248,
-        "globalGreedyCoverCandidateCount": 40,
-        "globalGreedyFinalSurvivorCount": 40,
-        "trainUnionRows": 43,
-        "trainUnionExecutableHitRows": 43,
-        "trainUnionOperationalFalsePositiveRows": 0,
-        "trainPrecision": 1,
-        "trainMinExecutableHitDatesPerObservedYear": 2,
-        "oosScopedRows": 42171,
-        "oosSurvivorCoverCount": 40,
-        "oosZeroOperationalFalsePositiveYear2CoverCount": 0,
-        "oosUnionRows": 17,
-        "oosUnionExecutableHitRows": 5,
-        "oosUnionOperationalFalsePositiveRows": 12,
-        "oosPrecision": 0.29411764705882354,
-        "oosYear2ExecutableHitPassedOnObservedYears": false
-      },
-      "summary": "Greedy global cover found 40 strict executable train survivors across 2016-2024 after combining all 17248 zero-FP tiles. Train replay passed with union 43/43 executable hits and 0 operational false positives, min 2 hit dates per train year. OOS 2025-01-02..2026-04-14 failed: all 40 covers matched but zero covers stayed zero-FP/year2; union was 5 executable hits, 12 misses, 17 rows, 29.41% precision, observed-year min hit dates 1."
-    },
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_executable_global_greedy_stability_audit_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_executable_global_greedy_stability_audit",
-      "probeId": null,
-      "status": "completed_train_only_fragility_diagnostic_oos_failed",
-      "runs": [
-        "tp12_year2hit_executable_global_greedy_stability_audit_v1",
-        "tp12_year2hit_executable_global_zero_fp_greedy_cover_v1"
-      ],
-      "primaryMetrics": {
-        "survivorCoverCount": 40,
-        "smallTileDominatedLt8": 40,
-        "smallTileDominatedLt10": 40,
-        "allTilesYear2Incomplete": 40,
-        "stitchedYearCoverage": 40,
-        "oosZeroOperationalFalsePositiveYear2CoverCount": 0,
-        "oosRead": true,
-        "lockedSelectorEmitted": false
-      },
-      "summary": "Frozen 40-cover executable greedy train survivors were fully fragile: 40/40 small-tile-dominated, 40/40 all-tiles-year2-incomplete, 40/40 stitched-year-coverage, OOS zero operational-FP year2 covers=0."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_year2hit_executable_global_greedy_stability_gated_cover_v1",
@@ -487,6 +384,95 @@
         "usesSideDailyOrProgramFlow": false
       },
       "summary": "Added daily-OHLCV-only D0 token surface, operational 100pct year2hit seed mining controls, future-lock fail-fast, early support dedupe, and final pattern similarity dedupe gate. Local and server verify passed."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_daily_ohlcv_operational_seed_contract_repair_v1",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "probeId": null,
+      "status": "completed",
+      "runs": [
+        "tp12_daily_ohlcv_operational_seed_contract_repair_v1_local_verify",
+        "tp12_daily_ohlcv_operational_seed_contract_repair_v1_server_verify"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "sameBarPolicy": "fail",
+        "oosRead": false,
+        "lockedSelectorEmitted": false
+      },
+      "summary": "Operational seed probe contract now explicitly sets sameBarPolicy=fail so TP12 label construction fail-fast contract is complete before train-only seed mining."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_daily_ohlcv_operational_seed_miner_memory_repair_v1",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "probeId": null,
+      "status": "completed",
+      "runs": [
+        "tp12_daily_ohlcv_operational_seed_miner_memory_repair_v1_local_verify",
+        "tp12_daily_ohlcv_operational_seed_miner_memory_repair_v1_server_verify"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "supportSignatureMode": "event_order_date_symbol_sha256_v2",
+        "nearSupportRepresentativesRetainedFor": "quality_seed_passed",
+        "failOnZeroOperational100SeedUses": "qualitySeedPassedCount",
+        "oosRead": false,
+        "lockedSelectorEmitted": false
+      },
+      "summary": "Repaired TP12 operational seed miner OOM by streaming support signatures, compacting retained support representatives, and making failOnZeroOperational100Seed count only strict quality_seed_passed candidates."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_daily_ohlcv_operational_seed_parent_memory_repair_v1",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "probeId": null,
+      "status": "completed",
+      "runs": [
+        "tp12_daily_ohlcv_operational_seed_parent_memory_repair_v1_local_verify",
+        "tp12_daily_ohlcv_operational_seed_parent_memory_repair_v1_server_verify"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "retainedParentMode": "compact_next_extension_fields_v1",
+        "fullRowsStillEmittedToCatalog": true,
+        "oosRead": false,
+        "lockedSelectorEmitted": false
+      },
+      "summary": "Compacted TP12 operational seed miner retained parent rows to next-extension fields only, preventing year-hit date lists from accumulating in memory during wide train-only seed search."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_daily_ohlcv_operational_seed_probe_run_v1",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "probeId": null,
+      "status": "completed_zero_operational100_seed",
+      "runs": [
+        "tp12_daily_ohlcv_operational_seed_probe_run_v1_r2",
+        "tp12_daily_ohlcv_operational_seed_probe_run_v1_r5"
+      ],
+      "primaryMetrics": {
+        "trainEventCount": 3673294,
+        "tokenCount": 63,
+        "seedTokenCount": 63,
+        "evaluatedCandidateCount": 11949,
+        "emittedCandidateCount": 11326,
+        "rawSurvivorCount": 11326,
+        "qualitySeedPassedCount": 0,
+        "earlyDedupedCandidateCount": 578,
+        "maxDecisionDateSeen": "2024-12-24",
+        "oosRead": false,
+        "lockedSelectorEmitted": false
+      },
+      "summary": "Train-only 2016-2024 daily OHLCV D0 seed probe completed: 11,326 year2hit raw survivors were found, but zero strict operational 100pct seeds survived because every raw survivor still contained operational false positives. No OOS/future rows were used."
     }
   ],
   "recentExperimentLog": [
@@ -7157,6 +7143,62 @@
         "tp12_daily_ohlcv_operational_seed_search_stack_v1_server_verify"
       ],
       "summary": "Added daily-OHLCV-only D0 token surface, operational 100pct year2hit seed mining controls, future-lock fail-fast, early support dedupe, and final pattern similarity dedupe gate. Local and server verify passed."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_daily_ohlcv_operational_seed_contract_repair_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "status": "completed",
+      "runs": [
+        "tp12_daily_ohlcv_operational_seed_contract_repair_v1_local_verify",
+        "tp12_daily_ohlcv_operational_seed_contract_repair_v1_server_verify"
+      ],
+      "summary": "Operational seed probe contract now explicitly sets sameBarPolicy=fail so TP12 label construction fail-fast contract is complete before train-only seed mining."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_daily_ohlcv_operational_seed_miner_memory_repair_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "status": "completed",
+      "runs": [
+        "tp12_daily_ohlcv_operational_seed_miner_memory_repair_v1_local_verify",
+        "tp12_daily_ohlcv_operational_seed_miner_memory_repair_v1_server_verify"
+      ],
+      "summary": "Repaired TP12 operational seed miner OOM by streaming support signatures, compacting retained support representatives, and making failOnZeroOperational100Seed count only strict quality_seed_passed candidates."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_daily_ohlcv_operational_seed_parent_memory_repair_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "status": "completed",
+      "runs": [
+        "tp12_daily_ohlcv_operational_seed_parent_memory_repair_v1_local_verify",
+        "tp12_daily_ohlcv_operational_seed_parent_memory_repair_v1_server_verify"
+      ],
+      "summary": "Compacted TP12 operational seed miner retained parent rows to next-extension fields only, preventing year-hit date lists from accumulating in memory during wide train-only seed search."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_daily_ohlcv_operational_seed_probe_run_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "status": "completed_zero_operational100_seed",
+      "runs": [
+        "tp12_daily_ohlcv_operational_seed_probe_run_v1_r2",
+        "tp12_daily_ohlcv_operational_seed_probe_run_v1_r5"
+      ],
+      "summary": "Train-only 2016-2024 daily OHLCV D0 seed probe completed: 11,326 year2hit raw survivors were found, but zero strict operational 100pct seeds survived because every raw survivor still contained operational false positives. No OOS/future rows were used."
     }
   ],
   "doNotRepeat": [
@@ -8655,6 +8697,17 @@
       "area": "RESEARCH_CONTROL_PLANE",
       "status": "completed_oos_operational_eval_failed",
       "reason": "Replayed the frozen 40 train-100pct operational year2hit covers on OOS 2025-01-02..2026-04-14. All 40 matched OOS rows, but OOS precision collapsed: summed per-pattern 120/398=30.15%, unique union 5/17=29.41%, zero non-executable rows, observed-year min hit dates=1, year2 OOS failed."
+    },
+    {
+      "probeId": null,
+      "patchKey": "tp12_daily_ohlcv_operational_seed_probe_run_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "area": "RESEARCH_CONTROL_PLANE",
+      "status": "completed_zero_operational100_seed",
+      "reason": "Train-only 2016-2024 daily OHLCV D0 seed probe completed: 11,326 year2hit raw survivors were found, but zero strict operational 100pct seeds survived because every raw survivor still contained operational false positives. No OOS/future rows were used."
     }
   ],
   "goalModePolicy": {

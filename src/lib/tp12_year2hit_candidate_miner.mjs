@@ -23,7 +23,20 @@ import {
 const stablePatternId = (tokens) =>
   `tp12_y2h_${createHash("sha256").update(tokens.join("\n")).digest("hex").slice(0, 16)}`
 
-const sha256Lines = (values) => createHash("sha256").update(values.join("\n")).digest("hex")
+const supportRowHash = () => {
+  const hash = createHash("sha256")
+  return {
+    add(decisionDateKey, symbol) {
+      hash.update(decisionDateKey)
+      hash.update("\t")
+      hash.update(symbol)
+      hash.update("\n")
+    },
+    digest() {
+      return hash.digest("hex")
+    },
+  }
+}
 
 const normalizeYears = ({ coreYears, coreYearFrom = 2016, coreYearTo = 2024 }) => {
   if (Array.isArray(coreYears) && coreYears.length > 0) {
@@ -392,22 +405,21 @@ const supportMetrics = ({ tokens, supportIndices, dataset, options, patternKind 
   const hitSymbols = new Set()
   const matchRowsByDate = new Map()
   const hitRowsByDate = new Map()
-  const supportKeys = []
-  const positiveSupportKeys = []
+  const supportHash = supportRowHash()
+  const positiveSupportHash = supportRowHash()
   let hitRows = 0
   let nonExecutableRows = 0
   for (const index of supportIndices) {
     const decisionDateKey = dataset.dateKeys[dataset.dateIds[index]]
     const symbol = dataset.symbols[dataset.symbolIds[index]]
-    const supportKey = `${decisionDateKey}\t${symbol}`
-    supportKeys.push(supportKey)
+    supportHash.add(decisionDateKey, symbol)
     matchedDates.add(decisionDateKey)
     matchedSymbols.add(symbol)
     incrementMap(matchRowsByDate, decisionDateKey)
     if (dataset.entryExecutableFlags[index] === 0) nonExecutableRows += 1
     if (dataset.hitFlags[index] === 1) {
       hitRows += 1
-      positiveSupportKeys.push(supportKey)
+      positiveSupportHash.add(decisionDateKey, symbol)
       hitDates.add(decisionDateKey)
       hitSymbols.add(symbol)
       incrementMap(hitRowsByDate, decisionDateKey)
@@ -426,8 +438,6 @@ const supportMetrics = ({ tokens, supportIndices, dataset, options, patternKind 
     if (dates.length < options.minHitsPerYear) belowMinYears.push(year)
   }
   const matchRows = supportIndices.length
-  supportKeys.sort()
-  positiveSupportKeys.sort()
   const falsePositiveRows = matchRows - hitRows
   const rowPrecision = matchRows > 0 ? hitRows / matchRows : 0
   const matchedDateCount = matchedDates.size
@@ -474,10 +484,12 @@ const supportMetrics = ({ tokens, supportIndices, dataset, options, patternKind 
     yearHitDates: yearHitDateLists,
     belowMinYears,
     qualityRejectReasons,
-    supportSignature: sha256Lines(supportKeys),
-    supportRowCount: supportKeys.length,
-    positiveSupportSignature: sha256Lines(positiveSupportKeys),
-    positiveSupportRowCount: positiveSupportKeys.length,
+    supportSignature: supportHash.digest(),
+    supportSignatureMode: "event_order_date_symbol_sha256_v2",
+    supportRowCount: matchRows,
+    positiveSupportSignature: positiveSupportHash.digest(),
+    positiveSupportSignatureMode: "event_order_date_symbol_sha256_v2",
+    positiveSupportRowCount: hitRows,
   }
 }
 
@@ -498,6 +510,17 @@ const parentResultSort = (left, right) =>
   right.row.hitRows - left.row.hitRows ||
   right.row.rowPrecision - left.row.rowPrecision ||
   candidateKey(left.row.tokenSet).localeCompare(candidateKey(right.row.tokenSet))
+
+const compactParentResult = (result) => ({
+  row: {
+    tokenSet: result.row.tokenSet,
+    tokenCount: result.row.tokenCount,
+    minYearHitDates: result.row.minYearHitDates,
+    hitRows: result.row.hitRows,
+    rowPrecision: result.row.rowPrecision,
+  },
+  positiveSupportIndices: Uint32Array.from(result.positiveSupportIndices),
+})
 
 const seedTokens = ({ postings, options }) =>
   [...postings.values()]
@@ -578,6 +601,11 @@ const supportOverlapCount = (left, right) => {
   }
   return count
 }
+
+const shouldRetainNearSupportRepresentative = ({ result, options }) =>
+  options.earlyDedupe.enabled &&
+  (options.earlyDedupe.nearSupportJaccard > 0 || options.earlyDedupe.containment > 0) &&
+  result.row.qualityPassed === true
 
 const duplicateSupportReason = ({ supportIndices, representatives, options }) => {
   if (!options.earlyDedupe.enabled) return ""
@@ -702,11 +730,13 @@ export const mineTp12Year2hitCandidates = async ({
         return null
       }
       exactSupportSignatures.add(result.row.supportSignature)
-      supportRepresentatives.push({
-        supportSignature: result.row.supportSignature,
-        supportIndices: result.supportIndices,
-        patternId: result.row.patternId,
-      })
+      if (shouldRetainNearSupportRepresentative({ result, options })) {
+        supportRepresentatives.push({
+          supportSignature: result.row.supportSignature,
+          supportIndices: Uint32Array.from(result.supportIndices),
+          patternId: result.row.patternId,
+        })
+      }
     }
     incrementMap(statusCounts, result.row.status)
     incrementMap(kindCounts, patternKind)
@@ -716,7 +746,7 @@ export const mineTp12Year2hitCandidates = async ({
     }
     if (result.row.year2hitPassed) {
       const sizeRows = survivorResultsBySize.get(result.row.tokenCount) ?? []
-      sizeRows.push(result)
+      sizeRows.push(compactParentResult(result))
       if (sizeRows.length > options.beamWidthPerSize) {
         sizeRows.sort(parentResultSort)
         sizeRows.length = options.beamWidthPerSize
@@ -750,9 +780,11 @@ export const mineTp12Year2hitCandidates = async ({
       })
     })
   }
-  const survivorCount = [...statusCounts.entries()]
+  const rawOrQualitySurvivorCount = [...statusCounts.entries()]
     .filter(([status]) => status === "quality_seed_passed" || status === "raw_survivor")
     .reduce((sum, [, count]) => sum + count, 0)
+  const qualitySeedPassedCount = statusCounts.get("quality_seed_passed") ?? 0
+  const rawSurvivorCount = statusCounts.get("raw_survivor") ?? 0
   const manifest = {
     kind: "tp12_year2hit_candidate_mining_manifest_v1",
     generatedAt: new Date().toISOString(),
@@ -779,15 +811,19 @@ export const mineTp12Year2hitCandidates = async ({
     earlyDedupedCandidateCount,
     earlyDedupeReasonCounts: mapToSortedObject(earlyDedupeReasonCounts),
     supportRepresentativeCount: supportRepresentatives.length,
-    survivorCount,
+    retainedParentMode: "compact_next_extension_fields_v1",
+    survivorCount: rawOrQualitySurvivorCount,
+    rawSurvivorCount,
+    qualitySeedPassedCount,
     statusCounts: mapToSortedObject(statusCounts),
     patternKindCounts: mapToSortedObject(kindCounts),
     seedTokens: seeds.slice(0, 500),
+    supportSignatureMode: "event_order_date_symbol_sha256_v2",
     options,
   }
   const manifestPath = outManifestPath || path.join(path.dirname(outCatalogPath), "candidate_mining_manifest.json")
   await writeJson(manifestPath, manifest)
-  if (options.failOnZeroOperational100Seed && survivorCount < 1) {
+  if (options.failOnZeroOperational100Seed && qualitySeedPassedCount < 1) {
     throw new Error("zero operational 100pct year2hit seed after candidate mining")
   }
   return { manifest }

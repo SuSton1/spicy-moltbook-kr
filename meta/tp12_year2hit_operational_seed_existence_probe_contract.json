@@ -32,6 +32,7 @@
     "holdDays": 3,
     "stopLossPct": 0,
     "stopPolicy": "no_stop",
+    "sameBarPolicy": "fail",
     "labelHorizonDateTo": "2024-12-30",
     "horizonBoundaryPolicy": "skip_cross_boundary",
     "terminalForwardPolicy": "skip_terminal_incomplete_forward",
