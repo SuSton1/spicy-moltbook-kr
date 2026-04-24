@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-24T04:36:59Z",
+  "updatedAt": "2026-04-24T04:55:53Z",
   "legacyArchiveRef": "meta/legacy_experiment_archive.json",
   "legacyGoalMisalignedKeys": [
     "d1_score_margin_strong_candidate_bypass",
@@ -17,31 +17,6 @@
     "agreement_rerank_promote_trade_only"
   ],
   "recentTargetFirstHighlights": [
-    {
-      "date": "2026-04-23",
-      "key": "tp12_year2hit_zero_fp_micro_split_v1",
-      "scope": "target_first_v2",
-      "candidateMode": "tp12_year2hit_zero_fp_micro_split",
-      "probeId": null,
-      "status": "completed_full_train_micro_split_survivors_found",
-      "runs": [
-        "tp12_year2hit_zero_fp_micro_split_v1"
-      ],
-      "primaryMetrics": {
-        "scopedRowCount": 149896,
-        "sourceRuleCount": 469,
-        "enabledParentCount": 20,
-        "candidateTileCount": 18784890,
-        "zeroFpTileCount": 17606,
-        "coverCandidateCount": 40,
-        "finalSurvivorCount": 40,
-        "bestHitRows": 34,
-        "bestFalsePositiveRows": 0,
-        "bestMinHitDatesPerYear": 2,
-        "bestMinHitSymbolDatesPerYear": 2
-      },
-      "summary": "Built a train-only TP12 zero-FP micro-split miner over the 469 broken OOF-zero-FP rules. It composes full-train zero-FP child tiles into parent-local year covers. On 2016-2024 full train, 20 enabled parents produced 17,606 zero-FP child tiles and 40 final cover survivors; best survivors have 34/34 hit rows, falsePositiveRows=0, and every year 2016-2024 has at least 2 hit decision dates and 2 hit symbol-dates."
-    },
     {
       "date": "2026-04-23",
       "key": "tp12_year2hit_zero_fp_micro_split_oos_replay_v1",
@@ -480,6 +455,40 @@
         "lockedFutureFrom": "2025-01-02"
       },
       "summary": "Added train-period 100pct operational year2hit monthly coverage bundle optimizer. It accepts only passed year2hit patterns with zero operational misses/non-executable rows, greedily combines multiple patterns to reduce explicit full-month recommendation/hit deficits, fails instead of relaxing thresholds, and blocks locked-future rows."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_year2hit_train100_monthly_coverage_eval_v1",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "probeId": null,
+      "status": "completed_eval_gate_failed",
+      "runs": [
+        "tp12_year2hit_train100_monthly_coverage_eval_v1/train_only"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "bridgePassedPatternCount": 40,
+        "bridgeEventRows": 1100,
+        "bridgeOperationalHitRows": 1100,
+        "bridgeOperationalMissRows": 0,
+        "monthlyStatus": "failed",
+        "monthlyBundleStatus": "rejected",
+        "candidatePatternCount": 40,
+        "selectedPatternCount": 3,
+        "unionRowCount": 43,
+        "unionOperationalHitRows": 43,
+        "unionOperationalMissRows": 0,
+        "unionOperationalPrecision": 1,
+        "minRecommendationsPerFullMonth": 0,
+        "minOperationalHitsPerFullMonth": 0,
+        "zeroHitMonthCount": 80,
+        "below5HitMonthCount": 107,
+        "below5RecommendationMonthCount": 107,
+        "monthlyGatePassed": false
+      },
+      "summary": "Converted existing 2016-2024 train 100pct operational year2hit greedy covers into operational pattern/events and tested monthly 5-hit bundle gate. Train precision stayed 100pct with zero misses, but coverage failed: unique union rows only 43 across 108 full months, 107 months below 5 hits."
     }
   ],
   "recentExperimentLog": [
@@ -7069,6 +7078,19 @@
         "tp12_year2hit_monthly_coverage_bundle_optimizer_v1"
       ],
       "summary": "Added train-period 100pct operational year2hit monthly coverage bundle optimizer. It accepts only passed year2hit patterns with zero operational misses/non-executable rows, greedily combines multiple patterns to reduce explicit full-month recommendation/hit deficits, fails instead of relaxing thresholds, and blocks locked-future rows."
+    },
+    {
+      "date": "2026-04-24",
+      "key": "tp12_year2hit_train100_monthly_coverage_eval_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "status": "completed_eval_gate_failed",
+      "runs": [
+        "tp12_year2hit_train100_monthly_coverage_eval_v1/train_only"
+      ],
+      "summary": "Converted existing 2016-2024 train 100pct operational year2hit greedy covers into operational pattern/events and tested monthly 5-hit bundle gate. Train precision stayed 100pct with zero misses, but coverage failed: unique union rows only 43 across 108 full months, 107 months below 5 hits."
     }
   ],
   "doNotRepeat": [
@@ -8545,6 +8567,17 @@
       "area": "RESEARCH_CONTROL_PLANE",
       "status": "invalid_or_inconclusive",
       "reason": "Greedy global cover found 40 strict executable train survivors across 2016-2024 after combining all 17248 zero-FP tiles. Train replay passed with union 43/43 executable hits and 0 operational false positives, min 2 hit dates per train year. OOS 2025-01-02..2026-04-14 failed: all 40 covers matched but zero covers stayed zero-FP/year2; union was 5 executable hits, 12 misses, 17 rows, 29.41% precision, observed-year min hit dates 1."
+    },
+    {
+      "probeId": null,
+      "patchKey": "tp12_year2hit_train100_monthly_coverage_eval_v1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "area": "RESEARCH_CONTROL_PLANE",
+      "status": "completed_eval_gate_failed",
+      "reason": "Converted existing 2016-2024 train 100pct operational year2hit greedy covers into operational pattern/events and tested monthly 5-hit bundle gate. Train precision stayed 100pct with zero misses, but coverage failed: unique union rows only 43 across 108 full months, 107 months below 5 hits."
     }
   ],
   "goalModePolicy": {
