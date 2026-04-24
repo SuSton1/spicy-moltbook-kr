@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "updatedAt": "2026-03-10T03:30:00Z",
+  "goalMode": "TARGET_FIRST_V2",
+  "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+  "singlePosition": false,
+  "maxNewEntriesPerDay": 1,
+  "primaryMetrics": [
+    "targetHitRate",
+    "targetHitCount",
+    "targetHitsPer20TradingDays",
+    "targetHitRateEval",
+    "executedTargetHitRateEval"
+  ],
+  "secondaryMetrics": [
+    "stopRate",
+    "timeoutNegativeRate",
+    "selectionHitAt1Eval"
+  ],
+  "secondaryPnLMetrics": [
+    "winRate",
+    "avgNetRet",
+    "cumulativeReturn",
+    "equalWeightNetRetSum"
+  ],
+  "legacyForbiddenAsPrimary": [
+    "winRate",
+    "avgNetRet",
+    "cumulativeReturn"
+  ],
+  "allowedExperimentScopes": [
+    "legacy_only",
+    "target_first_v2",
+    "exploratory_target_first_v2",
+    "confirm_target_first_v2",
+    "final_target_first_v2"
+  ],
+  "allowedCandidateModes": [
+    "boost_only",
+    "penalty_only",
+    "boost_penalty"
+  ],
+  "acceptedBaselineBySemantics": {
+    "LEGACY_PNL_V1::SINGLE_POSITION_V1": {
+      "probeId": "probe12",
+      "reason": "Legacy Step E verified best baseline"
+    },
+    "TARGET_FIRST_V2::OVERLAP_DAILY_ONE_PICK_V2": null
+  },
+  "researchMode": {
+    "name": "C_FIRST_REBASE_ADAPTIVE_FRONTIER",
+    "lineDiscard": {
+      "minD": 0.4,
+      "minE": 0.4
+    },
+    "parentPromotion": {
+      "minD": 0.5,
+      "minE": 0.55
+    },
+    "patternSalvage": {
+      "enabled": true,
+      "salvagePoolPath": "meta/salvaged_pattern_pool.json",
+      "quarantinePoolPath": "meta/pattern_quarantine_pool.json"
+    },
+    "cShaping": {
+      "primarySignal": "STEP_D_UPDATE_EVAL",
+      "secondarySignal": "PREVIOUS_RUN_STEP_E",
+      "forbidSameCycleLockboxAsLabel": true,
+      "requireSessionEndedForPreviousRunEAssist": true
+    },
+    "c1Qualifier": {
+      "primarySignal": "FROZEN_STEP_D_PROBE",
+      "candidateUniverseNarrowingOnly": true,
+      "forbidSameCycleLockboxAsQualifier": true,
+      "scope": "family"
+    },
+    "candidateControlPlane": {
+      "manifestPath": "meta/candidate_mode_manifest.json",
+      "oneMajorChangePerLine": true,
+      "allowedMajorChangeTypes": [
+        "boost_only",
+        "penalty_only",
+        "boost_penalty",
+        "c0_family_mining",
+        "c0_shortlist_policy",
+        "c0_signature_rule",
+        "c1_family_probe",
+        "c1_pass_policy",
+        "c1_probe_scope",
+        "c2_dedup_policy",
+        "c2_similarity_rule",
+        "c2_representative_policy"
+      ]
+    },
+    "salvagePromotion": {
+      "corePromotionRule": "repeated_salvage",
+      "hardRetirementRule": "repeated_quarantine"
+    }
+  },
+  "currentReferenceLine": {
+    "probeId": "probe38",
+    "runId": "tf2_c120c109rej_onlive_probe38_20260309",
+    "stepDTargetHitRateEval": 0.16279069767441862,
+    "stepDExecutedTargetHitRateEval": 0.15384615384615385,
+    "stepETargetHitRate": 0.2857142857142857
+  },
+  "probeRoles": {
+    "probe38": "smoke_reference",
+    "probe42": "donor_cross_check",
+    "probe12": "side_effect_check",
+    "probe59": "benchmark_only_until_stepc_restored"
+  },
+  "shortlistProbes": {
+    "smoke": [
+      "probe12",
+      "probe38",
+      "probe42"
+    ],
+    "confirm": [
+      "probe12",
+      "probe13",
+      "probe38",
+      "probe39",
+      "probe40",
+      "probe41",
+      "probe42",
+      "probe43",
+      "probe44",
+      "probe54",
+      "probe59"
+    ],
+    "promotion": [
+      "probe12",
+      "probe38",
+      "probe42",
+      "probe54",
+      "probe59"
+    ]
+  },
+  "forbiddenLegacyPatchKeys": [
+    "d1_score_margin_strong_candidate_bypass",
+    "liquidity_ratio_strong_candidate_bypass",
+    "d2_daytype_semantics_relaxation",
+    "false_positive_decision_mode_blend",
+    "false_positive_edge_override_gate_relax",
+    "false_positive_model_sign_prior",
+    "false_positive_training_source_executed_only",
+    "false_positive_label_semantics_rewrite",
+    "false_positive_label_semantics_mild_reweight",
+    "false_positive_strong_candidate_bypass_evalsafe",
+    "freeze_online_learning_probe12_d2stack",
+    "freeze_online_learning_only_probe12_d2stack",
+    "agreement_rerank_promote_trade_only"
+  ],
+  "sessionStartCommand": "tools/bootstrap_target_first_session.sh --scope=target_first_v2",
+  "notes": [
+    "Use target-first metrics as the primary promotion basis.",
+    "Do not compare TARGET_FIRST_V2 overlap runs directly against legacy single-position PnL runs.",
+    "Exploratory work must stay inside the shortlist unless explicitly overridden.",
+    "Treat the current low-D probe38 line as holdout/reference only, not as a parent candidate.",
+    "Do not use same-cycle lockbox Step E outcomes directly as Step C shaping labels.",
+    "Step C1 may use frozen Step D probe results for family qualification, but same-cycle Step E remains forbidden.",
+    "Step C2 may deduplicate overlapping C1 families, but same-cycle Step E remains forbidden and C2 must stay read-only.",
+    "Line discard and pattern salvage must remain separate.",
+    "Only boost_only, penalty_only, and boost_penalty candidate modes are allowed for C-first rebase."
+  ]
+}

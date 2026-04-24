@@ -1,0 +1,26 @@
+{
+  "kind": "technique_episode_slice_contract_v1",
+  "contractId": "tp12_episode_matched_control_purity_slice_v11",
+  "updatedAt": "2026-04-16T10:30:00Z",
+  "labelId": "tp12_no_stop_hit_3d",
+  "coreYears": [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024],
+  "trainRange": {
+    "startDateKey": "2016-08-12",
+    "endDateKey": "2024-12-27"
+  },
+  "controlRequireSamePartition": true,
+  "controlRequireSameYear": true,
+  "maxMatchedControlsPerPositive": 3,
+  "controlMinCurrentAtomJaccard": 0.2,
+  "controlMinEpisodeAtomJaccard": 0.1,
+  "controlMinSharedCurrentAtoms": 2,
+  "controlMinSharedEpisodeAtoms": 2,
+  "controlCurrentAtomWeight": 1,
+  "controlEpisodeAtomWeight": 0.25,
+  "controlDistanceMetric": "weighted_jaccard",
+  "minPositiveSupportPerYear": 2,
+  "maxSliceAtoms": 3,
+  "topDeltaAtomsToConsider": 24,
+  "maxSliceContracts": 10,
+  "recheckTopSlices": 5
+}

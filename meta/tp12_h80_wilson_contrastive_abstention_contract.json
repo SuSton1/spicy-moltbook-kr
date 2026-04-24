@@ -1,0 +1,121 @@
+{
+  "kind": "tp12_h80_wilson_contrastive_abstention_contract_v1",
+  "contractId": "tp12_h80_wilson_contrastive_abstention_v1",
+  "patchKey": "tp12_h80_wilson_contrastive_abstention_v1",
+  "goalMode": "train_nested_wilson_h80",
+  "scope": "target_first_v2",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "label": {
+    "labelConfigId": "tp12_target12_next_global_session_open_hold3_no_stop_v1",
+    "entryPolicy": "GLOBAL_NEXT_SESSION_OPEN",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "stopPolicy": "no_stop",
+    "requireEntryFeasibilitySummary": true
+  },
+  "splits": {
+    "outerFolds": [
+      {
+        "fitYears": [2016, 2017, 2018, 2019, 2020],
+        "validationYear": 2021
+      },
+      {
+        "fitYears": [2016, 2017, 2018, 2019, 2020, 2021],
+        "validationYear": 2022
+      },
+      {
+        "fitYears": [2016, 2017, 2018, 2019, 2020, 2021, 2022],
+        "validationYear": 2023
+      },
+      {
+        "fitYears": [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023],
+        "validationYear": 2024
+      }
+    ],
+    "purgeTradingDays": 5,
+    "embargoTradingDays": 5,
+    "sameDecisionDateGroupSplit": true,
+    "sameSymbolPurgeTradingDays": 20
+  },
+  "objective": {
+    "mode": "abstention_first",
+    "targetWilsonLower95": 0.8,
+    "minSelectedRows": 150,
+    "absoluteMinSelectedRows": 100,
+    "minActiveValidationYears": 4,
+    "minActiveMonths": 24,
+    "maxFalsePositiveRowsAtMinSelectedRows": 20,
+    "maxTopSymbolShare": 0.08,
+    "maxTopPatternClusterShare": 0.35,
+    "maxTopRegimeShare": 0.5,
+    "maxTopMonthShare": 0.15
+  },
+  "featureGroups": {
+    "patternReliability": true,
+    "clusterConsensus": true,
+    "rawContinuousIntensity": true,
+    "liquidityCapacity": true,
+    "marketBreadthRegime": true,
+    "hardNegativeDeltas": true,
+    "pathQualityLabelsForTrainingOnly": true,
+    "sideDaily": "disabled_until_full_asof_coverage",
+    "intradayEarlyConfirmation": "disabled_for_daily_next_open_label"
+  },
+  "tierPolicy": {
+    "researchTier": {
+      "minSelectedRows": 150,
+      "minObservedHitRate": 0.65,
+      "minWilsonLower95": 0.55,
+      "oosApplyAllowed": false
+    },
+    "h70Tier": {
+      "minSelectedRows": 150,
+      "minObservedHitRate": 0.75,
+      "minWilsonLower95": 0.65,
+      "oosApplyAllowed": false
+    },
+    "h80Tier": {
+      "minSelectedRows": 150,
+      "minWilsonLower95": 0.8,
+      "oosApplyAllowed": true
+    }
+  },
+  "preflight": {
+    "failOnOosPath": true,
+    "requireDataReadiness": true,
+    "requireAsofSurvivorship": true,
+    "requireEntryFeasibility": true,
+    "requireFeatureManifest": true,
+    "requireSplitManifest": true
+  },
+  "lockRules": {
+    "emitLockedSelectorRequiresH80Gate": true,
+    "oosTuningAllowed": false,
+    "fallbackAllowed": false,
+    "researchTierOosApplyAllowed": false
+  },
+  "outputs": {
+    "contractAssertSummaryPath": "artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/contract_assert_summary.json",
+    "nestedSplitPlanPath": "artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/split/nested_split_plan.json",
+    "hardNegativeDatasetPath": "artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/hard_negative/hard_negative_dataset.jsonl.gz",
+    "hardNegativeManifestPath": "artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/hard_negative/hard_negative_manifest.json",
+    "selectorOofPredictionsPath": "artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/selector/selector_oof_predictions.jsonl",
+    "selectorCvSummaryPath": "artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/selector/selector_cv_summary.json",
+    "h80TrainGateSummaryPath": "artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/selector/h80_train_gate_summary.json",
+    "lockedSelectorManifestPath": "artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/locked_selector_manifest.json"
+  },
+  "hardStops": [
+    "Do not read OOS paths while fitting selector, thresholds, feature groups, or veto rules.",
+    "Do not emit a locked selector unless the H80 train gate passes.",
+    "Do not use future high/low, hitDate, maxForwardReturn, or OOS result as live features.",
+    "Do not silently fallback to current_like selector or the strict train100 branch.",
+    "Do not treat researchTier or H70 tier reports as OOS-eligible production locks."
+  ]
+}

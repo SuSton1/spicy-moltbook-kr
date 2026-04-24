@@ -1,0 +1,46 @@
+{
+  "kind": "tp12_h80_side_daily_coverage_audit_contract_v1",
+  "patchKey": "tp12_h80_side_daily_coverage_audit_v1",
+  "mode": "train_only_side_daily_join_coverage_audit",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "inputs": {
+    "candidates": "artifacts/runs/tp12_h80_same_day_listwise_context_abstention_v1/train_only_diagnostic/same_day_listwise_context_features.jsonl.gz",
+    "datasets": {
+      "investor_daily": "data/intraday_side/investor_daily.jsonl",
+      "program_daily": "data/intraday_side/program_daily.jsonl",
+      "trade_strength_daily": "data/intraday_side/trade_strength_daily.jsonl"
+    }
+  },
+  "outputs": {
+    "summary": "artifacts/runs/tp12_h80_side_daily_coverage_audit_v1/train_only_audit/side_daily_coverage_summary.json",
+    "missingExamples": "artifacts/runs/tp12_h80_side_daily_coverage_audit_v1/train_only_audit/side_daily_missing_examples.jsonl"
+  },
+  "coverageGate": {
+    "minSameDateCoverage": 0.95,
+    "minStrictPriorCoverage": 0.95,
+    "minPriorOrSameCoverage": 0.95,
+    "maxMissingExamplesPerDataset": 100
+  },
+  "guardrails": {
+    "oosReadAllowed": false,
+    "oosTuningAllowed": false,
+    "fallbackAllowed": false,
+    "failOnForbiddenDateRange": true,
+    "failOnMissingCriticalDataset": true,
+    "failOnDuplicateSideDailyRows": true,
+    "failOnMalformedSideDailyRows": true,
+    "noSilentFill": true
+  },
+  "notes": [
+    "This patch does not train a ranker and does not emit a selector.",
+    "The audit reports same-date, strict-prior, and prior-or-same join coverage separately so the later feature patch can choose an explicit as-of policy without fallback.",
+    "If coverage fails, side-daily data repair or a different explicit feature source is required before selector use."
+  ]
+}

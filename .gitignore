@@ -1,0 +1,35 @@
+# Dependencies and local package-manager caches
+node_modules/
+.npm/
+.pnpm-store/
+
+# Secrets and machine-local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Large local datasets and generated experiment outputs
+data/
+artifacts/
+.tmp/
+tmp_*.jsonl
+tmp_*.json
+*.log
+*.tar.gz
+*.tgz
+*.zip
+
+# Local tool binaries and native build outputs
+tools/bin/
+native/**/build/
+
+# Python and OS/editor noise
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
+
+# Accidental shell redirection files seen in this workspace
+=*

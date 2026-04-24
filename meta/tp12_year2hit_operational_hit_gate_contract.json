@@ -1,0 +1,71 @@
+{
+  "kind": "tp12_year2hit_operational_hit_gate_contract_v1",
+  "contractId": "tp12_operational_hit_gate_contract_v1",
+  "patchKey": "tp12_operational_hit_gate_contract_v1",
+  "updatedAt": "2026-04-24T00:00:00+09:00",
+  "hitDefinition": "operational_hit_v1",
+  "label": {
+    "entryRule": "NEXT_DAY_OPEN",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "stopPolicy": "no_stop"
+  },
+  "operationalHit": {
+    "chartHitField": "chartHitTarget",
+    "entryExecutableField": "entryExecutable",
+    "operationalHitField": "operationalHitTarget",
+    "executionPolicyId": "tp12_executable_hit_next_open_gap29p5_volume_v1",
+    "hitTargetPrimaryUseForbidden": true,
+    "nonExecutableRowsCountAsOperationalMisses": true,
+    "minEntryVolumeExclusive": 0,
+    "upperGapPctExclusive": 0.295,
+    "nonExecutableWhen": [
+      "entryVolume <= 0",
+      "entryOpen / decisionClose - 1 >= 0.295"
+    ],
+    "operationalMissReasons": [
+      "not_chart_hit",
+      "entry_volume_lte_zero",
+      "entry_gap_gte_29p5pct"
+    ]
+  },
+  "trainGate": {
+    "hitDefinition": "operational_hit_v1",
+    "hitField": "operationalHitTarget",
+    "minHitsPerCoreYear": 2,
+    "failOnInvalidRows": true,
+    "failOnZeroSurvivors": true,
+    "requireCoreYearsWithinTrain": true
+  },
+  "qualityGate": {
+    "hitDefinition": "operational_hit_v1",
+    "hitField": "operationalHitTarget",
+    "failOnZeroQualitySurvivors": true
+  },
+  "recommendationCadence": {
+    "minExecutableRecommendationsPerFullMonth": 5,
+    "fullMonthPolicy": "explicit_full_months_only",
+    "requireMonthlyCadence": true,
+    "failOnMissingMonthlyCadence": true
+  },
+  "oosResultGate": {
+    "targetSelectionKey": "onePickPerDay",
+    "targetObservedHitRate": 0.8,
+    "minWilsonLowerBound95": 0.8,
+    "minSelectedRows": 50,
+    "minUniqueMatchedDates": 50,
+    "minUniqueMatchedSymbols": 20,
+    "maxTop1DateShare": 0.12,
+    "failOnGateFailure": true,
+    "hitDefinition": "operational_hit_v1",
+    "hitField": "operationalHitTarget",
+    "requireMonthlyCadence": true,
+    "minExecutableRecommendationsPerFullMonth": 5
+  },
+  "hardStops": [
+    "hitTarget must not be used as the primary operational success field",
+    "non-executable recommendation rows must remain in evaluation and count as operational misses",
+    "full-month recommendation cadence is checked month by month, not by average",
+    "zero survivor or cadence shortage must fail, not relax thresholds"
+  ]
+}

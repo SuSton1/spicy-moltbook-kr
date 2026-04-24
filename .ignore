@@ -1,0 +1,5 @@
+# Generated outputs and large local datasets.
+artifacts/
+data/*.jsonl
+*.tar.gz
+tmp_*.jsonl

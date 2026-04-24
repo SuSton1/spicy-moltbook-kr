@@ -1,0 +1,291 @@
+{
+  "project": {
+    "name": "stockdesk-lab-lite",
+    "timezone": "Asia/Seoul"
+  },
+  "timeline": {
+    "anchorDateKey": "2026-02-19",
+    "warmupMonths": 12,
+    "discoveryMonths": 50,
+    "onlineMonths": 4,
+    "lockboxMonths": 4
+  },
+  "event": {
+    "highJumpThreshold": 0.08,
+    "closeJumpThreshold": 0.08,
+    "requireCloseJump": false,
+    "highJumpMode": "FROM_OPEN_EX_GAP",
+    "labelName": "HIGH8_BUYABLE_EX_GAP"
+  },
+  "filters": {
+    "symbolRegex": "^[0-9]{6}$",
+    "excludeTypes": [
+      "ETF",
+      "ETN",
+      "REIT",
+      "OTHER"
+    ],
+    "excludePreferred": true,
+    "excludeSpac": true,
+    "excludeBondLike": true,
+    "minMarketCapKrw": 30000000000,
+    "maxMarketCapKrw": 500000000000,
+    "excludeUnknownMarketCap": true,
+    "minAvgTradingValue20dKrw": 400000000,
+    "minEventTradingValueKrw": 5000000000,
+    "gapTradability": {
+      "enabled": true,
+      "requirePrevClose": true
+    }
+  },
+  "template": {
+    "localWindow": 40,
+    "globalWindow": 150,
+    "sequenceWindows": [
+      40
+    ],
+    "featureAsOf": "t-1",
+    "negativeSampling": {
+      "enabled": true,
+      "maxNegativesPerPositive": 1,
+      "offsets": [
+        5,
+        10,
+        20
+      ]
+    }
+  },
+  "similarity": {
+    "scorerVersion": "v2_exact",
+    "topK": 10,
+    "coarseTopN": 220,
+    "coarseTopClusters": 10,
+    "stageWeights": {
+      "global": 0.35,
+      "local": 0.45,
+      "trigger": 0.2
+    },
+    "initialWeights": {
+      "trend": 0.16,
+      "candle": 0.14,
+      "volume": 0.2,
+      "shape": 0.18,
+      "gap": 0.08
+    },
+    "postScoreAdjust": {
+      "enabled": true,
+      "qualityBonusWeight": 0.08,
+      "antiPenaltyWeight": 0.1,
+      "expectedRetBonusWeight": 0.04,
+      "expectedRetScale": 0.08
+    },
+    "minTradeScore": 0,
+    "earlyAbandon": {
+      "enabled": true,
+      "groupLevel": true,
+      "featureLevel": true,
+      "orderStrategy": "weight_variance"
+    }
+  },
+  "decisionGate": {
+    "minFinalScore": 0.58,
+    "minScoreMargin": 0.015,
+    "useScoreMarginGate": true,
+    "maxPicksPerDay": 2,
+    "hitWindowDays": 3,
+    "hitEval": {
+      "useStopLoss": true,
+      "stopLossPct": 0.04,
+      "sameDayTiePolicy": "STOP_WINS"
+    },
+    "inversionAdjust": {
+      "enabled": false,
+      "maxSwapMargin": 0.02,
+      "secondBoost": 0,
+      "qualityWeight": 0.04
+    },
+    "minExpectedNetRet3d": 0.002,
+    "requirePositiveExpectedNetRet3d": true,
+    "secondPick": {
+      "phase": "shadow",
+      "debugLog": false,
+      "minFinalScore": 0.58,
+      "minExpectedNetRet3d": 0.002,
+      "requirePositiveExpectedNetRet3d": true,
+      "maxGapFromFirst": 0.08,
+      "minMarginVsThird": 0
+    }
+  },
+  "onlineLearning": {
+    "enabled": true,
+    "learningRate": 0.03,
+    "reinforceBeta": 0.2,
+    "weightFloor": 0.01,
+    "startWeightsPath": ""
+  },
+  "cdLoop": {
+    "maxRounds": 12,
+    "minEpochsPerRound": 3,
+    "maxEpochsPerRound": 8,
+    "plateauEpochs": 2,
+    "minHitRateImprove": 0.0015,
+    "stopNoImproveRounds": 2,
+    "stagnationRoundsBeforeRebuildC": 1,
+    "finalStopNoImproveRounds": 2,
+    "minUsageForDrop": 12,
+    "dropHitRateDelta": 0.02,
+    "dropMinAvgRegret": 0.01,
+    "dropMinMissRate": 0.75,
+    "dropStreakRounds": 2,
+    "perRoundDropCapRatio": 0.25,
+    "clusterMinKeep": 2,
+    "rapidImproveHitRateDelta": 0.05,
+    "unstableNoCandidateRateDelta": 0.02,
+    "unstableRegretDelta": 0.01,
+    "minOnePickDaysForPromotion": 1,
+    "minPickedCountForPromotion": 40,
+    "zeroOnePickResetStreak": 2,
+    "weightCarry": {
+      "enabled": true,
+      "maxPrototypeChangeRate": 0.35
+    },
+    "scoreMarginSweep": {
+      "enabled": true,
+      "deltas": [
+        -0.012,
+        -0.009,
+        -0.006,
+        -0.003,
+        0,
+        0.003,
+        0.006
+      ],
+      "minPickHitRateGain": 0.0015,
+      "minPickHitCountGain": 1
+    },
+    "inversion": {
+      "enabled": true,
+      "enableOnStreak": 2,
+      "disableOnStreak": 2,
+      "minDualPickDays": 12,
+      "minRateDelta": 0.06,
+      "minBeatDays": 2,
+      "boostStep": 0.004,
+      "maxSecondBoost": 0.02,
+      "maxSwapMargin": 0.02,
+      "qualityWeight": 0.04
+    },
+    "secondPickController": {
+      "enabled": true,
+      "minSamples": 12,
+      "rateMargin": 0.015,
+      "expectedAdvantageMargin": 0.0015,
+      "expectedOverrideMaxRatePenalty": 0.015,
+      "gapStep": 0.0015,
+      "minGap": 0.012,
+      "maxGap": 0.03,
+      "expectedStep": 0.001,
+      "minExpectedFloor": 0.002,
+      "maxMinExpected": 0.02
+    }
+  },
+  "guardrails": {
+    "enforceStepAEngineDuckdb": true,
+    "forbidFallbackEverywhere": true,
+    "enforceExactScorer": true,
+    "forbidApproximateIndexInStrict": true,
+    "enforceHybrid15040Contracts": true
+  },
+  "backtest": {
+    "entry": "NEXT_DAY_OPEN",
+    "holdDays": 3,
+    "targetPct": 0.08,
+    "stopLossPct": 0.04,
+    "feeBps": 15,
+    "slippageBps": 5,
+    "singlePosition": true
+  },
+  "lightweight": {
+    "enabled": true,
+    "pipeline": {
+      "preferLiteArtifacts": true
+    },
+    "stepA": {
+      "engine": "duckdb",
+      "outputMode": "both",
+      "bitset": {
+        "enabled": true
+      },
+      "duckdb": {
+        "enabled": true,
+        "cliPath": "tools/bin/duckdb",
+        "databasePath": ":memory:"
+      }
+    },
+    "stepB": {
+      "inputMode": "auto",
+      "outputMode": "both",
+      "roundFeatureDigits": 6,
+      "quantizeSeqScale": 10000,
+      "runtimePack": {
+        "enabled": true
+      }
+    },
+    "stepC": {
+      "inputMode": "auto"
+    },
+    "stepD": {
+      "persistOnlineFeaturePackRows": false,
+      "prepareLockboxDuringStepD": true,
+      "writeFeaturePackRows": false,
+      "reuseRuntimeCache": true,
+      "keepWorkerPoolAlive": false,
+      "scoringWorkers": 2,
+      "workerChunkSize": 384
+    }
+  },
+  "pattern": {
+    "mode": "hybrid_150_40",
+    "ruleQuantiles": [
+      0.3,
+      0.5,
+      0.7
+    ],
+    "maxGlobalPrototypes": 300,
+    "maxLocalPrototypes": 480,
+    "globalClusterBins": 3,
+    "minRuleSupportRatio": 0.03,
+    "permanentDropListPath": "",
+    "excludeFeatureGroups": [],
+    "quality": {
+      "enabled": true,
+      "minTradesPerCluster": 8,
+      "prototypeClusterBlend": 0.7,
+      "retScale": 0.08,
+      "weights": {
+        "winRate": 0.35,
+        "targetRate": 0.2,
+        "avgNetRet": 0.35,
+        "stopRate": 0.1
+      }
+    },
+    "antiPattern": {
+      "enabled": true,
+      "extraNegRetWeight": 0.5
+    },
+    "contrastive": {
+      "enabled": true,
+      "blend": 0.35,
+      "minSamplesPerCluster": 30,
+      "liftCap": 3,
+      "antiNegRateWeight": 0.35
+    }
+  },
+  "dataPaths": {
+    "candleDailyJsonl": "data/candle_daily.jsonl",
+    "universeJsonl": "data/universe_daily.jsonl",
+    "symbolMasterJsonl": "data/symbol_master.jsonl",
+    "hourly60mJsonl": "data/candle_hourly60m.jsonl",
+    "newsJsonl": "data/optional_empty.jsonl"
+  }
+}

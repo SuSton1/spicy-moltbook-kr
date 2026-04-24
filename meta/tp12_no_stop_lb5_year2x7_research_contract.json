@@ -1,0 +1,66 @@
+{
+  "kind": "tp12_no_stop_lb5_year2x7_research_contract_v1",
+  "contractId": "tp12_no_stop_lb5_year2x7_audit_replay_v1",
+  "updatedAt": "2026-04-11T11:30:00+09:00",
+  "scopeId": "LOW_GAP_TOP",
+  "baseCandidateId": "lb5",
+  "lookbackTradingDays": 5,
+  "baseRollingContractPath": "meta/tp12_no_stop_rolling_research_contract.json",
+  "trainWindow": {
+    "from": "2016-08-12",
+    "to": "2024-12-27"
+  },
+  "oosWindow": {
+    "from": "2025-01-02",
+    "to": "2026-03-27"
+  },
+  "labelContract": {
+    "primaryLabelId": "tp12_no_stop_hit_3d",
+    "secondaryLabelId": "tp12_no_stop_hit_4d"
+  },
+  "yearCoverage": {
+    "coreYears": [
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023
+    ],
+    "minHitsPerCoreYear": 2,
+    "excludedBoundaryYears": [
+      2016,
+      2024
+    ]
+  },
+  "baselineRunIds": {
+    "baseRunId": "tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408",
+    "sourceRunId": "tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408_final_confirm_source",
+    "scopeRunId": "tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408_final_confirm_scope"
+  },
+  "baselineMetrics": {
+    "curatedRuleCount": 29182,
+    "trainSelectedRows": 183,
+    "trainHitRows": 183,
+    "trainHitRate": 1.0,
+    "oosCandidateRows": 533,
+    "oosSelectedRows": 105,
+    "oosHitRows": 30,
+    "oosHitRate": 0.2857142857142857,
+    "oosUniqueMatchedDates": 87,
+    "oosUniqueMatchedSymbols": 98,
+    "oosTop1DateShare": 0.0380952380952381
+  },
+  "hardStops": [
+    "Do not reopen TP12/SL4/3d stop-first tuning as part of this branch.",
+    "Do not widen scope beyond LOW_GAP_TOP while testing the year2x7 filter.",
+    "Do not use HIGH8 or close28 as the promotion reason for this branch.",
+    "Do not rerun 20M search until the strict year2x7 subset replay is judged."
+  ],
+  "notes": [
+    "This branch audits the completed canonical lb5 bank before any new search is opened.",
+    "Boundary years 2016 and 2024 remain in train data but do not count toward the year2x7 gate.",
+    "If the strict subset improves untouched OOS quality without collapsing support, a separate search-v2 branch may be opened later."
+  ]
+}

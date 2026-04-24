@@ -1,0 +1,80 @@
+{
+  "kind": "tp12_h80_learned_same_day_ranker_contract_v1",
+  "patchKey": "tp12_h80_learned_same_day_ranker_v1",
+  "mode": "train_only_learned_same_day_pairwise_ranker_diagnostic",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "label": {
+    "labelConfigId": "tp12_target12_next_global_session_open_hold3_no_stop_v1",
+    "entryPolicy": "GLOBAL_NEXT_SESSION_OPEN",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "stopPolicy": "no_stop"
+  },
+  "inputs": {
+    "features": "artifacts/runs/tp12_h80_same_day_listwise_context_abstention_v1/train_only_diagnostic/same_day_listwise_context_features.jsonl.gz"
+  },
+  "outputs": {
+    "summary": "artifacts/runs/tp12_h80_learned_same_day_ranker_v1/train_only_diagnostic/learned_same_day_ranker_summary.json",
+    "predictions": "artifacts/runs/tp12_h80_learned_same_day_ranker_v1/train_only_diagnostic/learned_same_day_ranker_predictions.jsonl"
+  },
+  "model": {
+    "implementedModelId": "pairwise_logistic_l2_v1",
+    "modelLadderScope": "pairwise_logistic_only_this_patch",
+    "learningRate": 0.005,
+    "epochs": 60,
+    "lambda": 0.01,
+    "maxPairsPerDate": 120,
+    "negativeWeights": {
+      "hard_negative": 2.5,
+      "easy_negative": 1.5,
+      "near_miss": 0.75,
+      "other": 1
+    },
+    "baselineSelectedFalsePositiveMultiplier": 1.5
+  },
+  "validation": {
+    "foldMode": "leave_one_year_out_train_oof_diagnostic",
+    "groupKey": "decisionDateKey",
+    "labelField": "hitTarget",
+    "sameDatePairingOnly": true,
+    "thresholdCalibration": "diagnostic_confidence_top_cut_only_no_locked_threshold"
+  },
+  "objective": {
+    "dailySelectionMode": "abstention_first_top1_diagnostic",
+    "targetWilsonLower95": 0.8,
+    "minSelectedRows": 150,
+    "absoluteMinSelectedRows": 100,
+    "topCuts": [50, 75, 100, 150, 200, 300, 500, 978]
+  },
+  "gates": {
+    "sanityForcedTop1MinHitRate": 0.465,
+    "sanityTopCut150MinHitRate": 0.57,
+    "researchForcedTop1MinHitRate": 0.5,
+    "researchTopCut150MinHitRate": 0.6,
+    "h80MinSelectedRows": 150,
+    "h80MinHitRowsAt150": 130,
+    "h80TargetWilsonLower95": 0.8
+  },
+  "guardrails": {
+    "oosReadAllowed": false,
+    "oosTuningAllowed": false,
+    "fallbackAllowed": false,
+    "lockedSelectorEmissionAllowed": false,
+    "failOnForbiddenDateRange": true,
+    "failOnFuturePathQualityLiveFeatureExport": true,
+    "failOnMissingRankFeature": true,
+    "failOnMissingPositiveOrNegativeTrainingPairs": true
+  },
+  "notes": [
+    "This is a bounded train-only diagnostic to test whether current same-day features retain learnable ordering signal.",
+    "LightGBM/XGBoost/LambdaMART are not auto-selected here; those require a separate explicit patch and dependency contract.",
+    "This patch never emits a production locked selector. If H80 ever passes, open a separate lock patch."
+  ]
+}

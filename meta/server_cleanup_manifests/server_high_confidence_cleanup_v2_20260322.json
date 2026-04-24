@@ -1,0 +1,399 @@
+{
+  "createdAt": "2026-03-22T00:00:00+09:00",
+  "scope": "server_artifact_cleanup",
+  "policy": "high_confidence_only_v2",
+  "selectionSummary": {
+    "excludedFamilies": [
+      "cd_auto_*",
+      "tf2_*",
+      "c1_smoke_*",
+      "de455_baseline_fix11_*",
+      "current widened rowcount family",
+      "pinned afree oos run",
+      "feature-store"
+    ],
+    "selectionReason": "No direct active/meta refs found in repo rg scan for these exact paths/families; archive/scratch/bootstrap-style artifacts only."
+  },
+  "expectedTotalSizeMb": 28513,
+  "itemCount": 54,
+  "items": [
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/gptpro_bundle_20260308_v1",
+      "sizeMb": 584,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/gptpro_bundle_20260308_v1",
+      "reason": "old gptpro archive bundle; not part of current runtime or experiment contract",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/gptpro_deep_bundle_20260308_v1",
+      "sizeMb": 3616,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/gptpro_deep_bundle_20260308_v1",
+      "reason": "old gptpro archive bundle; not part of current runtime or experiment contract",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/gptpro_deep_bundle_20260308_v2",
+      "sizeMb": 538,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/gptpro_deep_bundle_20260308_v2",
+      "reason": "old gptpro archive bundle; not part of current runtime or experiment contract",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/gptpro_longterm_bundle_20260308_v1",
+      "sizeMb": 617,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/gptpro_longterm_bundle_20260308_v1",
+      "reason": "old gptpro archive bundle; not part of current runtime or experiment contract",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_prejump_train_pack_20260313_205829_mem12g",
+      "sizeMb": 8324,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_prejump_train_pack_20260313_205829_mem12g",
+      "reason": "old prejump train pack run with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_exact_compiled_input_build_v2_20260320",
+      "sizeMb": 1303,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_exact_compiled_input_build_v2_20260320",
+      "reason": "superseded compiled-input build variant with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/probee_subset13_fix13_20260312_043208",
+      "sizeMb": 731,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/probee_subset13_fix13_20260312_043208",
+      "reason": "old one-off diagnostic run with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/rulecheck_20260312_201432",
+      "sizeMb": 530,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/rulecheck_20260312_201432",
+      "reason": "old one-off diagnostic run with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_180536_b01",
+      "sizeMb": 11,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_180536_b02",
+      "sizeMb": 12,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_180536_b03",
+      "sizeMb": 9,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_180536_b04",
+      "sizeMb": 9,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_184918_b01",
+      "sizeMb": 3,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_184918_b02",
+      "sizeMb": 3,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_184918_b03",
+      "sizeMb": 3,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_184918_b04",
+      "sizeMb": 3,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_185242_b01",
+      "sizeMb": 29,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_185242_b02",
+      "sizeMb": 29,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_185242_b03",
+      "sizeMb": 27,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_185242_b04",
+      "sizeMb": 27,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_190601_b01",
+      "sizeMb": 25,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_190601_b02",
+      "sizeMb": 25,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_190724_b01",
+      "sizeMb": 301,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_190724_b02",
+      "sizeMb": 302,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_era_diag_20260311_011449",
+      "sizeMb": 284,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_era_diag_20260311_011503",
+      "sizeMb": 469,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_feature_rewire_20260311_020740",
+      "sizeMb": 301,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_feature_rewire_fix_20260311_022100",
+      "sizeMb": 509,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_low_support_formula_20260311_062747",
+      "sizeMb": 792,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_low_support_reason_shadow_20260311_054532",
+      "sizeMb": 402,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_low_support_reason_shadow_20260311_054608",
+      "sizeMb": 792,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_singleera_evidence_20260311_041050",
+      "sizeMb": 535,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_singleera_evidence_bg_20260311_050000",
+      "sizeMb": 493,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_singleera_evidence_clean_20260311_054500",
+      "sizeMb": 788,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_singleera_tracefix_20260311_060200",
+      "sizeMb": 788,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c0c1_shard25_fullregen_20260311_032112",
+      "sizeMb": 780,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c0c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c0c1_shard25_singleera_guard_20260311_024200",
+      "sizeMb": 789,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c0c1_shard25_*",
+      "reason": "old shard/debug family with no direct repo/meta/docs reference",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_1",
+      "sizeMb": 96,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_10",
+      "sizeMb": 214,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_11",
+      "sizeMb": 235,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_12",
+      "sizeMb": 230,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_13",
+      "sizeMb": 197,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_14",
+      "sizeMb": 211,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_15",
+      "sizeMb": 192,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_16",
+      "sizeMb": 178,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_17",
+      "sizeMb": 191,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_2",
+      "sizeMb": 266,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_3",
+      "sizeMb": 285,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_4",
+      "sizeMb": 272,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_5",
+      "sizeMb": 247,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_6",
+      "sizeMb": 223,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_7",
+      "sizeMb": 242,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_8",
+      "sizeMb": 232,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_9",
+      "sizeMb": 219,
+      "pattern": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_*",
+      "reason": "bootstrap scratch run; distinct from active artifacts/feature-store",
+      "recoveryHint": "Use this exact server path plus run/family name from manifest to rerun or reconstruct from experiment logs if needed."
+    }
+  ]
+}

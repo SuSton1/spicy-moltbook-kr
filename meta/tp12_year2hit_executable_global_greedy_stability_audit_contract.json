@@ -1,0 +1,30 @@
+{
+  "kind": "tp12_year2hit_executable_global_greedy_stability_audit_contract_v1",
+  "patchKey": "tp12_year2hit_executable_global_greedy_stability_audit_v1",
+  "scope": "target_first_v2",
+  "purpose": "Audit the frozen executable global greedy zero-FP year2-hit train survivors for train-only fragility, then report OOS replay only as diagnostic evidence after the train survivor set is frozen.",
+  "inputs": {
+    "survivorsPath": "artifacts/runs/tp12_year2hit_executable_global_zero_fp_greedy_cover_v1/train_only/global_cover/micro_split_global_greedy_final_survivors.jsonl",
+    "trainReplayPath": "artifacts/runs/tp12_year2hit_executable_global_zero_fp_greedy_cover_v1/train_only/global_greedy_train_cover_replay/executable_cover_replay.jsonl",
+    "oosReplayPath": "artifacts/runs/tp12_year2hit_executable_global_zero_fp_greedy_cover_v1/oos/global_greedy_oos_cover_replay/executable_cover_replay.jsonl"
+  },
+  "outputDir": "artifacts/runs/tp12_year2hit_executable_global_greedy_stability_audit_v1",
+  "oosUsage": "diagnostic_only_after_train_survivors_frozen",
+  "hardStops": [
+    "Do not select, tune, or promote covers with OOS metrics.",
+    "Do not emit a runtime selector.",
+    "Do not change the frozen 40-cover survivor set.",
+    "Fail fast if survivor, train replay, or diagnostic OOS replay inputs are missing."
+  ],
+  "reportedDiagnostics": [
+    "per-cover train operational replay metrics",
+    "per-tile support size and year dispersion",
+    "whether each cover passes by stitching tiles that are not year2-hit by themselves",
+    "atom complexity and extreme same-day rank usage",
+    "diagnostic OOS replay precision and year2-hit status"
+  ],
+  "promotionPolicy": {
+    "allowed": false,
+    "nextEligibleStep": "Design a new train-only stability-gated mining patch and duplicate-check its patch key before running."
+  }
+}

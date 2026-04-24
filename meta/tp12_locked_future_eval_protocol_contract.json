@@ -1,0 +1,41 @@
+{
+  "kind": "tp12_locked_future_eval_protocol_contract_v1",
+  "contractId": "tp12_locked_future_eval_protocol_v1",
+  "patchKey": "tp12_locked_future_eval_protocol_v1",
+  "updatedAt": "2026-04-24T00:00:00+09:00",
+  "internalValidationDateRange": {
+    "from": "2016-01-01",
+    "to": "2024-12-31"
+  },
+  "lockedFutureDateRange": {
+    "from": "2025-01-02",
+    "to": null
+  },
+  "protocol": {
+    "futureTuningForbiddenFrom": "2025-01-02",
+    "requireInternalValidationPassedBeforeLockedFutureEval": true,
+    "selectorHashRequired": true,
+    "catalogHashRequired": true,
+    "trainGateHashRequired": true,
+    "thresholdMutationAfterLockedEvalForbidden": true
+  },
+  "allowedFuturePurpose": [
+    "locked_eval"
+  ],
+  "forbiddenFutureUses": [
+    "train",
+    "tune",
+    "select",
+    "threshold_select",
+    "ranker_fit",
+    "pattern_mine",
+    "catalog_sort",
+    "gate_relaxation"
+  ],
+  "hardStops": [
+    "Any 2025-01-02 or later row used for training, tuning, thresholding, selection, mining, or ranking must fail",
+    "Locked future evaluation cannot run before 2016-2024 internal validation passes",
+    "Selector hash, catalog hash, and train gate hash must match the locked manifest",
+    "OOS result thresholds must not be edited after reading locked future results"
+  ]
+}

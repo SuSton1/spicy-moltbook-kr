@@ -1,0 +1,156 @@
+{
+  "kind": "tp12_train100_neutral_anchor_veto_certificate_contract_v1",
+  "patchKey": "tp12_train100_neutral_anchor_veto_certificate_v1",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "labelConfig": {
+    "entryPolicy": "GLOBAL_NEXT_SESSION_OPEN",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "stopPolicy": "NO_STOP"
+  },
+  "objective": {
+    "minHitDecisionDatesPerYear": 2,
+    "minHitSymbolDatesPerYear": 2,
+    "minTotalPositiveSymbolDates": 18,
+    "preferredTotalPositiveSymbolDates": 30,
+    "requireFalsePositiveRows": 0,
+    "requireTrainPrecision": 1
+  },
+  "qualityGates": {
+    "minActiveMonths": 12,
+    "maxTopSymbolShare": 0.15,
+    "maxTopMonthShare": 0.2,
+    "minFeatureFamilyCount": 2,
+    "preferredFeatureFamilyCount": 3,
+    "requireThresholdCoarsenessPassed": true
+  },
+  "expression": {
+    "allowedForms": [
+      "anchor_and_not_conditional_veto"
+    ],
+    "maxAnchorAtoms": 4,
+    "maxVetoClauses": 4,
+    "maxVetoAtomsPerClause": 3,
+    "maxTotalAtoms": 10,
+    "allowedFeatureSpaceIds": [
+      "tp12_fs1_neutral_ohlcv_intensity_v1",
+      "tp12_fs2_neutral_candle_shape_v1",
+      "tp12_fs3_neutral_liquidity_volume_v1",
+      "tp12_fs4_neutral_cross_section_rank_v1",
+      "tp12_fs5_neutral_support_consensus_v1",
+      "tp12_fs6_neutral_market_context_v1",
+      "tp12_fs7_neutral_same_symbol_matured_prior_v1"
+    ]
+  },
+  "searchLimits": {
+    "maxVisitedAnchorStates": 250000,
+    "maxGeneratedAnchors": 25000,
+    "maxGeneratedVetoClausesPerAnchor": 5000,
+    "maxVisitedVetoStatesPerAnchor": 20000,
+    "allowIncompleteCertificate": true
+  },
+  "thresholdGrid": {
+    "percentile": [
+      0.1,
+      0.2,
+      0.3,
+      0.5,
+      0.7,
+      0.8,
+      0.9
+    ],
+    "rankBuckets": [
+      "bottom20",
+      "bottom30",
+      "mid20_80",
+      "top30",
+      "top20",
+      "top10"
+    ],
+    "zScore": [
+      -1.5,
+      -1,
+      -0.5,
+      0.5,
+      1,
+      1.5
+    ],
+    "counts": [
+      0,
+      1,
+      2,
+      3,
+      5,
+      8,
+      13,
+      21
+    ],
+    "shares": [
+      0.25,
+      0.5,
+      0.75
+    ],
+    "days": [
+      5,
+      10,
+      20,
+      40,
+      60
+    ],
+    "wickRatio": [
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6
+    ],
+    "closeLocation": [
+      0.25,
+      0.5,
+      0.65,
+      0.8,
+      0.9
+    ]
+  },
+  "forbiddenExpressionFields": [
+    "symbolIdRaw",
+    "dateIdRaw",
+    "hitTarget",
+    "hitDate",
+    "maxForwardReturn",
+    "minForwardDrawdown",
+    "futureHigh",
+    "futureLow",
+    "targetBeforeStop",
+    "stopBeforeTarget",
+    "entryDateFutureOpen"
+  ],
+  "outputPaths": {
+    "featureSpaceManifest": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/feature/feature_space_manifest.json",
+    "neutralFeatureCatalog": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/feature/neutral_feature_catalog.jsonl",
+    "neutralAtomCatalog": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/atoms/neutral_atom_catalog.jsonl.gz",
+    "neutralAtomBitsetManifest": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/atoms/neutral_atom_bitset_manifest.json",
+    "neutralAtomSupportSummary": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/atoms/neutral_atom_support_summary.json",
+    "anchorCatalog": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/anchors/anchor_catalog.jsonl.gz",
+    "anchorGenerationSummary": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/anchors/anchor_generation_summary.json",
+    "foundPatterns": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/search/train100_neutral_found_patterns.jsonl",
+    "rejectedPatterns": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/search/train100_neutral_rejected_patterns.jsonl.gz",
+    "incompleteFrontier": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/search/train100_neutral_incomplete_frontier.jsonl.gz",
+    "anchorVetoSearchSummary": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/search/train100_neutral_anchor_veto_search_summary.json",
+    "survivorVerifierSummary": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/verify/train100_neutral_survivor_verifier_summary.json",
+    "verifiedSurvivors": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/verify/train100_neutral_verified_survivors.jsonl",
+    "certificateSummary": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/certificate/train100_neutral_expression_space_certificate.json",
+    "certificateReport": "artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/certificate/train100_neutral_expression_space_certificate.md"
+  },
+  "oosReadAllowed": false,
+  "fallbackAllowed": false,
+  "lockedSelectorAllowed": false
+}

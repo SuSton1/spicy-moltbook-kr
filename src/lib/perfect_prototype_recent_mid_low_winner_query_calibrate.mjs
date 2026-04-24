@@ -1,0 +1,1 @@
+export { calibratePerfectPrototypeSupportTop1QueryRanker as calibratePerfectPrototypeRecentMidLowWinnerQuery } from "./perfect_prototype_support_top1_query_calibrate.mjs"

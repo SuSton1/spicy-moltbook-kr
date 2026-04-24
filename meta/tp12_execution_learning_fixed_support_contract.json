@@ -1,0 +1,13 @@
+{
+  "kind": "tp12_execution_learning_fixed_support_contract_v1",
+  "contractId": "tp12_execution_learning_fixed_support_v1",
+  "baselineVariantId": "daily_only_no_stop",
+  "supportImmutable": true,
+  "defaultRecentReplayDecisionCount": 30,
+  "expectedPairSignatureSha256": null,
+  "hardStops": [
+    "Do not change the donor support. The fixed-support path must use the frozen baseline selection rows exactly as provided.",
+    "Fail fast if the baseline variant binding is missing, if donor coverage is incomplete, or if an expected pair signature does not match.",
+    "This path is an explicit operating-branch sibling. Do not treat it as a fallback for supplier-side technique discovery."
+  ]
+}

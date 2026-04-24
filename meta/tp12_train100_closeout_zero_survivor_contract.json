@@ -1,0 +1,31 @@
+{
+  "kind": "tp12_train100_closeout_contract_v1",
+  "contractId": "tp12_train100_closeout_zero_survivor_v1",
+  "patchKey": "tp12_train100_closeout_zero_survivor_v1",
+  "goalMode": "train100_year2hit_closeout",
+  "scope": "target_first_v2",
+  "objective": {
+    "mode": "close_strict_train100_primary_path",
+    "requiredAcceptedTrain100PatternCount": 0,
+    "requiredAcceptedCandidateCount": 0,
+    "allowedCloseoutStatus": [
+      "closed_negative_incomplete",
+      "closed_negative_complete"
+    ],
+    "decision": "do_not_continue_as_primary_h80_path"
+  },
+  "requiredInputs": {
+    "partitionSummaryPath": "artifacts/runs/tp12_train100_counterexample_frontier_partition_drain_v1/step-frontier-partition-drain-8x1m/partition_summary.json",
+    "discoverySummaryPath": "artifacts/runs/tp12_train100_counterexample_frontier_partition_drain_v1/step-frontier-partition-drain-8x1m/train100_partition_discovery_summary.json",
+    "resumeManifestPath": "artifacts/runs/tp12_train100_counterexample_frontier_resume_8m_v1/step-frontier-resume-8m/counterexample_frontier_resume_8m_manifest.json"
+  },
+  "outputs": {
+    "closeoutSummaryPath": "artifacts/runs/tp12_train100_closeout_zero_survivor_v1/closeout_summary.json"
+  },
+  "hardStops": [
+    "Fail if any source summary reports oosRead=true.",
+    "Fail if any accepted train100 pattern or accepted candidate count is above zero.",
+    "Do not use strict train100 outputs as selector source after closeout.",
+    "Strict train100 may continue only as a separate unsat diagnostic objective."
+  ]
+}

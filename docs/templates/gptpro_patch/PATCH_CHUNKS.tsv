@@ -1,0 +1,7 @@
+# CHUNK_ID<TAB>GOAL<TAB>FILES_CSV<TAB>VERIFY_CMD
+# FILES_CSV: comma-separated repo-relative paths
+
+C001	계산 엔진 기본 구조 변경	src/example/engine.ts,src/example/new_policy.ts	npm run verify
+C002	테스트/회귀 케이스 보강	tests/example/engine.test.ts	npm run verify
+C003	레거시 제거/이름 이동	src/example/legacy_policy.ts,src/example/old_name.ts,src/example/new_name.ts	npm run verify
+

@@ -1,0 +1,605 @@
+2026-04-18 04:51:51 KST
+- umbrella patch:
+  - `public_kr_partial_date_slice_repair_v1`
+- context:
+  - user explicitly stopped the in-flight year2hit fixed-window chain before verdict and redirected work to a source-data integrity audit first
+  - no new experiment was launched in this patch; this is a root-cause data-repair patch only
+
+- confirmed source issue:
+  - canonical public-KR daily files are row-clean but not date-complete
+  - severe isolated partial-coverage dates:
+    - `2017-09-22`
+    - `2017-12-20`
+    - `2018-02-06`
+    - `2018-03-02`
+    - `2022-05-02`
+    - `2023-07-11`
+    - `2025-09-19`
+  - strongest pattern is one-day market collapse, mostly `KSQ`
+  - `2024-12-31` remains `0` rows but stays classified as repo-known effective-coverage boundary, not the repair target here
+
+- patch scope:
+  - add anomaly manifest:
+    - `meta/public_kr_partial_coverage_anomaly_manifest.json`
+  - add canonical anomaly audit:
+    - `tools/audit_public_kr_partial_coverage_dates.py`
+  - add merge-free stage-only historical wrapper:
+    - `tools/run_public_kr_historical_stage_only.sh`
+    - `tools/server_run_public_kr_historical_stage_only.sh`
+  - add targeted repair validator:
+    - `tools/validate_public_kr_targeted_repair_stage.py`
+  - add targeted repair orchestrator:
+    - `tools/run_public_kr_targeted_date_repair.sh`
+    - `tools/server_run_public_kr_targeted_date_repair.sh`
+  - add smoke:
+    - `tools/smoke_public_kr_partial_coverage_repair.py`
+  - extend ingest contract doc:
+    - `meta/public_kr_daily_ingest_contract.md`
+  - wire all new checks into:
+    - `scripts/verify.sh`
+
+- repair design decisions:
+  - no symbol-only hot patches
+  - no candle-only rewrite
+  - full one-date slice regeneration only
+  - `probe` and `apply` are split explicitly
+  - merge requires:
+    - completed stage summary
+    - passed stage QC
+    - passed targeted repair validator
+  - legacy-era anomaly dates default to `all_common`
+  - filtered-era anomaly dates default to `core_threshold`
+
+- validator requirements:
+  - staged candle rows must exceed current candle rows
+  - staged universe rows must not shrink below current universe rows
+  - staged local ratio versus adjacent canonical dates must recover above threshold
+  - previous-day missing symbols must recover above threshold
+  - duplicate/invalid/orphan class regressions remain disallowed
+
+- verification:
+  - `python3 tools/smoke_public_kr_partial_coverage_repair.py` passed
+  - local `bash scripts/verify.sh` exited `0`
+  - server `bash tools/run_server_command.sh npm run verify` exited `0`
+
+- current state:
+  - no repair probe has been launched yet
+  - no repair apply has been launched yet
+  - no experiment registry entry was added in this turn
+  - next live action, if requested, should be:
+    - probe the seven anomaly dates with `run_public_kr_targeted_date_repair.sh --mode=probe`
+    - inspect validator output
+    - only then run `--mode=apply`
+
+2026-04-18 06:08:14 KST
+- continued execution after the initial patch landed
+- first live probe attempt exposed two sequential root causes:
+  - noninteractive public-KR historical wrappers did not source `KRX_ID/KRX_PW`
+  - active-symbol candle repair still depended on Yahoo, which is missing anomaly dates like `2017-09-22`
+- root-cause fixes applied:
+  - added `tools/load_krx_mdc_env.sh`
+  - sourced it from:
+    - `tools/run_public_kr_historical_inputs.sh`
+    - `tools/run_public_kr_historical_backfill.sh`
+    - `tools/run_public_kr_historical_stage_only.sh`
+  - added explicit active candle provider contract:
+    - source manifest now supports `ACTIVE_KRX`
+    - shard planner/backfill/stage-only/targeted-repair wrappers now accept `--active-candle-provider`
+    - targeted repair defaults to `krx`
+  - added provider smoke:
+    - `tools/smoke_public_kr_active_candle_provider.py`
+  - wired provider smoke into `scripts/verify.sh`
+- verification after the provider patch:
+  - local `bash scripts/verify.sh` exited `0`
+  - server `bash tools/run_server_command.sh --skip-sync npm run verify` exited `0`
+- live probe result:
+  - single-date targeted probe run:
+    - `public_kr_partial_cov_probe_v1_20260418_r3`
+    - date: `2017-09-22`
+  - stage succeeded on all shards:
+    - shard 0: expected `259`, fetched `259`, candle `254`, universe `254`
+    - shard 1: expected `252`, fetched `252`, candle `247`, universe `247`
+    - shard 2: expected `248`, fetched `248`, candle `244`, universe `244`
+    - shard 3: expected `277`, fetched `277`, candle `269`, universe `269`
+    - shard 4: expected `269`, fetched `269`, candle `263`, universe `263`
+  - validator passed:
+    - `currentCandleRows=222`
+    - `stageCandleRows=1277`
+    - `currentUniverseRows=222`
+    - `stageUniverseRows=1277`
+    - `currentLocalRatio=0.1743`
+    - `stageLocalRatio=1.0024`
+    - `currentPrevMissingSymbols=1053`
+    - `stagePrevMissingSymbols=8`
+    - `recoveredPrevMissingSymbols=1045`
+    - `recoveryRate=0.9924`
+- interpretation:
+  - the Yahoo gap was the actual second root cause
+  - `ACTIVE_KRX` repair path restores the anomaly date to neighborhood-normal coverage
+  - `2017-09-22` is now proven repairable in probe mode without merge/apply
+- next live action:
+  - launch a full seven-date probe sweep with the corrected `ACTIVE_KRX` path
+  - if the remaining dates validate, proceed to a grouped `--mode=apply`
+
+2026-04-18 06:14:02 KST
+- launched full seven-date probe sweep:
+  - run id:
+    - `public_kr_partial_cov_probe_v1_20260418_r4`
+  - mode:
+    - `probe`
+  - provider:
+    - `ACTIVE_KRX`
+  - launch pid:
+    - `1983547`
+  - launch log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/data_quality/partial_coverage_repair/run=public_kr_partial_cov_probe_v1_20260418_r4.launch.log`
+- early confirmation:
+  - first date root created:
+    - `artifacts/backfill/public_kr_historical/run=public_kr_partial_cov_probe_v1_20260418_r4_20170922`
+  - launch log shows `--active-candle-provider=krx` for all five shards
+- next operator action:
+  - continue tailing the launch log and per-date validator outputs
+  - do not run `--mode=apply` until all seven probe dates have explicit validator verdicts
+
+2026-04-18 10:34:50 KST
+- continued after `r4` stalled on `2017-12-20`
+- root cause narrowed and fixed:
+  - `023430` was not a bad active/delisted source-route choice
+  - both authenticated KRX active and delisted price endpoints return only `2017-12-19` and zero rows on `2017-12-20`
+  - the true contract bug was lifecycle intersection treating `delistedOn` as an inclusive trading upper bound
+- evidence gathered on server:
+  - `023430 / KR7023430002`
+  - `active 2017-12-19..2017-12-20 -> ['2017/12/19']`
+  - `delisted 2017-12-19..2017-12-20 -> ['2017/12/19']`
+  - same pattern reproduced for additional delisted samples:
+    - `KR7002550002`
+    - `KR7000322008`
+    - `KR7001683002`
+    - `KR7003413002`
+  - all sampled symbols stopped at the trading day before `delistedOn`
+- code fix applied:
+  - `tools/public_kr_historical_common.py`
+    - `lifecycle_intersects()` now treats `delistedOn` as an exclusive upper bound for stageable trading rows
+  - `tools/build_historical_shares_intervals.py`
+    - `load_symbols()` now reuses the same lifecycle intersection logic
+  - `tools/smoke_public_kr_historical_input_builders.py`
+    - added regression assertions proving a symbol delisted on day `D` is excluded from a `D..D` stage
+    - added spanning-range assertion proving `effectiveTo = delistedOn - 1 day`
+- verification after the fix:
+  - local `bash scripts/verify.sh` exited `0`
+  - server `bash tools/run_server_command.sh npm run verify` reran to completion and printed `==> verify complete`
+- live probe rerun on the previously blocked date:
+  - run id:
+    - `public_kr_partial_cov_probe_v1_20260418_r5`
+  - date:
+    - `2017-12-20`
+  - shard outcomes:
+    - shard 0: `completed expected=261 fetched=261 missingData=0`
+    - shard 1: `completed expected=255 fetched=255 missingData=0`
+    - shard 2: `completed expected=251 fetched=251 missingData=0`
+    - shard 3: `completed expected=279 fetched=279 missingData=0`
+    - shard 4: `completed expected=275 fetched=275 missingData=0`
+  - shard 4 no longer emitted `missing_data_symbols.json`
+  - validator passed:
+    - `currentCandleRows=222 -> stageCandleRows=1295`
+    - `currentUniverseRows=222 -> stageUniverseRows=1295`
+    - `stageNonTradingRows=26`
+    - `currentLocalRatio=0.1710`
+    - `stageLocalRatio=0.9977`
+    - `currentPrevMissingSymbols=1075`
+    - `stagePrevMissingSymbols=4`
+    - `recoveredPrevMissingSymbols=1071`
+    - `recoveryRate=0.9963`
+- interpretation:
+  - the `2017-12-20` blocker is removed
+  - `delistedOn` exclusivity was the third live root cause in this repair track
+- next live action:
+  - full seven-date probe sweep relaunched under:
+    - `public_kr_partial_cov_probe_v1_20260418_r6`
+  - launch log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/data_quality/partial_coverage_repair/run=public_kr_partial_cov_probe_v1_20260418_r6.launch.log`
+  - keep monitoring `r6`; do not run `--mode=apply` until every anomaly date writes a passed validator summary
+
+2026-04-18 11:17:34 KST
+- `public_kr_partial_cov_probe_v1_20260418_r7` exposed a fourth live root cause
+- remaining-date probe status:
+  - `2018-02-06`: validator `passed`
+    - `currentCandleRows=627 -> stageCandleRows=1303`
+    - `currentUniverseRows=627 -> stageUniverseRows=1303`
+    - `recoveryRate=0.9940`
+    - `recoveredPrevMissingSymbols=663`
+  - `2018-03-02`: validator `passed`
+    - `currentCandleRows=618 -> stageCandleRows=1301`
+    - `currentUniverseRows=618 -> stageUniverseRows=1301`
+    - `recoveryRate=0.9897`
+    - `recoveredPrevMissingSymbols=670`
+  - `2022-05-02`: stage failed before validator
+- exact root cause:
+  - all five `2022-05-02` shards fetched `100%` of expected symbols and then failed on share resolution
+  - shard summaries recorded:
+    - `failureReason=historical stage shares coverage failed; inspect missingShares audit`
+  - canonical `data/historical_shares_intervals.jsonl` is truncated at:
+    - `max effectiveTo = 2020-04-19`
+  - both local and server copies have the same ceiling
+  - therefore filtered-era repair dates (`2022-05-02`, `2023-07-11`, `2025-09-19`) are blocked by stale canonical shares coverage, not KRX candle fetch
+- code fix applied:
+  - new fail-fast helper:
+    - `tools/assert_public_kr_historical_shares_coverage.py`
+  - wrapper wiring:
+    - `tools/run_public_kr_historical_stage_only.sh`
+  - new smoke:
+    - `tools/smoke_public_kr_historical_shares_coverage.py`
+  - verify updated:
+    - `scripts/verify.sh`
+- verification after the preflight fix:
+  - local `bash scripts/verify.sh` exited `0`
+  - server `bash tools/run_server_command.sh --skip-sync npm run verify` exited `0`
+- canonical shares remediation launched:
+  - run id:
+    - `public_kr_shares_full_rebuild_v1_20260418_r1`
+  - launch pid:
+    - `2201059`
+  - run root:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/backfill/public_kr_historical_inputs/run=public_kr_shares_full_rebuild_v1_20260418_r1`
+  - launch log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/backfill/public_kr_historical_inputs/run=public_kr_shares_full_rebuild_v1_20260418_r1/launch.log`
+  - start line:
+    - `START build_historical_shares_intervals from=2016-01-01 to=2026-04-17 symbols=1577 active=1252 delisted=325`
+- operator instruction:
+  - do not rerun filtered-era date probes until the shares rebuild finishes and proves coverage beyond `2025-09-19`
+  - next valid sequence:
+    1. validate rebuilt shares artifact coverage
+    2. rerun `2022-05-02`, `2023-07-11`, `2025-09-19`
+    3. only if all seven anomaly dates pass in probe mode, run grouped `--mode=apply`
+
+2026-04-18 12:44:18 KST
+- continued monitoring the live shares rebuild:
+  - run id:
+    - `public_kr_shares_full_rebuild_v1_20260418_r1`
+  - current progress:
+    - `processed=800/1252 success=800` on the active-symbol phase
+  - current process state:
+    - elapsed about `01:28`
+    - checkpoint size about `291.7MB`
+    - final output/summary not written yet
+- checkpoint coverage re-check:
+  - `globalMaxShareEffectiveTo=2026-04-17`
+  - however filtered-era dates are still not fully covered yet
+  - current missing-share counts against the live checkpoint:
+    - `2022-05-02`: `579`
+    - `2023-07-11`: `545`
+    - `2025-09-19`: `479`
+- interpretation:
+  - the full rebuild is making the right data available and actively shrinking the missing set
+  - but filtered-era repair remains blocked until the missing-share counts reach `0`
+- current operator action:
+  - keep the full rebuild running
+  - do not launch new KRX-heavy jobs in parallel
+  - rerun filtered-era probes only after the live checkpoint or final output passes the shares coverage guard for all three remaining dates
+
+2026-04-18 13:26:42 KST
+- active-symbol phase of the shares rebuild is complete:
+  - latest launch log lines:
+    - `PROGRESS build_historical_shares_intervals processed=1252/1252 success=1252`
+    - `PROGRESS build_historical_shares_intervals_delisted processed=50/325 success=50`
+  - final output is still pending:
+    - `historical_shares_intervals.jsonl`: not written yet
+    - `shares_summary.json`: not written yet
+  - live python pid is still running:
+    - `2201061`
+- checkpoint coverage status improved again:
+  - `2022-05-02`: `missingShareSymbolCount=127`
+  - `2023-07-11`: `missingShareSymbolCount=93`
+  - `2025-09-19`: `missingShareSymbolCount=27`
+  - `globalMaxShareEffectiveTo=2026-04-17` for all three checks
+- missing-share composition check:
+  - all remaining missing-share rows are `delistedOn != null`
+  - no active symbols remain missing in the checkpoint coverage audit
+  - market split of the remaining delisted-only tail:
+    - `2022-05-02`: `STK 39 / KSQ 88`
+    - `2023-07-11`: `STK 33 / KSQ 60`
+    - `2025-09-19`: `STK 13 / KSQ 14`
+- interpretation:
+  - no fifth root cause is visible right now
+  - the rebuild is on the correct path and just needs the delisted phase to finish
+- serialized finalize watcher launched on server:
+  - watcher run id:
+    - `public_kr_partial_cov_finalize_v1_20260418_r1`
+  - watcher pid:
+    - `2268364`
+  - watcher log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/data_quality/partial_coverage_repair/finalize=public_kr_partial_cov_finalize_v1_20260418_r1/watch.log`
+  - watcher behavior:
+    1. wait for shares rebuild pid `2201061` to exit
+    2. require final shares artifact + summary
+    3. atomically promote final shares artifact to canonical `data/historical_shares_intervals.jsonl`
+    4. rerun final coverage guards for `2022-05-02`, `2023-07-11`, `2025-09-19`
+    5. run filtered-era `--mode=probe` for the remaining three dates
+    6. if probe passes, run grouped `--mode=apply` for all seven anomaly dates
+    7. let `run_public_kr_targeted_date_repair.sh --mode=apply` rebuild the recommendation sidecar, rerun the partial-coverage audit, and execute `npm run verify`
+- operator instruction:
+  - do not start any parallel KRX-heavy remediation
+  - monitor the watcher log first; if it reaches `DONE finalize watcher`, the repair is fully closed
+
+2026-04-18 18:37:28 KST
+- a fifth live root cause was confirmed after the first finalize watcher failed on `2022-05-02`
+- exact failure:
+  - `public_kr_partial_cov_finalize_v1_20260418_r1` successfully rebuilt and promoted canonical shares
+  - final shares coverage guards passed for `2022-05-02`, `2023-07-11`, `2025-09-19`
+  - but the filtered-era probe `public_kr_partial_cov_probe_v1_20260418_r8` failed at validator on `2022-05-02`
+  - validation summary:
+    - `currentCandleRows=957 -> stageCandleRows=1291`
+    - `prev/next local baseline ≈ 2028`
+    - `stageLocalRatio=0.6366`
+    - `recoveryRate=0.2232`
+  - stage shard summaries all showed:
+    - `expectedSymbolCount` complete
+    - `fetchedSymbolCount == expectedSymbolCount`
+    - `missingDataSymbolCount=0`
+    - `missingShareSymbolCount=0`
+- root cause analysis:
+  - filtered-era failure was no longer a shares problem
+  - canonical `data/historical_symbol_lifecycle.jsonl` itself was truncated/biased:
+    - `rowCount=1577`
+    - `market split: KSQ 1481 / STK 96`
+    - `listedFrom max = 2020-03-24`
+  - live source inspection showed `load_kind_current_list_rows()` returned `2766` rows, including:
+    - `코스닥 1818`
+    - `유가 839`
+    - `코넥스 109`
+  - current builder was skipping KOSPI current rows because:
+    - `normalize_kind_market_code()` did not accept `시장구분='유가'`
+  - quantitative confirmation:
+    - pre-fix simulated `build_current_rows()` = `1778`
+    - skipped reasons = `unsupported_market 945`, `invalid_symbol 43`
+    - numeric `유가` rows alone = `836`
+    - `2022-04-29` candle rows missing from lifecycle = `821`, matching the KOSPI alias hole almost exactly
+- code fix:
+  - `tools/public_kr_historical_inputs_common.py`
+    - `normalize_kind_market_code()` now accepts `유가` and `유가증권`
+  - `tools/smoke_public_kr_historical_input_builders.py`
+    - regression smoke now asserts `normalize_kind_market_code(\"유가\") == \"STK\"`
+    - fake lifecycle build row switched to `시장구분='유가'`
+- verification:
+  - local `python3 tools/smoke_public_kr_historical_input_builders.py` passed
+  - live source count after patch:
+    - `current_rows=2614`
+    - skipped reasons reduced to `unsupported_market 109`, `invalid_symbol 43`
+  - local `bash scripts/verify.sh` passed
+  - server `npm run verify` rerun was started and the new public-KR smokes passed during the live stream
+- new canonical rebuild launched because the previous lifecycle/shares artifacts are no longer authoritative:
+  - inputs run id:
+    - `public_kr_historical_inputs_full_rebuild_v1_20260418_r2`
+  - launcher pid:
+    - `2433047`
+  - launch log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/backfill/public_kr_historical_inputs/run=public_kr_historical_inputs_full_rebuild_v1_20260418_r2/launch.log`
+  - early lifecycle result already confirms the root fix:
+    - `DONE build_historical_symbol_lifecycle ... symbols=3044 current=2614 delisted=430`
+  - shares phase then started:
+    - `START build_historical_shares_intervals ... symbols=3044 active=2614 delisted=430`
+- new serialized finalize watcher launched:
+  - watcher run id:
+    - `public_kr_partial_cov_finalize_v1_20260418_r2`
+  - watcher pid:
+    - `2435527`
+  - watcher log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/data_quality/partial_coverage_repair/finalize=public_kr_partial_cov_finalize_v1_20260418_r2/watch.log`
+  - watcher sequence:
+    1. wait for inputs rebuild pid `2433047`
+    2. require rebuilt lifecycle + shares artifacts and summaries
+    3. atomically promote canonical `historical_symbol_lifecycle.jsonl` and `historical_shares_intervals.jsonl`
+    4. rerun final coverage guards for the 3 filtered-era dates
+    5. run filtered-era probe `public_kr_partial_cov_probe_v1_20260418_r9`
+    6. if probe passes, run grouped apply `public_kr_partial_cov_apply_v1_20260418_r2`
+    7. let apply rebuild sidecar, rerun partial-coverage audit, and execute `npm run verify`
+
+2026-04-18 19:25:00 KST
+- `r2` shares rebuild is slow but not stalled
+  - remote checkpoint inspection:
+    - `checkpointRows=1005588`
+    - `checkpointSymbols=400`
+    - `lastSymbol=011330`
+    - `globalMaxEffectiveTo=2026-04-17`
+  - filtered-era coverage guards still fail at this midpoint only because the rebuild has not progressed far enough yet
+    - `2022-05-02` checkpoint guard:
+      - `sharesSymbolCount=400`
+      - `missingShareSymbolCount=1973`
+  - launch log still stops at `PROGRESS ... processed=400/2614`, but the worker process is alive and holds an established HTTPS session to Akamai
+- root-cause recheck on the apparent stall:
+  - the next active symbols after checkpoint symbol `011330` are:
+    - `011370 서한`
+    - `011390 부산산업`
+    - `011420 갤럭시아에스엠`
+  - the same authenticated KRX share fetch path was replayed manually for these symbols
+    - `011370` completed in `9.13s`
+    - `011390` completed in `5.98s`
+    - `011420` completed in `6.12s`
+  - conclusion:
+    - the rebuild is not hung on a broken symbol
+    - it is a long single-session KRX run at roughly `6~9s` per symbol, so `400/2614` active completion still implies hours of remaining runtime
+- server verify:
+  - previous session `54518` had no retained log, so verify was restarted explicitly
+  - new session:
+    - local launcher session id `32292`
+  - current state:
+    - server verify completed successfully
+    - `bash tools/run_server_command.sh --skip-sync npm run verify` finished with exit `0`
+- latest rebuild progress check:
+  - server launch log now prints:
+    - `PROGRESS build_historical_shares_intervals processed=500/2614 success=500`
+  - checkpoint snapshot after the next write:
+    - `checkpointRows=1251559`
+    - `checkpointSymbols=500`
+    - `lastSymbol=017390`
+    - checkpoint file size `182608273`
+    - checkpoint `mtime=2026-04-18 19:27:10 +0900`
+
+2026-04-18 20:41:00 KST
+- shares rebuild is continuing normally
+  - launch log has advanced to:
+    - `processed=1200/2614 success=1200`
+  - latest checkpoint snapshot:
+    - `checkpointRows=2973820`
+    - `checkpointSymbols=1200`
+    - `lastSymbol=079900`
+    - file size `433944072`
+    - checkpoint `mtime=2026-04-18 20:36:24 +0900`
+- midpoint filtered-era guard recheck against the live checkpoint confirms expected improvement:
+  - `2022-05-02`
+    - `lifecycleSymbolCount=2373`
+    - `sharesSymbolCount=1200`
+    - `missingShareSymbolCount=1189`
+    - previous midpoint before lifecycle fix was `1973`, so coverage is improving materially
+  - `2023-07-11`
+    - `lifecycleSymbolCount=2484`
+    - `sharesSymbolCount=1200`
+    - `missingShareSymbolCount=1299`
+  - `2025-09-19`
+    - `lifecycleSymbolCount=2640`
+    - `sharesSymbolCount=1200`
+    - `missingShareSymbolCount=1443`
+- interpretation:
+  - filtered-era guard still fails because rebuild is only halfway through the active symbol set
+  - no new root cause indicated
+  - wait for the existing `r2` rebuild and finalize watcher to complete before any manual probe/apply action
+
+2026-04-20 status check
+- `public_kr_historical_inputs_full_rebuild_v1_20260418_r2` completed on server
+  - lifecycle output:
+    - `symbols=3044`
+    - `current=2614`
+    - `delisted=430`
+  - shares output:
+    - active: `2614/2614 success=2614`
+    - delisted: `430/430 success=430`
+    - final intervals: `5759389`
+  - final artifacts exist:
+    - `data/historical_symbol_lifecycle.jsonl` promoted at `2026-04-18 23:02 KST`
+    - `data/historical_shares_intervals.jsonl` promoted at `2026-04-18 23:02 KST`
+- finalize watcher `public_kr_partial_cov_finalize_v1_20260418_r2` advanced past inputs rebuild
+  - canonical lifecycle+shares promotion completed
+  - final filtered-era shares guards passed:
+    - `2022-05-02`: `missingShareSymbolCount=0`
+    - `2023-07-11`: `missingShareSymbolCount=0`
+    - `2025-09-19`: `missingShareSymbolCount=0`
+- repair is NOT fully closed
+  - grouped apply did not run
+  - no `public_kr_partial_cov_apply_v1_20260418_r2` apply directory exists
+  - canonical `data/candle_daily.jsonl` and `data/universe_daily.jsonl` remain unchanged from `2026-04-17 16:03 KST`
+- stopping failure:
+  - filtered-era probe `public_kr_partial_cov_probe_v1_20260418_r9` passed stage/QC for `2022-05-02` and `2023-07-11`
+  - `2025-09-19` shard fetch/QC also completed with no missing candle/share symbols:
+    - aggregate stage candle rows: `2539`
+    - aggregate stage universe rows: `1340`
+    - shard summaries had `missingDataSymbolCount=0`, `missingShareSymbolCount=0`
+  - validator failed because stage universe rows regressed current canonical universe rows:
+    - `targeted repair stage validation failed: date=2025-09-19 stage universe rows regressed current rows stage=1340 current=1689`
+- current conclusion:
+  - lifecycle/shares root-cause repair is complete
+  - date-slice candle/universe repair is not complete
+  - next root cause is `2025-09-19` universe construction/regression under `core_threshold`, not shares coverage
+
+## 2026-04-20 KST year2hit foundation patch
+- added explicit diagnostics before resuming year2hit:
+  - `tools/diff_public_kr_universe_membership.py`
+  - `tools/build_tp12_year2hit_data_readiness_summary.py`
+  - `src/lib/tp12_year2hit_train_gate.mjs`
+  - `tools/build_tp12_year2hit_train_gate_summary.mjs`
+  - `tools/run_tp12_year2hit_train_gate.sh`
+- added smokes for:
+  - public-KR universe membership diff
+  - year2hit data readiness
+  - year2hit train gate
+  - same-date multi-symbol hit dedup
+- strengthened historical stage summary:
+  - records `universeMode`
+  - records universe candidate/pass/reject counts
+  - records reject reason counts and thresholds
+- real r9 diagnostic run:
+  - output:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/data_quality/year2hit_foundation/run=public_kr_universe_regression_diag_v1_20260420_r1/2025-09-19_universe_diff.json`
+  - result:
+    - current candle unique symbols: `1689`
+    - current universe unique symbols: `1689`
+    - stage candle unique symbols: `2539`
+    - stage universe unique symbols under `core_threshold`: `1340`
+    - current-only universe symbols: `875`
+    - stage-only universe symbols: `526`
+    - stage candle missing universe symbols: `1199`
+  - root interpretation:
+    - existing canonical `2025-09-19` daily fill shape is effectively all-common for that date
+    - staged repair used `core_threshold`, which rejected `1199` staged candle symbols, mostly for liquidity
+    - this is a manifest contract mismatch, not a shares/candle fetch miss
+- manifest fix:
+  - `meta/public_kr_partial_coverage_anomaly_manifest.json`
+  - `2025-09-19.defaultUniverseMode` changed from `core_threshold` to explicit `all_common`
+  - no runtime fallback was added
+- verification:
+  - local `bash scripts/verify.sh` passed with exit `0`
+  - server `bash tools/run_server_command.sh npm run verify` passed with exit `0`
+
+2026-04-20 final apply closeout
+- 2025-09-19 blocker probe:
+  - run id: `public_kr_partial_cov_20250919_universefix_v1_20260420_r2`
+  - status: passed
+  - stage rows:
+    - candle: `2539`
+    - universe: `2539`
+    - nontrading: `101`
+  - validator:
+    - current candle rows: `1689`
+    - stage candle rows: `2539`
+    - current universe rows: `1689`
+    - stage universe rows: `2539`
+    - recovery rate: `0.8422391857506362`
+  - conclusion:
+    - previous `stage universe rows regressed current rows stage=1340 current=1689` was fixed by explicit per-date `all_common`
+    - no fallback/auto mode switching was added
+- grouped apply:
+  - run id: `public_kr_partial_cov_apply_v1_20260420_r1`
+  - status: completed on server with exit `0`
+  - repaired manifest dates:
+    - `2017-09-22`: candle/universe `1977`, nontrading `33`
+    - `2017-12-20`: candle/universe `2003`, nontrading `30`
+    - `2018-02-06`: candle/universe `2014`, nontrading `24`
+    - `2018-03-02`: candle/universe `2015`, nontrading `26`
+    - `2022-05-02`: candle `2273`, universe `1504`, nontrading `100`
+    - `2023-07-11`: candle `2393`, universe `1371`, nontrading `91`
+    - `2025-09-19`: candle/universe `2539`, nontrading `101`
+  - apply wrote canonical server data:
+    - `data/candle_daily.jsonl` mtime `2026-04-20T05:03:33Z`
+    - `data/universe_daily.jsonl` mtime `2026-04-20T05:03:53Z`
+    - `data/nontrading_symbol_daily.jsonl` mtime `2026-04-20T05:03:57Z`
+  - sidecar rebuild and apply-internal `npm run verify` completed successfully
+- post-repair audit:
+  - artifact: `artifacts/data_quality/partial_coverage_repair/run=public_kr_partial_cov_apply_v1_20260420_r1/post_repair_partial_coverage_audit.json`
+  - latest common data date: `2026-04-17`
+  - candle date count: `2522`
+  - universe date count: `2522`
+  - manifest-tagged date count: `7`
+  - all 7 manifest dates now have `severeAnomaly=false`
+  - remaining `severeAnomalyCount=4` are adjacent next trading dates created by the repaired all-common spikes:
+    - `2017-09-25`
+    - `2017-12-21`
+    - `2018-02-07`
+    - `2018-03-05`
+  - these are not the original manifest dates; they are a separate continuity question if strict local smoothness is required
+- year2hit readiness:
+  - artifact: `artifacts/data_quality/year2hit_foundation/run=tp12_year2hit_data_readiness_post_apply_v1_20260420_r1/summary.json`
+  - status: `passed`
+  - latest common date: `2026-04-17`
+  - candle/universe common date count: `2522`
+  - candle-only dates: `0`
+  - universe-only dates: `0`
+  - required dates passed:
+    - `2022-05-02`
+    - `2023-07-11`
+    - `2025-09-19`
+  - lifecycle/share coverage on required dates:
+    - all `missingShareSymbolCount=0`
+- verification:
+  - server apply-internal `npm run verify` passed with exit `0`
+- current status:
+  - data foundation for year2hit required dates is ready
+  - do not rerun broad data repair unless deciding to address the four adjacent continuity dates as a new explicit repair target

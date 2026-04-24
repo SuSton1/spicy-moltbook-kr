@@ -1,0 +1,233 @@
+{
+  "kind": "technique_seed_templates_v1",
+  "templateSetId": "tp12_technique_seed_templates_v1",
+  "updatedAt": "2026-04-12T14:45:00+09:00",
+  "seeds": [
+    {
+      "seedId": "ma_retest_seed",
+      "label": "MA Retest Core",
+      "mechanismId": "MA_RETEST",
+      "anchorClauseIds": [
+        "anchor_ma120_break",
+        "anchor_compaction_value_break",
+        "anchor_recent_impulse",
+        "anchor_recent_ma120_cross",
+        "anchor_recent_ma60_cross"
+      ],
+      "retestClauseIds": [
+        "retest_anchor_mid_hold",
+        "retest_support_ma60",
+        "retest_support_ma120",
+        "retest_pullback_reclaim_token"
+      ],
+      "compressionClauseIds": [
+        "compression_compaction20",
+        "compression_sideways3",
+        "compression_impulse_then_dryup5",
+        "compression_flag_quality"
+      ],
+      "confirmClauseIds": [
+        "confirm_close_near_high",
+        "confirm_positive_close_retention_prevclose",
+        "confirm_sponsor_quality"
+      ],
+      "invalidateClauseIds": [
+        "invalidate_failed_breakout_count20",
+        "invalidate_failed_break_risk",
+        "invalidate_fragile_extension"
+      ],
+      "scopeCandidates": [
+        "LOW_GAP_TOP",
+        "LOW",
+        "MID"
+      ],
+      "lookbackCandidateIds": [
+        "lb3",
+        "lb5",
+        "lb8"
+      ]
+    },
+    {
+      "seedId": "breakout_base_seed",
+      "label": "Breakout Base Core",
+      "mechanismId": "BREAKOUT_BASE",
+      "anchorClauseIds": [
+        "anchor_compaction_value_break",
+        "anchor_value_backed_breakout",
+        "anchor_shallow_drawdown_150",
+        "anchor_near_52w_high",
+        "anchor_breakout_pause"
+      ],
+      "retestClauseIds": [
+        "retest_shallow_gap_fill",
+        "retest_support_ma60"
+      ],
+      "compressionClauseIds": [
+        "compression_compaction20",
+        "compression_sideways3",
+        "compression_coil",
+        "compression_dryup_before_release_token"
+      ],
+      "confirmClauseIds": [
+        "confirm_close_near_high",
+        "confirm_value_ratio",
+        "confirm_positive_close_retention_prevclose",
+        "confirm_release_quality",
+        "confirm_opening_imbalance",
+        "confirm_price_up_value_up_token"
+      ],
+      "invalidateClauseIds": [
+        "invalidate_failed_breakout_count20",
+        "invalidate_failed_break_risk",
+        "invalidate_liquidity_stress"
+      ],
+      "scopeCandidates": [
+        "LOW_GAP_TOP",
+        "MID",
+        "TOP"
+      ],
+      "lookbackCandidateIds": [
+        "lb1",
+        "lb3",
+        "lb5"
+      ]
+    },
+    {
+      "seedId": "failure_reclaim_seed",
+      "label": "Failure Reclaim Core",
+      "mechanismId": "FAILURE_RECLAIM",
+      "anchorClauseIds": [
+        "anchor_gap_hold_quality",
+        "anchor_compaction_value_break",
+        "anchor_shallow_drawdown_150",
+        "anchor_recent_impulse"
+      ],
+      "retestClauseIds": [
+        "retest_anchor_mid_hold",
+        "retest_shallow_gap_fill",
+        "retest_pullback_reclaim_token"
+      ],
+      "compressionClauseIds": [
+        "compression_compaction20",
+        "compression_sideways3",
+        "compression_flag_quality",
+        "compression_dryup_before_release_token"
+      ],
+      "confirmClauseIds": [
+        "confirm_close_near_high",
+        "confirm_positive_close_retention_prevclose",
+        "confirm_release_quality",
+        "confirm_release_follow_token",
+        "confirm_intraday_vwap_hold"
+      ],
+      "invalidateClauseIds": [
+        "invalidate_failed_breakout_count20",
+        "invalidate_extension_risk",
+        "invalidate_fragile_extension"
+      ],
+      "scopeCandidates": [
+        "LOW",
+        "MID",
+        "TOP"
+      ],
+      "lookbackCandidateIds": [
+        "lb1",
+        "lb3",
+        "lb5"
+      ]
+    },
+    {
+      "seedId": "liquidity_sponsor_seed",
+      "label": "Liquidity Sponsor Core",
+      "mechanismId": "LIQUIDITY_SPONSOR",
+      "anchorClauseIds": [
+        "anchor_compaction_value_break",
+        "anchor_value_backed_breakout",
+        "anchor_gap_hold_quality",
+        "anchor_shallow_drawdown_150",
+        "anchor_near_52w_high"
+      ],
+      "retestClauseIds": [
+        "retest_support_ma60",
+        "retest_support_ma120"
+      ],
+      "compressionClauseIds": [
+        "compression_compaction20",
+        "compression_sideways3",
+        "compression_impulse_then_dryup5"
+      ],
+      "confirmClauseIds": [
+        "confirm_value_ratio",
+        "confirm_close_near_high",
+        "confirm_positive_close_retention_prevclose",
+        "confirm_sponsor_quality",
+        "confirm_intraday_vwap_hold",
+        "confirm_opening_imbalance"
+      ],
+      "invalidateClauseIds": [
+        "invalidate_failed_breakout_count20",
+        "invalidate_liquidity_stress",
+        "invalidate_fragile_extension"
+      ],
+      "scopeCandidates": [
+        "LOW_GAP_TOP",
+        "LOW",
+        "MID",
+        "TOP"
+      ],
+      "lookbackCandidateIds": [
+        "lb3",
+        "lb5",
+        "lb8"
+      ]
+    },
+    {
+      "seedId": "gap_hold_seed",
+      "label": "Gap Hold Core",
+      "mechanismId": "GAP_HOLD",
+      "anchorClauseIds": [
+        "anchor_gap_hold_quality",
+        "anchor_compaction_value_break",
+        "anchor_shallow_drawdown_150",
+        "anchor_recent_impulse"
+      ],
+      "retestClauseIds": [
+        "retest_anchor_mid_hold",
+        "retest_shallow_gap_fill",
+        "retest_pullback_reclaim_token"
+      ],
+      "compressionClauseIds": [
+        "compression_compaction20",
+        "compression_sideways3",
+        "compression_coil"
+      ],
+      "confirmClauseIds": [
+        "confirm_close_near_high",
+        "confirm_positive_close_retention_prevclose",
+        "confirm_intraday_breakout_strength",
+        "confirm_intraday_vwap_hold",
+        "confirm_opening_imbalance"
+      ],
+      "invalidateClauseIds": [
+        "invalidate_failed_breakout_count20",
+        "invalidate_failed_break_risk",
+        "invalidate_extension_risk"
+      ],
+      "scopeCandidates": [
+        "LOW_GAP_TOP",
+        "MID",
+        "TOP"
+      ],
+      "lookbackCandidateIds": [
+        "lb1",
+        "lb3",
+        "lb5",
+        "lb8"
+      ]
+    }
+  ],
+  "notes": [
+    "Seeds bias the first candidate expansion, but they are not the final technique universe.",
+    "Technique naming is deferred until recurrence and OOS evidence exist."
+  ]
+}

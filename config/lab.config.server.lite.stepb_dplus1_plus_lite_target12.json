@@ -1,0 +1,47 @@
+{
+  "extends": "lab.config.server.lite.json",
+  "template": {
+    "featureAsOf": "t-1"
+  },
+  "event": {
+    "recentImpulseDiscovery": {
+      "enabled": true,
+      "lookbackTradingDays": 1
+    }
+  },
+  "backtest": {
+    "entry": "NEXT_DAY_OPEN",
+    "holdDays": 3,
+    "targetPct": 0.12,
+    "stopLossPct": 0.04
+  },
+  "lightweight": {
+    "pipeline": {
+      "preferLiteArtifacts": true
+    },
+    "stepA": {
+      "outputMode": "lite"
+    },
+    "stepB": {
+      "inputMode": "lite",
+      "outputMode": "lite",
+      "runtimePack": {
+        "enabled": false
+      },
+      "perfectPrototypeBaseline": {
+        "enabled": true,
+        "contractVersion": 2,
+        "lineId": "stepb_dplus1_plus_lite_target12",
+        "strategyMode": "STEPB_DPLUS1_BASELINE_V1",
+        "contextSurface": "v3_contextual_plus_lite",
+        "entryRule": "NEXT_DAY_OPEN",
+        "holdDays": 3,
+        "targetPct": 0.12,
+        "stopLossPct": 0.04,
+        "featureAsOf": "t-1",
+        "exactCollectionMode": "train_precision_1_only",
+        "maxGapTradingDays": 100000
+      }
+    }
+  }
+}

@@ -1,0 +1,4184 @@
+# Checklist
+
+## Phase 0G: 1D 3D12 TP12 Promotable-First Search
+
+- [x] `promotable-first search` is explicit and opt-in:
+  - [x] broad TP12 control contract stays unchanged by default
+  - [x] new prune/order behavior only activates when promotable flags are passed
+- [x] promotable-first hard prune only uses monotone upper bounds:
+  - [x] distinct dates upper bound
+  - [x] matched months upper bound
+  - [x] matched folds upper bound
+  - [x] best-possible top1/top3 date-share ceilings
+  - [x] best-possible top1/top3 fold-share ceilings
+- [x] promotable-first ordering is breadth-first:
+  - [x] candidate estimate ordering prefers folds/months/dates before hit mass
+  - [x] exact-head rerank prefers folds/months/dates before hit mass
+  - [x] final deterministic rule ranking can switch to promotable-first mode
+- [x] promotable-first TP12 metrics/reporting persist:
+  - [x] promotable prune counts
+  - [x] promotable rule yield
+  - [x] candidate efficiency
+  - [x] runtime per promotable rule
+- [x] server wrapper support exists for promotable-first TP12 probes:
+  - [x] mine wrapper passes promotable breadth/share thresholds
+  - [x] control vs promotable-first A/B can be run under the same 200K contract
+  - [x] subset cell reruns only read selected child artifacts and do not require TOP/MID/LOW all together
+- [x] first heavy `TOP_1D` control vs promotable-first `200K` A/B is executed and recorded:
+  - [x] control still yields only tiny OOS-perfect pockets
+  - [x] current promotable-first gate over-prunes the broad `TOP_1D` cell to zero rules
+- [x] local verify covers:
+  - [x] new search-bounds/ranking behavior via existing TP12 smokes or dedicated smoke
+  - [x] wrapper syntax if a new wrapper path is widened
+- [x] server `npm run verify` reruns after the patch before any heavy TP12 rerun.
+
+
+## Phase 0J: 1D 3D12 TP12 LOW Sub-Scopes
+
+- [x] `LOW` can be narrowed into explicit TP12 subtype sub-scopes without mutating the broad TP12 control.
+- [x] low-subscope filtered-pack builder exists and is provenance-safe:
+  - [x] `LOW_GAP_TOP`
+  - [x] `LOW_GAP_HIGH`
+  - [x] `LOW_JUMP_BELOW`
+  - [x] filter summaries persist rows / dates / months / family mix
+  - [x] compat `summary.json` / `manifest.json` are written for downstream OOS coverage checks
+- [x] low-subscope wrapper reuses the existing broad TP12 control packs instead of rebuilding daily packs.
+- [x] low-subscope wrapper supports subset reruns safely:
+  - [x] selected subscopes only
+  - [x] no unconditional requirement for all subscopes to exist
+- [x] low-subscope comparison report persists:
+  - [x] train rows / dates / months
+  - [x] OOS rows / dates / months
+  - [x] mined rules
+  - [x] breadth-qualified `4/4/3`
+  - [x] promotable breadth `10/6/4`
+  - [x] OOS zero-negative count
+  - [x] OOS perfect date-floor counts
+  - [x] close28 selected rows / hit rows / hit rate
+  - [x] wrapper wall-clock / exact-index RSS
+- [x] local verify covers:
+  - [x] low-subscope filtered-pack smoke
+  - [x] low-subscope report smoke
+  - [x] low-subscope wrapper syntax
+  - [x] low-subscope subset-wrapper guard smoke
+- [x] server `npm run verify` reruns after the patch before any heavy low-subscope experiment.
+- [x] first heavy LOW-subscope baseline `200K` rerun is executed and recorded:
+  - [x] `LOW_GAP_TOP` is the strongest current LOW TP12 source
+  - [x] all LOW sub-scopes still have train promotable breadth `10/6/4 = 0`
+  - [x] all LOW sub-scopes still have OOS perfect `>=3` matched dates = `0`
+
+## Phase 0K: 1D 3D12 TP12 LOW_GAP_TOP Promotable-First v2
+
+- [x] next narrow control target is `LOW_GAP_TOP` only.
+- [x] first relaxed promotable-first v2 rerun is executed and recorded:
+  - [x] baseline control path remained unchanged
+  - [x] seed-stage promotable bounds were weakened to `6/4/3`
+  - [x] relaxed rerun avoided the previous zero-rule collapse
+  - [x] relaxed rerun still failed to improve train promotable breadth `10/6/4` or OOS perfect `>=3` dates
+  - [x] relaxed rerun underperformed the baseline on line quality and runtime
+- [x] ordering and prune can be toggled independently for a LOW-only follow-up:
+  - [x] `LOW_GAP_TOP` ordering-only rerun is executed and recorded
+  - [x] ordering-only matches the baseline profile instead of improving promotable breadth
+  - [x] ordering-only does not create repeated OOS-perfect TP12 rules
+- [x] any next heavy rerun must justify itself beyond line hit-rate:
+  - [x] ordering-only still leaves train promotable breadth `10/6/4 = 0`
+  - [x] ordering-only still leaves OOS perfect `>=3` matched dates = `0`
+  - [x] no additional LOW search-side rerun is justified under the current TP12 contract
+
+## Phase 0L: 1D 3D12 TP12 LOW_GAP_TOP Ordering-Only Follow-Up
+
+- [x] `LOW_GAP_TOP` ordering-only promotable-first rerun is executed and recorded:
+  - [x] contract stayed fixed at `1D / NEXT_DAY_OPEN / 3d / TP12 / SL4 / 200K`
+  - [x] baseline surface / baseline conjunction / `max-rule-size=6` stayed unchanged
+  - [x] promotable prune remained disabled
+  - [x] promotable ordering remained enabled
+  - [x] result matched the existing `LOW_GAP_TOP` baseline profile instead of improving it
+- [x] ordering-only LOW rerun closes the remaining LOW search-side toggle question:
+  - [x] relaxed prune is not promotable
+  - [x] ordering-only is not promotable
+  - [x] further LOW search-side tuning under the same TP12 contract is not justified
+- [x] next meaningful follow-up moves off search-side tuning:
+  - [x] keep `LOW_GAP_TOP` as the strongest supplier scope
+  - [x] change the contract hypothesis before any new heavy TP12 rerun
+
+## Phase 0M: 1D 3D12 TP12 LOW_GAP_TOP Contract Split
+
+- [x] search-side tuning remains closed for current `TP12 / SL4 / 3d` exact search:
+  - [x] no new broad/narrow search-side heavy reruns are introduced in this phase
+  - [x] `LOW_GAP_TOP` stays the strongest supplier scope
+- [x] discovery-vs-clean contract split report exists for `LOW_GAP_TOP`:
+  - [x] touch discovery contract is explicit: `NEXT_DAY_OPEN / 3d / +12% touch / no stop gate`
+  - [x] clean validation contract reuses the existing `NEXT_DAY_OPEN / 3d / TP12 / SL4` metrics
+  - [x] bridge metrics persist touch-perfect vs clean-perfect retention
+- [x] contract-split tooling is server-safe and reuses existing `LOW_GAP_TOP` artifacts:
+  - [x] no daily-pack rebuild
+  - [x] no re-mine
+  - [x] existing frozen catalog + train/oos packs are the only source artifacts
+- [x] local verify covers the new contract-split report path
+- [x] server `npm run verify` reruns after the patch before any contract-split experiment
+- [x] first heavy `LOW_GAP_TOP` contract-split report is executed and recorded:
+  - [x] touch discovery produces repeated OOS-perfect `>=3-date` rules
+  - [x] clean `TP12 / SL4` retains `0` of those repeated touch-perfect rules
+  - [x] verdict is `signal_exists_clean_contract_blocks`
+
+## Phase 0N: 1D 3D12 TP12 LOW_GAP_TOP Touch Broadening
+
+- [x] search-side exact tuning stays closed:
+  - [x] no new broad/narrow miner reruns are introduced in this phase
+  - [x] `LOW_GAP_TOP` touch discovery remains the donor source
+- [x] donor broadening tooling exists for `LOW_GAP_TOP` touch discovery:
+  - [x] donor manifest persists repeated / zero-negative touch rules with temporal signatures
+  - [x] donor clusters persist temporal-overlap groupings
+  - [x] consensus seed candidates persist token-frequency broadening proposals
+  - [x] broadened candidate evaluation persists train/oos touch summaries
+  - [x] greedy union selection persists broadened touch union summaries
+- [x] touch broadening tooling is server-safe and reuses existing `LOW_GAP_TOP` artifacts:
+  - [x] no daily-pack rebuild
+  - [x] no re-mine
+  - [x] existing frozen catalog + train/oos packs are the only source artifacts
+- [x] local verify covers the new touch broadening report path
+- [x] server `npm run verify` reruns after the patch before any touch broadening experiment
+- [x] first heavy `LOW_GAP_TOP` touch broadening report is executed and recorded:
+  - [x] donor clusters are produced from touch-discovery rules
+  - [x] at least one broadened candidate or union is evaluated against train/oos touch summaries
+  - [x] broadening verdict is recorded against baseline touch line quality
+
+## Phase 0O: 1D 3D12 TP12 LOW_GAP_TOP Touch Scorecard Bundle
+
+- [x] touch discovery remains the optimization target in this phase:
+  - [x] no new `TP12 / SL4` clean exact-search reruns are introduced
+  - [x] `LOW_GAP_TOP` touch discovery remains the donor scope
+- [x] scorecard-bundle tooling exists and is server-safe:
+  - [x] donor exact, donor-cluster-any, and broadened-candidate terms are materialized from existing touch artifacts
+  - [x] train/oos touch bundle evaluations reuse existing frozen catalog + train/oos packs and do not rebuild packs or re-mine
+  - [x] scorecard solver persists term-bank, candidate previews, artifact, and train/oos summaries
+- [x] scorecard objective explicitly balances breadth and precision:
+  - [x] train breadth floors use dates / months / folds
+  - [x] train selected-row floor is explicit
+  - [x] top-date concentration ceiling is explicit
+  - [x] coverage-adjusted utility is persisted for the winning solution
+- [x] local verify covers the new touch scorecard bundle report path
+- [x] server `npm run verify` reruns after the patch before any touch scorecard bundle experiment
+- [x] first heavy `LOW_GAP_TOP` touch scorecard bundle report is executed and recorded:
+  - [x] baseline touch line is compared against scorecard-bundle oos line quality
+  - [x] scorecard-bundle coverage collapse vs lift is recorded explicitly
+  - [x] verdict is recorded against coverage-adjusted OOS lift, not tiny-pocket precision only
+
+## Phase 0P: 1D 3D12 TP12 LOW_GAP_TOP Coverage-Preserving Bundle Union
+
+## Phase 0Q: 1D 3D12 TP12 LOW_GAP_TOP Parent-Lift Bundle
+
+- [x] touch discovery remains the optimization target in this phase:
+  - [x] no new `TP12 / SL4` clean exact-search reruns are introduced
+  - [x] `LOW_GAP_TOP` touch discovery remains the donor scope
+- [x] parent-lift bundle tooling exists and is server-safe:
+  - [x] selected/seed cluster terms can be generalized into explicit parent-lift candidates
+  - [x] parent-lift candidates are evaluated from the existing frozen catalog + train/oos packs without rebuilding packs or re-mining
+  - [x] bundle selector can start from seed terms and then add only date-expanding terms
+  - [x] parent-lift report persists seed bundle, parent-lift bank, final union, and veto summaries
+- [x] parent-lift objective explicitly targets coverage-preserving lift:
+  - [x] train parent term floors use selected rows / dates / months / folds
+  - [x] positive-term additions require new-date or new-row gain
+  - [x] final verdict is based on OOS hit-rate lift under selected-row/date floors, not tiny-pocket precision only
+- [x] local verify covers the new parent-lift report path
+- [x] server `npm run verify` reruns after the patch before any parent-lift experiment
+- [x] first heavy `LOW_GAP_TOP` parent-lift report is executed and recorded:
+  - [x] baseline touch line is compared against parent-lift OOS line quality
+  - [x] seed bundle vs parent-lift coverage change is recorded explicitly
+  - [x] verdict is recorded against coverage-preserving OOS lift, not tiny-pocket precision only
+
+## Phase 0R: TP12 Kiwoom Intraday + Side-Data Patch Plan
+
+- [ ] source contract is explicit and single-path:
+  - [ ] Kiwoom REST is the only source for the new intraday / side-data subsystem
+  - [ ] no KIS/KRX/Yahoo fallback is introduced anywhere in the runtime path
+  - [ ] auth/IP/env failures are fail-fast and block the collector early
+- [ ] probe-first gates are implemented before any heavy backfill:
+  - [ ] `ka10080` 1-minute history depth probe persists oldest reachable timestamp under `cont-yn` / `next-key`
+  - [ ] `ka10060`, `ka90013`, `ka10047`, `ka10014`, `ka10068`, `ka20068`, `ka10013`, `ka20009`, `ka10051`, `ka10010` persist oldest reachable dates
+  - [ ] any 10-year claim must be backed by probe artifacts, not assumptions
+  - [ ] if 1-minute continuation cannot reach the required floor, the 10-year minute plan stops instead of degrading silently
+- [ ] data contracts are widened explicitly:
+  - [ ] `docs/data_contracts.md` defines `intraday_1m` partition storage and side-daily datasets
+  - [ ] `src/lib/config.mjs` gets explicit `dataPaths` entries for the new datasets
+  - [ ] current `hourly60m` contract is not overloaded as a fake 1-minute store
+- [ ] TP12 Step A manifest generation is explicit and provenance-safe:
+  - [ ] manifest is built from the Step A broad candidate universe, not final selected trades only
+  - [ ] every request row persists `symbol`, `decisionDateKey`, `laneId`, `impulseSourceDateKey`, `impulseLookbackDays`, and `windowDateKeys` for `D-1 .. D+4`
+  - [ ] manifest avoids leakage by separating feature cutoff times from label windows
+- [ ] 1-minute collection path is symbol-first reverse continuation:
+  - [ ] collector starts from a recent anchor and walks older data only via `next-key`
+  - [ ] collector writes only requested `D-1 .. D+4` windows from the manifest
+  - [ ] collector checkpoints `nextKey`, `oldestTsSeen`, `pageCount`, `rateLimitHitCount`, and completion floor per symbol
+  - [ ] initial runtime stays low-concurrency and explicitly rate-limited
+- [ ] side-daily collection path is implemented separately from minute bars:
+  - [ ] investor / program / trade-strength / shorting / lending / credit / sector collectors each keep explicit request and response contracts
+  - [ ] historical daily side-data is staged independently of minute data
+  - [ ] datasets that are forward-only in practice are marked as accrual-only and not pretended to be historical canon
+- [ ] stage / qc / merge mirrors the existing historical-daily pattern:
+  - [ ] stage writes only under `artifacts/backfill/...`
+  - [ ] QC blocks duplicates, monotonicity violations, invalid session timestamps, and daily-aggregate mismatches
+  - [ ] canonical merge is single-writer only
+  - [ ] runtime data remains server source-of-truth
+- [ ] TP12 intraday feature datasets are explicit:
+  - [ ] `D0 close gate` feature pack exists
+  - [ ] `D+1 09:05 / 09:15 / 09:30 gate` feature packs exist
+  - [ ] execution-policy labels compare `stop-first` vs `delay1 + 4d` vs abstain
+  - [ ] features use only information available before the decision timestamp
+- [ ] verification and operations are widened before heavy runs:
+  - [ ] local smokes cover client auth, probe contract, manifest shape, stage/QC/merge contract, and feature leakage guards
+  - [ ] `scripts/verify.sh` includes the new intraday smokes
+  - [ ] server `npm run verify` reruns after each patch bundle and before any heavy backfill
+  - [ ] sync rules continue to keep server runtime data authoritative
+- [ ] rollout order remains explicit:
+  - [ ] probe patch
+  - [ ] manifest patch
+  - [ ] minute stage/QC/merge patch
+  - [ ] side-daily stage/QC/merge patch
+  - [ ] feature dataset patch
+  - [ ] LOW_GAP_TOP pilot
+  - [ ] LOW full pilot
+  - [ ] broader TP12 Step A universe only after the pilots stay green
+
+
+- [x] touch discovery remains the optimization target in this phase:
+  - [x] no new `TP12 / SL4` clean exact-search reruns are introduced
+  - [x] `LOW_GAP_TOP` touch discovery remains the donor scope
+- [x] coverage-preserving bundle-union tooling exists and is server-safe:
+  - [x] row-level touch label matrix persists donor exact / cluster-any / broadened candidate fires
+  - [x] greedy positive bundle selector optimizes coverage-adjusted precision instead of SAT-style feasibility only
+  - [x] veto builder exists and only removes explicit failure pockets from the selected bundle
+  - [x] bundle-union report reuses existing frozen catalog + train/oos packs and does not rebuild packs or re-mine
+- [x] bundle objective explicitly balances coverage, precision, and concentration:
+  - [x] selected-row floor is explicit
+  - [x] matched-date floor is explicit
+  - [x] top-date concentration ceiling is explicit
+  - [x] overlap penalty is explicit
+  - [x] verdict is based on coverage-preserving OOS lift, not tiny-pocket precision only
+- [x] local verify covers the new touch bundle-union report path
+- [x] server `npm run verify` reruns after the patch before any touch bundle-union experiment
+- [x] first heavy `LOW_GAP_TOP` touch bundle-union report is executed and recorded:
+  - [x] baseline touch line is compared against bundle-union OOS line quality
+  - [x] coverage-preserving lift vs collapse is recorded explicitly
+  - [x] veto impact is recorded explicitly
+
+
+## Phase 0F: 1D 3D12 TP12 Regime Cells
+
+## Phase 0H: 1D 3D12 TP12 TOP Sub-Scopes
+
+- [x] `TOP` can be narrowed into explicit recent-only TP12 sub-scopes without mutating the broad TP12 control.
+- [x] top-subscope filtered-pack builder exists and is provenance-safe:
+  - [x] `TOP_RECENT_GAP_TOPHIGH`
+  - [x] `TOP_RECENT_CLOSE_ABOVE`
+  - [x] `TOP_RECENT_JUMP_ABOVE`
+  - [x] `TOP_RECENT_CROWDING_HIGH`
+  - [x] `TOP_RECENT_CROWDING_LOWMID`
+  - [x] filter summaries persist rows / dates / months / family mix
+  - [x] compat `summary.json` / `manifest.json` are written for downstream OOS coverage checks
+- [x] top-subscope wrapper reuses the existing broad TP12 control packs instead of rebuilding daily packs.
+- [x] top-subscope wrapper supports subset reruns safely:
+  - [x] selected subscopes only
+  - [x] no unconditional requirement for all subscopes to exist
+- [x] top-subscope comparison report persists:
+  - [x] train rows / dates / months
+  - [x] OOS rows / dates / months
+  - [x] mined rules
+  - [x] breadth-qualified `4/4/3`
+  - [x] promotable breadth `10/6/4`
+  - [x] OOS zero-negative count
+  - [x] OOS perfect date-floor counts
+  - [x] close28 selected rows / hit rows / hit rate
+  - [x] wrapper wall-clock / exact-index RSS
+- [x] local verify covers:
+  - [x] top-subscope filtered-pack smoke
+  - [x] top-subscope report smoke
+  - [x] top-subscope wrapper syntax
+  - [x] top-subscope subset-wrapper guard smoke
+- [x] server `npm run verify` reruns after the patch before any heavy top-subscope experiment.
+
+## Phase 0I: 1D 3D12 TP12 Ordering-Only Narrow Rerun
+
+- [x] `TOP_RECENT_JUMP_ABOVE` relaxed promotable-first rerun is fully recorded:
+  - [x] null/blank promotable share thresholds no longer coerce to `0`
+  - [x] fixshare rerun result is registered in the experiment ledger
+  - [x] handoff reflects that the remaining blocker is candidate-stage promotable upper-bound pruning, not share-threshold parsing
+- [x] TP12 narrow wrappers support independent promotable controls:
+  - [x] `--enable-promotable-search-prune=true|false`
+  - [x] `--enable-promotable-search-ordering=true|false`
+  - [x] existing `--promotable-first=true|false` remains an explicit convenience switch, not a hidden alternate runtime path
+  - [x] thresholds are only required/passed when promotable prune is enabled
+- [x] local verify covers:
+  - [x] split prune/order wrapper syntax
+  - [x] ordering-only wrapper guard smoke
+- [x] server `npm run verify` reruns after the wrapper split before any heavy narrow rerun.
+- [x] next heavy rerun is narrow `TOP_RECENT_JUMP_ABOVE` only:
+  - [x] same `1D / NEXT_DAY_OPEN / 3d / TP12 / SL4 / 200K` contract
+  - [x] baseline surface + baseline conjunction + `max-rule-size=6`
+  - [x] `promotable-search-ordering=true`
+  - [x] `promotable-search-prune=false`
+  - [x] results compared against the existing narrow baseline control before any new scope or budget change
+
+
+- [x] `1D TP12` regime-cell probes stay on the existing broad control contract:
+  - [x] baseline conjunction language
+  - [x] baseline surface `v3_contextual_plus_lite`
+  - [x] `max-rule-size=6`
+  - [x] `strict_label_boundary`
+  - [x] `recent_impulse_upto_1d`
+  - [x] `requestedLookbackTradingDays=1`
+  - [x] `NEXT_DAY_OPEN / 3d / 12% / 4%`
+  - [x] `maxSearchStates=200000`
+- [x] regime-cell probes reuse the already-built broad control train/oos packs instead of rebuilding daily packs.
+- [x] regime-cell filtering is explicit and provenance-safe:
+  - [x] `TOP_1D`
+  - [x] `MID_1D`
+  - [x] `LOW_1D`
+  - [x] filter summaries persist train/oos row counts, dates, months, and family mix
+- [x] regime-cell wrapper launches filtered-pack -> exact-index -> indexed miner -> frozen catalog -> OOS/apply/leaderboard with no fallback path.
+- [x] regime-cell comparison report persists:
+  - [x] train pack matched rows / dates / months
+  - [x] OOS pack matched rows / dates / months
+  - [x] mined rule count
+  - [x] breadth-qualified `4/4/3`
+  - [x] promotable breadth `10/6/4`
+  - [x] OOS zero-negative rule count
+  - [x] OOS perfect date-floor counts
+  - [x] close28 selected rows / hit rows / hit rate
+  - [x] wall-clock / exact-index RSS
+- [x] local verify covers:
+  - [x] 1D regime-cell filtered-pack smoke
+  - [x] 1D regime-cell report smoke
+  - [x] 1D regime-cell wrapper syntax
+- [x] server `npm run verify` is rerun after the patch before any heavy regime-cell experiment.
+
+## Phase 0E: 1D 3D12 TP12 Surface A/B
+
+- [x] `TP12 surface A/B` is explicit and separate from the condition-language A/B.
+- [x] control and variant both keep the same:
+  - [x] `strict_label_boundary`
+  - [x] `recent_impulse_upto_1d`
+  - [x] `requestedLookbackTradingDays=1`
+  - [x] `D+1 open`
+  - [x] `holdDays=3`
+  - [x] `targetPct=0.12`
+  - [x] `stopLossPct=0.04`
+  - [x] `maxSearchStates=200000`
+  - [x] baseline conjunction language
+  - [x] `max-rule-size=6`
+- [x] variant surface is a sibling config, not a mutation of the existing TP12 control line.
+- [x] TP12 surface v1 stays provenance-safe:
+  - [x] line id `stepb_dplus1_plus_lite_target12_surface_v1`
+  - [x] context surface `v7_contextual_plus_lite_tp12`
+  - [x] control keeps `stepb_dplus1_plus_lite_target12`
+  - [x] control keeps `v3_contextual_plus_lite`
+- [x] TP12 surface v1 only widens the feature surface:
+  - [x] no language change
+  - [x] no search-order/prune change
+  - [x] no live line mutation
+- [x] TP12 surface v1 promotes TP12-relevant continuation/support features:
+  - [x] wick/body continuation strength
+  - [x] support/rebound at MA60/MA120
+  - [x] dry-up / decay
+  - [x] coil / flag / breakout-pause
+  - [x] pivot distance
+  - [x] impulse anchor / chain / score terms
+- [x] TP12 common probe metrics lib exists and is reused by both:
+  - [x] condition-language A/B report
+  - [x] surface A/B report
+- [x] TP12 A/B reports persist the same comparison spine:
+  - [x] rule count
+  - [x] breadth-qualified `4/4/3`
+  - [x] promotable breadth `10/6/4`
+  - [x] OOS zero-negative count
+  - [x] OOS perfect date-floor counts
+  - [x] close28 selected rows / hit rows / hit rate
+  - [x] family rule counts
+  - [x] wrapper wall-clock
+  - [x] exact-index timing / RSS
+  - [x] candidate descriptor counts
+  - [x] materialize / intersection cost
+- [x] surface A/B wrapper is server-only and launches:
+  - [x] control child
+  - [x] variant child
+  - [x] shared out-dir report build
+- [x] local verify covers:
+  - [x] TP12 surface sibling config load
+  - [x] TP12 surface A/B report syntax
+  - [x] TP12 surface A/B wrapper syntax
+  - [x] TP12 surface A/B smoke
+- [x] server `npm run verify` is rerun after the patch before any heavy TP12 experiment.
+
+## Phase 0D: 1D 3D12 Condition-Language A/B
+
+- [ ] `1D / 3 trading days / 12% target / 4% stop` plus-lite sibling configs exist and stay separate from the live `8%/4%` line.
+- [ ] `condition-language baseline` and `condition-language enhanced` runs use the same:
+  - [ ] `strict_label_boundary`
+  - [ ] `recent_impulse_upto_1d`
+  - [ ] `requestedLookbackTradingDays=1`
+  - [ ] `D+1 open`
+  - [ ] `holdDays=3`
+  - [ ] `targetPct=0.12`
+  - [ ] `stopLossPct=0.04`
+  - [ ] `maxSearchStates=200000`
+- [ ] enhanced atom-space plumbing reaches both:
+  - [ ] `build_stepb_exact_index.mjs`
+  - [ ] `mine_perfect_prototypes_indexed.mjs`
+- [ ] enhanced variant is explicit and provenance-safe:
+  - [ ] `enableIntervalAtoms=true`
+  - [ ] `enableMacroAtoms=true`
+  - [ ] baseline keeps both disabled
+  - [ ] support/manifold/adaptive atom families stay off for this first clean A/B
+- [ ] A/B comparison report persists:
+  - [ ] wrapper wall-clock
+  - [ ] exact-index timing / RSS
+  - [ ] indexed-miner explored states / candidate costs
+  - [ ] rule-quality deltas from `selection_leaderboard.json`
+  - [ ] line-level close28 selected rows / hit rows / hit rate
+- [ ] A/B report distinguishes:
+  - [ ] raw rule count
+  - [ ] train-breadth-qualified rule count
+  - [ ] OOS zero-negative rule count
+  - [ ] OOS date-floor-qualified rule count
+  - [ ] interval/macro atom usage among survivors
+- [ ] `200K` experiment method is frozen and reproducible:
+  - [ ] one parent server wrapper launches baseline then enhanced
+  - [ ] same pack windows / same contract / same search budget
+  - [ ] duplicate check runs before the parent bundle
+  - [ ] results register in the same turn
+- [ ] local and server `npm run verify` both pass after the patch.
+
+## Phase 0C: v61r Selection Contract Replay + v61 8D Donor Cohort
+
+- [ ] `v61r` selection-contract replay is explicit and separate from overlay diagnostics.
+- [ ] `v61r` replays the original plus-lite open-eval contract with:
+  - [ ] `strict_label_boundary`
+  - [ ] `close28/day-dedup`
+  - [ ] `union_all`
+  - [ ] `secondary` promotion replay uses `same-day multi-picks day-deduped to one`
+  - [ ] `secondary` promotion replay enforces `selectedHitDateCount >= 4`
+  - [ ] `same_day_plus_recent_upto_<Nd>` discovery-universe alignment
+- [ ] `v61r` does not reuse `decision_date_only` as a proxy for the original promotion contract.
+- [ ] `v61r` can evaluate the active frozen plus-lite live lines:
+  - [ ] `1d_primary`
+  - [ ] `1d_secondary`
+  - [ ] `7d_primary`
+  - [ ] `7d_secondary`
+  - [ ] `8d_primary`
+  - [ ] `8d_secondary`
+- [ ] `v61r` persists per-line open-eval outputs with provenance:
+  - [ ] `selection_leaderboard.json`
+  - [ ] `selection_guardrail_summary.json`
+  - [ ] `open_eval_manifest.json`
+- [ ] `v61r` replays primary and secondary ownership semantics by lookback bucket:
+  - [ ] `1d_primary -> 1d_secondary`
+  - [ ] `7d_primary -> 7d_secondary`
+  - [ ] `8d_primary -> 8d_secondary`
+- [ ] `v61r` ownership merge uses the canonical live merge contract:
+  - [ ] `priority_first_symbol_dedup`
+  - [ ] `primary` can own symbol-date ahead of `secondary`
+  - [ ] retained `secondary` rows are reported separately from raw `secondary` line rows
+- [ ] `v61r` summary distinguishes:
+  - [ ] line-alone close28/day-dedup precision
+  - [ ] ownership-aware final-union precision
+  - [ ] retained-secondary precision after primary displacement
+- [ ] `v61r` fails fast when registry/catalog discovery-universe or lookback contracts mismatch.
+- [ ] `v61r` has a dedicated server wrapper and smoke.
+- [ ] `v61` donor-aware discovery starts with `8d` only.
+- [ ] `v61` donor cohort is built from live-line donor rows, not generic cell-only token buckets.
+- [ ] `v61` donor-aware scope is explicit:
+  - [ ] `8d_primary`
+  - [ ] `8d_secondary`
+  - [ ] `TOP`
+  - [ ] `MID`
+  - [ ] `LOW`
+- [ ] `v61` donor cohort preserves `LOW` subtype attribution:
+  - [ ] `low_gap_top_continuation`
+  - [ ] `low_gap_high_continuation`
+  - [ ] `low_jump_below_continuation`
+- [ ] `v61` subgroup prepass is stage-separated from exact refinement.
+- [ ] `v61` subgroup acceptance is explicit before exact mining:
+  - [ ] `matchedDateCount >= 10`
+  - [ ] `matchedMonthCount >= 6`
+  - [ ] `matchedFoldCount >= 4`
+  - [ ] `selectionFrequency >= 0.6`
+  - [ ] `foldPresenceCount >= 3`
+  - [ ] `windowPresenceCount >= 3`
+  - [ ] `top1DateHitShare <= 0.3`
+- [ ] `v61` writes donor/subgroup telemetry before any exact-refinement stage:
+  - [ ] `donor_cohort_summary.json`
+  - [ ] `subgroup_manifest_summary.json`
+  - [ ] `subgroup_rejected_counts.json`
+- [ ] `v61` has a dedicated server wrapper and smoke.
+
+## Phase 0B: 1d Recent-Only MID/LOW Shadow Families
+
+- [ ] `1d` issue is documented as `TOP monoculture`, not a `xsec.closeRank` calculation bug.
+- [ ] Existing `1d_primary` / `1d_secondary` operating lines stay unchanged during this patch.
+- [ ] Existing `1d` TOP rules remain pinned to `same_day_plus_recent_upto_1d`.
+- [ ] New MID/LOW work is explicitly removed from combined `same_day_plus_recent_upto_1d`.
+- [ ] New work is scoped to recent-only shadow lines:
+  - [ ] `1d_mid_recent_shadow`
+  - [ ] `1d_low_recent_shadow`
+- [ ] New recent-only line contract is explicit:
+  - [ ] line id `stepb_dplus1_plus_lite_recent_mid_low`
+  - [ ] discovery universe `recent_impulse_upto_1d`
+  - [ ] `requiresLegacyNegativeSampling=false`
+- [ ] All new plus-lite contextual tokens ship behind a new surface:
+  - [ ] `v6_contextual_plus_lite_recent_only_lane_local_pool8`
+- [ ] Lane-local rank contract is explicit:
+  - [ ] pool is `same dateKey + same stepALaneId`
+  - [ ] pool is computed from pre-apply pack rows
+  - [ ] train/live semantics are identical
+- [ ] Thin-lane semantics are explicit:
+  - [ ] `laneEventCount` exported
+  - [ ] lane-local rank uses `THIN_POOL` when pool size is too small
+  - [ ] missing `stepALaneId` / lane reference fails fast on the new surface
+- [ ] Rule families are split and explicit:
+  - [ ] `top_close_breakout`
+  - [ ] `top_close_recent`
+  - [ ] `mid_close_continuation`
+  - [ ] `low_close_continuation` (legacy umbrella; not the new mining target)
+  - [ ] `low_gap_top_continuation`
+  - [ ] `low_gap_high_continuation`
+  - [ ] `low_jump_below_continuation`
+- [ ] `MID/LOW` continuation families are defined by row cohorts, not token-bucket seed shortcuts.
+- [ ] `MID/LOW` family cohorts are pinned to:
+  - [ ] `stepALaneId=recent_impulse_1d`
+  - [ ] global `xsec.closeRank=MID|LOW`
+  - [ ] `THIN_POOL` excluded
+- [ ] `LOW` breadth collapse is treated as the active bottleneck:
+  - [ ] `LOW` cohort entry is non-zero
+  - [ ] `LOW` accepted root seed count is non-zero
+  - [ ] `LOW` purity rejects are not the current blocker
+  - [ ] `LOW` search dies below search-time `minHitCount`
+- [ ] `LOW` recovery uses subtype split plus low-only mining:
+  - [ ] `low_gap_top_continuation`
+  - [ ] `low_gap_high_continuation`
+  - [ ] `low_jump_below_continuation`
+  - [ ] low-only recent wrapper exists
+  - [ ] recent-only LOW subtype root scopes cannot consume the entire search budget serially
+  - [ ] recent-only constrained root scopes use deterministic per-scope budget fairness
+- [ ] recent-only exact indexed mining requires `row_lane_meta.parquet` even when lane-stratified mining is disabled.
+- [ ] recent-only cohort membership is an explicit scope contract, not an implicit root-token-count heuristic.
+- [ ] recent-only cohort scopes are built from row metadata lane membership plus cohort token membership, not from required-root-token intersections alone.
+- [ ] `mid_close_continuation` exact rules forbid `tag:xsec.closeRank:TOP`.
+- [ ] `low_close_continuation` exact rules forbid `tag:xsec.closeRank:TOP`.
+- [ ] `MID/LOW` root seeding is row-cohort based:
+  - [ ] token-bucket family seed entry is not used for the new recent-only line
+  - [ ] `midPositiveRowset` / `lowPositiveRowset` drive root seed stats
+  - [ ] root token ranking uses cohort concentration / cohort coverage before generic precision tie-breaks
+  - [ ] required cohort tokens constrain the scoped positive rowset, but do not define root-stage depth or enter the learned rule token list as synthetic root tokens
+  - [ ] recent-only family scopes enter search as constrained roots, so root candidates still intersect against the cohort rowset
+  - [ ] root-stage gating is controlled by an explicit recent-only family root-stage limit, not `requiredRootTokens.length`
+- [ ] Family-scoped mining uses family seed scope / allowlist / denylist / budget quota / expansion quota.
+- [ ] recent-only wrapper defaults are pinned to the family search contract:
+  - [ ] `--discovery-universe-id=recent_impulse_upto_1d`
+  - [ ] `--recent-impulse-lookback-days=1`
+  - [ ] `--enable-family-scoped-mining=true`
+  - [ ] explicit `--max-seed-tokens` override is optional, but the wrapper provides a recent-only default
+- [ ] recent-only wrappers pin family thresholds explicitly:
+  - [ ] `--mid-family-min-share=0.6`
+  - [ ] `--low-family-min-share=0.6`
+  - [ ] `--low-family-min-train-matched-dates`
+  - [ ] `--low-family-min-train-matched-months`
+  - [ ] `--low-family-min-train-matched-folds`
+  - [ ] any non-zero LOW fold breadth threshold requires an explicit `--fold-scheme=chronological_<N>`
+- [ ] `LOW` subtype families use a longer root stage than `MID`.
+- [ ] `LOW` subtype families use family-specific search-time `minHitCount` without relaxing exactness.
+- [ ] `MID/LOW` root vocabulary excludes generic same-day anchors:
+  - [ ] continuation-specific volume roots remain allowed:
+    - [ ] `num:feature.volume.exhaustionProxy:*`
+    - [ ] `num:feature.volume.ratio5Over20:*`
+  - [ ] `num:feature.volume.tradingValueToMarketCap:*`
+  - [ ] `num:seq150.stdev:*`
+  - [ ] `num:market.positiveCloseShare:*`
+  - [ ] `num:market.strongCloseShare:*`
+- [ ] `MID/LOW` root search is coarse-first:
+  - [ ] `tag:xsec.closeVsMedian:*`
+  - [ ] `tag:xsec.jumpVsMedian:*`
+  - [ ] `tag:xsecLane.closeRank:*`
+  - [ ] `tag:xsecLane.jumpRank:*`
+  - [ ] `tag:xsec.gapRank:*`
+- [ ] fine `B01~B05` numeric bins are delayed to child expansion for the recent-only line.
+- [ ] Family purity checks fail fast when `MID/LOW` families collapse back into `TOP` clones:
+  - [ ] `mid` family requires `MID share >= 0.6`, `TOP share = 0`
+  - [ ] `low` family requires `LOW share >= 0.6`, `TOP share = 0`
+- [ ] continuation families require `recent_impulse_1d share >= 0.8`.
+- [ ] `low` family uses stronger breadth guards than `mid`.
+- [ ] Curated shadow subsets are produced separately:
+  - [ ] `1d_mid_recent_shadow_v1`
+  - [ ] `1d_low_recent_shadow_v1`
+- [ ] LOW subtype recovery has a separate shadow-promotion contract:
+  - [ ] `recent_only_low_shadow_bundle_v1`
+  - [ ] LOW bundle promotion is explicit, not a hidden fallback from per-rule freeze
+  - [ ] LOW bundle promotion only allows:
+    - [ ] `low_gap_top_continuation`
+    - [ ] `low_gap_high_continuation`
+    - [ ] `low_jump_below_continuation`
+  - [ ] LOW bundle promotion is scored on close28/day-dedup line-level metrics, not per-rule OOS counts alone
+- [ ] Curated shadow freeze enforces provenance:
+  - [ ] recent-only shadow freeze forbids explicit `--rule-ids` / `--rule-ids-file`
+  - [ ] recent-only family selection cannot proceed unless `selectionLineId` resolves to `stepb_dplus1_plus_lite_recent_mid_low`
+  - [ ] recent-only shadow freeze requires family-only selection and rejects out-of-family survivors
+  - [ ] source catalog hash matches leaderboard source hash
+  - [ ] selection surface / line / train-oos windows match
+  - [ ] recent-only curated shadows persist an all-or-none provenance bundle:
+    - [ ] `selectionLineId`
+    - [ ] `selectionSurface`
+    - [ ] `selectionContractId`
+    - [ ] `selectionAllowedFamilyIds`
+    - [ ] `selectionDiscoveryUniverseId`
+    - [ ] `selectionManifestPath`
+  - [ ] `close28/day-dedup` survivor thresholds are used for promotion
+- [ ] LOW bundle promotion persists bundle-level diagnostics:
+  - [ ] `selectionBundleRuleIds`
+  - [ ] `selectionBundleMetrics`
+  - [ ] `selectionBundlePromotable`
+  - [ ] `selectionBundleRejectReasons`
+- [ ] `haesung_low_gap_top_oos100_v1` targeted selection contract exists for `low_gap_top_continuation` only:
+  - [ ] support-case export is explicit and produces tokenized support rows
+  - [ ] support-case export can persist donor rule ids and donor tokens
+  - [ ] targeted mining can consume `--support-cases-file`
+  - [ ] targeted mining can consume donor-neighborhood constraints from the support-case payload
+  - [ ] targeted mining persists effective compression telemetry:
+    - [ ] `supportCaseRootSeedCandidateCount`
+    - [ ] `supportCaseFilteredRootSeedCount`
+    - [ ] `supportCaseEffectiveRootSeedCount`
+    - [ ] `supportCaseCompressionRatio`
+    - [ ] `supportCaseMatchedRuleCount`
+    - [ ] `supportCaseMatchedRuleIds`
+  - [ ] selection leaderboard/report exposes `supportCaseIds`, `supportCaseCount`, `haesungSupport`
+  - [ ] curated freeze can require:
+    - [ ] `openOosPrecision = 1.0`
+    - [ ] `openOosMatchCount >= 3`
+    - [ ] `openOosUniqueMatchedDates >= 3`
+    - [ ] `trainMatchedMonthCount >= 4`
+    - [ ] `trainMatchedFoldCount >= 4`
+    - [ ] `haesungSupport = true`
+  - [ ] targeted low-gap-top wrapper fails fast unless `--support-cases-file` is present
+  - [ ] targeted low-gap-top wrapper pins donor-aware narrowing:
+    - [ ] `--support-case-max-effective-root-seeds`
+    - [ ] `--support-case-min-donor-root-overlap`
+    - [ ] `--support-case-min-donor-prefix-overlap`
+    - [ ] `--support-case-donor-prefix-depth-limit`
+- [ ] `low_gap_top` breadth/generalization is treated as the next active blocker after targeted compression:
+  - [ ] `20M` low-gap-top exact mining can produce many rules without producing `10+ matched-date` exact survivors
+  - [ ] `PP_54cba5347052`-style donor rules are treated as evidence of motif coverage, not as the final generalized candidate
+  - [ ] the active blocker is broad TP-cluster breadth, not Haesung-only support
+- [x] `low_gap_top` recovery uses generalized TP-cluster discovery before exact refinement:
+  - [x] support-case anchored search is probe-only
+  - [x] final candidate selection must come from support-case-free generalized mining
+  - [x] generalized subgroup prepass is explicit and fail-fast:
+    - [x] `matchedDateCount >= 10`
+    - [x] `matchedMonthCount >= 6`
+    - [x] `matchedFoldCount >= 4`
+    - [x] coverage-quality score is stored for accepted root candidates
+  - [x] temporal stability proxy is explicit:
+    - [x] `matchedMonthCount`
+    - [x] `matchedFoldCount`
+    - [x] `top1DateHitShare`
+  - [x] exact refinement is limited to generalized subgroup roots only
+- [x] `low_gap_top` generalized regime features are explicit:
+  - [x] `tag:lowGapTop.retentionRegime:*`
+  - [x] `tag:lowGapTop.gapContinuationRegime:*`
+  - [x] `tag:lowGapTop.volumeRegime:*`
+  - [x] `tag:lowGapTop.trendRegime:*`
+  - [x] `tag:lowGapTop.isolationRegime:*`
+  - [x] `tag:lowGapTop.bodyWickRegime:*`
+  - [x] `tag:lowGapTop.fpRisk:*`
+- [x] `low_gap_top` generalized subgroup telemetry is persisted:
+  - [x] `subgroupCandidateCount`
+  - [x] `subgroupQualifiedCandidateCount`
+  - [x] `subgroupEffectiveRootSeedCount`
+  - [x] `subgroupRejectedCounts`
+  - [x] `subgroupAcceptedPreview`
+- [x] leaderboard/report expose generalized breadth fields:
+  - [x] `trainMatchedDateCount`
+  - [x] `trainMatchedMonthCount`
+  - [x] `trainMatchedFoldCount`
+  - [x] `tpRegimeTagPresent`
+  - [x] `fpRiskTagPresent`
+  - [x] `generalizedQualified`
+- [x] `low_gap_top` generalized subgroup bridge is explicit:
+  - [x] `tag:lowGapTop.fpRisk:*` must never become an accepted subgroup root seed
+  - [x] subgroup root qualification requires positive quality (`subgroupScore > 0`, `subgroupTpLift > 0`)
+  - [x] generalized bundle seed manifests are built from accepted subgroup roots and carried into exact search scopes
+  - [x] early exact refinement remains inside subgroup bundle tokens before generic exact expansion is allowed
+  - [x] generalized exact refinement enforces a breadth floor (`matchedDateCount >= 10`, `matchedMonthCount >= 6`, `matchedFoldCount >= 4`) during early expansion
+  - [x] generalized runtime emits explicit zero-rule fail-fast output instead of falling through to generic curated-freeze errors
+- [x] `low_gap_top` subgroup-system architecture is the canonical next step:
+  - [x] subgroup prepass produces `subgroup manifest` records, not singleton-root-only survivors
+  - [x] subgroup manifest fields include:
+    - [x] `subgroupId`
+    - [x] `bundleTokens`
+    - [x] `bundleAxes`
+    - [x] `matchedDateCount`
+    - [x] `matchedMonthCount`
+    - [x] `matchedFoldCount`
+    - [x] `coverageShare`
+    - [x] `precision`
+    - [x] `tpLift`
+    - [x] `wracc`
+    - [x] `fpPenalty`
+    - [x] `top1DateHitShare`
+    - [x] `selectionFrequency`
+    - [x] `foldPresenceCount`
+    - [x] `windowPresenceCount`
+  - [x] stability/diversity filtering is explicit before exact refinement
+  - [x] exact refinement is allowed only inside selected subgroup manifests
+  - [x] `haesungSupport` remains a final acceptance filter, not a subgroup discovery bias
+- [ ] `low_gap_top` subgroup pipeline is fully stage-separated:
+  - [ ] broad subgroup discovery uses ranking, not hard `subgroupScore > 0` binary gating
+  - [ ] subgroup manifests persist subgroup cover, not only min-breadth token bundles
+  - [ ] stability selection is a canonical stage before exact refinement
+  - [ ] diversity selection is a canonical stage before exact refinement
+  - [ ] early exact breadth uses subgroup-retention floors, not the full broad-subgroup absolute threshold
+  - [ ] stage-specific fail-fast reasons are explicit:
+    - [ ] `no_subgroup_candidates`
+    - [ ] `no_stable_subgroups`
+    - [ ] `no_diverse_subgroups`
+    - [ ] `no_exact_refinements`
+    - [ ] `no_oos_perfect_rules`
+- [ ] `low_gap_top` generalized success is staged:
+  - [ ] first success = `10+ matched-date` generalized subgroup survivors exist
+  - [ ] second success = `train100 + OOS100` exact survivors exist inside that generalized subgroup
+  - [ ] final success = at least one such survivor also has `haesungSupport=true`
+- [x] `v20` staged subgroup pipeline reached the pre-exact target state:
+  - [x] `subgroupCandidateCount = 24`
+  - [x] `subgroupManifestCandidateCount = 64`
+  - [x] `subgroupStableManifestCount = 64`
+  - [x] `subgroupDiverseManifestCount = 8`
+  - [x] `subgroupBundleManifestCount = 8`
+  - [x] the active blocker moved from subgroup survival to exact refinement entry
+  - [ ] the first stable/diverse subgroup must still yield at least one exact survivor
+- [ ] `v21` exact-entry bridge converts subgroup manifests into searchable exact states:
+  - [x] materialized subgroup bundle seeds persist:
+    - [x] `entrySeedTokens`
+    - [x] `entryPositiveRowIndexes`
+    - [x] `entryNegativeRowIndexes`
+    - [x] `entryEffectiveMinHitCount`
+    - [x] `entryBreadthFloor`
+  - [x] exact-entry telemetry persists:
+    - [x] `subgroupExactEntryCandidateCount`
+    - [x] `subgroupExactEntryAcceptedCount`
+    - [x] `subgroupExactEntryRejectedCount`
+    - [x] `subgroupExactEntryRejectReasonCounts`
+    - [x] `subgroupExactEntryRejectReasonByFamily`
+    - [x] `subgroupExactEntrySeedPreviewByFamily`
+  - [x] stable/diverse subgroup bundle seeds are collected as first exact candidates before child expansion
+  - [x] zero-rule staged summaries distinguish:
+    - [x] `no_exact_entry`
+    - [x] `no_exact_refinements`
+  - [x] first exact-entry success is explicit:
+    - [x] `subgroupExactEntryAcceptedCount > 0`
+    - [x] `exploredStates > 0`
+  - [ ] accepted exact-entry states must still refine into at least one train-exact survivor
+- [ ] `v22` low-gap-top exact refinement uses counterexample-guided completion instead of generic child expansion:
+  - [x] accepted subgroup exact-entry states are handed to a manifest-local exact completion solver
+  - [x] exact completion telemetry persists:
+    - [x] `exactCompletionManifestCount`
+    - [x] `exactCompletionSolvedCount`
+    - [x] `exactCompletionUnsatCount`
+    - [x] `exactCompletionCollectedRuleCount`
+    - [x] `exactCompletionUnsatReasonCounts`
+    - [x] `exactCompletionCandidatePoolSizeByManifest`
+    - [x] `exactCompletionNegativeFrontierSizeByManifest`
+  - [x] zero-rule staged summaries distinguish:
+    - [x] `no_exact_completion_solutions`
+    - [x] `no_exact_completion_train_rules`
+    - [x] `no_oos_perfect_rules`
+  - [ ] the first success for `v22` is explicit:
+    - [ ] `exactCompletionSolvedCount > 0`
+    - [ ] `trainRuleCount > 0`
+  - [x] current `v22` probe outcome is pinned:
+    - [x] `subgroupBundleManifestCount = 8`
+    - [x] `subgroupExactEntryAcceptedCount = 7`
+    - [x] `exactCompletionManifestCount = 7`
+    - [x] `exactCompletionSolvedCount = 0`
+    - [x] `exactCompletionUnsatCount = 7`
+    - [x] `exactCompletionUnsatReasonCounts.unsat_breadth_retention = 7`
+    - [x] zero-rule summary resolved to `reason = no_exact_completion_solutions`
+    - [ ] at least one accepted manifest must still solve into a train-exact survivor
+- [x] `v23` low-gap-top exact completion uses exact-core frontier solving instead of one-manifest-one-rule hard solves:
+  - [x] accepted subgroup manifests are first decomposed into exactable cores
+  - [x] exact-core telemetry persists:
+    - [x] `exactCoreCandidateCount`
+    - [x] `exactCoreQualifiedCount`
+    - [x] `exactCoreSolvedCount`
+    - [x] `exactCoreUnsatCount`
+    - [x] `exactCoreUnsatReasonCounts`
+    - [x] `exactCoreFrontierBestRetainedDateCount`
+    - [x] `exactCoreFrontierBestRetainedMonthCount`
+    - [x] `exactCoreFrontierBestRetainedFoldCount`
+  - [x] zero-rule staged summaries distinguish:
+    - [x] `no_exactable_cores`
+    - [x] `no_core_frontier_solutions`
+    - [x] `no_exact_completion_train_rules`
+    - [x] `no_oos_perfect_rules`
+  - [x] the first success for `v23` is explicit:
+    - [x] `exactCoreQualifiedCount > 0`
+    - [x] `exactCoreSolvedCount > 0`
+    - [x] `trainRuleCount > 0`
+  - [x] current `v23` probe outcome is pinned:
+    - [x] `subgroupBundleManifestCount = 8`
+    - [x] `subgroupExactEntryAcceptedCount = 7`
+    - [x] `exactCompletionManifestCount = 7`
+    - [x] `exactCompletionSolvedCount = 5`
+    - [x] `exactCoreCandidateCount = 168`
+    - [x] `exactCoreQualifiedCount = 42`
+    - [x] `exactCoreSolvedCount = 16`
+    - [x] `trainRuleCount = 4`
+    - [x] best train breadth reached `18 dates / 16 months / 4 folds`
+    - [x] second-best train breadth reached `10 dates / 10 months / 4 folds`
+    - [x] OOS close28 finished at `6 selected / 1 hit`
+    - [x] `haesungSupport = false` for all surviving `v23` rules
+    - [ ] at least one surviving `v23` rule must reach `OOS100`
+    - [ ] at least one surviving `v23` rule must reach `haesungSupport = true`
+- [x] `v24` low-gap-top post-solve generalization uses crossfit hard-negative refinement:
+  - [x] rolling pseudo-OOS holdout telemetry is explicit:
+    - [x] `crossfitWindowCount`
+    - [x] `crossfitMatchedWindowCount`
+    - [x] `crossfitNegativeWindowCount`
+    - [x] `crossfitFalsePositiveRowCount`
+  - [x] repeated holdout misses are promoted into hard negatives:
+    - [x] `hardNegativeAddedCount`
+    - [x] `hardNegativeRefined`
+  - [x] exact completion scoring is hard-negative-aware without changing the canonical exact-completion path
+  - [x] leaderboard/report expose post-refine breadth and OOS-hardening fields:
+    - [x] `postRefineTrainMatchedDateCount`
+    - [x] `postRefineTrainMatchedMonthCount`
+    - [x] `postRefineTrainMatchedFoldCount`
+    - [x] `postRefineOosPerfectQualified`
+    - [x] `haesungSupport`
+  - [x] the first success criteria for `v24` are now measured explicitly:
+    - [x] `exactCoreSolvedCount = 15`
+    - [x] `hardNegativeRefinedRuleCount = 0` is explicitly reported
+    - [x] at least one surviving rule kept `trainMatchedDateCount >= 10`
+  - [x] the `v24` outcome is explicit:
+    - [x] `hardNegativeAddedCount = 9`
+    - [x] `exactCompletionCollectedRuleCount = 2`
+    - [x] close28 OOS ended at `0 selected / 0 hits`
+    - [x] historical replay `076610 / 2026-03-18` ended at `0 matches`
+    - [x] `haesungSupport = false` for all surviving `v24` rules
+    - [ ] at least one refined rule reaches `openOosPrecision = 1.0`
+    - [ ] `openOosMatchCount >= 3`
+    - [ ] `openOosUniqueMatchedDates >= 3`
+    - [ ] the same rule reaches `haesungSupport = true`
+- [ ] `v26` low-gap-top canonical solve uses a joint feasibility contract instead of another staged refine loop:
+  - [x] active blocker is documented as staged acceptance fragmentation after `v24`, not search reachability
+  - [x] canonical low-gap-top path becomes:
+    - [x] exact core frontier
+    - [x] joint feasibility solve over train breadth + crossfit recurrence + historical support
+    - [x] open-OOS validation
+  - [x] joint feasibility solver emits explicit telemetry:
+    - [x] `jointFeasibilityManifestCount`
+    - [x] `jointFeasibilitySolvedCount`
+    - [x] `jointFeasibilityUnsatCount`
+    - [x] `jointFeasibilityUnsatReasonCounts`
+    - [x] `jointHistoricalSupportMatchedCount`
+    - [x] `jointCrossfitRetainedPositiveWindowCount`
+    - [x] `jointCrossfitNegativeWindowCount`
+  - [x] joint feasibility fail-fast reasons distinguish:
+    - [x] `no_joint_feasible_rules`
+    - [x] `unsat_historical_support`
+    - [ ] `unsat_crossfit_negative_windows`
+    - [ ] `unsat_crossfit_positive_recurrence`
+    - [ ] `unsat_train_breadth`
+  - [x] leaderboard/report expose joint feasibility fields:
+    - [x] `jointFeasibilitySolved`
+    - [x] `jointUnsatReason`
+    - [x] `jointHistoricalSupportMatched`
+    - [x] `jointCrossfitRetainedPositiveWindowCount`
+    - [x] `jointCrossfitNegativeWindowCount`
+  - [x] historical-date apply is reproducible through a dedicated wrapper rather than ad hoc shell composition
+  - [x] `v26` probe outcome is explicit:
+    - [x] missing server support-case file was root-cause-fixed by exporting `/home/moltook/apps/stockdesk-lab-lite/artifacts/support_cases/haesung_076610_20260318_low_gap_top_v12.json`
+    - [x] `subgroupBundleManifestCount = 1`
+    - [x] `subgroupExactEntryAcceptedCount = 1`
+    - [x] `jointFeasibilitySolvedCount = 0`
+    - [x] `jointFeasibilityUnsatCount = 1`
+    - [x] `exactCompletionUnsatReasonCounts.unsat_historical_support = 1`
+    - [x] `jointHistoricalSupportMatchedCount = 0`
+    - [x] run ended with `reason = no_core_frontier_solutions`
+  - [ ] first success for `v26` is explicit:
+    - [ ] `jointFeasibilitySolvedCount > 0`
+    - [ ] at least one train survivor keeps `trainMatchedDateCount >= 10`
+    - [ ] the same rule reaches `openOosPrecision = 1.0`
+    - [ ] `openOosMatchCount >= 3`
+    - [ ] `openOosUniqueMatchedDates >= 3`
+    - [ ] the same rule reaches `haesungSupport = true`
+- [x] `v27` low-gap-top support-compatible atom space replaces the current historical-support-infeasible atomic token space:
+  - [x] active blocker is documented as `unsat_historical_support` under the present `v6` atomic token space, not solver plumbing
+  - [x] canonical `low_gap_top_continuation` path remains `v26` joint feasibility solve, but candidate atoms expand to:
+    - [x] interval atoms
+    - [x] macro/composite atoms
+    - [x] support-anchor atoms
+  - [x] tokenizer/export path can emit these atoms explicitly when enabled:
+    - [x] `enableIntervalAtoms`
+    - [x] `enableMacroAtoms`
+    - [x] `enableSupportAnchorAtoms`
+  - [x] support-case export can regenerate Haesung support JSON with the expanded atom space
+  - [x] joint-feasibility candidate ranking exposes atom-type telemetry:
+    - [x] `intervalAtomCount`
+    - [x] `macroAtomCount`
+    - [x] `supportAnchorAtomCount`
+    - [x] `candidateAtomTypeCounts`
+  - [x] `v27` probe outcome is pinned:
+    - [x] run `perfect_proto_low_gap_top_support_compatible_atom_space_v27_probe200k_20260327`
+    - [x] `subgroupBundleManifestCount = 1`
+    - [x] `subgroupExactEntryAcceptedCount = 1`
+    - [x] `exactCoreCandidateCount = 24`
+    - [x] `exactCoreQualifiedCount = 6`
+    - [x] `exactCompletionSolvedCount = 0`
+    - [x] `exactCompletionUnsatCount = 1`
+    - [x] `exactCompletionUnsatReasonCounts.unsat_historical_support = 1`
+    - [x] `jointHistoricalSupportMatchedCount = 0`
+    - [x] run ended with `reason = no_core_frontier_solutions`
+  - [ ] first success for `v27` is explicit:
+    - [ ] `jointFeasibilitySolvedCount > 0`
+    - [ ] `jointHistoricalSupportMatchedCount > 0`
+    - [ ] at least one train survivor keeps `trainMatchedDateCount >= 10`
+    - [ ] the same rule reaches `openOosPrecision = 1.0`
+    - [ ] `openOosMatchCount >= 3`
+    - [ ] `openOosUniqueMatchedDates >= 3`
+    - [ ] the same rule reaches `haesungSupport = true`
+- [ ] `v29` low-gap-top support-manifold distillation replaces raw support-compatible atom expansion as the canonical representation patch:
+  - [x] active blocker is documented as feature-family expressivity after `v27`, not solver/wrapper plumbing
+  - [x] canonical `low_gap_top_continuation` path remains `v26` joint feasibility solve, but the input representation changes to support-manifold signature features:
+    - [x] support-manifold dataset
+    - [x] support-manifold signature metrics
+    - [x] adaptive support-threshold atoms
+    - [x] support-signature distillation candidate pool priority
+  - [x] support-case export can persist support-signature-ready raw support data:
+    - [x] `numericFeatureMap`
+    - [x] `categoricalTokens`
+    - [x] support-signature config seed fields
+  - [x] tokenizer/export path can emit support-signature features explicitly when enabled:
+    - [x] `enableSupportManifoldSignature`
+    - [x] `enableAdaptiveThresholdAtoms`
+  - [x] joint-feasibility candidate ranking exposes support-signature telemetry:
+    - [x] `supportSignatureAtomCount`
+    - [x] `adaptiveThresholdAtomCount`
+    - [x] `candidateAtomTypeCounts.support_signature`
+  - [x] `v29` probe outcome is fixed:
+    - [x] run `perfect_proto_low_gap_top_support_manifold_distillation_v29_probe200k_20260327`
+    - [x] `subgroupBundleManifestCount = 1`
+    - [x] `subgroupExactEntryAcceptedCount = 1`
+    - [x] `exactCoreCandidateCount = 24`
+    - [x] `exactCoreQualifiedCount = 6`
+    - [x] `exactCompletionSolvedCount = 0`
+    - [x] `exactCompletionUnsatReasonCounts = { "unsat_historical_support": 1 }`
+    - [x] `jointHistoricalSupportMatchedCount = 0`
+    - [x] run ended with `reason = no_core_frontier_solutions`
+  - [ ] first success for `v29` is explicit:
+    - [ ] `jointFeasibilitySolvedCount > 0`
+    - [ ] `jointHistoricalSupportMatchedCount > 0`
+    - [ ] at least one train survivor keeps `trainMatchedDateCount >= 10`
+    - [ ] the same rule reaches `openOosPrecision = 1.0`
+    - [ ] `openOosMatchCount >= 3`
+    - [ ] `openOosUniqueMatchedDates >= 3`
+    - [ ] the same rule reaches `haesungSupport = true`
+- [ ] `v30` low-gap-top support-metric decision-set redesign replaces single-rule exact search as the canonical representation contract:
+  - [x] active blocker is documented as single-rule framing infeasibility after `v29`, not search/plumbing failure
+  - [x] canonical `low_gap_top_continuation` path changes from single conjunction solve to bounded tiny decision-set solve:
+    - [x] support-metric dataset builder
+    - [x] support-metric deterministic feature family
+    - [x] stable clause bank extraction
+    - [x] clause stability selection
+    - [x] global decision-set solver with clause budget `<= 3`
+  - [x] historical support becomes a hard feasibility constraint inside the decision-set solve:
+    - [x] must-cover `076610:2026-03-18`
+    - [x] no post-hoc historical acceptance-only path
+  - [x] crossfit recurrence is integrated as a hard decision-set constraint:
+    - [x] `crossfitNegativeWindowCount = 0`
+    - [x] `crossfitRetainedPositiveWindowCount >= 2`
+  - [x] first row-level decision-set execution is fixed:
+    - [x] server verify passed after row-level stable-clause-bank rewrite
+    - [x] run `perfect_proto_low_gap_top_support_metric_decision_set_v30_probe200k_r3_20260327`
+    - [x] decision-set stage executed and terminated with `reason = unsat_no_feasible_decision_set`
+    - [x] `stableClauseCandidateCount = 0`
+    - [x] no feasible bounded decision set (`1/2/3` clauses) was emitted
+    - [x] frozen train-mine artifact still collapsed to a single fallback train survivor `PP_d57fd9233a09`
+    - [x] that survivor remained below target breadth (`9 dates / 9 months / 4 folds`)
+    - [x] that survivor remained `haesungSupport = false`
+    - [x] that survivor remained `openOosMatchCount = 0`
+  - [ ] decision-set telemetry is still incomplete and must be hardened:
+    - [x] `stableClauseCandidateCount`
+    - [ ] `stableClauseQualifiedCount`
+    - [ ] `decisionSetClauseBudgetTried`
+    - [ ] `decisionSetSolvedCount`
+    - [ ] `decisionSetUnsatReasonCounts`
+    - [ ] `decisionSetHistoricalSupportMatchedCount`
+  - [ ] first success for `v30` is explicit:
+    - [ ] `decisionSetSolvedCount > 0`
+    - [ ] `decisionSetHistoricalSupportMatchedCount > 0`
+    - [ ] at least one solved set keeps `trainMatchedDateCount >= 10`
+    - [ ] the same solved set reaches `openOosPrecision = 1.0`
+    - [ ] `openOosMatchCount >= 3`
+    - [ ] `openOosUniqueMatchedDates >= 3`
+    - [ ] the same solved set reaches `haesungSupport = true`
+- [ ] `v31` low-gap-top support-scorecard router replaces clause-bank-first decision-set generation as the canonical artifact:
+  - [x] active blocker is documented as clause-bank feasibility failure after `v30 r3`, not search/plumbing failure
+  - [x] canonical `low_gap_top_continuation` path changes from bounded tiny decision set to subgroup-gated support scorecard:
+    - [x] prototype cohort builder
+    - [x] deterministic support metric / support score features
+    - [x] role-aware scorecard term bank (`support_anchor` / `breadth_extender` / `risk_killer`)
+    - [x] sparse integer scorecard solver
+    - [x] hard abstention threshold artifact
+  - [x] historical support becomes a hard scorecard feasibility contract:
+    - [x] must-cover `076610:2026-03-18`
+    - [x] no post-hoc historical acceptance-only path
+  - [x] scorecard telemetry is explicit:
+    - [x] `prototypeCohortPositiveCount`
+    - [x] `prototypeCohortHardNegativeCount`
+    - [x] `scorecardTermCandidateCount`
+    - [x] `scorecardTermQualifiedCount`
+    - [x] `scorecardSolvedCount`
+    - [x] `scorecardUnsatReasonCounts`
+    - [x] `scorecardHistoricalSupportMatchedCount`
+  - [x] `v31 r3` server probe outcome is fixed in-contract:
+    - [x] prototype cohort remained healthy: `592` support-positive / `1352` hard-negative / gated-train `188 rows, 162 dates, 48 months, 4 folds`
+    - [x] scorecard term bank was non-empty: `166` candidate / `140` qualified / `8` support-anchor / `8` risk-killer
+    - [x] scorecard solve failed fast with `unsat_no_feasible_support_scorecard`
+    - [x] immediate root cause was `breadthExtenderTermCount = 0`
+    - [x] current blocker is therefore scorecard breadth-extension feasibility, not wrapper/plumbing failure
+  - [x] `v32` canonical direction is fixed:
+    - [x] `support scorecard` stays as reference-only diagnostic surface for `low_gap_top_continuation`
+    - [x] canonical runtime artifact changes to a subgroup-gated `support-prototype router`
+    - [x] router path must not depend on independent `breadth_extender` role-bank construction
+    - [x] router calibration must solve monotone support-threshold feasibility directly against:
+      - [x] `076610:2026-03-18` historical support must-cover
+      - [x] `train precision = 1.0`
+      - [x] `trainMatchedDateCount >= 10`
+      - [x] `trainMatchedMonthCount >= 6`
+      - [x] `trainMatchedFoldCount = 4`
+      - [x] `crossfitNegativeWindowCount = 0`
+      - [x] `crossfitRetainedPositiveWindowCount >= 2`
+    - [x] router stage must fail fast with explicit unsat reasons:
+      - [x] `unsat_no_gate`
+      - [x] `unsat_historical_support`
+      - [x] `unsat_train_breadth`
+      - [x] `unsat_crossfit_negatives`
+      - [x] `unsat_no_monotone_threshold_router`
+    - [x] `v32 r2` router outcome is fixed in-contract:
+      - [x] router calibration no longer stalls on the full `22k` train rowset; calibration is restricted to gate-reachable rows
+      - [x] `gatedTrainSummary` stayed broad enough for a feasible router search:
+        - [x] `188 rows`
+        - [x] `162 dates`
+        - [x] `48 months`
+        - [x] `4 folds`
+      - [x] router candidate space was non-empty:
+        - [x] `routerCandidateCount = 24`
+        - [x] `routerFeatureCandidateCount = 6`
+        - [x] `routerThresholdCandidateCount = 24`
+        - [x] `triedCandidateCount = 19704`
+      - [x] router stage now fails fast and explicitly:
+        - [x] `reason = unsat_no_monotone_threshold_router`
+        - [x] `routerUnsatReasonCounts.unsat_train_precision = 19704`
+      - [x] current blocker is therefore monotone-threshold purity feasibility, not router performance / wrapper plumbing
+  - [ ] first success for `v32` is explicit:
+    - [ ] `routerSolvedCount > 0`
+    - [ ] `routerHistoricalSupportMatchedCount > 0`
+    - [ ] at least one router keeps `trainMatchedDateCount >= 10`
+    - [ ] the same router reaches `openOosPrecision = 1.0`
+    - [ ] `openOosMatchCount >= 3`
+    - [ ] `openOosUniqueMatchedDates >= 3`
+    - [ ] the same router reaches `haesungSupport = true`
+  - [x] `v33` canonical direction is fixed:
+    - [x] `support-prototype router` stays as the reference-only failed global-threshold surface for `low_gap_top_continuation`
+    - [x] canonical runtime artifact changes to a subgroup-gated `local prototype atlas`
+    - [x] atlas path must not depend on independent breadth-extender term generation or global monotone threshold feasibility
+    - [x] atlas artifact must be explicit:
+      - [x] `gateTokens`
+      - [x] `positivePrototypes`
+      - [x] `negativePrototypes`
+      - [x] `featureKeys`
+      - [x] `featureScales`
+      - [x] `acceptanceRadiusByCell`
+      - [x] `vetoMarginByCell`
+      - [x] `abstainThreshold`
+      - [x] `fitDiagnostics`
+    - [x] atlas calibration must solve local-pocket feasibility directly against:
+      - [x] `076610:2026-03-18` historical support must-cover
+      - [x] `train precision = 1.0`
+      - [x] `trainMatchedDateCount >= 10`
+      - [x] `trainMatchedMonthCount >= 6`
+      - [x] `trainMatchedFoldCount = 4`
+      - [x] `crossfitNegativeWindowCount = 0`
+      - [x] `crossfitRetainedPositiveWindowCount >= 2`
+    - [x] atlas stage must fail fast with explicit unsat reasons:
+      - [x] `unsat_no_gate`
+      - [x] `unsat_no_local_cells`
+      - [x] `unsat_historical_support`
+      - [x] `unsat_train_precision`
+      - [x] `unsat_train_breadth`
+      - [x] `unsat_crossfit_negatives`
+      - [x] `unsat_no_local_prototype_atlas`
+    - [x] `v33` probe outcome is fixed in-contract:
+      - [x] run: `perfect_proto_low_gap_top_local_prototype_atlas_v33_probe200k_20260327`
+      - [x] local and server `npm run verify` both passed before the server probe
+      - [x] atlas candidate space was non-empty:
+        - [x] `atlasCellCandidateCount = 4`
+        - [x] `atlasQualifiedCellCount = 3`
+        - [x] `triedCandidateCount = 1368`
+      - [x] atlas runtime now fails fast and explicitly:
+        - [x] `reason = unsat_no_local_prototype_atlas`
+        - [x] `atlasUnsatReasonCounts.unsat_historical_support = 1368`
+      - [x] the support case still failed to enter every qualified local pocket:
+        - [x] `ATLAS_CELL_01 supportCaseMarginMean = -0.07913476157876032`
+        - [x] `ATLAS_CELL_04 supportCaseMarginMean = -0.48946091207711095`
+        - [x] `ATLAS_CELL_03 supportCaseMarginMean = -1.577422426383034`
+      - [x] upstream frozen survivor remained weak:
+        - [x] `PP_0833e2a41b90`
+        - [x] `trainMatchedDateCount = 5`
+        - [x] `openOosMatchCount = 0`
+        - [x] `haesungSupport = false`
+      - [x] current blocker is therefore support-case local-pocket membership under the current support-signature surface, not atlas wrapper / calibration plumbing
+  - [ ] first success for `v33` is explicit:
+    - [ ] `atlasSolvedCount > 0`
+    - [ ] `atlasHistoricalSupportMatchedCount > 0`
+    - [ ] at least one atlas keeps `trainMatchedDateCount >= 10`
+    - [ ] the same atlas reaches `openOosPrecision = 1.0`
+    - [ ] `openOosMatchCount >= 3`
+    - [ ] `openOosUniqueMatchedDates >= 3`
+    - [ ] the same atlas reaches `haesungSupport = true`
+  - [x] `v34` canonical direction is fixed:
+    - [x] keep `v33` subgroup-gated `local prototype atlas` as the canonical runtime artifact
+    - [x] do not revisit `exact rule`, `decision set`, `scorecard`, or global monotone `support-prototype router` as the primary runtime path
+    - [x] the next patch is representation-only:
+      - [x] replace the current support-signature surface with a `support-contrastive bridge subtype` family
+      - [x] keep atlas orchestration, wrapper, and calibration-loop contracts fail-fast and deterministic
+    - [x] the new bridge subtype family must be defined by explicit cohorts:
+      - [x] `bridgePositiveRows`
+      - [x] `supportNearHardNegativeRows`
+      - [x] `backgroundRows`
+      - [x] `gatedPositiveRows`
+    - [x] the new bridge feature family must emphasize contrastive separation, not absolute Haesung-likeness:
+      - [x] positive-vs-negative differential distance
+      - [x] local neighborhood purity / recurrence
+      - [x] positive-cell vs negative-cell membership margin
+      - [x] groupwise residual margin by feature group
+    - [x] overfit red lines for `v34` are explicit:
+      - [x] no symbol/date/id direct feature or token
+      - [x] no support-case row-key featureization
+      - [x] no single-case family accepted without `10 dates / 6 months / 4 folds`
+      - [x] no post-hoc-only `haesungSupport` acceptance
+    - [x] `v34` staged fail-fast reasons are explicit:
+      - [x] `unsat_no_bridge_positive_cohort`
+      - [x] `unsat_bridge_positive_breadth`
+      - [x] `unsat_no_support_near_hard_negative`
+      - [x] `unsat_support_case_outside_all_bridge_cells`
+      - [x] `unsat_train_precision`
+      - [x] `unsat_train_breadth`
+      - [x] `unsat_crossfit_negatives`
+      - [x] `unsat_oos_precision`
+  - [ ] first success for `v34` is explicit:
+    - [x] at least one bridge-positive local cell has positive support margin for `076610:2026-03-18`
+    - [ ] `atlasSolvedCount > 0`
+    - [ ] `atlasHistoricalSupportMatchedCount > 0`
+    - [ ] at least one atlas keeps `trainMatchedDateCount >= 10`
+    - [ ] the same atlas reaches `openOosPrecision = 1.0`
+    - [ ] `openOosMatchCount >= 3`
+    - [ ] `openOosUniqueMatchedDates >= 3`
+    - [ ] the same atlas reaches `haesungSupport = true`
+  - [x] `v34` probe outcome is fixed in-contract:
+    - [x] run: `perfect_proto_low_gap_top_support_contrastive_bridge_family_v34_probe200k_20260327`
+    - [x] local and server `npm run verify` both passed before the server probe
+    - [x] the bridge representation itself became real:
+      - [x] `bridgeReady = true`
+      - [x] `bridgePositiveSummary = 18 rows / 18 dates / 15 months / 4 folds`
+      - [x] `supportNearHardNegativeSummary = 32 rows / 31 dates / 25 months / 4 folds`
+      - [x] `supportCaseBridgeBestPositiveCellMarginMean = 0.3731458321528325`
+    - [x] the support case entered at least one atlas candidate cell:
+      - [x] `atlasPositiveSupportMarginCellCount = 1`
+      - [x] `ATLAS_CELL_02 supportCaseMarginMean = 0.282872745174483`
+    - [x] the atlas still failed explicitly:
+      - [x] `reason = unsat_no_local_prototype_atlas`
+      - [x] `atlasUnsatReasonCounts.unsat_historical_support = 24`
+      - [x] `atlasCellCandidateCount = 2`
+      - [x] `atlasQualifiedCellCount = 1`
+      - [x] `triedCandidateCount = 24`
+    - [x] the surviving bridge cell stayed too narrow to satisfy the operating contract:
+      - [x] best train pocket only reached `4~6` dates / `4~6` months / `3` folds
+      - [x] `crossfitPositiveWindowCount` stayed at `0~1`
+      - [x] `haesungSupport = false`
+      - [x] `openOosMatchCount = 0`
+      - [x] current blocker therefore changed again:
+        - [x] the support case is no longer outside every positive cell
+        - [x] the active blocker is now bridge-cell breadth/generalization, not atlas wrapper plumbing or support-case cell membership
+  - [x] `v35` canonical direction is fixed:
+    - [x] keep the `v33/v34` subgroup-gated `local prototype atlas` as the canonical runtime artifact
+    - [x] do not revisit `exact rule`, `decision set`, `scorecard`, or global threshold router as the primary runtime path
+    - [x] replace the `single positivePrototype / single negativePrototype` cell model with a `recurrence-anchor-cover atlas`
+    - [x] add an explicit `bridge recurrence lift` stage between `v34 bridge family` and atlas build
+    - [x] `bridge recurrence lift` must select companion positives by:
+      - [x] `marginalDateGain`
+      - [x] `marginalMonthGain`
+      - [x] `marginalFoldGain`
+      - [x] `crossfitPositiveWindowGain`
+      - [x] `negativeLeakCost`
+    - [x] cell acceptance must now use:
+      - [x] `positiveAnchors[]`
+      - [x] `negativeBorderAnchors[]`
+      - [x] `kPositive`
+      - [x] `minPositiveVotes`
+      - [x] `positiveRadius`
+      - [x] `negativeMargin`
+      - [x] `abstainThreshold`
+    - [x] bounded union is explicit:
+      - [x] allow at most `2` compatible cells
+      - [x] union is forbidden if `train precision < 1.0`
+    - [x] `v35` staged fail-fast reasons are explicit:
+      - [x] `unsat_no_seed_bridge_family`
+      - [x] `unsat_no_recurrence_companion_candidates`
+      - [x] `unsat_companion_lift_no_breadth_gain`
+      - [x] `unsat_companion_lift_negative_leak`
+      - [x] `unsat_support_case_lost_after_lift`
+      - [x] `unsat_no_anchor_cover`
+      - [x] `unsat_anchor_cover_breadth`
+      - [x] `unsat_anchor_vote_support`
+      - [x] `unsat_cell_union_precision`
+  - [x] `v35` short-probe outcome is now closed on the correct `200k` budget:
+    - [x] wrapper root-cause was fixed before judging `v35`:
+      - [x] `server_run_stepb_dplus1_plus_lite_recent_low_gap_top_support_atlas.sh` now passes an explicit short-probe budget instead of silently inheriting `20000000`
+      - [x] latest server `npm run verify` passed after the wrapper fix
+    - [x] corrected short probe `perfect_proto_low_gap_top_recurrence_anchor_cover_atlas_v35_probe200k_r2_20260327` finished with:
+      - [x] `train_mine.rules = 1`
+      - [x] `train_mine.exploredStates = 200000`
+      - [x] `support atlas reason = unsat_no_local_prototype_atlas`
+      - [x] `atlasUnsatReasonCounts.unsat_historical_support = 192`
+    - [x] `bridge recurrence lift` did improve breadth before atlas calibration:
+      - [x] seed bridge positives = `18 rows / 18 dates / 15 months / 4 folds`
+      - [x] accepted companions = `6 / 170`
+      - [x] lifted bridge positives = `24 rows / 24 dates / 18 months / 4 folds`
+      - [x] marginal breadth gain = `+6 dates / +3 months / +0 folds`
+    - [x] active blocker is now sharper:
+      - [x] support-case membership stayed alive inside anchor-cover candidate cells
+      - [x] but most recurrence companions died to `unsat_companion_lift_negative_leak = 157`
+      - [x] the remaining anchor-cover cells stayed too narrow for the operating contract:
+        - [x] `ATLAS_CELL_01 positiveSummary = 17 dates / 14 months / 4 folds`
+        - [x] `ATLAS_CELL_02 positiveSummary = 7 dates / 6 months / 3 folds`
+      - [x] final operating result stayed empty:
+        - [x] `open-oos close28 rawMatchedRows = 0`
+        - [x] leaderboard top rule `PP_0833e2a41b90` stayed at `5 dates / 4 months / 4 folds`
+        - [x] leaderboard top rule still had `openOosMatchCount = 0`
+        - [x] leaderboard top rule still had `haesungSupport = false`
+  - [ ] first success for `v35` is explicit:
+    - [ ] support case enters an anchor cover:
+      - [ ] `supportCaseAnchorVoteCount > 0`
+    - [ ] pre-threshold breadth is explicit:
+      - [ ] `atlasBestTrainBreadthBeforeThreshold.trainMatchedDateCount >= 10`
+      - [ ] `atlasBestTrainBreadthBeforeThreshold.trainMatchedMonthCount >= 6`
+      - [ ] `atlasBestTrainBreadthBeforeThreshold.trainMatchedFoldCount >= 4`
+    - [ ] final atlas survives with:
+      - [ ] `atlasSolvedCount > 0`
+      - [ ] `atlasHistoricalSupportMatchedCount > 0`
+      - [ ] `train precision = 1.0`
+      - [ ] `trainMatchedDateCount >= 10`
+      - [ ] `trainMatchedMonthCount >= 6`
+      - [ ] `trainMatchedFoldCount = 4`
+      - [ ] `crossfitNegativeWindowCount = 0`
+      - [ ] `crossfitRetainedPositiveWindowCount >= 2`
+      - [ ] `openOosPrecision = 1.0`
+      - [ ] `openOosMatchCount >= 3`
+      - [ ] `openOosUniqueMatchedDates >= 3`
+      - [ ] `haesungSupport = true`
+  - [x] `v36` canonical direction is fixed:
+    - [x] keep the deterministic `local prototype atlas` runtime for one final proof patch only
+    - [x] do not revisit `exact rule`, `decision set`, `scorecard`, or global threshold router as the primary runtime path
+    - [x] add an explicit `support leave-one-out fit` contract:
+      - [x] `076610:2026-03-18` is excluded from bridge fitting / prototype estimation / feature scaling / cell seeding
+      - [x] the support case is reintroduced only at final acceptance
+    - [x] replace static `bridge recurrence lift` gating with a deterministic `dynamic bridge frontier`:
+      - [x] recompute positive prototype / positive-cell margins after each accepted companion
+      - [x] rebuild negative shell / leak metrics after each accepted companion
+      - [x] accept companions by marginal frontier gain, not a single static leak cutoff
+    - [x] add an explicit `boundary-veto frontier` stage before final atlas calibration:
+      - [x] persist pre-threshold frontier points for breadth / support / precision
+      - [x] apply deterministic support-near hard-negative vetoes before the final threshold grid
+      - [x] fail fast if boundary veto cannot recover `train precision = 1.0` without losing support
+    - [x] `v36` staged fail-fast reasons are explicit:
+      - [x] `unsat_support_leave_one_out_fit`
+      - [x] `unsat_dynamic_bridge_frontier_empty`
+      - [x] `unsat_dynamic_bridge_frontier_no_breadth`
+      - [x] `unsat_dynamic_bridge_frontier_negative_leak`
+      - [x] `unsat_boundary_veto_no_precision_recovery`
+      - [x] `unsat_boundary_veto_support_loss`
+      - [x] `unsat_prethreshold_frontier_empty`
+      - [x] `unsat_prethreshold_frontier_below_breadth`
+  - [ ] first success for `v36` is explicit:
+    - [ ] support leave-one-out fit remains recoverable:
+      - [x] `supportFitExcluded = true`
+      - [ ] `supportLeaveOneOutRecovered = true`
+    - [ ] pre-threshold frontier exposes operating breadth:
+      - [ ] `preThresholdBestBreadthCandidate.trainMatchedDateCount >= 10`
+      - [ ] `preThresholdBestBreadthCandidate.trainMatchedMonthCount >= 6`
+      - [ ] `preThresholdBestBreadthCandidate.trainMatchedFoldCount >= 4`
+    - [ ] boundary veto restores purity without losing support:
+      - [ ] `boundaryVetoBestPrecisionLift.trainPrecision = 1.0`
+      - [x] `boundaryVetoSupportLossCount = 0`
+      - [ ] `crossfitNegativeWindowCount = 0`
+    - [ ] final atlas still satisfies:
+      - [ ] `atlasSolvedCount > 0`
+      - [ ] `atlasHistoricalSupportMatchedCount > 0`
+      - [ ] `openOosPrecision = 1.0`
+      - [ ] `openOosMatchCount >= 3`
+      - [ ] `openOosUniqueMatchedDates >= 3`
+      - [ ] `haesungSupport = true`
+    - [ ] actual `v36` probe outcome (`perfect_proto_low_gap_top_dynamic_bridge_boundary_frontier_v36_probe200k_r2_20260327`):
+      - [x] wrapper/root-cause fix landed: `recent_mid_low` now supplies `--split-policy=decision_date_only`
+      - [x] base recent-mid-low run completed and produced a frozen catalog
+      - [x] `supportFitExcluded = true`
+      - [ ] `supportLeaveOneOutRecovered = true`
+      - [ ] dynamic bridge frontier accepted companions
+      - [ ] boundary veto recovered support
+      - [ ] final atlas solved
+      - [ ] OOS selected rows > 0
+      - [ ] `haesungSupport = true`
+      - [ ] actual summary:
+        - [x] `bridgeCompanionAcceptedCount = 0`
+        - [x] `bridgeCompanionRejectReasonCounts.unsat_boundary_veto_support_loss = 157`
+        - [x] `bridgeCompanionRejectReasonCounts.unsat_dynamic_bridge_frontier_negative_leak = 10`
+        - [x] `atlasBestTrainBreadthBeforeThreshold = 12 dates / 11 months / 4 folds`
+        - [x] `preThresholdFrontierPointCount = 3`
+        - [x] every frontier point had `supportMatched = []`
+        - [x] `atlasUnsatReasonCounts.unsat_historical_support = 3`
+        - [x] close28 OOS selected rows = `0`
+  - [x] `v37` canonical direction is fixed:
+    - [x] retire `local prototype atlas` as the primary runtime artifact
+    - [x] keep `v34~v36` bridge/contrastive representation work as the input surface
+    - [x] move the runtime to `boundary residual scorer + calibrated abstention`
+    - [x] keep `076610:2026-03-18` in acceptance-only scope:
+      - [x] exclude the support case from fit / prototype / scaling / threshold calibration
+      - [x] require `haesungSupport = true` only after non-support breadth / purity are already satisfied
+    - [x] add a new `support boundary residual` feature family:
+      - [x] score `support-near TP` versus `support-near FP` boundaries directly
+      - [x] score recurrence/stability pressure directly
+      - [x] expose false-positive pressure explicitly instead of local-cell membership only
+    - [x] `v37` staged fail-fast reasons are explicit:
+      - [x] `unsat_support_leave_one_out_fit`
+      - [x] `unsat_support_recovery_after_leave_one_out`
+      - [x] `unsat_non_support_train_breadth`
+      - [x] `unsat_non_support_crossfit_recurrence`
+      - [x] `unsat_boundary_residual_not_separable`
+      - [x] `unsat_scorer_train_precision`
+      - [x] `unsat_scorer_oos_zero_match`
+      - [x] `unsat_scorer_oos_precision`
+      - [x] `unsat_support_acceptance_only_dependency`
+  - [ ] first success for `v37` is explicit:
+    - [ ] leave-one-out stays strict:
+      - [ ] `supportFitExcluded = true`
+      - [ ] `supportLeaveOneOutRecovered = true`
+    - [ ] non-support operating breadth is proven first:
+      - [ ] `nonSupportTrainMatchedDateCount >= 10`
+      - [ ] `nonSupportTrainMatchedMonthCount >= 6`
+      - [ ] `nonSupportTrainMatchedFoldCount >= 4`
+    - [ ] scorer runtime survives with:
+      - [ ] `train precision = 1.0`
+      - [ ] `crossfitNegativeWindowCount = 0`
+      - [ ] `crossfitRetainedPositiveWindowCount >= 2`
+      - [ ] `openOosPrecision = 1.0`
+      - [ ] `openOosMatchCount >= 3`
+      - [ ] `openOosUniqueMatchedDates >= 3`
+      - [ ] `haesungSupport = true`
+    - [ ] actual `v37` probe outcome (`perfect_proto_low_gap_top_boundary_residual_scorer_v37_*`):
+      - [x] support exclusion contract executed:
+        - [x] `supportFitExcluded = true`
+      - [ ] support recovery failed after leave-one-out:
+        - [ ] `supportLeaveOneOutRecovered = true`
+      - [ ] non-support breadth target did not survive purity:
+        - [x] best breadth candidate reached `152 dates / 48 months / 4 folds`
+        - [ ] the same candidate satisfied `train precision = 1.0`
+      - [ ] scorer remained infeasible:
+        - [x] `reason = unsat_scorer_train_precision`
+        - [x] `scorerCandidateCount = 6`
+        - [x] `triedCandidateCount = 2904`
+        - [x] `scorerQualifiedCount = 0`
+        - [x] `scorerUnsatReasonCounts.unsat_scorer_train_precision = 2793`
+        - [x] `scorerUnsatReasonCounts.unsat_non_support_train_breadth = 111`
+        - [x] best train summary was `618 selected / 176 hit / 442 negative / precision 0.2848`
+        - [x] best train crossfit stayed dirty: `crossfitPositiveWindowCount = 6`, `crossfitNegativeWindowCount = 6`
+      - [ ] OOS/support outcome remained empty:
+        - [x] close28 OOS selected rows = `0`
+        - [ ] `openOosPrecision = 1.0`
+        - [ ] `haesungSupport = true`
+  - [ ] `v38` grouped boundary residual experts completed but failed earlier than union:
+    - [x] local/server `npm run verify` passed
+    - [x] server short probe `perfect_proto_low_gap_top_grouped_boundary_residual_experts_v38_probe200k_20260328` completed end-to-end
+    - [x] upstream surfaces were ready:
+      - [x] `supportFitExcluded = true`
+      - [x] `bridgeReady = true`
+      - [x] `boundaryResidualReady = true`
+      - [x] `recurrencePurityReady = true`
+      - [x] `recurrencePurityFeatureCount = 32`
+      - [x] `boundaryResidualFeatureCount = 35`
+      - [x] `boundaryResidualPositiveGroupCount = 6`
+    - [ ] grouped-local-expert runtime never became feasible:
+      - [x] `reason = unsat_no_local_experts`
+      - [x] `boundaryGroupCount = 6`
+      - [x] `boundaryGroupEligibleCount = 0`
+      - [x] `localExpertCandidateCount = 0`
+      - [x] `localExpertQualifiedCount = 0`
+      - [x] `expertUnionCandidateCount = 0`
+      - [x] `expertUnionQualifiedCount = 0`
+      - [x] `supportLeaveOneOutRecovered = false`
+    - [x] the blocker moved ahead of calibration:
+      - [x] grouped dataset contained only `30` rows
+      - [x] `supportCaseEligibleGroups = ["candle"]`
+      - [x] `supportCaseLocalRecoveryMarginMean = 0`
+      - [x] the current recurrence-purity grouping never produced a single eligible local expert
+    - [ ] OOS/support outcome remained empty:
+      - [x] close28 OOS selected rows = `0`
+      - [ ] `openOosPrecision = 1.0`
+      - [ ] `haesungSupport = true`
+    - [x] active blocker is now `boundary group eligibility collapse`, not scorer purity or atlas membership
+  - [x] `v39 perfect_proto_support_carrier_graph_local_experts_v39_probe200k_20260328` actual outcome is now recorded:
+    - [x] local/server `npm run verify` both passed before probe
+    - [x] upstream recent-mid-low chain completed and produced a frozen catalog
+    - [x] `step-perfect-prototype-support-carrier-graph-experts/no_support_carrier_graph_local_experts_summary.json` ended with:
+      - [x] `reason = unsat_support_case_not_component_reachable`
+      - [x] `supportFitExcluded = true`
+      - [x] `supportLeaveOneOutRecovered = false`
+      - [x] `carrierGraphFeatureCount = 15`
+      - [x] `carrierComponentCount = 3`
+      - [x] `carrierEligibleComponentCount = 1`
+      - [x] `supportCaseReachableComponentCount = 0`
+      - [x] `boundaryGroupCount = 0`
+      - [x] `localExpertCandidateCount = 0`
+      - [x] `expertUnionQualifiedCount = 0`
+    - [x] `carrier graph` family itself became the blocker:
+      - [x] bridge stage stayed feasible with `bridgePositiveSummary = 16 rows / 16 dates / 14 months / 4 folds`
+      - [x] support stayed only barely attached to the bridge surface with `supportCaseBridgeBestPositiveCellMarginMean = 0.030262614771508156`
+      - [x] one eligible carrier component existed, but the support case could not reach it after carrier projection
+      - [x] runtime never reached boundary-group / local-expert calibration because pre-runtime fail-fast fired first
+    - [ ] OOS/support outcome remained empty:
+      - [x] close28 OOS selected rows = `0`
+      - [ ] `openOosPrecision = 1.0`
+      - [ ] `haesungSupport = true`
+    - [x] active blocker is now `bridge-to-carrier reachability collapse`, not expert-union tuning
+  - [x] any continuation after `v39` must start at the carrier-family boundary itself:
+    - [x] do not retune local-expert thresholds while `supportCaseReachableComponentCount = 0`
+    - [x] preserve `supportFitExcluded = true` and acceptance-only support semantics
+    - [x] require the next prove-or-kill milestone before any runtime tuning:
+      - [x] `carrierEligibleComponentCount > 0`
+      - [x] `supportCaseReachableComponentCount > 0`
+      - [x] non-support component-level breadth still exists after the reachability repair
+  - [x] `v40 perfect_proto_low_gap_top_support_corridor_graph_propagation_v40` is now closed with actual probe results:
+    - [x] `r1` root-cause bug was fixed inside the same patch:
+      - [x] original `unsat_no_corridor_metric_features` came from a metric-learning/seed-selection mismatch
+      - [x] corridor metric learning now fits on broader recurring positive/negative reference cohorts instead of only the tiny propagation seed set
+      - [x] local and server `npm run verify` both passed again after the fix
+    - [x] final `r2` probe (`perfect_proto_low_gap_top_support_corridor_graph_propagation_v40_probe200k_r2_20260328`) still failed:
+      - [x] `reason = unsat_support_case_not_corridor_reachable`
+      - [x] `supportFitExcluded = true`
+      - [x] `supportLeaveOneOutRecovered = false`
+      - [x] `graphPositiveSeedCount = 2`
+      - [x] `graphNegativeSeedCount = 24`
+      - [x] `corridorFeatureCount = 24`
+      - [x] `graphNodeCount = 658`
+      - [x] `graphEdgeCount = 2464`
+      - [x] `supportCasePositivePotential = 0`
+      - [x] `supportCaseNegativePotential = 1.3262364245709249e-11`
+      - [x] `supportCaseSafeReachabilityScore = -0.25000000000994677`
+    - [x] interpretation:
+      - [x] graph construction and propagation now execute end-to-end
+      - [x] the blocker is no longer missing corridor features
+      - [x] the blocker is now graph-level support recovery collapse: the support case does not pick up any positive potential from non-support recurring seeds
+    - [ ] OOS/support outcome remains unsolved:
+      - [x] close28 OOS selected rows = `0`
+      - [ ] `openOosPrecision = 1.0`
+      - [ ] `haesungSupport = true`
+    - [x] any continuation after `v40` must start from propagation reachability itself:
+      - [x] do not retune abstention thresholds while `supportCasePositivePotential = 0`
+      - [x] preserve `supportFitExcluded = true` and acceptance-only support semantics
+      - [x] treat `graphPositiveSeedCount = 2` as a material bottleneck for future propagation work
+  - [x] `v41 perfect_proto_low_gap_top_ordinal_multibasin_local_experts_v41` is now executed and recorded as `invalid_or_inconclusive`:
+    - [x] `supportFitExcluded = true`
+    - [x] explicit `sig.ordinalMotif.*` family added and verified
+    - [x] top-prefix corridor seeding was replaced with multibasin seed cover:
+      - [x] `corridorPositiveBasinCount = 4`
+      - [x] `corridorPositiveEligibleBasinCount = 3`
+      - [x] `corridorPositiveSeedCount = 9`
+      - [x] `supportCaseReachableBasinCount = 2`
+    - [x] corridor graph remained discovery-only:
+      - [x] broad gate stayed `low_gap_top_continuation`
+      - [x] basin projection/reachability built end-to-end
+    - [x] canonical runtime after corridor projection was exercised:
+      - [x] local discriminative experts
+      - [x] bounded expert union
+      - [x] explicit abstention
+    - [x] pre-runtime prove-or-kill milestone succeeded:
+      - [x] `localExpertCandidateCount = 29862`
+      - [x] `localExpertQualifiedCount = 4`
+    - [x] actual blocker moved to qualified-expert breadth collapse:
+      - [x] all `14` expert-union candidates failed with `unsat_expert_union_train_breadth`
+      - [x] every pure expert/union stayed pinned at `9 dates / 8 months / 3 folds`
+      - [x] `supportLeaveOneOutRecovered = false`
+      - [x] `openOos selected rows = 0`
+      - [x] upstream frozen champion stayed `PP_0833e2a41b90` with `train 5/5`, `openOosMatchCount = 0`, `haesungSupport = false`
+    - [ ] operating success contract remains unsolved:
+      - [ ] `trainMatchedDateCount >= 10`
+      - [ ] `trainMatchedMonthCount >= 6`
+      - [ ] `trainMatchedFoldCount >= 4`
+      - [ ] `openOosPrecision = 1.0`
+      - [ ] `openOosMatchCount >= 3`
+      - [ ] `openOosUniqueMatchedDates >= 3`
+      - [ ] `haesungSupport = true`
+  - [x] `v42 perfect_proto_low_gap_top_multibasin_simplex_complement_frontier_v42` completed and remains `invalid_or_inconclusive`:
+    - [x] OOM root cause was repaired:
+      - [x] reuse the support-corridor family stage-by-stage inside [build_perfect_prototype_low_gap_top_support_corridor_local_experts.mjs](/home/saida/code/stockdesk-lab-lite/tools/build_perfect_prototype_low_gap_top_support_corridor_local_experts.mjs) so old family snapshots can be collected
+      - [x] stop rebuilding simplex `tokenSet` clones inside [perfect_prototype_support_multibasin_simplex_features.mjs](/home/saida/code/stockdesk-lab-lite/src/lib/perfect_prototype_support_multibasin_simplex_features.mjs)
+      - [x] local `npm run verify` and server `npm run verify` both passed again after the memory repair
+    - [x] server short probe completed:
+      - [x] run id `perfect_proto_low_gap_top_multibasin_simplex_complement_frontier_v42_probe200k_r2_20260328`
+      - [x] final unsat file [no_support_corridor_local_experts_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_multibasin_simplex_complement_frontier_v42_probe200k_r2_20260328/step-perfect-prototype-support-corridor-local-experts/no_support_corridor_local_experts_summary.json)
+    - [x] actual blocker is now narrower than `v41`:
+      - [x] `localExpertQualifiedCount = 2`, but `qualifiedExpertDistinctMatchedDateSignatureCount = 1`
+      - [x] complement frontier kept only `1` expert and added zero breadth:
+        - [x] `bestSingleExpertTrainMatchedDateCount = 8`
+        - [x] `bestSingleExpertTrainMatchedMonthCount = 7`
+        - [x] `bestSingleExpertTrainMatchedFoldCount = 3`
+        - [x] `expertUnionDateGainOverBestSingleExpert = 0`
+        - [x] `expertUnionMonthGainOverBestSingleExpert = 0`
+        - [x] `expertUnionFoldGainOverBestSingleExpert = 0`
+      - [x] final reason stayed `unsat_expert_union_train_breadth`
+      - [x] `supportLeaveOneOutRecovered = false`
+      - [x] OOS close28 stayed empty: [summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_multibasin_simplex_complement_frontier_v42_probe200k_r2_20260328/step-perfect-prototype-open-oos-apply-close28/summary.json)
+    - [x] upstream frozen champion stayed unchanged:
+      - [x] [selection_leaderboard.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_multibasin_simplex_complement_frontier_v42_probe200k_r2_20260328/step-perfect-prototype-open-eval-report/selection_leaderboard.json) still tops out at `PP_0833e2a41b90`
+      - [x] `train 5/5`, `openOosMatchCount = 0`, `haesungSupport = false`
+    - [x] any further continuation inside current `low_gap_top` must fail fast before support/OOS if:
+      - [x] `qualifiedExpertDistinctMatchedDateSignatureCount <= 1`
+      - [x] `coverageFrontierQualifiedCount <= 1`
+      - [x] `bestSingleExpertTrainMatchedDateCount <= 8`
+      - [x] `expertUnionDateGainOverBestSingleExpert <= 0`
+      - [x] `expertUnionFoldGainOverBestSingleExpert <= 0`
+    - [ ] operating success contract remains unchanged:
+      - [ ] `train precision = 1.0`
+      - [ ] `trainMatchedDateCount >= 10`
+      - [ ] `trainMatchedMonthCount >= 6`
+  - [x] `v43 perfect_proto_support_recurrence_motif_bag_cover_v43` is completed and the blocker is now pinned:
+    - [x] canonical run: [perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328)
+    - [x] current `low_gap_top` was treated as a gate/feature supplier rather than the primary family hypothesis
+    - [x] learning unit changed from row pocket membership to `date bag` coverage:
+      - [x] positive train dates became positive bags
+      - [x] support-near hard-negative dates became negative bags
+      - [x] support remained a held-out acceptance-only bag
+    - [x] `sig.motifLattice.*` representation shipped on top of bridge / boundary / recurrence / ordinal suppliers:
+      - [x] coarse recurring motif bundles were discovered from support-excluded positives
+      - [x] rows were rescored by bundle agreement, negative conflict, breadth carry, and complementarity potential
+    - [x] MIL-style witness selection and motif prototype induction shipped:
+      - [x] each positive bag contributed `1..k` witness rows
+      - [x] motif prototypes carried distinct bag-cover signatures rather than distinct rows only
+    - [x] bag-cover stage produced real diversity before detector qualification:
+      - [x] [support_date_bag_dataset_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328/step-perfect-prototype-support-bag-cover/support_date_bag_dataset_summary.json) showed `positiveBagCount = 16`, `negativeBagCount = 28`, `supportBagCount = 1`
+      - [x] [support_motif_lattice_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328/step-perfect-prototype-support-bag-cover/support_motif_lattice_summary.json) showed `motifBundleCount = 23`, `distinctBagCoverSignatureCount = 14`, `supportCaseTopBundleCount = 0`
+      - [x] [support_bag_witness_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328/step-perfect-prototype-support-bag-cover/support_bag_witness_summary.json) showed `witnessAcceptedCount = 24`, `witnessAcceptedBagCount = 16`
+      - [x] [support_mil_motif_prototypes_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328/step-perfect-prototype-support-bag-cover/support_mil_motif_prototypes_summary.json) showed `motifPrototypeCount = 6`, `distinctBagCoverSignatureCount = 6`
+    - [x] final failure moved to detector purity, not bag diversity:
+      - [x] [no_support_bag_cover_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328/step-perfect-prototype-support-bag-cover/no_support_bag_cover_summary.json) resolved to `reason = unsat_no_bag_local_detectors`
+      - [x] `bagLocalDetectorCandidateCount = 480`
+      - [x] `bagLocalDetectorQualifiedCount = 0`
+      - [x] `bagLocalDetectorRejectReasonCounts.unsat_bag_local_detector_train_precision = 462`
+      - [x] `bagLocalDetectorRejectReasonCounts.unsat_bag_local_detector_train_breadth = 18`
+      - [x] best detector summary stayed impure: `49 selected / 15 positive / 34 negative / precision 0.3061`
+      - [x] best detector breadth reached `14 dates / 11 months / 3 folds`
+      - [x] `crossfitNegativeWindowCount = 6`
+      - [x] `haesungSupport = false`
+      - [x] `supportLeaveOneOutRecovered = false`
+    - [x] OOS remained empty:
+      - [x] [summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328/step-perfect-prototype-open-oos-apply-close28/summary.json) stayed `0 selected / 0 hit`
+    - [x] upstream frozen champion stayed unchanged:
+      - [x] [selection_leaderboard.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328/step-perfect-prototype-open-eval-report/selection_leaderboard.json) still tops out at `PP_0833e2a41b90`
+      - [x] `train 5/5`, `openOosMatchCount = 0`, `haesungSupport = false`
+    - [x] any further continuation of the bag-cover family must fail fast before support/OOS if:
+      - [x] `bagLocalDetectorQualifiedCount = 0`
+      - [x] `distinctBagCoverSignatureCount <= 1`
+      - [x] best detector `train precision < 1.0`
+      - [x] best detector `trainMatchedFoldCount < 4`
+      - [x] `crossfitNegativeWindowCount > 0`
+    - [ ] operating success contract remains unchanged:
+      - [ ] `train precision = 1.0`
+      - [ ] `trainMatchedDateCount >= 10`
+      - [ ] `trainMatchedMonthCount >= 6`
+  - [x] `v44 perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44` is completed and the blocker is now pinned:
+    - [x] canonical run: [perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44_probe200k_20260328](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44_probe200k_20260328)
+    - [x] current `low_gap_top` was demoted to gate / feature supplier and the learning unit changed to `decision-date anchored temporal episode`:
+      - [x] `lookbackTradingDays = 4`
+      - [x] support remained held-out acceptance-only
+      - [x] candidate rows were evaluated inside `5-day` episode context rather than row/bag membership alone
+    - [x] `sig.roleTopo.*` representation shipped on top of bridge / boundary / recurrence / ordinal suppliers:
+      - [x] [support_temporal_episode_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44_probe200k_20260328/step-perfect-prototype-support-temporal-episode/support_temporal_episode_summary.json) showed `episodeCandidateCount = 469`, `episodePositiveCount = 16`, `episodeNegativeCount = 31`, `episodeFeatureCount = 30`
+      - [x] [support_role_topology_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44_probe200k_20260328/step-perfect-prototype-support-temporal-episode/support_role_topology_summary.json) showed `roleTopologyFeatureCount = 35`, `roleTopologySignatureCount = 6`, `supportCaseReachableRoleSignatureCount = 1`
+    - [x] the single anchored scorer plus abstention reached breadth, but not purity:
+      - [x] [no_support_temporal_episode_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44_probe200k_20260328/step-perfect-prototype-support-temporal-episode/no_support_temporal_episode_summary.json) resolved to `reason = unsat_temporal_anchor_train_precision`
+      - [x] `supportFitExcluded = true`
+      - [x] `supportLeaveOneOutRecovered = false`
+      - [x] `selectedFeaturePoolCount = 8`
+      - [x] `candidateCount = 108`
+      - [x] `qualifiedCandidateCount = 0`
+      - [x] best train summary stayed impure: `38 selected / 11 positive / 27 negative / precision 0.2895`
+      - [x] best train breadth reached `11 dates / 11 months / 4 folds`
+      - [x] `crossfitPositiveWindowCount = 2`
+      - [x] `crossfitNegativeWindowCount = 6`
+    - [x] OOS remained empty:
+      - [x] [summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44_probe200k_20260328/step-perfect-prototype-open-oos-apply-close28/summary.json) stayed `0 selected / 0 hit`
+    - [x] upstream frozen champion stayed unchanged:
+      - [x] [selection_leaderboard.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44_probe200k_20260328/step-perfect-prototype-open-eval-report/selection_leaderboard.json) still tops out at `PP_0833e2a41b90`
+      - [x] `train 5/5`, `openOosMatchCount = 0`, `haesungSupport = false`
+    - [x] any further continuation of the temporal-episode family must fail fast before support/OOS if:
+      - [x] `qualifiedCandidateCount = 0`
+      - [x] best non-support candidate `train precision < 1.0`
+      - [x] best non-support candidate `crossfitNegativeWindowCount > 0`
+      - [x] `supportLeaveOneOutRecovered = false`
+      - [x] close28 OOS stays `0 selected`
+  - [x] `v45 perfect_proto_low_gap_top_counterfactual_outranking_residual_v45` was implemented as the canonical selection-family reset:
+    - [x] `low_gap_top_continuation` was demoted to gate / feature supplier only
+    - [x] optimization unit changed from row / bag membership to `decision-date query top1 selection`
+    - [x] `sig.outRank.*` and `sig.ctrlResidual.*` were materialized on top of bridge / boundary / recurrence / ordinal / temporal / role-topology suppliers
+    - [x] the runtime path was replaced with a `top1-per-date query ranker + abstention`
+    - [x] local `npm run verify` passed after an in-place augmentation fix that removed the server OOM from the first `v45` probe
+    - [x] server `npm run verify` passed
+    - [x] server short probe `perfect_proto_low_gap_top_counterfactual_outranking_residual_v45_probe200k_r2_20260328` completed and failed at `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_counterfactual_outranking_residual_v45_probe200k_r2_20260328/step-perfect-prototype-support-top1-query/no_support_top1_query_summary.json`
+    - [x] final unsat reason was `unsat_top1_query_train_precision`
+    - [x] fit contract held:
+      - [x] `supportFitExcluded = true`
+      - [x] `supportLeaveOneOutRecovered = false`
+    - [x] search completed but found no feasible ranker:
+      - [x] `selectedFeaturePoolCount = 8`
+      - [x] `candidateCount = 1552`
+      - [x] `qualifiedCandidateCount = 0`
+    - [x] best non-support candidate proved the new blocker is purity collapse, not breadth:
+      - [x] `269 selected / 131 positive / 138 negative / precision 0.48698884758364314`
+      - [x] `trainMatchedDateCount = 131`
+      - [x] `trainMatchedMonthCount = 48`
+      - [x] `trainMatchedFoldCount = 4`
+      - [x] `crossfitPositiveWindowCount = 6`
+      - [x] `crossfitNegativeWindowCount = 6`
+      - [x] `haesungSupport = false`
+    - [x] the highest-ranked surviving feature pair still collapsed onto an absolute residual axis instead of a clean same-date winner signal:
+      - [x] `sig.ctrlResidual.regimeResidualRank`
+      - [x] `sig.ctrlResidual.temporalEpisode_episodePositiveCarry`
+    - [x] upstream frozen leaderboard remained unchanged:
+      - [x] `PP_0833e2a41b90`
+      - [x] `train 5/5`
+      - [x] `openOosMatchCount = 0`
+      - [x] `haesungSupport = false`
+    - [x] close28 OOS stayed empty:
+      - [x] `0 selected / 0 hit`
+    - [x] any continuation of the `v45` top1-query family must fail fast before support/OOS if:
+      - [x] best non-support candidate `train precision < 1.0`
+      - [x] best non-support candidate `crossfitNegativeWindowCount > 0`
+      - [x] `supportLeaveOneOutRecovered = false`
+      - [x] close28 OOS stays `0 selected`
+  - [x] `v46 perfect_proto_low_gap_top_support_separability_audit_v46` completed as the canonical family-level root-cause audit:
+    - [x] `low_gap_top_continuation` was treated only as a gate / supplier family, not as a directly solvable runtime family
+    - [x] one supplier-union feature space was materialized from:
+      - [x] `sig.boundary.*`
+      - [x] `sig.recurBoundary.*`
+      - [x] `sig.ordinalMotif.*`
+      - [x] `sig.temporalEpisode.*`
+      - [x] `sig.roleTopo.*`
+      - [x] `sig.query.*`
+      - [x] `sig.ctrlResidual.*`
+      - [x] `sig.outRank.*`
+    - [x] an audit dataset was built with:
+      - [x] support-excluded recurring positive rows
+      - [x] support-near hard negatives
+      - [x] same-date runner-up negatives
+      - [x] matched-control negatives
+      - [x] held-out support-case projections
+    - [x] actual v46 dataset breadth was non-trivial:
+      - [x] `supplierFeatureCount = 240`
+      - [x] `separabilityPositiveSummary = 16 rows / 16 dates / 14 months / 4 folds`
+      - [x] `separabilityNegativeSummary = 45 rows / 35 dates / 28 months / 4 folds`
+      - [x] `separabilityPairCount = 59`
+      - [x] `separabilitySameDatePairCount = 17`
+      - [x] `separabilityMatchedControlPairCount = 42`
+    - [x] pairwise/query/fold separability audits were run before any new runtime solve:
+      - [x] `pairwiseCandidateCount = 781`
+      - [x] `pairwiseQualifiedCandidateCount = 0`
+      - [x] `queryCandidateCount = 0`
+      - [x] `queryQualifiedCandidateCount = 0`
+    - [x] best v46 pairwise subset still failed the contract:
+      - [x] `pairwiseWinRate = 0.9534883720930233`
+      - [x] `minFoldPairwiseWinRate = 0.75`
+      - [x] `sameDateRunnerUpBeatRate = 0.8181818181818182`
+      - [x] `hardNegativeLeakCount = 11`
+      - [x] `supportProjectionScore = -0.6934119069706872`
+      - [x] `supportProjectionPositive = false`
+      - [x] `failureReason = unsat_fold_pairwise_win_rate`
+    - [x] emitted artifact was:
+      - [x] `no_support_separability_summary.json`
+      - [x] derived family contract was not emitted
+    - [x] v46 conclusion is now pinned:
+      - [x] current `low_gap_top` supplier family is not separable enough to justify another in-family selector/runtime patch
+      - [x] any next step must start from target/family redefinition outside the current `low_gap_top` continuation framing
+  - [x] `v47 perfect_proto_support_counterfactual_episode_transition_admission_top1_v47` completed as the post-v46 family reset and failed at Stage A admission:
+    - [x] current `low_gap_top_continuation` was demoted to a gate / supplier only
+    - [x] the primary family was reset to `support-excluded episode-transition`
+    - [x] the learning unit changed to `decision-date anchored episode`
+    - [x] the runtime was pinned to `episode admission + admitted-date top1 + abstention`
+    - [x] `076610` symbol rows stayed outside fit / seed / scaling / calibration
+    - [x] support acceptance remained artifact-hash-stable and acceptance-only
+    - [x] Stage A failed on train precision rather than breadth:
+      - [x] `reason = unsat_episode_admission_train_precision`
+      - [x] `supportFitExcluded = true`
+      - [x] `supportProjectionPositive = true`
+      - [x] `candidateCount = 18`
+      - [x] `qualifiedCandidateCount = 0`
+      - [x] best admission candidate:
+        - [x] `selectedEpisodeCount = 465`
+        - [x] `positiveEpisodeCount = 16`
+        - [x] `negativeEpisodeCount = 449`
+        - [x] `precision = 0.034408602150537634`
+        - [x] `trainMatchedDateCount = 16`
+        - [x] `trainMatchedMonthCount = 14`
+        - [x] `trainMatchedFoldCount = 4`
+        - [x] `crossfitNegativeWindowCount = 6`
+    - [x] Stage B top1 was never reached because admission never qualified
+    - [x] final support/OOS remained unsolved:
+      - [x] `supportLeaveOneOutRecovered = false`
+      - [x] close28 OOS `0 selected / 0 hit`
+      - [x] upstream frozen top rule remained `PP_0833e2a41b90`
+      - [x] `haesungSupport = false`
+    - [x] pinned hard-stop after `v47`:
+      - [x] do not resume another `low_gap_top`-supplier runtime patch by retuning `episode admission`, `admitted-date top1`, or adjacent selectors
+      - [x] any next recovery attempt must start from another target/family definition
+  - [x] `v48 perfect_proto_recent_mid_low_same_date_winner_query_v48` completed and closed as `invalid_or_inconclusive`:
+    - [x] family/runtime contract held:
+      - [x] primary family was `recent_mid_low` same-date winner query
+      - [x] `low_gap_top_continuation` stayed supplier / gate only
+      - [x] runtime stayed `same-date top1 outranking + abstention`
+      - [x] support stayed acceptance-only with symbol `076610` excluded from fit / seed / scaling / calibration
+    - [x] singleton-query root cause was fixed before server probing:
+      - [x] peerless queries no longer encoded runner-up gap as `0`
+      - [x] peerless queries no longer encoded consensus win-share as `0`
+      - [x] local smoke passed: `tools/smoke_perfect_prototype_recent_mid_low_winner_query.mjs`
+      - [x] local/server `npm run verify` passed
+    - [x] actual server short-probe outcome:
+      - [x] run id: `perfect_proto_recent_mid_low_same_date_winner_query_v48_20260328_231358`
+      - [x] summary: `step-perfect-prototype-recent-mid-low-winner-query/no_support_recent_mid_low_winner_query_summary.json`
+      - [x] `reason = unsat_top1_query_train_precision`
+      - [x] `supportFitExcluded = true`
+      - [x] `supportLeaveOneOutRecovered = false`
+      - [x] `selectedFeaturePoolCount = 3`
+      - [x] `candidateCount = 960`
+      - [x] `qualifiedCandidateCount = 0`
+      - [x] best train summary:
+        - [x] `998 selected / 299 positive / 699 negative`
+        - [x] `precision = 0.2996`
+        - [x] `trainMatchedDateCount = 299`
+        - [x] `trainMatchedMonthCount = 50`
+        - [x] `trainMatchedFoldCount = 4`
+        - [x] `crossfitNegativeWindowCount = 6`
+      - [x] top surviving pair remained dirty:
+        - [x] `sig.roleTopo.selfRank.temporalEpisode_episodeNegativePressure`
+        - [x] `sig.roleTopo.selfRank.temporalEpisode_episodePositiveCarry`
+      - [x] no feasible winner-query artifact emitted
+      - [x] OOS remained unsolved
+    - [x] pinned hard-stop after `v48`:
+      - [x] do not keep retuning the same `recent_mid_low` same-date winner-query family/runtime
+      - [x] next recovery attempt must change the target/family definition again rather than micro-adjusting this same top1-query surface
+  - [x] `v49 perfect_proto_support_failure_regime_veto_top1_v49` completed on server short probe `perfect_proto_support_failure_regime_veto_top1_v49_20260328_234759` and failed before survivor-top1:
+    - [x] server summary: `reason = unsat_veto_train_breadth`
+    - [x] support contract stayed intact:
+      - [x] `supportFitExcluded = true`
+      - [x] `supportLeaveOneOutRecovered = false`
+    - [x] veto stage explored a real cluster library:
+      - [x] `vetoCandidateCount = 3776`
+      - [x] `vetoQualifiedCandidateCount = 0`
+      - [x] `selectedClusterUniverseCount = 4`
+      - [x] best veto family was dominated by `slateArchetype_border_riskMargin`
+    - [x] the stage collapsed in only two modes:
+      - [x] strict veto thresholds zeroed everything out: `0 positive survivors / 0 dates / 0 months / 0 folds`
+      - [x] looser veto thresholds kept breadth but leaked hard negatives: `92 positive dates / 35 months / 4 folds` versus `102 negative dates / 36 months / 4 folds`
+    - [x] `supportProjectionPositive = false`, so the line never reached survivor-top1 runtime
+    - [x] wrapper exited with contract-fast-fail `42` because no feasible veto-top1 artifact was emitted
+  - [x] pinned hard-stop after `v49`:
+    - [x] do not retune this same `failure-regime veto` surface
+    - [x] do not keep the same `low_gap_top` / `recent_mid_low` supplier framing for the next recovery line
+    - [x] the next attempt must change target/family definition again instead of another in-family veto/query adjustment
+  - [x] `v50 perfect_proto_shadow_winner_slate_top1_v50` completed on server short probe `perfect_proto_shadow_winner_slate_top1_v50_probe200k_20260329` and failed at the winner-slate separability audit:
+    - [x] server summary: `reason = unsat_pairwise_win_rate`
+    - [x] support contract stayed intact:
+      - [x] `supportFitExcluded = true`
+      - [x] `supportLeaveOneOutRecovered = false`
+    - [x] the family reset itself executed end-to-end:
+      - [x] local `npm run verify` passed
+      - [x] server `npm run verify` passed
+      - [x] supplier union emitted `supplierFeatureCount = 103`
+      - [x] winner-slate feature layer emitted `shadowWinnerSlateFeatureCount = 14`
+      - [x] winner-slate dataset was broad enough to test real separation:
+        - [x] `queryEligibleTrainRowCount = 14450`
+        - [x] `winnerPositiveDateCount = 958`
+        - [x] `shadowWinnerSlatePairCount = 5742`
+    - [x] the blocker is explicit and upstream of runtime:
+      - [x] `pairwiseCandidateCount = 1`
+      - [x] `pairwiseQualifiedCandidateCount = 0`
+      - [x] best audit subset used `sig.shadowSlate.selection.rankPct` + `sig.slateArchetype.selection.rankPct`
+      - [x] but only reached `pairwiseWinRate = 0.5951`
+      - [x] `sameDateRunnerUpBeatRate = 0.5953`
+      - [x] `matchedControlBeatRate = 0.5950`
+      - [x] `failureImpostorBeatRate = 0.5950`
+      - [x] `minFoldPairwiseWinRate = 0.5619`
+      - [x] `hardNegativeLeakCount = 1956`
+      - [x] `supportProjectionPositive = false`
+    - [x] runtime never started because the canonical audit contract failed first
+    - [x] wrapper exited with contract-fast-fail `42` because no feasible shadow winner-slate artifact was emitted
+  - [x] pinned hard-stop after `v50`:
+    - [x] do not retune this same `shadow winner-slate` family/runtime
+    - [x] do not return to `low_gap_top`, `recent_mid_low`, admission, veto, expert-union, or adjacent query retuning as recovery lines for this target
+    - [x] the next line must change the target universe / family definition again rather than another selector or runtime tweak on the same supplier framing
+  - [x] `v51 perfect_proto_prejump_predictive_hypothesis_portfolio_v51` was implemented and executed as a capped server microprobe on `perfect_proto_prejump_predictive_hypothesis_portfolio_v51_microprobe10k5k_r3_20260329`:
+    - [x] canonical target universe moved to `PREJUMP_PREDICTIVE_V1` on `afree_open`
+    - [x] `low_gap_top_continuation` and `recent_mid_low` were used as supplier-only inputs, not as primary recovery families
+    - [x] one shared substrate was built once for the whole round:
+      - [x] as-of-`t` decision-date candidate slate snapshot
+      - [x] support-excluded candidate universe
+      - [x] shared telemetry schema
+      - [x] shared separability-audit harness
+      - [x] one canonical runtime only: `pre-runtime audit -> single same-date top1 query -> existing policy/execution gate`
+    - [x] the five hypotheses shared the same supplier snapshot, train/OOS split, and support exclusion contract:
+      - [x] `H1 winner-slate archetype`
+      - [x] `H2 episode-transition`
+      - [x] `H3 trade-vs-abstain`
+      - [x] `H4 execution-realizable trade`
+      - [x] `H5 latent-witness`
+    - [x] support contract stayed strict:
+      - [x] symbol `076610` remained fit-excluded
+      - [x] support acceptance stayed artifact-hash-stable and acceptance-only
+    - [x] v51 root-cause engineering blockers were closed in the same patch:
+      - [x] `feature_store` `limitRows` now applies on the server pack path
+      - [x] the v51 builder no longer `readFile`s multi-gigabyte JSONL inputs and instead streams/compacts required fields only
+      - [x] failed v51 temp/run artifacts were pruned on server to recover disk headroom before the successful rerun
+    - [x] capped probe coverage was explicitly partial, not full-adjudication:
+      - [x] train pack respected `limitRowsApplied = 10000`
+      - [x] OOS pack respected `limitRowsApplied = 5000` and finished with `rowCount = 1908`
+      - [x] effective train decision coverage was only `9` dates (`2020-11-27` -> `2020-12-09`)
+      - [x] dataset-level positive winner breadth was only `9 dates / 2 months / 4 folds`
+    - [x] the shared audit still failed before runtime:
+      - [x] `pairwiseCandidateCount = 17`
+      - [x] `pairwiseQualifiedCandidateCount = 0`
+      - [x] best hypothesis = `H3 trade-vs-abstain`
+      - [x] best audit metrics:
+        - [x] `pairwiseWinRate = 0.9167`
+        - [x] `sameDateRunnerUpBeatRate = 0.8333`
+        - [x] `failureImpostorBeatRate = 1.0`
+        - [x] `hardNegativeLeakCount = 2`
+        - [x] `supportProjectionPositive = true`
+      - [x] final reason = `unsat_same_date_runner_up_beat_rate`
+    - [x] the strongest alternate audit result was `H2 episode-transition`, but it still failed:
+      - [x] `pairwiseWinRate = 0.9722`
+      - [x] `sameDateRunnerUpBeatRate = 0.9444`
+      - [x] `matchedControlBeatRate = 0`
+      - [x] `hardNegativeLeakCount = 3`
+      - [x] reason = `unsat_matched_control_beat_rate`
+    - [x] because the capped microprobe only covered `9` positive dates and `2` months, `v51` is recorded as `invalid_or_inconclusive`, not as a promotable family success or a final do-not-repeat proof
+    - [x] pinned hard-stop after actual `v51` outcome:
+      - [x] do not retune the same five-hypothesis portfolio on the same capped snapshot and call it a new family
+      - [x] do not return to `low_gap_top`, `recent_mid_low`, admission, veto, expert-union, or adjacent query retuning for this target
+      - [x] the next line must either widen the prejump decision-date universe enough to reach the breadth floor or redefine the target universe again before another selector/runtime experiment
+  - [x] `v52 perfect_proto_prejump_episode_transition_counterfactual_controls_v52` was executed end-to-end and closed as a real prejump verdict:
+    - [x] canonical target universe remained:
+      - [x] `PREJUMP_PREDICTIVE_V1`
+      - [x] `afree_open`
+      - [x] as-of-`t` features only
+    - [x] the root-cause substrate change landed:
+      - [x] row-capped microprobe packs are no longer the primary adjudication substrate
+      - [x] `feature_store` pack assembly now supports deterministic `decision-date stratified` sampling
+      - [x] v52 pack contract now exposes:
+        - [x] `maxDecisionDates`
+        - [x] `maxRowsPerDate`
+        - [x] `decisionDateSamplingMode`
+        - [x] `selectedDecisionDateCount`
+        - [x] `selectedDecisionMonthCount`
+        - [x] `coverageComplete`
+      - [x] actual train substrate reached `48 decision dates / 48 months / 4 folds / 6144 rows`
+      - [x] actual OOS substrate only exposed `2 decision dates / 1 month / 256 rows`; runtime never started because audit failed first
+    - [x] v52 hypothesis scope stayed narrowed:
+      - [x] `H2 episode-transition` remained the only canonical family
+      - [x] `H3 trade-vs-abstain` stayed diagnostic-only and never became a runtime fallback
+      - [x] `H1/H4/H5` stayed out of the canonical v52 runtime path
+    - [x] negative cohort redesign landed:
+      - [x] matched controls no longer depend on negative-only decision dates
+      - [x] matched controls are built as `counterfactual execution-feasible impostors`
+      - [x] same-date runner-up negatives remained mandatory
+      - [x] failure-impostor negatives remained mandatory
+      - [x] actual dataset contained `48` positive winners, `96` same-date runner-ups, `60` matched controls across `30` dates, and `3` failure negatives
+    - [x] v52 stayed audit-first and was stopped by the canonical audit:
+      - [x] corrected substrate satisfied the breadth floor before audit
+      - [x] runtime did not start because canonical `H2` still yielded `pairwiseQualifiedCandidateCount = 0`
+      - [x] best canonical `H2` only reached:
+        - [x] `pairwiseWinRate = 0.7986`
+        - [x] `sameDateRunnerUpBeatRate = 0.6771`
+        - [x] `matchedControlBeatRate = 0.7292`
+        - [x] `minFoldPairwiseWinRate = 0.7083`
+        - [x] `hardNegativeLeakCount = 78`
+        - [x] `supportProjectionPositive = true`
+      - [x] wrapper exited `42` with `no_support_prejump_episode_transition_counterfactual_controls_summary.json`
+    - [x] v52 hard-stop is now active:
+      - [x] the corrected substrate proved this is no longer a breadth-sampling problem
+      - [x] canonical `H2` failed matched-control and same-date separation on the corrected substrate, so the prejump line is stopped
+      - [x] do not return to the `v51` five-hypothesis portfolio or retune `v52` on the same `PREJUMP_PREDICTIVE_V1` substrate
+  - [x] `v53 perfect_proto_daily_canonical_winner_slate_contrastive_top1_v53` was executed as the next canonical target-universe reset:
+    - [x] canonical target universe moved to `same_day_plus_recent_upto_1d`
+    - [x] canonical label unit was set to `decision-date canonical winner`
+    - [x] `PREJUMP_PREDICTIVE_V1` / `afree_open` were kept supplier-only
+    - [x] runtime contract stayed single-path:
+      - [x] same-date top1 outranking only
+      - [x] no admission/veto/expert-union/bag-cover wrapper revival
+    - [x] root-cause fixes completed before the final probe:
+      - [x] wrapper contract repaired to pass the required `--seed-input` / lane-universe arguments for `same_day_plus_recent_upto_1d`
+      - [x] generic `afree_open` control-pack rows now carry baseline `stepALaneId` so the lane-local contextual surface can build without fail-fast contract errors
+      - [x] local `npm run verify` passed
+      - [x] server `npm run verify` passed
+    - [x] final server probe `perfect_proto_daily_canonical_winner_slate_contrastive_top1_v53_probe200k_r3_20260329` still failed before query audit:
+      - [x] reason = `unsat_no_daily_canonical_winner_rows`
+      - [x] `normalizedTrainRowCount = 56838`
+      - [x] `normalizedControlTrainRowCount = 200000`
+      - [x] `normalizedOosRowCount = 29989`
+      - [x] `normalizedControlOosRowCount = 200000`
+      - [x] `canonicalPositiveDateCount = 489`
+      - [x] `controlOnlyDateCount = 0`
+      - [x] `queryEligiblePositiveSummary = 18316 rows / 489 dates / 24 months / 4 folds`
+      - [x] `queryEligibleNegativeSummary = 0 rows / 0 dates / 0 months / 0 folds`
+    - [x] real blocker is substrate, not same-date ranking:
+      - [x] the row-capped `afree_open` control packs truncated into dates that all overlapped canonical positive dates
+      - [x] control-only decision dates disappeared, so matched-control / abstain negatives never formed
+      - [x] do not retune v53 ranking/query logic on this row-capped substrate
+      - [x] any next attempt must either build control-only dates upstream before packing or redefine the target universe again
+  - [x] `v54 perfect_proto_trade_abstain_archetype_winner_bank_v54` root-cause substrate fix landed and the line is now closed by actual outcome:
+    - [x] canonical target universe stayed `same_day_plus_recent_upto_1d`
+    - [x] `PREJUMP_PREDICTIVE_V1` / `afree_open` remained supplier or control-only sources
+    - [x] upstream pack/root-cause fixes landed before any new ranking logic:
+      - [x] daily pack supports deterministic `maxDecisionDates`
+      - [x] daily pack supports deterministic `maxRowsPerDate`
+      - [x] daily pack supports explicit `excludeDecisionDates`
+      - [x] control-only decision dates were constructed upstream instead of relying on row-capped overlap
+    - [x] substrate fail-fast contract was satisfied in the short probe:
+      - [x] `canonicalPositiveDateCount = 156`
+      - [x] `controlOnlyDateCount = 48`
+      - [x] query-eligible train positives reached `156 dates / 24 months / 4 folds`
+    - [x] runtime staging was real, not hypothetical:
+      - [x] Stage A `trade vs abstain` date-level gate
+      - [x] Stage B positive-date `winner archetype` router
+      - [x] Stage C archetype-local `same-date top1` ranker / rule bank
+    - [x] Stage A passed exactly:
+      - [x] `tradeGatePrecision = 1.0`
+      - [x] `controlLeakCount = 0`
+      - [x] `tradeGateSelectedDateCount = 156`
+      - [x] support remained acceptance-only
+    - [x] Stage B passed diversity:
+      - [x] `winnerArchetypeCount = 2`
+      - [x] `winnerArchetypeDistinctDateSignatureCount = 2`
+    - [x] final blocker moved entirely into Stage C:
+      - [x] `reason = unsat_no_archetype_rule_bank`
+      - [x] `archetypeRuleBankCandidateCount = 2`
+      - [x] `archetypeRuleBankQualifiedCount = 0`
+      - [x] best archetype candidate `A2` failed with `precision = 0.3412698412698413`
+      - [x] best archetype candidate still leaked `crossfitNegativeWindowCount = 6`
+      - [x] `supportLeaveOneOutRecovered = false`
+    - [x] post-v54 hard-stop:
+      - [x] do not retune the v54 pack fix, trade/abstain gate, or archetype router as if Stage A/B were still open blockers
+      - [x] current `same_day_plus_recent_upto_1d` trade-abstain/archetype line is exhausted at archetype-local top1 purity
+      - [x] any next attempt must redefine the target universe again instead of reworking v54 internals
+  - [x] `v55 perfect_proto_daily_trade_slate_mechanism_bank_v55` mechanism-bank reset landed and the line is now closed by actual outcome:
+    - [x] canonical prediction object moved to `decision-date slate`
+    - [x] canonical label stayed `ABSTAIN` or `WINNER(slot)`
+    - [x] `same_day_plus_recent_upto_1d`, `PREJUMP_PREDICTIVE_V1`, and `afree_open` were kept as supplier/control-only inputs
+    - [x] the new date-centered target universe was materialized as `daily_trade_slate_v1`
+    - [x] support case `076610 / 2026-03-18` remained acceptance-only and fit-excluded
+    - [x] the new OHLCV mechanism-bank families landed:
+      - [x] `sig.pathGeom.*`
+      - [x] `sig.sponsor.*`
+      - [x] `sig.stateTrans.*`
+      - [x] `sig.phaseDiv.*`
+      - [x] `sig.slateJoint.*`
+      - [x] `sig.liqPath.*`
+    - [x] feature-bank sidecars were used instead of family-specific cloned packs
+    - [x] base daily substrate stayed immutable and raw OHLCV scans remained single-pass
+    - [x] the corrected short probe was breadth-valid:
+      - [x] train pack reached `48 decision dates / 24 months / 4 folds / 5551 rows`
+      - [x] `canonicalPositiveDateCount = 156`
+      - [x] `controlOnlyDateCount = 48`
+      - [x] `queryEligiblePositiveSummary = 1799 rows / 156 dates / 24 months / 4 folds`
+      - [x] `queryEligibleNegativeSummary = 6183 rows / 58 dates / 24 months / 4 folds`
+    - [x] Stage A `trade vs abstain` gate passed exactly:
+      - [x] `tradeGateQualifiedCandidateCount = 56`
+      - [x] `tradeGatePrecision = 1.0`
+      - [x] `tradeGateControlLeakCount = 0`
+      - [x] `tradeGateSelectedDateCount = 156`
+      - [x] `tradeGateSupportProjectionPositive = true`
+    - [x] Stage B archetype routing passed diversity:
+      - [x] `winnerArchetypeCount = 2`
+      - [x] `winnerArchetypeDistinctDateSignatureCount = 2`
+      - [x] `A1` absorbed `150` dates and `A2` isolated a `6`-date pocket
+    - [x] final blocker moved entirely into the mechanism-local exact rule bank:
+      - [x] `reason = unsat_top1_query_train_breadth`
+      - [x] `mechanismHypothesisQualifiedCount = 0`
+      - [x] `archetypeRuleBankCandidateCount = 6`
+      - [x] `archetypeRuleBankQualifiedCount = 0`
+      - [x] `H1 pathGeom + sponsor` produced `0` top1 candidates
+      - [x] `H2 stateTrans + phaseDiv` produced `0` top1 candidates
+      - [x] best `H3 slateJoint + liqPath / A2` candidate only reached `54 selected / 7 positive / 47 negative / precision 0.12962962962962962`
+      - [x] best `H3/A2` candidate only covered `7 dates / 5 months / 4 folds`
+      - [x] best `H3/A2` candidate still leaked `crossfitNegativeWindowCount = 3`
+      - [x] `supportLeaveOneOutRecovered = false`
+    - [x] post-v55 hard-stop:
+      - [x] do not retune v55 trade gate, archetype router, or the `H1/H2/H3` mechanism-bank families as if substrate were still the blocker
+      - [x] the `daily_trade_slate_v1` OHLCV-only mechanism-bank line is exhausted at archetype-local top1 purity and breadth
+      - [x] do not reopen v44~v54 after v55
+  - [x] `v56 perfect_proto_daily_trade_slate_symbolic_microcard_bank_v56` actual result:
+    - [x] substrate and Stage A still held:
+      - [x] `normalizedTrainRowCount = 5551`
+      - [x] `normalizedControlTrainRowCount = 6144`
+      - [x] `canonicalPositiveDateCount = 156`
+      - [x] `controlOnlyDateCount = 48`
+      - [x] `tradeGatePrecision = 1.0`
+      - [x] `tradeGateControlLeakCount = 0`
+      - [x] `tradeGateSupportProjectionPositive = true`
+    - [x] symbolic token bank did materialize:
+      - [x] `sig.microCard.dayGlyph.*`
+      - [x] `sig.microCard.kgram.*`
+      - [x] `sig.phaseGrammar.transition.*`
+      - [x] `sig.auctionControl.pattern.*`
+      - [x] `sig.sponsorCoupling.pattern.*`
+      - [x] `sig.anchorPath.extrema.*`
+      - [x] `sig.slateSymbolicContrast.*`
+    - [x] witness selector did not fail on breadth:
+      - [x] `witnessQualifiedCount = 293`
+      - [x] `witnessPositiveDateCount = 156`
+      - [x] `witnessNegativeDateCount = 196`
+    - [x] final blocker was earlier than exact bank:
+      - [x] `reason = unsat_symbolic_microcard_router`
+      - [x] `witnessDistinctSignatureCount = 1`
+      - [x] micro-card routing collapsed into a giant dominant card
+      - [x] `microCardCount = 3`
+      - [x] `microCardDistinctDateSignatureCount = 3`
+      - [x] `maxMicroCardShare = 0.8846153846153846` which violated the `<= 0.8` contract
+      - [x] dominant card `MC1` alone covered `138` dates
+      - [x] exact bank stage never became eligible, so no feasible symbolic exact-rule artifact was emitted
+    - [x] interpretation:
+      - [x] the symbolic grammar did not create meaningful witness diversity; it mostly reproduced the same weak witness signature
+      - [x] daily-OHLCV-only recovery is exhausted before exact-bank mining, at witness-to-micro-card diversity collapse
+    - [x] post-v56 hard-stop:
+      - [x] do not retune symbolic thresholds, token counts, or `microcard-max-share` on the same daily-OHLCV-only substrate
+      - [x] do not reopen scalar winner-bank variants after v56
+      - [x] treat the daily-OHLCV-only line as closed unless the target or data universe changes materially
+  - [x] `v57 perfect_proto_daily_trade_slate_sequence_shapelet_witness_bank_v57` actual result:
+    - [x] the breadth-valid `daily_trade_slate_v1` substrate and Stage A contract held again:
+      - [x] `normalizedTrainRowCount = 5551`
+      - [x] `normalizedControlTrainRowCount = 6144`
+      - [x] `canonicalPositiveDateCount = 156`
+      - [x] `controlOnlyDateCount = 48`
+      - [x] `tradeGatePrecision = 1.0`
+      - [x] `tradeGateControlLeakCount = 0`
+      - [x] `tradeGateSupportProjectionPositive = true`
+    - [x] multiscale sequence-shapelet families landed successfully:
+      - [x] `sig.seqShapelet.price5.*`
+      - [x] `sig.seqShapelet.price10.*`
+      - [x] `sig.seqShapelet.price20.*`
+      - [x] `sig.seqShapelet.range10.*`
+      - [x] `sig.seqShapelet.range20.*`
+      - [x] `sig.seqShapelet.body10.*`
+      - [x] `sig.seqShapelet.volume10.*`
+      - [x] `sig.seqShapelet.volume20.*`
+      - [x] `sig.seqShapelet.combo.*`
+      - [x] `sequenceShapeletRowCount = 15441`
+      - [x] `sequenceShapeletMissingRowCount = 0`
+    - [x] bag-level witness selection repaired diversity:
+      - [x] `witnessQualifiedCount = 293`
+      - [x] `witnessPositiveDateCount = 156`
+      - [x] `witnessNegativeDateCount = 196`
+      - [x] `witnessDistinctSignatureCount = 293`
+    - [x] prototype routing also passed the diversity guards:
+      - [x] `prototypeCount = 5`
+      - [x] `prototypeDistinctDateSignatureCount = 5`
+      - [x] `maxPrototypeShare = 0.03205128205128205`
+      - [x] router used `combo + price10` prototype axes
+      - [x] `prototypeWitnessSummary = 41 rows / 22 dates / 15 months / 4 folds`
+    - [x] final blocker moved entirely into the prototype-local exact bank:
+      - [x] `reason = unsat_top1_query_train_breadth`
+      - [x] `shapeletHypothesisCount = 3`
+      - [x] `shapeletHypothesisQualifiedCount = 0`
+      - [x] `shapeletRuleBankCandidateCount = 142`
+      - [x] `qualifiedRuleCount = 0`
+      - [x] best candidate was `H2 / PC5`
+      - [x] best candidate only reached `2 selected / 2 positive / 0 negative / precision 1.0`
+      - [x] best candidate only covered `2 dates / 2 months / 2 folds`
+      - [x] best candidate still had `supportLeaveOneOutRecovered = false`
+      - [x] best candidate produced `openOosSelectedRowCount = 0`
+    - [x] interpretation:
+      - [x] `v57` fixed the `v56` diversity-collapse failure mode
+      - [x] the new failure mode is the opposite: prototype cards are now too fine-grained, so exact rules stay clean only in tiny pockets and never reach `10/6/4`
+      - [x] daily-OHLCV-only exact-one-pick recovery is now exhausted after breadth-valid substrate, solved trade gate, solved witness diversity, and solved prototype diversity
+    - [x] post-v57 hard-stop:
+      - [x] do not reopen `v55`, `v56`, or `v57` on the same daily-OHLCV-only substrate
+      - [x] do not retune prototype axes, token bins, or prototype-max-share as if Stage B/C were still open blockers
+      - [x] any next attempt must change the data universe or downgrade the objective away from daily exact-one-pick `100%`
+  - [x] `v58 perfect_proto_support_like_surge_episode_bank_v58` actual result:
+    - [x] run ids:
+      - [x] `perfect_proto_support_like_surge_episode_bank_v58`
+      - [x] `perfect_proto_support_like_surge_episode_bank_v58_probe200k_20260329`
+    - [x] final artifact:
+      - [x] [no_support_support_like_surge_episode_bank_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_support_like_surge_episode_bank_v58_probe200k_20260329/step-perfect-prototype-support-like-surge-episode-bank/no_support_support_like_surge_episode_bank_summary.json)
+    - [x] breadth-valid detector substrate held:
+      - [x] `supportFitExcluded = true`
+      - [x] `canonicalPositiveDateCount = 156`
+      - [x] `controlOnlyDateCount = 48`
+      - [x] `queryEligiblePositiveSummary = 1799 rows / 156 dates / 24 months / 4 folds`
+      - [x] `queryEligibleNegativeSummary = 6183 rows / 58 dates / 24 months / 4 folds`
+    - [x] Stage A stayed solved:
+      - [x] `tradeGatePrecision = 1.0`
+      - [x] `tradeGateControlLeakCount = 0`
+      - [x] `tradeGateSelectedDateCount = 156`
+      - [x] `tradeGateSupportProjectionPositive = true`
+    - [x] detector episode dataset and negative bank both formed:
+      - [x] `detectorPositiveSummary = 293 rows / 156 dates / 24 months / 4 folds`
+      - [x] `detectorSameDateNegativeSummary = 291 rows / 148 dates / 24 months / 4 folds`
+      - [x] `detectorHardNegativeSummary = 58 rows / 58 dates / 24 months / 4 folds`
+      - [x] `detectorNegativeSummary = 349 rows / 206 dates / 24 months / 4 folds`
+    - [x] final blocker moved earlier than the detector bank:
+      - [x] `reason = unsat_support_like_archetype_router`
+      - [x] `supportLikeArchetypeCount = 3`
+      - [x] `supportLikeDistinctDateSignatureCount = 3`
+      - [x] `supportLikeMaxArchetypeShare = 0.9358974358974359`
+      - [x] `supportLikeArchetypeAxes = ["combo"]`
+      - [x] giant-archetype collapse happened before `support_like_exact_detector_bank` could run
+      - [x] dominant `SA1` consumed `146 / 156` positive dates under `sig.seqShapelet.combo.f3__f3__f3`
+    - [x] interpretation:
+      - [x] switching from exact one-pick to detector supervision did not rescue the daily-OHLCV-only line
+      - [x] the sequence-shapelet representation still collapses to a single dominant support-like combo archetype once winner identity is removed
+      - [x] daily-OHLCV-only `support-like surge detector` is now exhausted after breadth-valid substrate, solved trade gate, and breadth-valid detector dataset
+    - [x] post-v58 hard-stop:
+      - [x] do not reopen `v55~v58` on the same daily-OHLCV-only substrate
+      - [x] do not retune `combo` bins, archetype counts, or max-share guards as if the line were still recoverable by router tuning
+      - [x] any next attempt must add a new data axis or downgrade the objective away from daily-OHLCV-only exact support-like detection
+- [ ] Family scorecards expose operating-like metrics:
+  - [ ] raw
+  - [ ] close28
+  - [ ] deduped
+  - [ ] final-selected proxy
+  - [ ] recent-only report rejects catalogs whose rule families are outside `mid_close_continuation` / allowed `LOW` subtype families
+  - [ ] recent-only report emits `recent_low_bundle_candidate.json`
+- [ ] Rejection summaries expose family-specific LOW diagnostics:
+  - [ ] `belowMinHitCountByFamily`
+  - [ ] `noNegativeSeparationProgressCountByFamily`
+  - [ ] `boundPruneCountByFamily`
+  - [ ] `scopeBudgetStopCountByFamily`
+  - [ ] `finalSurvivorCountByFamily`
+  - [ ] `rootScopeBudgetPlanByFamily`
+- [ ] Freeze diagnostics expose family-specific LOW failure reasons:
+  - [ ] `freezeRejectCountByFamily`
+  - [ ] `freezeRejectReasonByFamily`
+- [ ] Apply/report metrics expose canonical line-level OOS hit metrics:
+  - [ ] `lineLevelHitCount`
+  - [ ] `lineLevelHitRate`
+  - [ ] `close28SelectedRows`
+  - [ ] `close28HitRows`
+- [ ] Mis-registered recent-only `v6` OOS metrics are corrected append-only in the experiment registry (`21 selected / 8 hits`, not `0`).
+- [ ] `priority=3` shadow lines are visible in live-priority summary/report/state artifacts.
+- [x] live-priority writes durable `latest_activity.json` progress alongside `latest_success.json` for long-running stack/shadow runs.
+- [x] daily-ops success runs fail fast if live/daily `latest_success.json` persistence is missing, and end-to-end smoke covers the state contract.
+- [ ] A-free operating benchmark vs exact-only benchmark are documented separately.
+- [ ] Full-live replay remains the promotion gate:
+  - [ ] `076610 / 2026-03-18` 해성옵틱스 should gain support from a new recent-only MID/LOW shadow family
+  - [ ] `331920 / 2026-03-23` 셀레믹스 must remain covered by existing TOP operating lines
+- [ ] Recent 20~40 trading-day shadow replay must show no pick explosion before promotion.
+
+## Phase 0: Policy / Runtime Alignment
+
+- [x] `scoreRecalibration.eraSupportReasonPolicies` runtime parser preserves all configured fields.
+- [x] `LOW_SUPPORT_COUNT` relief routing uses raw era-support reason, not post-relief reason.
+- [x] Rerank / micro-correction recompute margin and calibrated signals after top-order changes.
+- [x] `backbone_plus_target_delta` compares full utility, not delta-only.
+- [x] Agreement rerank selects the best `TRADE` candidate inside the swap pool, not the first one encountered.
+
+## Phase 1: Step-B -> C0 Data Contract
+
+- [x] C0 requires the new Step-B features:
+  - [x] `shape.failedBreakoutCount20`
+  - [x] `gap.fillThenContinueScore`
+  - [x] `gap.fillThenRevertScore`
+  - [x] `execution.feasibilityScore`
+- [x] C0 fails fast on stale Step-B artifacts instead of silently treating missing features as `0`.
+- [x] C0 summary exposes feature schema validation status.
+
+## Phase 2: Preserve C0 Intent Through Step C
+
+- [x] C0 `eraCoverageRatio` uses applied era count, aligned with effective-era / entropy metrics.
+- [x] C0 membership exports family status needed by downstream fallback logic.
+- [x] Step C fallback only backfills from C0 diversity-safe families.
+- [x] Prototype era rebalance never reintroduces templates that were already filtered out.
+- [x] Positive local prototypes retain `c0FamilyId`, `c0Shortlisted`, and `c0FamilySupport`.
+
+## Phase 3: Canary Validation
+
+- [x] Server `npm run verify`
+- [x] 3-family canary rerun:
+  - [x] `F008` guard
+  - [x] `F123` agreement
+  - [x] `F175` deep-fail
+- [x] Compare:
+  - [x] `pickedDaysEval`
+  - [x] `targetHitRateEval`
+  - [x] `selectionHitAt1Eval`
+  - [x] primary gate reason
+  - [x] recommended strategy
+
+## Phase 4A: F123 Agreement Warmup Patch
+
+- [x] Agreement learned-view inference respects `minSamplesForInference` / label floors before contributing votes.
+- [x] `LEARNED_WARMUP` agreement scoring falls back to heuristic ranking instead of prior-only learned logits.
+- [x] Server `npm run verify`
+- [x] F123 canary rerun on latest canary base
+- [x] Result captured:
+  - [x] 3-family canary unchanged (`F008` 20%, `F123` 0%, `F175` 0%)
+  - [x] F123 eval agreement blocked-hit day was `1`, and that day still had primary gate `DAY_TYPE_MODEL_NO_TRADE`
+
+## Phase 4B: Efficient F123 Single-Family Replay
+
+- [x] `step-c1` accepts `--source-run-id` / `--source-run-dir` and reads source `step-c0` directly without copying base artifacts into the new run.
+- [x] `step-c1` accepts `--family-id` / `--family-ids` overrides and fails fast when requested families are missing from the source `step-c0` index.
+- [x] Family probe scratch reuses source Step-B / C0 paths for Step C and closes cached Step-D worker pools before returning.
+- [x] Server `npm run verify`
+- [x] F123 single-family replay on latest canary base:
+  - [x] source run `c3_canary_phase02_fix_20260311_112500`
+  - [x] replay run `c3_canary_phase4b_f123replay2_20260311_154127`
+  - [x] only `step-c1/probes/F123` was generated and the parent `step-c1` process exited cleanly
+  - [x] result unchanged (`pickedDaysEval` `37`, `targetHitRateEval` `0`, `selectionHitAt1Eval` `0.07407407407407407`, primary gate `AGREEMENT_CONSENSUS_LOW`)
+
+## Phase 4C: F123 Score-Recovery Experiments
+
+- [x] `scoreRecovery.maxScoreMarginShortfall=0.022` shadow replay (`c3_canary_phase4b_scoremargin_20260311_155309`) increased diagnostics only:
+  - [x] F123 `scoreRecoveryEligibleRateEval` `0.018518518518518517 -> 0.2037037037037037`
+  - [x] F123 final result stayed blocked (`pickedDaysEval` `37`, `targetHitRateEval` `0`, primary gate `AGREEMENT_CONSENSUS_LOW`)
+- [x] `scoreRecovery.mode=hard` replay (`c3_canary_phase4b_scorehard_20260311_155727`) was not kept:
+  - [x] F123 improved to `pickedDaysEval` `48`, `targetHitRateEval` `0.041666666666666664`
+  - [x] F008 regressed from `targetHitRateEval` `0.2` to `0.09090909090909091`
+- [x] pathology-gated `scoreRecovery.mode=hard` replay (`c3_canary_phase4b_scorehard_pathgated_20260311_160606`) was also not kept:
+  - [x] F123 improved only to `targetHitRateEval` `0.02127659574468085`
+  - [x] F008 still regressed to `targetHitRateEval` `0.1111111111111111`
+  - [x] retained config reverts to shadow `scoreRecovery` with `maxScoreMarginShortfall=0.002`
+
+## Phase 5: Family Preflight System
+
+- [x] Add a reusable family dossier extractor:
+  - [x] `tools/family_probe_dossier.mjs`
+- [x] Add a fixed preflight workflow:
+  - [x] `docs/family_preflight_workflow.md`
+- [x] Add a reusable hypothesis-card template:
+  - [x] `docs/templates/family_hypothesis_card.md`
+- [x] Materialize the first dossier:
+  - [x] `docs/family_dossiers/F123.md`
+- [x] Materialize the first active hypothesis card:
+  - [x] `docs/family_hypotheses/F123_precision_card_01.md`
+
+## Phase 5B: F123 Preflight Narrowing
+
+- [x] Extend the dossier extractor with agreement-counterfactual evidence:
+  - [x] alt agreement-trade / hit days by rank
+  - [x] strict rerank fallback viability after dropping the blocked top1
+  - [x] surface-degeneracy counts for quality / anti / temporal fields
+- [x] Capture the new F123 conclusion in the dossier:
+  - [x] strict rerank-only path is not the main lever
+  - [x] agreement fallback has visible upside (`fallbackPassDaysIfDropBlockedTop1Eval = 34`, `fallbackHitDaysIfDropBlockedTop1Eval = 7`)
+- [x] Close the first hypothesis card:
+  - [x] `docs/family_hypotheses/F123_precision_card_01.md` -> `discarded`
+- [x] Open the next active hypothesis card:
+  - [x] `docs/family_hypotheses/F123_agreement_fallback_card_02.md`
+
+## Phase 6: F123 Agreement Fallback Keeper
+
+- [x] Add agreement fallback selection in Step D:
+  - [x] initial version added the fallback path
+  - [x] follow-up fix changed the anchor from `selectedRow` to the blocked top1 so `SCORE_MARGIN_LOW` days could also be recovered
+- [x] Server `npm run verify`
+- [x] F123 keep-trace replay:
+  - [x] run `c3_canary_phase6_f123agfallback_keeptrace3_20260311_181500`
+  - [x] `targetHitRateEval` improved from `0` to `0.05405405405405406`
+  - [x] `executedTargetHitRateEval` improved from `0` to `0.10526315789473684`
+  - [x] `selectionPolicy.mode = AGREEMENT_FALLBACK` appeared on `38` days
+  - [x] `pickedDaysEval` stayed at `37`
+  - [x] `selectionHitAt1Eval` stayed at `0.07407407407407407`
+- [x] Sentinel replay:
+  - [x] run `c3_canary_phase6_agfallback_sentinels_20260311_181900`
+  - [x] `F008` stayed at `targetHitRateEval = 0.2`, primary gate `DAY_TYPE_MODEL_NO_TRADE`
+  - [x] `F175` stayed at `targetHitRateEval = 0`, primary gate `SCORE_BELOW_MIN`
+- [x] Residual follow-up logged:
+  - [x] per-day trace fields still need a cleanup pass so fallback swaps are explicit outside `selectionPolicy.mode`
+
+## Phase 6B: Agreement Fallback Trace Cleanup
+
+- [x] Export flat fallback trace fields into D1 / D2 audit rows:
+  - [x] `agreementFallbackApplied`
+  - [x] `agreementFallbackReason`
+  - [x] `agreementFallbackChosenRank`
+  - [x] `agreementFallbackBlockedRank`
+  - [x] `agreementFallbackBlockedSymbol`
+  - [x] `agreementFallbackSelectionChanged`
+- [x] Add fallback summary counters to Step D:
+  - [x] `agreementFallbackDaysEval`
+  - [x] `agreementFallbackHitRateEval`
+  - [x] `agreementFallbackExecutedHitRateEval`
+  - [x] nested `agreementFallbackSelection`
+- [x] Server `npm run verify`
+- [x] F123 trace-fix replay:
+  - [x] run `c3_canary_phase6_f123agfallback_tracefix_20260311_182900`
+  - [x] behavior unchanged from keeper replay (`targetHitRateEval = 0.05405405405405406`, `executedTargetHitRateEval = 0.10526315789473684`)
+  - [x] top-level `agreementFallbackApplied=true` exported on `38` days
+  - [x] Step D summary exported `agreementFallbackDaysEval = 16`, `agreementFallbackHitRateEval = 0.125`
+
+## Phase 6C: 3-Family Canary Revalidation
+
+- [x] Server 3-family replay on the patched keeper:
+  - [x] run `c3_canary_phase6_agfallback_triplet_20260311_183800`
+  - [x] source run `c3_canary_phase02_fix_20260311_112500`
+- [x] F123 lift held in the wider replay:
+  - [x] `pickedDaysEval = 37`
+  - [x] `targetHitRateEval = 0.05405405405405406`
+  - [x] `executedTargetHitRateEval = 0.10526315789473684`
+  - [x] `selectionHitAt1Eval = 0.07407407407407407`
+  - [x] primary gate still `AGREEMENT_CONSENSUS_LOW`
+- [x] Sentinels stayed at baseline behavior:
+  - [x] `F008 targetHitRateEval = 0.2`, primary gate `DAY_TYPE_MODEL_NO_TRADE`
+  - [x] `F175 targetHitRateEval = 0`, primary gate `SCORE_BELOW_MIN`
+
+## Phase 7: F123 Shadow-Reject Precision Guard
+
+- [x] Add a narrow shadow-reject precision guard under `decisionGate.agreementGate`:
+  - [x] enable only for `AGREEMENT_CONSENSUS_LOW`
+  - [x] apply only when `selectionPolicy.mode = EXPLOIT`
+  - [x] apply only when agreement fallback did not find a passing alternative
+- [x] Export flat trace for the new guard:
+  - [x] `agreementShadowRejectBlocked`
+  - [x] `agreementShadowRejectReason`
+  - [x] `agreementShadowRejectAgreementReason`
+  - [x] `agreementShadowRejectSelectionMode`
+- [x] Server `npm run verify`
+- [x] F123 single-family replay:
+  - [x] run `c3_canary_phase7_f123_shadowblock_20260311_182811`
+  - [x] `pickedDaysEval` dropped from `37` to `28`
+  - [x] `targetHitRateEval` improved from `0.05405405405405406` to `0.17857142857142858`
+  - [x] `executedTargetHitRateEval` improved from `0.10526315789473684` to `0.2`
+  - [x] primary gate moved to `AGREEMENT_FALLBACK_PASS`
+  - [x] reject reason moved to `LOW_SELECTION_HIT_AT_1_EVAL`
+- [x] 3-family replay:
+  - [x] run `c3_canary_phase7_shadowblock_triplet_20260311_182811`
+  - [x] `F123` kept the same lift
+  - [x] `F008 targetHitRateEval = 0.2` unchanged
+  - [x] `F175 targetHitRateEval = 0` unchanged
+
+## Phase 7B: F123 Selection Metric Resolution
+
+- [x] Export an agreement-fallback-aware selection metric from Step D:
+  - [x] `selectionHitAt1AgreementFallbackAwareEval`
+  - [x] overlap accounting for fallback-hit days that were already raw top1-hit days
+- [x] Resolve C1 selection metric narrowly for agreement-fallback families:
+  - [x] keep raw `selectionHitAt1Eval`
+  - [x] allow `selectionHitAt1ResolvedEval` to use the fallback-aware metric only for `AGREEMENT_FALLBACK_PASS`
+  - [x] expose `selectionHitAt1MetricSourceEval`
+- [x] Server `npm run verify`
+- [x] F123 single-family replay:
+  - [x] run `c3_canary_phase7b_f123_selmetric_20260311_184432`
+  - [x] `selectionHitAt1ResolvedEval = 0.16666666666666666`
+  - [x] `selectionHitAt1MetricSourceEval = AGREEMENT_FALLBACK_AWARE`
+  - [x] `rejectReason = PASS`
+  - [x] `passed = true`
+- [x] 3-family replay:
+  - [x] run `c3_canary_phase7b_selmetric_triplet_20260311_184432`
+  - [x] `F123` stayed `passed = true`
+  - [x] `F008` stayed rejected on `LOW_SELECTION_HIT_AT_1_EVAL`
+  - [x] `F175` stayed rejected on `LOW_TARGET_HIT_RATE_EVAL`
+
+## Phase 7C: C2 Downstream Alignment
+
+- [x] Make C2 representative scoring use resolved selection metric when available:
+  - [x] `selectionHitAt1ResolvedEval` preferred over raw `selectionHitAt1Eval`
+  - [x] tie-breakers use the same resolved metric
+  - [x] group output records `representativeSelectionHitAt1MetricSource`
+- [x] Server `npm run verify`
+- [x] C2 run on Phase 7B triplet:
+  - [x] run `c3_canary_phase7b_selmetric_triplet_20260311_184432`
+  - [x] `representativeFamilyIds = [F123, F008, F175]`
+  - [x] `F123 representativeSelectionHitAt1Eval = 0.16666666666666666`
+  - [x] `F123 representativeSelectionHitAt1MetricSource = AGREEMENT_FALLBACK_AWARE`
+  - [x] `F123 representativeScore = 0.32300000000000006`
+
+## Phase 7D: Downstream Metric Propagation
+
+- [x] Add shared selection-metric resolver for downstream consumers:
+  - [x] `src/lib/selection_metric.mjs`
+  - [x] prefer `selectionHitAt1ResolvedEval` when present
+  - [x] keep raw top1 metric as fallback
+- [x] Align downstream consumers to the same metric semantics:
+  - [x] `src/pipeline/cd_loop.mjs`
+  - [x] `src/pipeline/step_c_pattern_mine.mjs`
+  - [x] `src/pipeline/step_e_lockbox_backtest.mjs`
+  - [x] `src/report/generate_report.mjs`
+  - [x] `tools/family_probe_dossier.mjs`
+- [x] Make dossier tool degrade gracefully when replay runs do not retain `step_d_summary.json`
+- [x] Server `npm run verify`
+- [x] Server dossier validation:
+  - [x] run `c3_canary_phase7b_selmetric_triplet_20260311_184432`
+  - [x] run `c3_canary_phase7b_f123_selmetric_20260311_184432`
+  - [x] `selectionHitAt1Eval = 0.16666666666666666`
+  - [x] `selectionHitAt1RawEval = 0.07407407407407407`
+  - [x] `selectionHitAt1MetricSourceEval = AGREEMENT_FALLBACK_AWARE`
+  - [x] dossier fallback reports `stepDSummary=no, d1=no`
+
+## Phase 8: F008 Narrow Score-Recovery Keeper
+
+- [x] Broad day-type escape was tested and rejected:
+  - [x] `c3_canary_phase8_f008_edgeescape_20260311_114000` regressed `targetHitRateEval` from `0.2` to `0.14285714285714285`
+  - [x] `c3_canary_phase8b_f008_edgeescape_tight_20260311_114500` returned to baseline `targetHitRateEval = 0.2`
+- [x] Add path-guarded `scoreRecovery` support for narrow F008 near-miss recovery:
+  - [x] allow guard fields for rule day type, final day type, policy source, and max slippage risk
+  - [x] keep the branch restricted to `SCORE_MARGIN_LOW`
+- [x] Wire `dayTypeDecision` into D1 score-recovery evaluation:
+  - [x] `runD1Top1Ranker` accepts `dayTypeDecision`
+  - [x] Step D passes the live `dayTypeDecision` into D1
+- [x] Materialize F008 dossier and keeper card:
+  - [x] `docs/family_dossiers/F008.md`
+  - [x] `docs/family_hypotheses/F008_score_recovery_card_01.md`
+- [x] Server `npm run verify`
+- [x] F008 single-family replay:
+  - [x] run `c3_canary_phase8c_f008_scorerecovery_fix_20260311_115700`
+  - [x] `pickedDaysEval` improved from `5` to `6`
+  - [x] `targetHitRateEval` improved from `0.2` to `0.3333333333333333`
+  - [x] `executedTargetHitRateEval` stayed at `0.2`
+  - [x] `scoreRecoveryEligibleRateEval = 0.018518518518518517`
+  - [x] `scoreRecoveryWouldHitRateEval = 1`
+- [x] Wider triplet replay:
+  - [x] run `c3_canary_phase8c_triplet_20260311_115900`
+  - [x] `F008 targetHitRateEval = 0.3333333333333333`
+  - [x] `F123 passed = true`
+  - [x] `F175 targetHitRateEval = 0`
+
+## Phase 9: Dual-Stage Family Pool + Prototype Contribution Ledger
+
+- [x] Add a dual-stage family pool manifest as a reusable common asset:
+  - [x] `src/lib/family_pool.mjs`
+  - [x] classify `PRODUCTION | WATCHLIST | REJECTED`
+  - [x] require `D targetHitRateEval >= 0.5`
+  - [x] require `E familyHitRateLockbox >= 0.5`
+  - [x] require `minDPickedDays`, `minELockboxPicks`, era coverage, entropy floors
+  - [x] require C2 representative status when `requireRepresentativeFamily = true`
+  - [x] export `productionReady` and `minProductionFamilies`
+- [x] Add Step E family lockbox rollup for dual-stage gating:
+  - [x] `src/pipeline/step_e_lockbox_backtest.mjs`
+  - [x] export `familyHitRateLockbox`
+  - [x] export `familyExecutedHitRateLockbox`
+  - [x] export `familyPickCountLockbox`
+  - [x] export `familyStopRateLockbox`
+  - [x] attach `familyLockboxRollup` to Step E summary and `eGate.familySelection`
+- [x] Add prototype contribution ledger as a reusable common asset:
+  - [x] `src/lib/prototype_ledger.mjs`
+  - [x] export lifecycle `CORE | WATCH | PENALTY | QUARANTINE | RETIRED`
+  - [x] persist direct hit/miss, family pass/representative/production, agreement, negative evidence, coverage, confidence
+- [x] Build and persist family pool + prototype ledger in `cd_loop`:
+  - [x] `src/pipeline/cd_loop.mjs`
+  - [x] write `family_pool.json` summary into final `cd-loop` summary
+  - [x] write `prototype_contribution_ledger.json` summary into final `cd-loop` summary
+- [x] Make Step C consume production-family-only pool and prototype ledger:
+  - [x] `src/pipeline/step_c_pattern_mine.mjs`
+  - [x] production family IDs are the only production library source
+  - [x] remove automatic `C2` fallback when production family count is below floor
+  - [x] fail explicitly when production pool is empty instead of mixing production and shadow
+  - [x] adaptive frontier consumes ledger biases for `CORE`, `WATCHLIST`, `PENALTY`, `QUARANTINE`, `RETIRED`
+  - [x] export `familyPool` and `prototypeLedger` metadata into Step C runtime/library summary
+  - [x] add `minNegativePrototypeFloor` guard to protect negative-evidence diversity
+- [x] Propagate prototype-quality priors into C0/C1/C2:
+  - [x] `src/pipeline/step_c0_family_mine.mjs`
+  - [x] `src/pipeline/step_c1_family_probe.mjs`
+  - [x] `src/pipeline/step_c2_family_dedup.mjs`
+  - [x] C0 scores prototype quality/core share/penalty/quarantine without silently turning missing ledger rows into fake zero-quality rows
+  - [x] C1 score weights for prototype quality/core share/penalty/quarantine are configurable, not hardcoded
+  - [x] C2 representative rows retain propagated `retired share`, `ledger confidence`, `matched count`, and `coverage`
+- [x] Fix concrete integration issues found during patch audit:
+  - [x] `filterTemplatesByC1PassList` no longer references undefined `backfillFamilyIds`
+  - [x] `filterTemplatesByC1PassList` now exports family ID arrays, not raw `Set` objects
+- [x] Server `npm run verify`
+  - [x] command: `ssh spicy-moltbook 'cd /home/moltook/apps/stockdesk-lab-lite && npm run verify'`
+  - [x] result: `pass`
+  - [x] doctor runId: `20260311_130054`
+- [x] Server smoke validation for the new common assets:
+  - [x] `family_pool.mjs` smoke on `c3_canary_phase7b_selmetric_triplet_20260311_184432`
+  - [x] summary showed `productionReady = false`, `productionFamilyCount = 0`, `watchlistFamilyCount = 3`
+  - [x] `F123` classified as `WATCHLIST` with `reason = E_FAMILY_METRICS_MISSING`
+  - [x] `prototype_ledger.mjs` smoke on `c1_smoke_20260310_023320/.../r01`
+  - [x] ledger summary produced `prototypeCount = 5`, `watchCount = 5`
+
+## Phase 10: Full-Family D/E Baseline Bootstrap
+
+- [x] Re-evaluate the baseline source choice before any 400+ family D/E run:
+  - [x] `c0_only_20260310_033000` was rejected as the production baseline source
+  - [x] reason: all shared family IDs changed signatures against the newer 455-family C0 (`same = 0`, `changed = 452`)
+  - [x] reason: shortlist composition diverged almost completely from the current 455-family shortlist
+- [x] Confirm the current 455-family universe to use for baseline:
+  - [x] `c3_canary_phase02_fix_20260311_112500` and `c25_era_diversity_rewire_20260311_095243` have identical 455-family definitions
+  - [x] selected source for full-family baseline: `c25_era_diversity_rewire_20260311_095243`
+- [x] Add full-family baseline support utilities:
+  - [x] `tools/merge_c1_shards.mjs`
+  - [x] merge multiple C1 shard runs into one merged `step-c1`
+  - [x] optionally mark all merged families as `backfillFamilyIds` for baseline-wide downstream evaluation
+  - [x] copy source `step-a/step-b/step-c0` into the merged run
+  - [x] `tools/run_de_family_baseline.mjs`
+  - [x] run `Step C -> Step D -> Step E` from an already merged C1 run
+  - [x] disable strict family-pool gating for bootstrap
+  - [x] disable C2 for the full-family baseline path
+- [x] Add runtime C0 family override support in `src/pipeline/step_c_pattern_mine.mjs`:
+  - [x] Step C can now consume `runtime.allowedC0FamilyIds`
+  - [x] when forced family IDs are present, Step C no longer collapses to the nominal C0 shortlist first
+- [x] Restart full-family baseline on the latest 455-family source:
+  - [x] old 452-family shard runs were stopped
+  - [x] new shard runs were started on `c25_era_diversity_rewire_20260311_095243`
+  - [x] shard split: `152 / 152 / 151`
+  - [x] run IDs:
+    - [x] `de455_baseline_20260311_231446_b01`
+    - [x] `de455_baseline_20260311_231446_b02`
+    - [x] `de455_baseline_20260311_231446_b03`
+- [x] Server `npm run verify`
+  - [x] command: `ssh spicy-moltbook 'cd /home/moltook/apps/stockdesk-lab-lite && npm run verify'`
+  - [x] result: `pass`
+  - [x] doctor runId: `20260311_142949`
+
+## Phase 11: Full-Family Zero-Template Root Cause / Probe Hardening
+
+- [x] Stop treating the first `de455` shard output as a valid baseline:
+  - [x] `171` D-complete families included `149` zero-pick rows
+  - [x] `148` of those were `NO_TEMPLATES_AFTER_NORMALIZATION`, not genuine D miss families
+- [x] Confirm the live root cause from server artifacts:
+  - [x] successful scratch `F008` showed `c0EffectiveSource = C0_SHORTLIST` instead of `RUNTIME_FORCED_FAMILY_IDS`
+  - [x] live server `src/pipeline/step_c_pattern_mine.mjs` was missing the probe-time `runtime.allowedC0FamilyIds` handling in `filterTemplatesByC0Shortlist`
+  - [x] consequence: non-shortlisted families were zeroed before the forced C1 family filter
+- [x] Harden Step C probe diagnostics before resuming 455-family baseline:
+  - [x] write a partial `step_c_summary.json` on zero-template failure
+  - [x] expose per-stage funnel counts:
+    - [x] `rawTemplates`
+    - [x] `templatesBeforeC0`
+    - [x] `templatesAfterC0Filter`
+    - [x] `templatesAfterC1Filter`
+    - [x] `templatesAfterC2Filter`
+    - [x] `templatesAfterFamilyPoolFilter`
+  - [x] expose failure metadata:
+    - [x] `failure.reason`
+    - [x] `failure.stage`
+    - [x] probe/runtime family IDs and filter effective sources
+- [x] Extend C1 family probe result rows with Step C funnel debug fields
+- [x] Server `npm run verify`
+  - [x] command: `ssh spicy-moltbook 'cd /home/moltook/apps/stockdesk-lab-lite && npm run verify'`
+  - [x] result: `pass`
+  - [x] doctor runId: `20260311_153137`
+- [x] 6-family smoke on the latest 455-family source:
+  - [x] run ID: `de455_zero_template_smoke6_20260312_000001`
+  - [x] failure reps: `F001`, `F004`
+  - [x] controls: `F124`, `F175`
+  - [x] zero-pick controls: `F042`, `F117`
+  - [x] `NO_TEMPLATES_AFTER_NORMALIZATION` count dropped from `2/2` failure reps to `0/2`
+  - [x] all 6 families wrote Step C summaries with `c0EffectiveSource = RUNTIME_FORCED_FAMILY_IDS`
+  - [x] `F001` recovered to `pickedDaysEval = 4`, `targetHitRateEval = 0.25`
+  - [x] `F124` kept `targetHitRateEval = 0.2`
+- [x] 20-family smoke gate was superseded by direct rerun bootstrap:
+  - [x] reason: the failure was a deterministic server-code parity miss (`filterTemplatesByC0Shortlist` lacked `runtime.allowedC0FamilyIds`)
+  - [x] the 6-family smoke already covered zero-template reps, keeper/control families, and zero-pick controls
+- [x] restart the full 455-family D/E baseline on the fixed server code:
+  - [x] run IDs:
+    - [x] `de455_baseline_fix11_20260312_002200_b01`
+    - [x] `de455_baseline_fix11_20260312_002200_b02`
+    - [x] `de455_baseline_fix11_20260312_002200_b03`
+  - [x] shard split kept the 455-family universe at `152 / 152 / 151`
+  - [x] first probe in each shard (`F001`, `F153`, `F305`) wrote Step C summaries with:
+    - [x] `c0EffectiveSource = RUNTIME_FORCED_FAMILY_IDS`
+    - [x] `c1EffectiveSource = RUNTIME_FORCED_FAMILY_IDS`
+    - [x] no zero-template failure metadata
+- [x] isolate `F315` for one-off `Step E` validation without touching the live 455-family rerun:
+  - [x] dedicated run ID: `f315_stepde_isolated_20260312_013321`
+  - [x] standalone `step-c1` completed with `targetHitRateEval = 0.4166666666666667`, `executedTargetHitRateEval = 0.36363636363636365`, `pickedDaysEval = 12`
+  - [x] first isolated `run_de_family_baseline` attempt failed because the server repo was missing `tools/run_de_family_baseline.mjs`
+  - [x] second isolated `run_de_family_baseline` attempt hit a real config bug:
+    - [x] `pattern.prototypeSelection.minNegativePrototypeFloor = 0` was coerced back to `12`
+    - [x] root cause: `resolvePrototypeSelectionConfig()` treated `0` as falsy in `src/pipeline/step_c_pattern_mine.mjs`
+  - [x] next isolated `run_de_family_baseline` attempt reached `Step E` and exposed a real replay bug:
+    - [x] `src/pipeline/step_e_lockbox_backtest.mjs` referenced `baselineD1Row` / `baselineD2Row` that were not defined in the active scope
+    - [x] fix: use the already synthesized local rows `d1BaselineRow` / `d2BaselineRow`
+  - [x] the following isolated `Step E` attempt exposed another real replay bug:
+    - [x] `src/pipeline/step_e_lockbox_backtest.mjs` referenced `library` without loading `pattern_library.json`
+    - [x] fix: mirror `Step D` parity loading and read both `pattern_library.json` and `pattern_library_runtime.json`
+  - [ ] F315 top-level D/E starvation fix:
+    - [x] root cause confirmed: top-level `run_de_family_baseline` used `runtime.allowedC0FamilyIds` without `familyProbeMode`, but `filterTemplatesByC1Families()` still forced `maxFamilyRepresentatives >= 1`
+    - [x] fix: apply the representative cap only when `familyProbeMode === true` and metadata explicitly provides a positive cap
+    - [x] add Step C telemetry for representative-cap application and pre/post-cap template counts
+    - [x] rerun isolated `f315_stepde_isolated_20260312_013321` and confirm the cap regression is gone:
+      - [x] top-level `templatesAfterC1Filter = 84`
+      - [x] `c1RepresentativeCapApplied = false`
+    - [ ] split family-probe D/E evaluation from production-style top-level D/E:
+      - [ ] confirmed remaining blocker is not the top-level D gate
+      - [ ] top-level `Step C` still applies production strict quality / contrastive / prototype-consistency rules and collapses F315 to `prototypes = 0`
+      - [ ] evidence from isolated rerun:
+        - [ ] `prototypeSelectionEnabled = true`
+        - [ ] `keptByConsistency = 0`, `prunedByConsistency = 48`
+        - [ ] dominant pruned reasons include `clusterSupport`, `qualityTrades`, `contrastiveSamples`, and temporal diversity checks
+  - [ ] next patch direction: add a true family-probe `Step E` path that reuses probe-mode `Step C/D` artifacts instead of rebuilding a production-style top-level library
+
+## Phase 12: Probe Step E / Dual-Track Family Evaluation
+
+- [x] Add a true probe-mode `Step E` path to `src/pipeline/step_c1_family_probe.mjs`
+  - [x] keep current probe semantics (`runStepC -> runStepD`) and append optional `runStepE()`
+  - [x] reuse the family scratch `step-c/step-d` artifacts directly
+  - [x] do not rebuild a production-style top-level library inside probe-E
+- [x] Extend C1 family-probe result rows with lockbox fields
+  - [x] `stepELockboxStatus`
+  - [x] `stepESummaryPath`
+  - [x] `familyHitRateLockbox`
+  - [x] `familyExecutedHitRateLockbox`
+  - [x] `familyPickCountLockbox`
+  - [x] `familyStopRateLockbox`
+  - [x] `familyTimeoutNegativeRateLockbox`
+  - [x] `familyProbeDEParityStatus`
+  - [x] `familyProbeDEParityReason`
+- [x] Add `pattern.c1.lockboxEval` config surface
+  - [x] `enabled`
+  - [x] `persistArtifacts`
+  - [x] `minPickFloor`
+  - [x] `maxConcurrentFamilies`
+  - [x] default stays disabled so the live `de455_baseline_fix11_*` rerun is unaffected
+- [x] Restore probe-E lockbox prep/runtime parity in `src/pipeline/step_d_online_loop.mjs`
+  - [x] allow `stepDPrepareLockboxDuringStepDOverride = true` to survive the `C1_FAMILY_PROBE` fast profile
+  - [x] keep `policyStateObject` in runtime artifacts even when writebacks are disabled so probe-E can reuse the in-memory D artifacts
+- [x] Extend `step-c1` summary/index with probe-E aggregate counts
+  - [x] `probeELockboxEnabled`
+  - [x] `probeECompletedFamilyCount`
+  - [x] `probeENonzeroPickFamilyCount`
+  - [x] `probeEPositiveHitFamilyCount`
+- [x] Verify server parity after the probe-E patch
+  - [x] command: `ssh spicy-moltbook 'cd /home/moltook/apps/stockdesk-lab-lite && npm run verify'`
+  - [x] result: `pass`
+  - [x] doctor runId: `20260311_172948`
+- [ ] Run probe-E sentinel validation without disturbing the live 455 rerun
+  - [x] launch isolated sentinel run `probee_sentinel4_fix12_20260312_021500` with `pattern.c1.lockboxEval.enabled = true`
+  - [ ] `F315`
+  - [ ] `F008`
+  - [ ] `F123`
+  - [ ] `F175`
+- [x] Promote the evaluation model into a strict dual-track split
+  - [x] `Probe D/E` remains the family-signal evaluation path
+  - [x] `Top-level D/E` remains the production-library evaluation path
+  - [x] do not relax production strict Step C semantics in this phase
+- [ ] After full 455 probe-D finishes, select the first probe-E subset
+  - [ ] `D >= 30%` families first
+  - [ ] add `20%~30%` families with large pick counts or better executed quality
+  - [ ] always include sentinel/control families
+- [ ] Only if the subset probe-E looks healthy, run one full 455 probe-E sweep
+- [ ] Only after probe D/E working cohorts are identified, run top-level production D/E as the second-stage promotion screen
+
+## Phase 13: Cluster-First Bundle Search / D_U-D_V-E Promotion
+
+- [x] Lock the Phase 13 design boundary
+  - [x] `family = search container`
+  - [x] `prototype/cluster = ingredient`
+  - [x] `bundle = promotion unit`
+  - [x] keep `cluster-first bundle search` as the immediate path
+  - [x] explicitly defer `true multi-prototype quorum` to a later phase
+- [x] Add `pattern.c1.bundleEval` config surface
+  - [x] `enabled`
+  - [x] `minPickFloorDWeak`
+  - [x] `minPickFloorEWeak`
+  - [x] `minPickFloorDStrong`
+  - [x] `minPickFloorEStrong`
+  - [x] `defaultAbstainWhenNoConsensus`
+  - [x] `maxConcurrentBundles`
+  - [x] default stays disabled so the live `de455_baseline_fix11_*` run is unaffected
+- [x] Extend `step-c1` summary/index metadata with bundle-eval surface
+  - [x] `bundleEvalEnabled` in disabled summary/index
+  - [x] `bundleEvalEnabled` in normal summary/index
+- [x] Add reusable bundle role helper
+  - [x] new helper: `src/lib/bundle_role_classifier.mjs`
+  - [x] normalize bundle spec
+  - [x] classify bundle role
+  - [x] classify sample tier
+  - [x] evaluate bundle status
+  - [x] compute veto score
+- [x] Add a reusable prototype/cluster leaderboard builder
+  - [x] new tool: `tools/build_prototype_bundle_leaderboard.mjs`
+  - [x] read probe-D audit and optional probe-E audit/trades
+  - [x] split D metrics into `U` and `V`
+  - [x] aggregate `prototype` rows
+  - [x] aggregate `cluster` rows
+  - [x] write `step-c1/prototype_bundle_leaderboard.json`
+  - [x] support shard-aware aggregation for live runs like `..._b01/_b02/_b03`
+- [x] Add a reusable veto library artifact
+  - [x] emit `step-c/step_c_veto_library.json`
+  - [x] store stop/timeout-heavy prototype rows
+  - [x] store stop/timeout-heavy cluster rows
+- [x] Define the 1st-pass bundle spec format
+  - [x] `bundleId`, `familyId`
+  - [x] `coreClusterIds`, `corePrototypeIds`
+  - [x] `supportClusterIds`, `supportPrototypeIds`
+  - [x] `vetoClusterIds`, `vetoPrototypeIds`
+  - [x] `allowedDayTypes`, `allowedRegimeTags`
+  - [x] `minMargin`
+  - [x] `abstainWhenNoConsensus`
+  - [x] `designSource=U`, `validationSource=V`, `confirmationSource=E`
+  - [x] do not implement strong `minCoreQuorum` in Phase 13
+- [x] Add a cluster-first bundle probe runner
+  - [x] new tool: `tools/run_bundle_probe.mjs`
+  - [x] reuse family probe scratch artifacts
+  - [x] re-filter candidate rows by prototype/cluster whitelist/blacklist
+  - [x] apply cluster-first `core/support/veto/day-type/regime/abstain` rules
+  - [x] compute `D_U`, `D_V`, and `E` bundle metrics
+  - [x] write `step-c1/bundle_leaderboard.json`
+  - [x] keep top-level strict path untouched
+- [x] Add a subset candidate selector for bundle probe-E staging
+  - [x] new tool: `tools/select_bundle_subset.mjs`
+  - [x] select families by `D_V` strength / near-miss / sentinel inclusion
+  - [x] keep family selection on `D_V` while keeping cluster design hints sorted by `D_U`
+  - [x] write `step-c1/bundle_subset_candidates.json`
+- [ ] Run cluster-first bundle smoke
+  - [x] `F003`
+    - [x] core clusters: `C032`, `C034`
+    - [x] support cluster: `C002`
+    - [x] veto clusters: `C060`, `C064`
+    - [x] result: `REJECTED / HIGH_STOP_RATE_E`
+  - [x] `F315`
+    - [x] confirm the D-only false-positive pattern at bundle level
+    - [x] result: `REJECTED / LOW_RATE_E`
+  - [x] `F008`
+    - [x] sentinel/control smoke
+    - [x] result: `REJECTED / LOW_RATE_DV`
+  - [x] `F123`
+    - [x] sentinel/control smoke
+    - [x] result: `REJECTED / LOW_RATE_DV`
+- [ ] Enforce Phase 13 design discipline
+  - [ ] design bundle candidates from `D_U` only
+  - [ ] validate in `D_V`
+  - [ ] confirm in `E`
+  - [ ] do not use `E` to design bundles
+- [ ] Stage the first subset probe-E candidate cohort
+  - [x] build/update the live `prototype_bundle_leaderboard.json`
+  - [x] emit `bundle_subset_candidates.json`
+  - [x] expose available / missing sentinel family ids in the subset summary
+  - [ ] keep sentinel families in the subset even when they do not satisfy the primary `D_V` threshold
+- [ ] Apply the promotion rules
+  - [ ] weak gate:
+    - [ ] `rateD_V >= 0.30`
+    - [ ] `rateE >= 0.30`
+    - [ ] `pickD_V >= 6`
+    - [ ] `pickE >= 6`
+  - [ ] strong gate:
+    - [ ] `rateD_V >= 0.50`
+    - [ ] `rateE >= 0.50`
+    - [ ] `pickD_V >= 10`
+    - [ ] `pickE >= 10`
+  - [ ] only strong-pass bundles become `PROMOTED`
+- [x] Explicitly defer true quorum
+  - [x] do not implement `minCoreQuorum >= 2` in Phase 13
+  - [x] do not implement weighted support quorum in Phase 13
+  - [x] do not implement veto quorum in Phase 13
+  - [x] only open the true-quorum phase after support metadata exists:
+    - [x] supporting prototype ids per candidate
+    - [x] supporting cluster ids per candidate
+    - [x] support counts
+    - [x] support score distribution
+
+## Phase 14: Perfect Prototype Catalog / 3D+8% 100% Search
+
+- [x] Lock the Phase 14 objective boundary
+  - [x] build a new `perfect prototype catalog` path instead of extending Phase 13 bundle promotion
+  - [x] define success by `eventOutcome.hitTarget === true`
+  - [x] keep the trade contract fixed at `NEXT_DAY_OPEN`, `holdDays = 3`, `targetPct = 0.08`
+  - [x] mine on the usable Step-B window only: `2020-11-27 ~ 2024-12-31`
+  - [x] reserve `2025-01-01 ~ 2026-02-19` for fixed-catalog out-of-sample replay only
+  - [x] treat `maxGapTradingDays <= 40` as the practical `at least once every two months` rule
+  - [x] keep research catalog rules and runtime day/symbol output dedupe as separate concerns
+- [x] Lock the Phase 14 leakage boundary
+  - [x] use Step-B `templates_lite.jsonl` as the mining source
+  - [x] use `featureVec`, `globalFeatureVec`, `seq40q`, `seq150q` as the v1 mining surface
+  - [x] use Step-D feature pack `featureVec`, `globalFeatureVec`, `seq40`, `seq150` as the v1 runtime surface
+  - [x] explicitly forbid `eventDate`, `templateId`, `entryIdx`, `exitIdx`, and post-outcome fields as rule tokens
+  - [x] explicitly defer Step-B-only `eventMeta.jumpPct` / gap-specific enrichments from v1 runtime gating
+- [x] Add shared perfect-prototype tokenizer / rule primitives
+  - [x] new helper: `src/lib/perfect_prototype_tokenizer.mjs`
+  - [x] new helper: `src/lib/perfect_prototype_rule.mjs`
+  - [x] normalize Step-B rows and Step-D feature pack rows into the same rule language
+  - [x] support deterministic token bins for `feature`, `globalFeature`, and quantized sequence signatures
+- [x] Add reusable perfect-prototype mining / catalog helpers
+  - [x] new helper: `src/lib/perfect_prototype_miner.mjs`
+  - [x] new helper: `src/lib/perfect_prototype_catalog.mjs`
+  - [x] new helper: `src/lib/perfect_prototype_dedupe.mjs`
+  - [x] mine rules with `positive-first + zero-negative` search
+  - [x] keep only `precision = 1.0` rules
+  - [x] enforce `matched negative = 0`
+  - [x] enforce `maxGapTradingDays <= 40`
+  - [x] enforce configurable `minHitCount`
+  - [x] dedupe near-identical rules before catalog promotion
+- [x] Add perfect-prototype offline tools
+  - [x] new tool: `tools/mine_perfect_prototypes.mjs`
+  - [x] new tool: `tools/apply_perfect_prototypes.mjs`
+  - [x] new tool: `tools/report_perfect_prototypes_oos.mjs`
+  - [x] emit `step-perfect-prototype/catalog.json`
+  - [x] emit `step-perfect-prototype/champion_rules.json`
+  - [x] emit `step-perfect-prototype/matches.jsonl`
+  - [x] emit `step-perfect-prototype/coverage_report.json`
+  - [x] emit `step-perfect-prototype/summary.json`
+- [x] Add Step-D perfect-prototype gate config
+  - [x] add `decisionGate.perfectPrototypeGate.enabled`
+  - [x] add `decisionGate.perfectPrototypeGate.mode = off|annotate|hard`
+  - [x] add `decisionGate.perfectPrototypeGate.catalogPath`
+  - [x] add `decisionGate.perfectPrototypeGate.selectionMode = champion_only|union_all`
+  - [x] add `decisionGate.perfectPrototypeGate.dedupeSymbolsPerDay`
+  - [x] add `decisionGate.perfectPrototypeGate.maxRulesPerSymbol`
+- [x] Add Step-D annotate mode
+  - [x] load the perfect-prototype catalog before day scoring
+  - [x] attach `matchedPerfectPrototypeIds` to online candidates
+  - [x] attach `matchedPerfectPrototypeIds` to lockbox candidates
+  - [x] write perfect-prototype gate telemetry into `step_d_summary.json`
+  - [x] write perfect-prototype gate telemetry into the Step-D artifact manifest
+- [x] Add Step-D hard gate / dedupe mode
+  - [x] in `hard` mode, reject candidates that match no perfect-prototype rule before ranking
+  - [x] dedupe the final runtime output by `decisionDateKey + symbol`
+  - [x] preserve `matchedRuleIds` internally even when the runtime output is deduped
+  - [x] keep `annotate` mode non-destructive for rollout safety
+- [x] Extend audit coverage
+  - [x] add `matchedPerfectPrototypeIds`
+  - [x] add `matchedPerfectPrototypeCount`
+  - [x] add `perfectPrototypePrimaryRuleId`
+  - [x] add `perfectPrototypeGatePassed`
+  - [x] surface the same fields in both D1 ranked rows and D2 execution audit rows
+- [x] Add strict validation / replay discipline
+  - [x] fail catalog replay when the catalog file is missing in `annotate` or `hard` mode
+  - [x] keep training and OOS replay as separate commands and separate artifacts
+  - [x] do not retune or mutate the catalog during `2025-01-01 ~ 2026-02-19` replay
+  - [x] treat OOS precision breakage as an overfit failure, not as a runtime tuning request
+- [x] Record Phase 14 v1 diagnosis before deeper feature work
+  - [x] strict v1 full pass returned `0` rules
+  - [x] no-gap v1 diagnostic still returned `0` rules
+  - [x] symbol-overfit diagnostic only produced trivial sparse rules when `minHitCount` was lowered
+
+## Phase 15: Perfect Prototype Event-Aware v2 Surface
+
+- [x] Add a shared event-aware pre-open feature helper
+  - [x] new helper: `src/lib/perfect_prototype_event_features.mjs`
+  - [x] derive a consistent `eventMeta` shape from Step-D event-day candles
+  - [x] derive a shared `eventFeatureVec` from `jumpPct`, `jumpPctFromPrevClose`, `jumpPctFromOpen`, `closeRetPct`, `gapOpenPct`
+  - [x] derive reusable categorical event tags from the same pre-open event features
+- [x] Extend the mining/runtime rule language to include event-aware v2 features
+  - [x] add `event.` numeric prefixes to the tokenizer surface
+  - [x] add event categorical tag tokens to the tokenizer output
+  - [x] keep Step-B fallback support by deriving `eventFeatureVec` from legacy `eventMeta` when fresh v2 fields are absent
+  - [x] expose `--surface=v1|v2_event_aware` on `tools/mine_perfect_prototypes.mjs`
+- [x] Persist event-aware v2 features across Step-B and Step-D artifacts
+  - [x] write `eventFeatureVec` into Step-B full/lite/runtime-pack outputs
+  - [x] write `eventFeatureVec` into Step-D `decision_candidates_feature_pack.jsonl`
+  - [x] stamp Step-D feature-pack meta with the event-aware surface id
+  - [x] bump the Step-D lockbox feature-pack cache fingerprint to avoid stale v1 cache reuse
+- [x] Add miner rejection diagnostics so zero-rule runs are explainable
+  - [x] track seed/search/gap/negative rejection counters in `src/lib/perfect_prototype_miner.mjs`
+  - [x] emit `step-perfect-prototype/rejected_rules.jsonl`
+  - [x] emit rejection diagnostics into `step-perfect-prototype/summary.json`
+- [x] Run strict v2 mining diagnostics on the server
+  - [x] run `tools/mine_perfect_prototypes.mjs --surface=v2_event_aware` on the 2024 train window
+  - [x] compare against the prior v1 zero-rule baseline
+  - [x] strict v2 still returned `0` rules
+  - [x] no-gap v2 still returned `0` rules
+  - [x] rejection diagnostics show `negativeMatchCount` as the blocker, not `maxGapTradingDays`
+  - [x] decide that single-rule search needs a broader context surface before promotion
+- [ ] Defer broader v2 enrichments until the direct event-aware surface is measured
+  - [x] only add cross-sectional market/day context if strict v2 still returns `0` rules
+  - [ ] only rerun Phase 14 OOS replay after a non-empty strict v2 catalog exists
+
+## Phase 16: Perfect Prototype Contextual v3 Surface / Market-XSec Separation
+
+- [x] Lock the Phase 16 diagnosis boundary
+  - [x] treat `negativeMatchCount`, not `maxGapTradingDays`, as the primary blocker after v2
+  - [x] keep the leakage boundary from Phase 14 unchanged
+  - [x] keep the runtime contract fixed at `NEXT_DAY_OPEN`, `holdDays = 3`, `targetPct = 0.08`
+  - [x] keep the goal of showing only rule-matched symbols when hard-gated
+- [x] Add a shared contextual feature helper
+  - [x] new helper: `src/lib/perfect_prototype_contextual_features.mjs`
+  - [x] derive day-level `marketContextVec`
+  - [x] derive row-level `xsecEventVec`
+  - [x] derive reusable contextual categorical tags
+  - [x] support in-memory context reconstruction from stale v1/v2 artifacts
+- [x] Extend the tokenizer / rule language to `v3_contextual`
+  - [x] add `market.` numeric prefixes
+  - [x] add `xsec.` numeric prefixes
+  - [x] add contextual categorical tags
+  - [x] make `v3_contextual` the default perfect-prototype mining surface
+- [x] Persist contextual v3 features across Step-B and Step-D
+  - [x] write `marketContextVec`, `xsecEventVec`, `contextualTokens` into Step-B full/lite/runtime-pack outputs
+  - [x] write `marketContextVec`, `xsecEventVec`, `contextualTokens` into Step-D feature-pack rows
+  - [x] stamp Step-B summary with the contextual perfect-prototype surface id
+  - [x] bump the Step-D lockbox feature-pack cache fingerprint to avoid stale v2 reuse
+  - [x] stamp Step-D feature-pack meta with `v3_contextual`
+- [x] Upgrade the miner toward negative-separation search
+  - [x] rebuild contextual features in-memory before tokenization
+  - [x] widen the default search budget (`maxRuleSize`, `maxSeedTokens`, `maxSearchStates`)
+  - [x] select seed tokens by precision / separation-ratio / separation-lift union instead of one score only
+  - [x] stop descending branches that make no match change
+  - [x] stop descending branches that fail to reduce negatives
+  - [x] stop descending branches that regress precision
+- [x] Extend offline perfect-prototype tooling for v3
+  - [x] `tools/mine_perfect_prototypes.mjs` defaults to `v3_contextual`
+  - [x] emit `step-perfect-prototype/negative_separation_report.json`
+  - [x] `tools/apply_perfect_prototypes.mjs` reconstructs contextual v3 rows before matching
+  - [x] `tools/report_perfect_prototypes_oos.mjs` reconstructs contextual v3 rows before matching
+- [ ] Server validation / diagnostics
+  - [x] server `npm run verify`
+    - [x] doctor run `20260312_045220`
+  - [x] strict `v3_contextual` mining run on the 2024 train window
+    - [x] run `perfect_proto_v3_strict_20260312_045300`
+    - [x] result: `rules = 0`
+    - [x] result: `exploredStates = 750043`
+    - [x] result: `numericFeatureCount = 112`
+    - [x] result: `gapViolationCount = 386`
+  - [x] no-gap `v3_contextual` mining run on the same train window
+    - [x] run `perfect_proto_v3_nogap_20260312_045900`
+    - [x] result: `rules = 219`
+    - [x] result: `matchedNegativeRows = 0`
+    - [x] result: champion `trainHitCount = 14`, `maxGapTradingDays = 422`
+  - [x] record whether contextual v3 creates a non-empty strict catalog
+    - [x] strict v3 is still empty
+    - [x] no-gap v3 is non-empty, so the contextual surface can now build perfect rules when gap is relaxed
+  - [x] record whether the dominant blocker is still `negativeMatchCount`
+    - [x] v3 fixed the zero-rule/no-gap case
+    - [x] strict v3 still shows very large `negativeMatchCount`, but the final blocker for the target objective is now the `maxGapTradingDays <= 40` requirement
+- [ ] Runtime promotion discipline
+  - [ ] only if strict v3 yields a non-empty catalog, run annotate replay first
+  - [ ] only if annotate replay looks clean, promote the perfect-prototype gate to `hard`
+  - [ ] only after a non-empty strict catalog exists, rerun Phase 14 OOS replay
+
+## Phase 17: Perfect Prototype Full-Universe Daily Pack / Parent Compression
+
+- [x] Lock the Phase 17 diagnosis boundary
+  - [x] treat the v3 `219 no-gap rules` as low-quality `child rules`, not runtime promotion targets
+  - [x] record that the child-rule OOS replay (`2025-01-01 ~ 2026-02-19`) matched only `4` rows and hit only `1`
+  - [x] define the new target as `validated parent rules` on the full symbol-day universe, not more exact child conjunctions
+  - [x] keep the leakage boundary from Phase 14 unchanged
+  - [x] keep the trade contract fixed at `NEXT_DAY_OPEN`, `holdDays = 3`, `targetPct = 0.08`
+- [x] Add a full-universe daily-pack builder
+  - [x] new helper: `src/lib/perfect_prototype_daily_pack.mjs`
+  - [x] new tool: `tools/build_perfect_prototype_daily_pack.mjs`
+  - [x] reuse `buildDecisionCandidateIndex()` for the inclusion gate instead of Step-A event extraction
+  - [x] reuse Step-D-compatible `featureAsOf`, instrument/core/gap filters, and `NEXT_DAY_OPEN` outcome simulation
+  - [x] emit `step-perfect-prototype-daily/daily_pack.jsonl`
+  - [x] emit `step-perfect-prototype-daily/summary.json`
+  - [x] emit `step-perfect-prototype-daily/manifest.json`
+- [x] Add child-rule overlap clustering
+  - [x] new helper: `src/lib/perfect_prototype_rule_overlap.mjs`
+  - [x] evaluate child rules on the search split against full-universe tokenized rows
+  - [x] cluster child rules by positive date-symbol overlap instead of treating every child rule as independent
+  - [x] emit a reusable child-overlap report for downstream parent-rule mining
+- [x] Add parent-rule compression / mining
+  - [x] new helper: `src/lib/perfect_prototype_parent_rule.mjs`
+  - [x] new tool: `tools/mine_perfect_prototype_parents.mjs`
+  - [x] derive parent candidates from cluster token-support ratios instead of exact child-rule tokens only
+  - [x] rank parent rules by validation/search date coverage, gap, hit count, and rule size
+  - [x] stream the daily pack in two passes instead of loading the full JSONL into memory
+  - [x] emit `parent_catalog.json`
+  - [x] emit `validated_parent_catalog.json`
+  - [x] emit `parent_rule_report.json`
+  - [x] emit `parent_cluster_report.json`
+  - [x] emit `parent_summary.json`
+- [x] Add chronological split discipline for parent promotion
+  - [x] search split defaults to `2020-11-27 ~ 2023-12-31`
+  - [x] validation split defaults to `2024-01-01 ~ 2024-12-31`
+  - [x] OOS split defaults to `2025-01-01 ~ 2026-02-19`
+  - [x] require `negative = 0` and `minSearchHits` on search before parent candidacy
+  - [x] require `negative = 0`, `minValidationHits`, and `maxGapTradingDays <= 40` on validation before promotion to `validated`
+- [ ] Runtime promotion discipline for parent catalogs
+  - [ ] forbid child catalogs from direct runtime promotion
+  - [ ] allow only `validated_parent_catalog.json` for annotate/hard runtime gating
+  - [ ] only after a non-empty validated parent catalog exists, run annotate replay
+  - [ ] only after annotate replay looks clean, promote the gate to `hard`
+- [ ] Server validation / diagnostics
+  - [x] server `npm run verify`
+    - [x] doctor run `20260312_053829`
+  - [x] sample daily-pack build on the server
+    - [x] run `perfect_proto_daily_phase17_sample_20260312_053500`
+    - [x] result: `312,955` rows, `47,730` positive rows, `265,225` negative rows, `1,912` symbols
+  - [x] sample parent-miner run on the server
+    - [x] first attempt hit Node heap OOM on full JSONL load
+    - [x] fix: switch `tools/mine_perfect_prototype_parents.mjs` to a 2-pass stream over the daily pack
+    - [x] rerun `perfect_proto_parent_phase17_sample_20260312_054000`
+    - [x] result: `219` child rules -> `41` overlap clusters -> `51` parent rules
+    - [x] result: `validatedParentRuleCount = 0`
+    - [x] result: all `51` parent rules were rejected by negative matches, not by missing date coverage
+
+## Phase 18: Negative-First Parent Search
+
+- [x] Lock the Phase 18 search objective
+  - [x] stop treating token-support overlap as the primary parent-promotion heuristic
+  - [x] fix the ranking order to `validation negative count -> validation max gap -> validation matched dates -> search hit count -> rule size`
+  - [x] keep the leakage boundary unchanged from Phases 14-17
+  - [x] keep the trade contract fixed at `NEXT_DAY_OPEN`, `holdDays = 3`, `targetPct = 0.08`
+- [x] Add a cluster-local negative-first parent-search helper
+  - [x] new helper: `src/lib/perfect_prototype_parent_search.mjs`
+  - [x] search only within each overlap cluster token union
+  - [x] seed from top child rules plus support-ratio parents, but rank by validation-first metrics
+  - [x] add `drop / add / swap` neighbor operators
+  - [x] keep search bounded with `beamSize`, `maxRounds`, and stagnation rounds
+- [x] Upgrade the parent miner to use negative-first search
+  - [x] keep the two-pass streaming evaluation over `daily_pack.jsonl`
+  - [x] remove the old support-ratio-only parent promotion path
+  - [x] evaluate candidates round by round and keep per-cluster frontiers
+  - [x] dedupe equivalent parent rules across clusters by the better validation-first score
+  - [x] emit `cluster_candidate_leaderboard.json`
+  - [x] emit `parent_search_report.json`
+  - [x] emit `parent_search_failures.jsonl`
+- [ ] Runtime promotion discipline
+  - [ ] keep runtime promotion disabled while `validated_parent_catalog.json` is empty
+  - [ ] allow annotate replay only after a non-empty validated parent catalog exists
+  - [ ] allow `hard` gate promotion only after annotate replay looks clean
+- [ ] Server validation / diagnostics
+  - [x] server `npm run verify`
+    - [x] doctor run `20260312_055658`
+  - [x] sample Phase 18 parent-miner rerun
+    - [x] run `perfect_proto_parent_phase18_sample_20260312_060100`
+    - [x] result: `219` child rules -> `41` overlap clusters -> `861` evaluated parent rules
+    - [x] result: `validatedParentRuleCount = 0`
+    - [x] result: failure mix moved to `34 VALIDATION_NEGATIVES`, `5 VALIDATION_GAP`, `2 VALIDATION_HIT_FLOOR`
+    - [x] result: best gap-only candidates reached `validationNegativeCount = 0` but still missed the `maxGapTradingDays <= 40` rule
+  - [ ] if sample `validatedParentRuleCount > 0`, run the full-range rerun
+  - [x] if sample `validatedParentRuleCount = 0`, record the single-rule kill-switch decision
+    - [x] do not run the full-range rerun yet
+    - [x] treat Phase 18 as the decision boundary for `single perfect prototype`
+
+## Phase 19: Step-B D+1 Baseline Hardening
+
+- [x] Re-establish the Step-B D+1 baseline line as a separate legacy-only reference path
+  - [x] keep predictive primary catalogs and runtime artifacts separate
+  - [x] require explicit split policy on the server wrapper
+  - [x] emit frozen-catalog hash and rule-id hash into the baseline manifest
+  - [x] emit train reapply / OOS leaderboard / risk guardrail outputs
+- [x] Contract hardening before long baseline runs
+  - [x] make Step-B runtime semantics read from one explicit baseline contract source
+  - [x] persist row-level `entryRule`, `holdDays`, `targetPct`, `stopLossPct`, `featureAsOf`, `exactCollectionMode`
+  - [x] fail fast on invalid legacy baseline contract settings instead of silently reusing generic config
+- [x] Boundary provenance hardening
+  - [x] fail fast on reversed or overlapping train/OOS windows
+  - [x] separate strict-boundary drops from missing-outcome-key drops
+  - [x] carry train/OOS boundary filter summaries into `baseline_manifest.json`
+- [x] Leaderboard semantic cleanup
+  - [x] compute coverage from nested `eventOutcome.hitTarget`
+  - [x] split per-rule train and OOS unique date/symbol counts
+  - [x] remove train fallback from OOS support fields
+  - [x] rename misleading per-rule raw match columns or compute true deduped counts
+  - [x] propagate `selectionMode` consistently across report/apply/leaderboard artifacts
+- [x] Exactness-claim hardening
+  - [x] extend drift comparison with `maxGapTradingDays`, first/last hit date, and matched-date count
+  - [x] require zero catalog fallback before claiming exact train reapply parity
+- [x] Context recompute hardening
+  - [x] legacy reapply/apply must drop stale incoming `contextualTokens` and use recomputed tokens only
+- [x] Speed follow-up only after the above are closed
+  - [x] align the Step-B D+1 wrapper with the historical no-gap benchmark by passing `maxGapTradingDays=100000`
+  - [x] benchmark whether the baseline still reaches the old ~3k-rule cadence on the server
+    - `perfect_proto_stepb_dplus1_speed_sanity_20260319_013000` hit `4000` exact rules on `20000140` explored states in `1266.8s` with `89781` Step-B rows
+  - [x] no immediate `perfect_proto_stepb_legacy_adaptive_intersection_fastpath_v1` patch is needed for cadence recovery
+- [x] Final baseline interpretation hardening before long-running Step-B train/OOS runs
+  - [x] make the baseline config self-contained:
+    - explicit `featureAsOf = t-1`
+    - explicit `exactCollectionMode = train_precision_1_only`
+    - fail fast instead of composing missing baseline fields from generic defaults
+  - [x] lock `stepb_dplus1_baseline` to historical `no-gap` semantics:
+    - require `maxGapTradingDays = 100000`
+    - fail fast instead of silently reusing the same line id with a different gap
+  - [x] enforce `selectionMode` integrity across:
+    - train report
+    - OOS report
+    - raw apply
+    - `close28` apply
+    - final leaderboard manifest
+  - [x] add symmetric boundary provenance:
+    - `strict_label_boundary` keeps explicit drop summaries
+    - `decision_date_only` now emits an explicit “boundary filtering intentionally skipped” summary
+  - [x] remove ambiguous leaderboard aliases and clarify coverage semantics:
+    - no unlabeled train/OOS mixed `uniqueMatchedDates`
+    - no unlabeled train/OOS mixed `uniqueMatchedSymbols`
+    - coverage-rate fields now state that they are deduped-positive coverage
+  - [x] add a tiny wrapper end-to-end smoke:
+    - Step-A -> Step-B config rewrite / boundary provenance helper path -> leaderboard-manifest contract coverage
+  - [x] keep Phase 5 expression backport, Phase 6 speed patch, and Phase 7 relaxed precision deferred until this interpretation hardening is closed
+- [x] Final Step-B baseline contract closure before the long reference run
+  - [x] remove wrapper/helper drift by making the server wrapper source the shared helper library
+  - [x] make direct Step-B baseline runs fail fast on:
+    - invalid `contractVersion`
+    - invalid `strategyMode`
+    - top-level `template/backtest` values that disagree with the explicit baseline contract
+  - [x] preserve the recovered historical `~3k` cadence while closing the contract gap
+  - [x] only after the above, run `perfect_proto_stepb_dplus1_long_reference_run_v1`
+    - run id: `perfect_proto_stepb_dplus1_long_reference_20260319_142559`
+    - train: `89781` Step-B rows, `4000` exact rules, `20000140` explored states, `trainExactnessDriftRuleCount=0`
+    - OOS: `3412` matched rules, `741` zero-negative rules, `334` hit>=2 zero-negative rules, `116` hit>=3 zero-negative rules
+    - guardrail: `245` unique matched dates, `417` unique matched symbols, `top1DateShare=0.00881`, `top10SymbolShare=0.08664`
+- [x] Public daily fill candle-integrity hardening
+  - [x] root cause was not partial `2026-03-18` ingestion; it was recurring upstream close-only placeholder rows (`open=high=low=0`, `close>0`, `volume=0`) across multiple dates
+  - [x] `tools/fill_public_kr_daily.py` now fails fast on invalid placeholder/impossible OHLC rows instead of silently ingesting them
+  - [x] fill abort now writes an explicit audit under `artifacts/data_quality/` before exiting
+  - [x] verify now includes a synthetic smoke for invalid candle detection + audit output
+- [x] Historical invalid candle audit/scrub tooling
+  - [x] add explicit historical audit command for `data/candle_daily.jsonl`
+  - [x] add explicit scrub command that removes invalid candle rows and matching universe rows only when `--apply` is given
+  - [x] require backup creation before any scrub rewrite
+  - [x] include a deterministic smoke for audit + dry-run + apply flow
+  - [x] surface `ABORT` / `FATAL` lines in `tools/monitor_fill_latest.sh`
+  - [x] apply historical scrub on server and confirm post-scrub audit is clean
+    - scrub result: `2588` candle rows removed, `2131` matching universe rows removed
+    - post-scrub audit: `0` invalid rows, `0` invalid symbols
+  - [x] rerun Step-B D+1 long reference after scrub
+    - run id: `perfect_proto_stepb_dplus1_long_reference_post_scrub_20260319_ko`
+    - train: `89768` Step-B rows, `4000` exact rules, `trainExactnessDriftRuleCount=0`
+    - OOS: `3402` matched rules, `768` zero-negative rules, `351` hit>=2 zero-negative rules, `127` hit>=3 zero-negative rules
+    - delta vs pre-scrub long reference: `trainStepBRows=-13`, `oosMatchedRules=-10`, `oosZeroNegativeRules=+27`, `oosHit2ZeroNegativeRules=+17`, `oosHit3ZeroNegativeRules=+11`
+- [x] Step-B `v3_contextual_plus_lite` expression comparison at fixed budget
+  - [x] keep the clean no-gap baseline line intact and compare only at fixed budget first:
+    - baseline: `v3_contextual`, `maxRules=10000`, `maxSearchStates=20000000`
+    - plus-lite: `v3_contextual_plus_lite`, `maxRules=10000`, `maxSearchStates=20000000`
+    - do not open the later `30000 / 120000000` budget sweep until this fixed-budget expression comparison is implemented and read
+  - [x] add exactly these 15 expression features to the new legacy surface only:
+    - `pattern.insideBarCount3`
+    - `pattern.nr4`
+    - `pattern.nr7`
+    - `pattern.closeClusterTightness3`
+    - `pattern.closeClusterTightness5`
+    - `shape.sidewaysScore3`
+    - `shape.sidewaysScore5`
+    - `shape.sidewaysScore10`
+    - `volume.lowVolumeCount3`
+    - `volume.lowVolumeCount5`
+    - `volume.volumeVsRecentPeak`
+    - `level.closeNearHigh20`
+    - `level.closeNearHigh60`
+    - `level.touchRecentHighCount10`
+    - `level.rejectionFromRecentHighCount10`
+  - [x] do not pull `anchor.*`, `chain.*`, or `score.*` into this first legacy expression surface
+  - [x] if the new surface is used, regenerate Step-B from the existing Step-A events before mining
+  - [x] compare:
+    - train exact rule count
+    - OOS matched rules
+    - OOS zero-negative rules
+    - OOS hit>=2 zero-negative rules
+    - OOS hit>=3 zero-negative rules
+    - unique matched dates / symbols
+    - top1/top5 date share
+    - top10 symbol share
+    - runtime / explored states
+  - [x] comparison result:
+    - baseline: `perfect_proto_stepb_dplus1_budget10k_20m_20260319`
+      - `5000` exact rules, `20000065` explored states
+      - OOS: `4192` matched rules, `996` zero-negative rules, `429` hit>=2 zero-negative rules, `150` hit>=3 zero-negative rules
+      - coverage: `246` unique matched dates, `430` unique matched symbols, `top1DateShare=0.00849`, `top5DateShare=0.04243`, `top10SymbolShare=0.08487`
+      - `close28`: `499` matched rows, `3591` matched rules, `921` zero-negative rules
+    - plus-lite: `perfect_proto_stepb_dplus1_plus_lite_budget10k_20m_heap8g_rerun_20260319`
+      - `5000` exact rules, `20000221` explored states
+      - OOS: `4274` matched rules, `999` zero-negative rules, `435` hit>=2 zero-negative rules, `175` hit>=3 zero-negative rules
+      - coverage: `241` unique matched dates, `367` unique matched symbols, `top1DateShare=0.01176`, `top5DateShare=0.05378`, `top10SymbolShare=0.09244`
+      - `close28`: `395` matched rows, `3580` matched rules, `1017` zero-negative rules
+    - reading:
+      - plus-lite improved stronger exact survivorship (`hit>=3`, `hit>=2`, and `close28` zero-negative rules)
+      - plus-lite reduced surfaced breadth and worsened concentration
+      - plus-lite required explicit `NODE_OPTIONS=--max-old-space-size=8192` during mining
+      - keep `v3_contextual` as the default Step-B baseline; treat plus-lite as an optional alternate line for stricter exact-rule harvesting
+- [x] Apply recommendation close-return lookup order hardening
+  - [x] root cause:
+    - `tools/apply_perfect_prototypes.mjs` assumed `data/candle_daily.jsonl` rows were already chronological per symbol
+    - post-scrub valid rows remained, but that implicit ordering guarantee no longer held
+    - plus-lite `close28` apply then failed with `Missing recommendation-date close return lookup ...`
+  - [x] fix:
+    - build targeted recommendation-date close-return lookups order-independently
+    - add an unsorted-candle smoke to verify the regression never silently returns
+  - [x] result:
+    - rerun `perfect_proto_stepb_dplus1_plus_lite_budget10k_20m_heap8g_rerun_20260319` completed cleanly end-to-end
+- [x] Step-B after-close surface integrity hardening
+  - [x] root cause:
+    - the generic Step-B after-close wrapper defaulted to `config/lab.config.server.lite.json`
+    - a plus-lite frozen catalog could therefore be applied against freshly generated `v3_contextual` Step-B rows without failing
+    - that mismatch makes plus-lite-specific rules disappear and can produce false “no recommendation” reads
+  - [x] fix:
+    - compare frozen `manifest.surface` to generated `step-b/summary.json` before apply
+    - fail fast on any surface or baseline line mismatch
+    - add a dedicated smoke and wire it into `npm run verify`
+  - [x] result:
+    - `2026-03-13` plus-lite after-close with the correct plus-lite config surfaces `123010`
+    - the earlier “plus-lite had no recommendation” read was a wrapper/config mismatch, not a model behavior difference
+- [ ] Step-B plus-lite open-eval line
+  - [ ] fix the line contract explicitly:
+    - discovery remains `Step-A + Step-B + v3_contextual_plus_lite`
+    - evaluation becomes `Step-A`-free open-market train/OOS replay on the same `D+1 open / 3-day / +8% / -4%` semantics
+    - final selection truth is `open-OOS`, not Step-A-conditioned OOS
+    - deploy/live output dedupes by symbol/day and keeps rule support as metadata instead of deleting rules
+  - [ ] make the open-eval pack reuse the same row-construction semantics as Step-B discovery so feature/event/outcome drift cannot accumulate between discovery and evaluation
+  - [ ] add a server-only open-eval wrapper that:
+    - consumes a frozen plus-lite discovery catalog
+    - builds `open-train` and `open-OOS` daily packs without Step-A gating
+    - runs raw apply + `close28` apply on both windows
+    - emits an open-eval leaderboard and guardrail bundle
+  - [ ] keep the counting domains explicit:
+    - `plus-lite discovery count`
+    - `open-train/open-OOS rule-eval count`
+    - `selection leaderboard count`
+    - `deploy symbol-deduped count`
+    must never be interpreted as the same metric
+  - [ ] final deploy output must dedupe only the surfaced symbol/day rows:
+    - keep all matched rules as support metadata
+    - recompute `primaryRuleId` from the deploy selection ordering instead of keeping the first pre-merge rule
+    - expose `matchedRuleCount`, `supportingRuleIds`, and selection-quality fields on the deduped row
+  - [ ] keep this line exact-only for now:
+    - do not add `90%+ relaxed precision`
+    - do not reopen predictive path changes
+    - do not add `anchor.*`, `chain.*`, or `score.*`
+- [x] Step-A recent-impulse 1~3d widening for plus-lite discovery
+  - [x] keep the existing `same_day_high8` lane unchanged for the legacy baseline comparison axis
+  - [x] widen only the plus-lite discovery line so `D` is also eligible when `D-1`, `D-2`, or `D-3` had a `HIGH8` impulse
+  - [x] preserve Step-B semantics:
+    - `eventDate = D`
+    - `asOfDate = D-1`
+    - `D+1 open / 3-day / +8% / -4%`
+  - [x] carry explicit discovery provenance:
+    - `stepALaneId`
+    - `impulseSourceDateKey`
+    - `impulseLookbackDays`
+    - `impulseJumpPct`
+    - `impulseJumpPctFromPrevClose`
+    - `impulseJumpPctFromOpen`
+  - [x] enforce this as explicit config, not hidden behavior:
+    - plus-lite config sets `event.recentImpulseDiscovery.enabled=true`
+    - plus-lite config sets `event.recentImpulseDiscovery.lookbackTradingDays=3`
+    - baseline config explicitly keeps `event.recentImpulseDiscovery.enabled=false`
+  - [x] server plus-lite wrapper now fails fast if the plus-lite config does not keep the recent-impulse 3d contract
+  - [x] leaderboard/report manifest now records train/OOS Step-A lane counts and emits `recent_impulse_guardrail_summary.json`
+  - [x] verify includes a dedicated Step-A recent-impulse lane smoke
+- [x] Phase 20: Step-B recent-impulse widened miner memory rescue
+  - [x] keep widened `1~3일` plus-lite discovery enabled; do not shrink back to same-day only for the rescue bundle
+  - [x] use the current widened probe as the canonical before/after benchmark:
+    - train Step-B templates: `171756`
+    - same-day-only train Step-B templates: `89768`
+    - widened `200k / 4GB` probe: `700` exact rules, `200180` explored states, `533.92s`, `4294704 KB`
+    - widened `20M / 4GB` currently OOMs
+  - [x] compact the legacy prepare/mining path without changing exact rule semantics:
+    - reduce prepare-pipeline copies
+    - compact tokenized mining rows to row-meta plus tokens only
+    - compact token postings into typed numeric containers
+    - replace `positiveRowIndexes.join(",")` same-signature keys with hash buckets plus exact equality checks
+    - add an exact-safe intersection fastpath
+  - [x] keep bounded-heap seed selection out of the retained bundle because diversified ranked-list merge needs full ranking depth for exact-equivalent state-limited behavior
+  - [x] keep child-ordering search reordering explicitly deferred until the exact-safe memory rescue bundle is validated
+  - [x] add a legacy miner compaction equivalence smoke and wire it into `npm run verify`
+  - [x] rerun the widened `200k / 4GB` probe after the rescue bundle and recover canonical exactness while improving throughput/memory:
+    - post-fix widened `200k / 4GB` probe: `700` exact rules, `200180` explored states, `504.69s`, `3992324 KB`
+    - delta vs baseline: `-29.23s`, `-302380 KB`
+  - [x] root-cause note:
+    - the temporary `701 / 200083` drift in v2/v3/v4 was caused by the new intersection galloping fastpath skipping the current start index on imbalanced arrays
+    - fixing that start-index bug restored canonical exactness without reverting the retained memory compaction bundle
+- [x] Phase 21: Step-B widened search-cost exact-safe optimization
+  - [x] keep widened `1~3일` plus-lite discovery enabled; do not shrink the discovery lane for this bundle
+  - [x] use the current widened probe as the canonical before/after benchmark:
+    - pre-bundle widened `200k / 4GB` canonical probe: `700` exact rules, `200180` explored states, `504.69s`, `3992324 KB`
+  - [x] reduce search-time object/materialization cost without changing exact rule semantics:
+    - split rule construction into `ruleCore` during search and full rule materialization only after final top-K selection
+    - build a single `calendarDateKey -> index` cache up front and reuse it during search-time gap evaluation
+    - replace repeated `enrichedEntries.slice().sort()` seed rankings with exact-equivalent index-array rankings
+    - add a positive-count fastpath so `minHitCount` failing branches do not allocate full positive intersections
+  - [x] keep the following explicitly out of scope for this bundle:
+    - bounded-heap seed selection
+    - child-ordering search reordering
+    - token-id internalization
+    - DuckDB/bitset miner rewrites
+  - [x] extend exactness smoke coverage to lock the new search-time compaction behavior
+  - [x] rerun the widened `200k / 4GB` probe after the new bundle and confirm:
+    - `700` exact rules preserved
+    - `200180` explored states preserved
+    - post-bundle probe: `495.70s`, `3986780 KB`
+    - delta vs previous canonical probe: `-8.99s`, `-5544 KB`
+  - [x] user-directed stop:
+    - `1M / 4GB` probe was launched but explicitly cancelled by user before completion
+    - local/server processes were terminated and the run is not treated as a completed benchmark
+- [ ] Phase 22: Step-B widened speed50 exact-safe kernel rewrite
+  - [x] rollback decision locked:
+    - the `speed50` runtime hot path is rolled back locally after the canonical widened probe regressed performance
+    - active widened canonical baseline remains `v6`: `700` exact rules, `200180` explored states, `495.70s`, `3986780 KB`
+    - do **not** continue from the token-id / hybrid-rowset runtime path as the active miner line
+    - server reconfirm is now completed:
+      - server `npm run verify` passed after the rollback
+      - widened `200k / 4GB` rollback-confirm probe preserved `700` exact rules and `200180` explored states
+      - rollback-confirm rule-id/payload hashes matched the previous `v6` canonical run exactly
+  - [ ] keep widened `1~3일` plus-lite discovery enabled; do not shrink the discovery lane for this bundle
+  - [ ] use the single canonical widened probe as the only heavy before/after benchmark:
+    - widened `200k / 4GB` canonical probe: `700` exact rules, `200180` explored states, `495.70s`, `3986780 KB`
+    - `1M / 4GB` remains explicitly out of scope for this bundle
+  - [ ] replace string-token search internals with deterministic token-id search internals while preserving emitted token ordering and `ruleId`
+  - [ ] replace pure array rowset search internals with an exact-safe hybrid sparse/dense rowset kernel
+  - [ ] convert recursive search state to mutable stacks/frames so branch-local token and rowset allocations are delayed or avoided
+  - [ ] preserve deterministic final emit:
+    - `ruleId`
+    - `tokens`
+    - `positiveMatchRowIndexes`
+    - `negativeMatchRowIndexes`
+    - `matchedSymbols`
+    - `sampleMatchIds`
+    - `matchRows`
+  - [ ] extend exactness smokes so token-id mode and hybrid rowset mode are both locked against drift
+  - [ ] rerun exactly one widened `200k / 4GB` server probe after the bundle and only accept the bundle if:
+    - `700` exact rules are preserved
+    - `200180` explored states are preserved
+    - `ruleId` set and `matchRows` remain identical
+    - wall time is materially lower, with stretch goal `247s` or below
+    - max RSS is materially lower, targeting at least `25%` reduction
+  - [x] implement the candidate `speed50` kernel bundle once and benchmark it on the single canonical widened probe:
+    - candidate bundle scope:
+      - deterministic token-id internalization
+      - exact-safe hybrid sparse/dense rowset kernel
+      - mutable search-state/token stack
+      - deterministic emit bridge + equivalence smokes
+    - widened `200k / 4GB` probe result:
+      - `700` exact rules preserved
+      - `200180` explored states preserved
+      - `ruleIdsSha256` preserved
+      - `rule payload hash` preserved: `f6fb38dbdc58355f30caacd05928bfad487e3f337caed9c1c9eda5de676cb512`
+      - wall time regressed to `500.35s` (`+4.65s` vs canonical baseline)
+      - max RSS regressed to `4323096 KB` (`+336316 KB` vs canonical baseline)
+    - outcome:
+      - exactness held, but the bundle missed the speed target and is **not** accepted as the new canonical performance baseline
+      - canonical widened benchmark remains `v6`: `495.70s`, `3986780 KB`
+  - [x] runtime rollback follow-up:
+    - remove the `speed50` token-id runtime path from the active legacy miner implementation
+    - keep the failed bundle documented in experiment logs only
+- [x] Phase 23: Step-B widened selection-first exact search mode evaluation
+  - attempted an explicit `selection_first_exact_v1` mode with:
+    - live floor via `searchObjectiveTopK`
+    - warm singleton/pair exact pre-scan
+    - rank-aligned seed and child preview ordering
+  - server canonical mining-only benchmark used one heavy run only:
+    - widened `1~3일`
+    - `200k / 4GB`
+    - compared against an apples-to-apples legacy mining-only rerun
+  - result:
+    - exact rule set was identical to legacy:
+      - `700` exact rules
+      - `200180` explored states
+      - identical `ruleIdsSha256`
+      - identical full rule payload hash
+      - identical top100 hit-quality summary
+    - mining-only performance regressed:
+      - legacy: `88.67s`, `3991956 KB`
+      - selection-first: `93.22s`, `3931124 KB`
+      - speed gate failed because quality was unchanged and elapsed worsened
+  - outcome:
+    - do **not** promote `selection_first_exact_v1`
+    - rollback the mode additions and keep the failed experiment in logs only
+- [x] Phase 24: Step-B exact indexed/native kernel promotion experiment
+  - active widened baseline now defaults to `exact_indexed_kernel_v1`
+  - keep `legacy_exact_catalog_v6` only as an explicit compatibility override
+  - scope:
+    - promote Step-B exact mining rowset/search hot path onto the existing indexed/native exact rowset kernel
+    - do **not** retry token-id wrappers or partial rowset shims on top of the legacy JS array miner
+    - do **not** change widened `1~3일` discovery semantics
+  - heavy validation contract:
+    - one server-only heavy benchmark only
+    - widened `1~3일`
+    - `200k / 4GB`
+    - no `1M`, `5M`, or `20M` probe in this bundle
+  - exactness gate:
+    - `700` exact rules preserved
+    - `200180` explored states preserved
+    - rule-id hash identical
+    - full rule payload hash identical
+    - any drift is an immediate failure
+  - performance gate:
+    - elapsed must be `< 495.70s`
+    - max RSS must be `< 3986780 KB`
+    - stretch target is `>= 30%` elapsed reduction on the same canonical probe
+  - implementation scope:
+    - explicit `--search-mode=exact_indexed_kernel_v1`
+    - token postings bridged to exact rowset objects
+    - DFS/search count/hasAny/materialize moved to rowset API
+    - final rule emit bridged back to the exact legacy output schema
+    - rowset/postings prep cache allowed only as an exact fail-fast cache keyed by source-run/tokenizer contract
+  - result:
+    - server mining-only apples-to-apples benchmark on the widened `1~3일` `200k / 4GB` input preserved exactness:
+      - `700` exact rules
+      - `200180` explored states
+      - identical rule-id hash
+      - identical full rule payload hash
+    - performance vs legacy apples baseline:
+      - legacy: `88.67s`, `3991956 KB`
+      - exact indexed kernel: `75.19s`, `3994760 KB`
+      - delta: `-13.48s` (`-15.2%`) elapsed, `+2804 KB` RSS
+    - decision:
+      - promote `exact_indexed_kernel_v1` to the active widened Step-B exact mining default
+      - keep `legacy_exact_catalog_v6` only as an explicit compatibility override
+      - accept the small `+2804 KB` RSS delta because exactness is byte-for-byte identical and mining-only elapsed improved by `15.2%`
+- [ ] Phase 25: Step-B exact indexed throughput reduction chain
+  - active widened exact mining default remains `exact_indexed_kernel_v1`
+  - do **not** return to legacy JS-array tuning
+  - next optimization chain is fixed:
+    - `perfect_proto_stepb_exact_phase_timing_v1`
+    - `perfect_proto_stepb_exact_postings_cache_v1`
+    - `perfect_proto_stepb_exact_compiled_input_v1`
+    - `perfect_proto_stepb_exact_parallel_frontier_v1`
+  - widened discovery semantics remain fixed:
+    - recent-impulse `1~3일`
+  - heavy benchmark policy for this chain:
+    - server-only
+    - `200k / 4GB` only
+    - no `1M`, `5M`, or `20M` probes until all four bundles finish
+  - hard exactness gate for every bundle:
+    - `700` exact rules preserved
+    - `200180` explored states preserved
+    - identical rule-id hash
+    - identical full rule payload hash
+    - any drift is immediate failure
+  - active indexed mining-only apples baseline:
+    - widened `1~3일`
+    - `200k / 4GB`
+    - `75.19s`
+    - `3994760 KB`
+  - numeric success gates:
+    - `perfect_proto_stepb_exact_phase_timing_v1`
+      - `elapsed <= 75.19s`
+      - `summary.json.phaseTimings` populated
+    - `perfect_proto_stepb_exact_postings_cache_v1`
+      - cold run must not regress materially
+      - warm run `<= 60s`
+    - `perfect_proto_stepb_exact_compiled_input_v1`
+      - cold run `<= 56s`
+    - `perfect_proto_stepb_exact_parallel_frontier_v1`
+      - `200k / 4GB` elapsed `<= 45s`
+  - implementation scope:
+    - exact phase timing in `tools/mine_perfect_prototypes.mjs` + `src/lib/perfect_prototype_miner.mjs`
+    - exact prep cache keyed by input/tokenizer/search contract
+    - compiled Step-B exact index artifact with `--index-dir` mining path
+    - deterministic parallel frontier on compiled input only
+  - explicitly out of scope:
+    - `selection_first_exact_v1` retry
+    - token-id wrapper retry
+    - naive full-bitset
+    - Step-A changes
+    - relaxed precision
+  - Bundle 2 result:
+    - `perfect_proto_stepb_exact_postings_cache_v1`
+      - exactness held on both cold and warm runs:
+        - `700` exact rules
+        - `200180` explored states
+        - identical rule-id hash: `b8721e05bbd68e6c1371d88c95b500d4fdad2cf4f5bbb2b521fef7440088f3a7`
+        - identical payload hash: `dd2e55171f6b085a78274d4bfb82514d5aae0c94032f9d21e52b38599e723037`
+      - cold `200k / 4GB` run failed the throughput gate:
+        - `133.52s`, `5327852 KB`
+        - dominant overhead:
+          - `hashInputSec=14.12s`
+          - `cacheWriteSec=39.87s`
+      - warm `200k / 4GB` run passed strongly:
+        - `29.98s`, `3667572 KB`
+        - `cacheHit=true`
+      - decision:
+        - keep exact prep cache as an experimental helper only
+        - do not treat Bundle 2 as the cold-path promotion
+        - move directly to `perfect_proto_stepb_exact_compiled_input_v1` to remove JSONL/hash/write overhead from the primary path
+  - Bundle 3 result:
+    - `perfect_proto_stepb_exact_compiled_input_v1`
+      - exactness held on the server `200k / 4GB` cold benchmark:
+        - `700` exact rules
+        - `200180` explored states
+        - identical rule-id hash: `b8721e05bbd68e6c1371d88c95b500d4fdad2cf4f5bbb2b521fef7440088f3a7`
+        - identical payload hash: `dd2e55171f6b085a78274d4bfb82514d5aae0c94032f9d21e52b38599e723037`
+      - compiled-input build step:
+        - `97.01s`, `5298772 KB`
+        - this is an explicit one-time index build, not part of the cold mining-only apples gate
+      - compiled-input cold mining-only run:
+        - `10.80s` wall, `10.336s` summary elapsed
+        - `3666824 KB`
+      - comparison vs active direct indexed baseline:
+        - direct indexed baseline: `61.73s`, `3994760 KB`
+        - compiled input cold mining: `10.336s`, `3666824 KB`
+        - delta: `-51.39s` (`-83.3%`) elapsed, `-327936 KB` RSS
+      - decision:
+        - keep compiled input as the primary throughput path for heavy Step-B exact experiments
+        - promote the Step-B plus-lite server wrapper default so heavy train mining now builds a compiled exact index first and then mines via `--index-dir`
+        - preserve `--index-dir` as the fail-fast runtime contract under the promoted wrapper path
+        - proceed to `perfect_proto_stepb_exact_parallel_frontier_v1` on top of the compiled input artifact
+  - Bundle 4 result:
+    - `perfect_proto_stepb_exact_parallel_frontier_v1`
+      - server verify and exact equivalence smokes passed on the compiled input artifact
+      - server `200k / 4GB` heavy benchmark failed the apples gate:
+        - run stopped with `global_budget_exhausted`
+        - wall `37.37s`, `1349088 KB`
+        - no promotable final exact catalog was emitted
+      - root cause:
+        - the parallel budget manager still exhausts the global budget before exact completion because active sibling leases are not reclaimable in the live control plane
+        - failure progress snapshot showed:
+          - `parallelCompletedChunkReclaimSearchStates=101262`
+          - `parallelActiveWaveExploredStates=98304`
+          - total in-flight + reclaimed states `=199566`
+          - remaining nominal search budget `=434`
+          - remaining grantable search budget `=0`
+      - `perfect_proto_stepb_exact_parallel_frontier_initial_lease_fix_v1`
+        - initial lease capping to request-headroom/tranche windows passed local+server verify
+        - but it did not change the heavy benchmark outcome because the unresolved blocker is active-sibling lease reclaim, not launch-time lease size alone
+      - decision:
+        - do not promote `exact_parallel_frontier_v1`
+        - keep compiled-input direct mining as the primary throughput path
+  - A-free open-train discovery follow-up:
+    - `perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_discovery_200k_probe_v1`
+      - `daily_pack.jsonl` open-train pack reuse is valid, but exact discovery failed before mining:
+        - source rows: `1081567`
+        - compiled direct builder OOMed at default heap and again at `4GB`
+      - `perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_index_build_heap8_probe_v1`
+        - direct snapshot builder OOMed again at `6GB`
+      - root cause:
+        - `tools/build_stepb_exact_index.mjs` still reads the whole JSONL and materializes `snapshot.bin`
+        - A-free open-pack is now large enough that direct snapshot build is no longer viable
+      - required fix:
+        - add an explicit streamed Step-B exact indexed builder that writes only indexed artifacts
+        - require explicit `--tokenizer-spec` reuse
+        - mine the resulting A-free artifact with `tools/mine_perfect_prototypes_indexed.mjs`
+        - do not add any hidden fallback from direct compiled build
+    - `perfect_proto_stepb_afree_indexed_zero_state_rootcause_probe_v1`
+      - the streamed A-free exact index itself was healthy:
+        - `rowCount=1081567`
+        - `tokenCount=623`
+      - the zero-rule rerun was caused by `tools/mine_perfect_prototypes_indexed.mjs` parsing omitted optional flags as zero:
+        - empty `--root-end` became `rootSeedEndIndexExclusive=0`
+        - empty `--worker-chunk-index` became `workerChunkIndex=0`
+        - seed selection still produced `623` root seeds, but DFS launched with an empty `0..0` root range
+  - `perfect_proto_stepb_indexed_cli_optional_flag_parse_fix_v1`
+      - fixed direct indexed CLI parsing so blank optional numeric flags stay `null` instead of coercing to `0`
+      - local and server `npm run verify` both passed after the fix
+      - rerun result:
+        - `53` exact rules
+        - `200000` explored states
+        - `allocated_budget_exhausted`
+        - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+      - interpretation:
+        - A-free discovery is no longer blocked by zero-state startup
+        - next decision is whether to raise A-free search budget beyond `200k`, not whether the A-free index contract is valid
+  - A-free states/sec optimization contract:
+    - `perfect_proto_stepb_afree_states_per_sec_contract_v1`
+      - target path is the reusable A-free exact indexed artifact, not legacy JSONL mining
+      - heavy benchmark gate stays server-only `200k / 4GB`
+      - exactness drift is a hard failure:
+        - `53` exact rules
+        - `200000` explored states
+        - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+      - baseline wall/RSS for the canonical A-free `200k` probe:
+        - `105.16s`
+        - `1362276 KB`
+      - hotspot breakdown from the canonical A-free `200k` probe:
+        - `candidateDescriptorBuildMs=26193`
+        - `rowsetIntersectionMs=10463.194`
+        - `memoLookupMs=7917.739`
+        - `orderingHeadRerankMs=2967`
+        - `negativeCountResolutionMs=2373`
+      - operating conclusion:
+        - do not revisit token-id wrappers or naive full-bitset patches on this line
+        - primary states/sec work must reduce JS-side candidate generation, head rerank churn, and repeated seed posting access
+      - bundle order:
+        - `perfect_proto_stepb_afree_seed_posting_pin_v1`
+        - `perfect_proto_stepb_afree_streaming_candidate_head_v1`
+        - follow-up bundles may revisit native batch scoring / row-projected candidate generation only after the direct A-free `200k` exactness gate remains locked
+  - `perfect_proto_stepb_afree_seed_posting_pin_v1`
+      - direct A-free Step-B exact indexed mining now pins the full selected seed posting universe:
+        - `seedPostingCacheEntryLimit=623`
+      - exactness remained locked on the reusable A-free `200k / 4GB` gate:
+        - `53` exact rules
+        - `200000` explored states
+        - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+      - timed rerun result after the seed-pinning + streaming-candidate-head partial bundle:
+        - `97.99s`
+        - `1331668 KB`
+      - hotspot deltas vs the prior A-free baseline:
+        - `candidateDescriptorBuildMs=22983` (from `26193`)
+        - `orderingHeadRerankMs=1075` (from `2967`)
+        - `negativeCountResolutionMs=2281` (from `2373`)
+        - `rowsetIntersectionMs=10291.749` (from `10463.194`)
+        - `memoLookupMs=7869.223` (from `7917.739`)
+      - interpretation:
+        - the bundle improved wall time by about `6.8%` and lowered RSS by about `2.2%`
+        - the main visible win came from reduced JS-side candidate/rerank churn, not from rowset-kernel changes
+  - next immediate follow-up bundle:
+      - `perfect_proto_stepb_afree_memo_full_rowset_hash_v1`
+      - outcome:
+        - exactness stayed locked but the bundle regressed canonical throughput and was rolled back:
+          - `97.99s -> 102.75s`
+  - `perfect_proto_stepb_afree_parallel_live_budget_reclaim_v1`
+      - scope:
+        - resume the remaining A-free throughput bundle on the parallel indexed control-plane
+        - treat `perfect_proto_stepb_afree_parallel_reclaim_v2` microtranche/slack-cap runs as inconclusive tuning attempts, not root-cause fixes
+      - root-cause contract:
+        - parent/worker budget protocol is currently monotonic top-up only
+        - reclaimable active sibling budget is measured but not actually transferred
+        - launch/commit tuning alone is insufficient; the fix must support deterministic downward live-budget revisions and explicit donor reclaim
+      - hard gate:
+        - same reusable A-free exact index
+        - server-only heavy benchmark `200k / 4GB`
+        - exactness drift is a hard failure:
+          - `53` exact rules
+          - `200000` explored states
+          - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+      - target outcome:
+        - parallel path completes instead of failing with `global_budget_exhausted`
+        - direct vs parallel `maxSearchStates` semantics stay aligned
+        - no hidden fallback to direct mode
+      - implementation result:
+        - verify now includes `tools/smoke_prejump_parallel_live_budget_regression_acceptance.mjs`
+        - the new smoke proves worker-side downward live-budget revisions are accepted and enforced:
+          - `externalBudgetDecreaseAppliedCount=1`
+          - `externalBudgetDecreaseSearchStates=480`
+        - server `npm run verify` passed with the new smoke enabled
+      - heavy benchmark result:
+        - run id:
+          - `perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_parallel_live_budget_reclaim_200k_v1_20260321`
+        - outcome:
+          - failed with `global_budget_exhausted`
+        - observed wall / RSS:
+          - `81.33s`
+          - `1166088 KB`
+        - observed parallel budget state at stop:
+          - `parallelCompletedChunkReclaimSearchStates=45057`
+          - `parallelActiveWaveExploredStates=154624`
+          - observed total in-flight+completed search states: `199681`
+          - `parallelRemainingSearchBudget=319`
+          - `parallelRemainingGrantableSearchBudget=0`
+          - `parallelActiveReclaimAttemptCount=39`
+          - `parallelActiveReclaimCommitCount=11`
+          - `parallelActiveReclaimSearchStates=53268`
+      - interpretation:
+        - active donor reclaim is now real, not advisory only
+        - but the parallel control-plane still cannot carry the run through exact completion under the same nominal `200k` contract
+        - keep the accepted direct A-free baseline active:
+          - `53` exact rules
+          - `200000` explored states
+          - `84.31s`
+          - `1664284 KB`
+  - next immediate follow-up bundle:
+        - `perfect_proto_stepb_afree_parallel_microchunk_semantics_align_v1`
+        - target the remaining gap between direct and parallel `maxSearchStates` semantics by making chunk leases finishable and reducing simultaneous frontier overcommit before any `20M+` A-free promotion
+      - contract:
+        - parallel A-free `200k / 4GB` must stop behaving like an exact-completion-only engine under capped discovery budgets
+        - direct indexed semantics are the source of truth:
+          - capped discovery may end with `truncatedByMaxSearchStates=true`
+          - that is not itself a failure
+        - parallel control-plane must therefore:
+          - treat global-budget cap hits as deterministic truncation, not automatic hard failure
+          - only fail if local lease/request logic is inconsistent with the parent budget protocol
+          - reduce simultaneous first-wave frontier overcommit so worker leases can converge toward the direct `200k` contract before any `20M+` promotion
+      - heavy gate:
+        - same reusable A-free exact index
+        - same server-only `200k / 4GB`
+        - no hidden fallback to direct mode
+        - quality target remains the accepted direct baseline:
+          - `53` exact rules
+          - `200000` explored states
+          - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+  - next immediate follow-up bundle:
+      - `perfect_proto_stepb_afree_row_projected_candidate_generation_v1`
+      - target the remaining A-free direct hotspot by shrinking the local candidate universe once support gets small
+      - keep the same reusable A-free exact index contract and extend it with row-to-token adjacency artifacts only
+      - preserve the existing exact comparator, rule ordering, and rule-id hash
+  - `perfect_proto_stepb_afree_row_projected_candidate_generation_v1`
+      - root cause fixed:
+        - streamed exact index builder now assigns `row_token_ids.bin` token ids from the same dictionary write order that the miner reconstructs
+        - row-projected loader now fails fast if token dictionary order is not strictly ascending/unique
+      - reusable streamed A-free exact index had to be rebuilt once under the repaired token-id contract:
+        - `perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_stream_index_build_v3_20260321`
+        - `1081567` rows
+        - `623` tokens
+        - `150337813` token postings
+      - canonical A-free direct `200k / 4GB` rerun with `--row-projected-candidate-threshold=128` preserved exactness:
+        - `53` exact rules
+        - `200000` explored states
+        - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+      - timed rerun result:
+        - `87.29s`
+        - `1614868 KB`
+      - hotspot movement versus the accepted `97.99s` A-free baseline:
+        - `candidateDescriptorBuildMs=2817`
+        - `rowProjectedCandidateBuildMs=2361`
+        - `rowsetIntersectionMs=1203.339`
+        - `orderingHeadRerankMs=1289`
+        - `negativeCountResolutionMs=2777`
+        - `memoLookupMs=7858.745`
+      - interpretation:
+        - row-projected candidate generation is exact-safe once token-id ordering is unified end-to-end
+        - wall time improved by about `10.9%`, but RSS increased to about `1.61 GB`
+        - next large A-free gain should come from native batched threshold scoring, not another index-contract rewrite
+  - next immediate follow-up bundle:
+      - `perfect_proto_stepb_afree_native_batch_threshold_scoring_v1`
+      - move per-candidate threshold scoring from JS loops into the native rowset kernel while preserving the same candidate ordering and exact rule hash
+      - switch from full remaining-seed scan to row-projected candidate generation only when `currentPositiveCount` is below a fixed threshold
+      - keep the same server-only `200k / 4GB` heavy gate and require:
+        - `53` exact rules
+        - `200000` explored states
+        - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+      - success target:
+        - materially reduce `candidateDescriptorBuildMs`
+        - reduce total elapsed below the current `97.99s` accepted baseline
+        - keep RSS growth below `+20%`
+  - `perfect_proto_stepb_afree_native_batch_threshold_scoring_v1`
+      - root cause fixed:
+        - added fail-fast native batch count APIs for sparse/sparse, sparse/bitmap, bitmap/sparse, and bitmap/bitmap intersections
+        - direct A-free indexed miner now batch-scores positive candidate counts and exact negative counts, and delays negative rowset materialization until the candidate is actually accepted or sampled
+      - canonical A-free direct `200k / 4GB` rerun against the reusable streamed v3 index preserved exactness:
+        - `53` exact rules
+        - `200000` explored states
+        - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+        - rules payload identical after normalizing away catalog-envelope metadata
+      - timed rerun result:
+        - `84.31s`
+        - `1664284 KB`
+      - hotspot movement versus the accepted row-projected baseline:
+        - `candidateDescriptorBuildMs=2572`
+        - `rowProjectedCandidateBuildMs=2393`
+        - `rowsetIntersectionMs=1374.616`
+        - `orderingHeadRerankMs=620`
+        - `negativeCountResolutionMs=1276`
+        - `memoLookupMs=7770.871`
+      - interpretation:
+        - native batch threshold scoring is exact-safe on the A-free direct line
+        - wall time improved by about `3.4%` versus the accepted `87.29s` row-projected baseline, while RSS rose by about `3.1%`
+        - JS-side rerank churn dropped sharply, but `memoLookupMs` is now the dominant visible hotspot
+      - default contract update:
+        - direct indexed Step-B discovery defaults now use `rowProjectedCandidateThreshold=128` unless explicitly overridden
+  - parallel capped-discovery follow-up result:
+      - `perfect_proto_stepb_afree_parallel_microchunk_semantics_align_v1`
+      - root cause partially fixed:
+        - `tools/mine_perfect_prototypes.mjs --index-dir ... --search-mode=exact_parallel_frontier_v1` now inherits the same indexed no-gap defaults as the accepted direct line:
+          - `maxGapTradingDays=100000`
+          - `maxSeedTokens=4000`
+        - the corrected server rerun restored the parallel seed universe to the direct baseline:
+          - `selectedSeedCount=623`
+      - canonical server-only A-free `200k / 4GB` rerun after the indexed-default fix was not promotable:
+        - run id:
+          - `perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_parallel_microchunk_semantics_align_200k_v3_20260321`
+        - `1639` exact rules
+        - `199683` observed explored states at truncation
+        - `ruleIdsSha256=aa7c6558883921697c806dd67173f5008ecbcf305a10cfd9e1ff1a1db49fcdc6`
+        - `96.92s`
+        - `1114660 KB`
+      - control-plane evidence:
+        - `parallelAcceptedGlobalBudgetTruncation=true`
+        - `parallelDispatchCount=4`
+        - `parallelCompletedChunkCount=1`
+        - `parallelObservedTotalExploredStatesAtTruncation=199683`
+      - interpretation:
+        - the seed/default contract mismatch is fixed, but capped parallel discovery still consumes the nominal `200k` budget across multiple live frontier chunks and therefore returns a materially different catalog than the accepted direct baseline
+        - the corrected rerun was also slower than the accepted direct A-free line:
+          - direct accepted baseline remains `53` exact rules / `200000` explored states / `84.31s` / `1664284 KB`
+        - do not promote or repeat this capped-`200k` semantics-align bundle; any future multi-worker attempt must either:
+          - implement strict direct-order root serialization under the same capped semantics, or
+          - become an explicit large-state throughput mode with a different quality contract
+  - A-free 53-rule open-OOS replay:
+      - `perfect_proto_stepb_afree_53rule_open_oos_eval_v1`
+      - reused the accepted A-free direct catalog:
+        - `53` exact rules
+        - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+      - built the reusable open-market OOS pack for `2025-01-01 .. 2026-01-31` under `strict_label_boundary`
+      - default-heap `report_perfect_prototypes_oos.mjs` OOMed on the OOS pack, but the exact report completed unchanged at `6GB` heap
+      - OOS result:
+        - `sourceRows=253743`
+        - `dedupedMatches=24`
+        - `dedupedHits=7`
+        - `dedupedPrecision=29.17%`
+        - `uniqueMatchedSymbols=24`
+        - `uniqueMatchedDates=2`
+        - `matchedRuleCount=22`
+        - `zeroNegativeRuleCount=3`
+        - `hit2ZeroNegativeRuleCount=0`
+      - precision-ranked OOS leaders:
+        - `PP_00d5b9b7b2d2`: `1/1`
+        - `PP_010af475ec31`: `1/1`
+        - `PP_cacd580ca02d`: `1/1`
+        - `PP_351a2579cb93`: `1/2`
+        - `PP_376c3cabdb16`: `1/2`
+        - `PP_a94a85f7e6bf`: `1/2`
+  - `perfect_proto_stepb_afree_33rule_minhit10_open_oos_eval_v1`
+      - reused the same canonical open OOS pack:
+        - `2025-01-01 .. 2026-01-31`
+        - `253743` source rows
+      - catalog:
+        - `33` exact A-free train rules from the `minHitCount=10`, `rowProjectedCandidateThreshold=128` direct `200k` probe
+        - `ruleIdsSha256=14ababf24199d0fcad5b319665ec4566a3aeb13324684de91c23e937250b8cac`
+      - replay contract:
+        - reused the existing open OOS pack
+        - exact report completed at `6GB` heap
+      - OOS result:
+        - `dedupedMatches=0`
+        - `dedupedHits=0`
+        - `matchedRuleCount=0`
+      - interpretation:
+        - the stricter `minHitCount=10` A-free train catalog did not fire at all on the current open OOS window
+        - increasing the train hit floor improved train-side selectivity but over-tightened coverage for this OOS period
+  - `perfect_proto_stepb_afree_wrapper_promote_v1`
+      - server heavy Step-B plus-lite primary wrapper now defaults to A-free open-pack discovery:
+        - train open pack build
+        - exact index build from `daily_pack.jsonl`
+        - direct exact mining
+        - open train/OOS replay and open-eval leaderboard
+      - `tools/server_run_stepb_dplus1_plus_lite.sh` no longer treats Step-A/Step-B `templates_lite.jsonl` discovery as the primary path
+      - open-pack report/apply/leaderboard commands in the promoted wrappers now run with explicit `NODE_OPTIONS=--max-old-space-size=6144`
+      - effect:
+        - default discovery/eval contract is now aligned to A-free market-wide semantics
+        - historical A+B discovery remains reproducible only through explicit lower-level/manual paths, not the primary wrapper
+  - `perfect_proto_stepb_daycap2_v1`
+      - completed:
+        - `day_capped_top2_v1`
+      - contract:
+        - discovery hit mode:
+          - `day_capped_symbol_count`
+        - discovery day symbol cap:
+          - `2`
+        - apply/OOS selection mode:
+          - `top2_per_day_union`
+      - implementation:
+        - discovery ranking/pruning now uses capped day-aware hit stats instead of raw per-row hit inflation
+        - rule payloads now persist both raw and capped train hit counts plus matched date spread
+        - open OOS/apply selection now enforces at most `2` picked symbols per date
+      - canonical server validation:
+        - reusable A-free exact index reused
+        - reusable open OOS pack reused
+        - A-free `200k / 4GB` canonical discovery:
+          - `9` rules
+          - `200000` explored states
+          - `ruleIdsSha256=e0c391269da6fa5f350d71f8fe7a1ff257f6d3a3477eae0ebbbb17423e0b74a1`
+        - open OOS replay under `top2_per_day_union`:
+          - `31` selected rows
+          - `8` hits
+          - selected precision:
+            - `25.81%`
+      - calibration shortlist on the same reusable A-free index:
+        - `minHitCount=4`
+          - `78` rules
+          - open OOS selected rows:
+            - `137`
+          - open OOS hits:
+            - `52`
+          - selected precision:
+            - `37.96%`
+        - `minHitCount=6`
+          - `9` rules
+          - open OOS selected precision:
+            - `25.81%`
+        - `minHitCount=8`
+          - `1` rule
+          - open OOS selected rows:
+            - `2`
+          - open OOS hits:
+            - `0`
+        - `minHitCount=10`
+          - `0` rules
+      - interpretation:
+        - the new contract successfully removed one-day multi-symbol spike dominance
+        - all surviving discovery rules are multi-date under the cap-2 semantics
+        - current recommended cutoff for the day-capped line is:
+          - `minHitCount=4`
+  - `perfect_proto_stepb_max_rules_unclamp_v1`
+      - root cause fixed:
+        - `normalizeMinerOptions()` no longer silently clamps `maxRules` at `5000`
+        - compiled-input smoke now asserts both:
+          - `normalizeMinerOptions({ maxRules: 100000 }).maxRules === 100000`
+          - catalog metadata preserves the requested `maxRules` / `maxSearchStates`
+      - server verify:
+        - `npm run verify` passed after the unclamp patch
+      - unclamped A-free `20M` rerun:
+        - run id:
+          - `perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321`
+        - reusable A-free exact index reused
+        - contract:
+          - `day_capped_top2_v1`
+          - `minHitCount=2`
+          - `maxRules=100000`
+          - `maxSearchStates=20000000`
+          - `rowProjectedCandidateThreshold=128`
+          - `NODE_OPTIONS=--max-old-space-size=6144`
+        - result:
+          - `68226` final selected rules
+          - `68226` live canonical rules
+          - `20000000` explored states
+          - `ruleIdsSha256=a3305d82f74cc480460a0be3894ec67ca140e836ac6addd847679b83c283b84d`
+          - `catalogContentSha256=7564458bd465a57916b566259045c3cb741d739a6032a68ba563ffbc8aaf4fba`
+          - wall:
+            - `1:59:38`
+          - max RSS:
+            - `6026936 KB`
+        - interpretation:
+          - the old `5000` save clamp is gone
+          - the requested `100000` cap now propagates all the way into the saved manifest/catalog metadata
+          - the 20M A-free day-cap line can now retain the full discovered rule set instead of truncating at `5000`
+    - `2026-03-21 68,226-rule frozen catalog OOS replay`
+      - patch key:
+        - `perfect_proto_stepb_afree_daycap2_68226_open_oos_eval_v1`
+      - reusable inputs:
+        - frozen catalog:
+          - `perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321`
+        - reusable OOS open pack:
+          - `perfect_proto_stepb_afree_53rule_open_oos_eval_v1_20260321`
+      - contract:
+        - `day_capped_top2_v1`
+        - `selectionMode=top2_per_day_union`
+        - OOS period:
+          - `2025-01-01 ~ 2026-01-31`
+        - heap cap:
+          - `6144 MB`
+      - result:
+        - `47496` matched rules
+        - `512` final selected rows
+        - `202` final selected hits
+        - selected precision:
+          - `39.453125%`
+        - `260` unique matched dates
+        - `316` unique matched symbols
+      - note:
+        - day-cap selection dropped `1499` rows from `2011` raw matched rows
+        - reusable OOS report is now pinned in `meta/afree_reusable_artifacts.json`
+    - `2026-03-22 7-rule A-free operating Step-B catalog pinned`
+      - patch key:
+        - `perfect_proto_stepb_afree_operating_catalog_add_pp935d6457f10a_v1`
+      - frozen catalog:
+        - `/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_precision90_maxhit15_20m_v1_20260322/operating_7rule_plus_pp935d6457f10a_v1/catalog.json`
+      - hashes:
+        - `catalogContentSha256=d94a55a33f4ad1fe3a0185d26154408c57a967ebfcc69bdb9a591f40584bea39`
+        - `ruleIdsSha256=65619b5bcdc57dbd894709a3dd17a5d03edb734e5734941c7d06e639898a40c1`
+      - operating rule ids:
+        - `PP_0c87a6a77f60`
+        - `PP_25820a1eaeaf`
+        - `PP_332c954c7516`
+        - `PP_471c80cbdd29`
+        - `PP_4e55c09a1d6a`
+        - `PP_935d6457f10a`
+        - `PP_cefa17c34587`
+      - wrapper:
+        - `tools/run_stepb_afree_operating_5rule_after_close.sh`
+      - note:
+        - this is the pinned live Step-B operating subset
+        - this supersedes the prior `6`-rule subset and manually promotes `PP_935d6457f10a` from the relaxed `68,726`-rule trainPrecision>=0.90 line
+        - `PP_935d6457f10a` posted raw open OOS `9/10` and future-to-`2026-03-18` `1/2`
+        - the wrapper is now hard-pinned to the A-free open live-pack path, not the gated `Step-A -> Step-B` after-close path
+        - the full `68,226` exact catalog remains the research baseline parent pool
+    - `2026-03-22 recent impulse multiline contract pinned before code changes`
+      - umbrella patch key:
+        - `perfect_proto_stepb_recent_impulse_multiline_stack_v1`
+      - contract:
+        - keep `afree_open` as a separate primary discovery universe under the existing `stepb_dplus1_plus_lite` contract
+        - keep the `recent_impulse_upto_1d` through `recent_impulse_upto_8d` family as recent-only seeded universes
+        - add a widened plus-lite family:
+          - `same_day_plus_recent_upto_1d`
+          - `same_day_plus_recent_upto_2d`
+          - `same_day_plus_recent_upto_3d`
+          - `same_day_plus_recent_upto_4d`
+          - `same_day_plus_recent_upto_5d`
+          - `same_day_plus_recent_upto_6d`
+          - `same_day_plus_recent_upto_7d`
+          - `same_day_plus_recent_upto_8d`
+        - do not overload `stepALaneId` as the discovery-universe id
+        - `recent_impulse_1d ~ 8d` stay event lanes; `recent_impulse_upto_Nd` and `same_day_plus_recent_upto_Nd` are discovery-universe ids
+        - widened `same_day_plus_recent_upto_Nd` must always include `same_day_high8` plus `recent_impulse_1d ~ Nd`
+        - each frozen catalog must apply only on its own-pack universe
+        - mismatch between pack universe and catalog universe must fail fast
+        - final A-free operating apply should emit all recommended symbols via `selectionMode=union_all`
+      - current widened-legacy diagnosis:
+        - `2d/3d` 20M exact-only runs are overfitting to a few train-date clusters, not failing on the OOS apply path
+        - `2d` and `3d` both produced many exact rules but almost no OOS raw matches
+      - upcoming breadth gates for the widened plus-lite line:
+        - `minTrainMatchedDateCount >= 10`
+        - `top1DateHitShare <= 0.3`
+        - `top3DateHitShare <= 0.6`
+        - `maxRulesPerMatchedDateSignature = 3`
+      - pruning split:
+        - `minTrainMatchedDateCount >= 10` must move to explicit search-time pruning
+        - `top1DateHitShare <= 0.3` and `top3DateHitShare <= 0.6` must remain final rule gates
+        - `maxRulesPerMatchedDateSignature = 3` must remain a post-collection cap
+        - pruning must be explicit opt-in and must not silently alter A-free
+      - report cleanup:
+        - fix the OOS matched-date count metric so it uses actual matched dates instead of `hitDates.length`
+      - next-stage diverse exact-rule-set patch plan:
+        - goal:
+          - stop optimizing for raw exact-rule count alone
+          - optimize for a diverse exact rule set that covers new dates, months, quarters, and market regimes
+        - temporal breadth extensions:
+          - add `matchedMonthCount`, `matchedQuarterCount`
+          - add `matchedMonthSignatureHash`, `matchedQuarterSignatureHash`
+          - treat `minTrainMatchedMonths` and `minTrainMatchedQuarters` as safe search-time pruning targets alongside `minTrainMatchedDates`
+        - search-stage diversity:
+          - do not rewrite the indexed miner into a different runtime engine
+          - implement diverse candidate ordering / frontier bucketing inside the existing DFS exact miner
+          - buckets should prefer coverage across month signatures, quarter signatures, market regime families, and anchor-token families
+        - catalog-stage diversity:
+          - add a set-level diverse selector before final catalog freeze
+          - score rule sets by quality plus novelty minus overlap rather than train hit count alone
+          - keep exactness requirements unchanged; the selector changes which exact rules survive together
+        - compression branch:
+          - add an explicit experimental KRIMP / MDL-style selector branch
+          - treat it as a research selector, not an automatic runtime replacement
+        - overlap / canonicalization:
+          - add month/quarter signature caps alongside the existing matched-date signature cap
+          - canonicalize near-duplicate covers before final selection
+        - validation order:
+          - use widened plus-lite `3d` as the first test bed
+          - reuse the existing `3d` pack and fixed direct index for `200k` staged validation
+          - keep A-free unchanged until the widened-line diversity patch shows a real OOS lift
+      - `2026-03-23` root-cause pivot after `3d` staged selector validation:
+        - `3d` stayed pinned near `17` matched train dates and `OOS rawMatchedRows=0` even after:
+          - temporal breadth pruning
+          - diverse search ordering
+          - diverse catalog selection
+          - MDL / KRIMP-style compression selection
+        - interpretation:
+          - the failure is upstream candidate generation, not frozen-catalog selection
+          - selector and MDL branches remain valid compression tools, but they are not the first-line rescue path for widened plus-lite `3d`
+        - required next root-cause patch stack:
+          - add chronological fold-stability metrics and pruning
+          - add fold-share final gates alongside the existing date-share gates
+          - run widened plus-lite experiments with explicit `day_capped_symbol_count` exact semantics
+          - add lane provenance to the exact index and interleave root-seed exploration by Step-A lane so one burst family cannot consume the full `200k` search budget
+          - treat lane-aware selector changes as merge-time support for the new candidate pool, not as the primary rescue mechanism
+        - first validation target after the patch:
+          - widened plus-lite `same_day_plus_recent_upto_3d`
+          - existing train/OOS pack reuse remains allowed
+          - direct exact index may be rebuilt once so lane provenance is materialized into the indexed artifact without adding fallback runtime paths
+      - A-free remains unchanged for now:
+        - keep the current A-free reusable artifacts and operating subset pinned until a separate A-free breadth-gate experiment is explicitly scheduled
+      - required root-cause scope:
+        - generalize Step-A and DuckDB recent impulse handling from `1..3` to `1..8`
+        - preserve the historical widened plus-lite semantics where Step-B train rows expanded from `89,768` same-day-only rows to `171,756` widened `1~3일` rows
+        - treat that `171,756` anchor as `92,555` event-side seed rows plus `79,201` legacy synthetic negative templates; do not mistake the event-side row count for the full widened legacy row count
+        - rewire open Step-B perfect-prototype discovery so the pack seed path can express both recent-only and widened `same_day_high8 + recent` families
+        - carry universe/lookback provenance through pack, index, catalog, apply, and OOS replay
+      - `2026-03-26` Haesung low-gap-top targeted search correction:
+        - current blocker is no longer LOW discovery; `low-only 20M` already produced `534` exact LOW rules and historical `2026-03-18` 해성옵틱스 support
+        - the mis-scoped `v11` support-case run was stopped because it still selected `664` seed tokens and behaved like broad LOW search with reordered roots
+        - `v12` support-case targeted mining must reduce root space, not just reorder it
+        - hard requirements for `v12`:
+          - `low_gap_top_continuation` only
+          - support-case constrained root token set = `support-case tokens ∩ targeted root allowlist`
+          - broad root families (`global/market/seq/volume/trend`) forbidden
+          - early prefix expansion must preserve support-case overlap for the first `2~3` tokens
+          - fail fast when `--support-cases-file` is enabled but the constrained root scope does not compress under the configured root cap
+        - validation order for `v12`:
+          - first `200k` or `2M` targeted probe only
+          - escalate to `20M` only if constrained root count is materially reduced and diagnostics confirm real targeting
+      - `2026-03-29` `v59a` pilot outcome:
+        - patch key:
+          - `perfect_proto_1d_top_mid_low_failure_bank_oos_report_v59a`
+        - scope:
+          - Haesung acceptance paused
+          - `1D` pilot report executed for `TOP`, `MID`, `LOW` only
+        - executed cells:
+          - `TOP x 1D`
+          - `MID x 1D`
+          - `LOW x 1D`
+        - final result:
+          - `r3` probe populated all `3` cells with valid train breadth and restored `trainMatchedFoldCount = 4`
+          - no cell produced a promotable `positive 100% bank`
+          - all `3` cells remained `unsat_positive_bank_train_breadth`
+          - `failure bank` and `veto bank` artifacts were mined in every cell, but OOS comparison remained degenerate because `positive bank` union was empty
+        - OOS comparison that was attempted:
+          - `positive only`
+          - `positive + failure`
+          - `positive + failure + veto`
+        - cell-level outcomes:
+          - `TOP x 1D`: best positive rule reached `2 dates / 2 months / 2 folds`; failure bank `qualified=8`; veto bank `qualified=4`
+          - `MID x 1D`: best positive rule reached `5 dates / 5 months / 4 folds`; failure bank `qualified=8`; veto bank `qualified=6`
+          - `LOW x 1D`: best positive rule reached `3 dates / 3 months / 2 folds`; failure bank `qualified=8`; veto bank `qualified=5`
+        - interpretation:
+          - `failure/veto` architecture is buildable on regime-local `1D` cells
+          - however, there is no promotable `positive bank`, so `failure/veto` OOS lift cannot yet be measured in a meaningful way
+          - repeat of the exact `v59a` configuration should be blocked; next move must change cell scope or positive-bank discovery surface instead of rerunning this pilot unchanged
+      - `2026-03-29` `v60a` exact discovery patch plan:
+        - patch key:
+          - `perfect_proto_low_1d_recent_significant_episode_exact_bank_v60a`
+        - checklist:
+          - [ ] add a dedicated server wrapper that reuses the recent-low-only train/OOS pack path and then runs an episode exact-bank build step
+          - [ ] keep scope pinned to `recent_impulse_upto_1d` and LOW subtype families only:
+            - `low_gap_top_continuation`
+            - `low_gap_high_continuation`
+            - `low_jump_below_continuation`
+          - [ ] keep Haesung/support cases out of fit, seed selection, scaling, and significance calibration for `v60a`
+          - [ ] add a LOW recent-only episode dataset builder that:
+            - normalizes pack rows
+            - restores deterministic chronological folds/windows
+            - excludes fit symbol `076610`
+            - emits family-local episode tokens and numeric episode features
+          - [ ] add rule-level exact re-evaluation on episode tokens rather than relying on literal prototype-card routing only
+          - [ ] add rule-level temporal stability scoring with explicit leave-one-window / leave-one-fold style telemetry
+          - [ ] add rule-level multiple-testing-controlled significance scoring
+          - [ ] add a greedy exact-union selector that accepts a small bank only when union-level breadth is valid
+          - [ ] enforce hard acceptance:
+            - rule `train precision=1.0`
+            - rule `crossfitNegativeWindowCount=0`
+            - rule `selectionFrequency` floor
+            - rule `qValue` floor after multiple-testing correction
+            - union `matchedDateCount>=10`
+            - union `matchedMonthCount>=6`
+            - union `matchedFoldCount=4`
+            - union `precision=1.0`
+          - [ ] emit staged failure summaries:
+            - `no_significant_episode_rules`
+            - `no_stable_episode_rules`
+            - `no_valid_union_breadth`
+          - [ ] add smoke coverage for the new episode exact-bank path
+          - [ ] wire the new smoke into `scripts/verify.sh`
+      - `2026-03-29` `v60b` overlay diagnostic patch plan:
+        - patch key:
+          - `perfect_proto_live_line_failure_veto_overlay_report_v60b`
+        - checklist:
+          - [ ] add a dedicated server wrapper that reads frozen live lines from the live-priority registry and runs a diagnostic overlay report
+          - [ ] generalize the current `1D regime` failure/veto/OOS report modules into reusable overlay modules
+          - [ ] keep `v60b` diagnostic-only:
+            - no promotion artifacts
+            - no registry edits
+            - no shadow auto-enable
+          - [ ] require baseline positive-engine validity per line before overlay lift is scored
+          - [ ] mark a line `invalid_or_inconclusive` when baseline positive selection is empty or invalid
+          - [ ] report `positive only -> positive + failure -> positive + failure + veto` per live line
+          - [ ] keep operating-benchmark lines and exact-only benchmark lines distinguishable in the report
+          - [ ] add smoke coverage for the live-line overlay report path
+          - [ ] wire the new smoke into `scripts/verify.sh`
+      - `2026-03-30` `v61r` original selection-contract replay patch plan:
+        - patch key:
+          - `live_priority_selection_contract_replay_v61r`
+        - checklist:
+          - [ ] add a dedicated replay library for original live-line selection contracts
+          - [ ] keep replay pinned to `strict_label_boundary`
+          - [ ] keep replay pinned to `close28/day-dedup` line-level scoring
+          - [ ] preserve full daily-pack rows through `enrich -> normalize -> tokenize -> match`
+          - [ ] add ownership-aware final-union replay using `priority_first_symbol_dedup`
+          - [ ] keep `primary -> secondary` semantics explicit in the report
+          - [ ] report both:
+            - [ ] line-alone contract replay
+            - [ ] ownership-aware final union replay
+          - [ ] expose secondary `100% hit>=4 day-dedup` contract verdicts explicitly
+          - [ ] add a dedicated build tool for selection-contract replay
+          - [ ] add a dedicated server wrapper for selection-contract replay
+          - [ ] add smoke coverage for the selection-contract replay path
+          - [ ] wire the new smoke and wrapper syntax checks into `scripts/verify.sh`
+      - `2026-03-30` `v61` 8D donor-aware `TOP/MID/LOW` subgroup patch plan:
+        - patch key:
+          - `perfect_proto_8d_top_mid_low_donor_subgroup_system_v61`
+        - checklist:
+          - [ ] keep `v61` scoped to `8d_primary` / `8d_secondary` first
+          - [ ] build donor-aware cohort rows from frozen live-line train replay, not broad cell-only mining
+          - [ ] keep cell splits explicit:
+            - [ ] `TOP`
+            - [ ] `MID`
+            - [ ] `LOW`
+          - [ ] keep `LOW` subtype attribution visible inside the donor cohort
+          - [ ] add a donor cohort dataset builder that emits:
+            - [ ] donor-positive rows
+            - [ ] cohort negatives
+            - [ ] token/rank regime features
+            - [ ] date/month/fold telemetry
+          - [ ] add a subgroup prepass builder that scores donor-local candidates before any exact refinement
+          - [ ] require subgroup acceptance:
+            - [ ] `matchedDateCount >= 10`
+            - [ ] `matchedMonthCount >= 6`
+            - [ ] `matchedFoldCount >= 4`
+            - [ ] `selectionFrequency >= 0.6`
+            - [ ] `foldPresenceCount >= 3`
+            - [ ] `windowPresenceCount >= 3`
+            - [ ] `top1DateHitShare <= 0.3`
+          - [ ] emit explicit subgroup manifests and zero-manifest fail-fast summaries
+          - [ ] add a dedicated build tool for the `8d` donor-aware subgroup system
+          - [ ] add a dedicated server wrapper for the `8d` donor-aware subgroup system
+          - [ ] add smoke coverage for the donor-aware subgroup system
+          - [ ] wire the new smoke and wrapper syntax checks into `scripts/verify.sh`

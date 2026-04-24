@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "updatedAt": "2026-03-10T03:30:00Z",
+  "currentC0Rollout": {
+    "enabled": true,
+    "majorChangeType": "c0_family_mining",
+    "majorChangePath": "src/pipeline/step_c0_family_mine.mjs + src/pipeline/step_c_pattern_mine.mjs + src/pipeline/cd_loop.mjs",
+    "runId": null,
+    "note": "C0 pipeline is integrated at repo level; per-run C0 details are appended by cd_loop candidate manifests."
+  },
+  "currentC1Rollout": {
+    "enabled": true,
+    "majorChangeType": "c1_family_probe",
+    "majorChangePath": "src/pipeline/step_c1_family_probe.mjs + src/pipeline/step_c_pattern_mine.mjs + src/pipeline/step_d_online_loop.mjs + src/pipeline/cd_loop.mjs",
+    "runId": null,
+    "probeScope": "update",
+    "probeProfile": "C1_FAMILY_PROBE",
+    "passPolicyVersion": "c1_d_first_family_qualifier_v1",
+    "familyCoveragePolicy": "normalized_coverage_exec_quality",
+    "note": "C1 pipeline is integrated at repo level; per-run C1 family probe details are appended by cd_loop candidate manifests."
+  },
+  "currentC2Rollout": {
+    "enabled": true,
+    "majorChangeType": "c2_dedup_policy",
+    "majorChangePath": "src/pipeline/step_c2_family_dedup.mjs + src/pipeline/step_c_pattern_mine.mjs + src/pipeline/cd_loop.mjs",
+    "runId": null,
+    "similarityPolicyVersion": "c2_overlap_graph_v1",
+    "representativePolicy": "quality_first_with_coverage_guard",
+    "shadowRetentionPolicy": "retain_shadow_families",
+    "note": "C2 pipeline is integrated at repo level; per-run C2 dedup details are appended by cd_loop candidate manifests."
+  },
+  "rows": [
+    {
+      "runId": "cd_auto_20260309_222414_i001",
+      "sessionId": "cdauto_20260309_222414_i001",
+      "round": 1,
+      "candidateMode": "boost_only",
+      "majorChangeType": "c047_midvol_liqhigh_risk955_narrow",
+      "majorChangePath": "config/lab.config.server.lite.json:falsePositiveGate.edgeAwareOverride.interactionBlocks[C047,MIDVOL,VOL_MID_LIQ_HIGH]",
+      "provenance": {
+        "source": "active_research_handoff.balanced_fallback",
+        "patchKey": "target_first_fp_override_block_c047_midvol_liqhigh_risk955_v1",
+        "referenceRunId": "tf2_c120c109rej_onlive_probe38_20260309",
+        "note": "single major change from current reference line: narrow existing C047 mid/high block with minFalsePositiveModelRisk >= 0.955"
+      }
+    },
+    {
+      "runId": "cd_auto_20260309_225305_i001",
+      "sessionId": "cdauto_20260309_225305_i001",
+      "round": 1,
+      "candidateMode": "boost_only",
+      "majorChangeType": "c110_midvol_liqhigh_reference_rebase",
+      "majorChangePath": "config/lab.config.server.lite.json:falsePositiveGate.edgeAwareOverride.interactionBlocks[C110,MIDVOL,VOL_MID_LIQ_HIGH]",
+      "provenance": {
+        "source": "active_research_handoff.current_active_candidate",
+        "patchKey": "target_first_fp_override_block_c110_midvol_liqhigh_trade_v1",
+        "referenceRunId": "tf2_c120c109rej_onlive_probe38_20260309",
+        "note": "single major change from current reference line: swap prior C062 narrow trade block to C110 narrow trade block and keep adaptive frontier in boost_only mode"
+      }
+    },
+    {
+      "runId": "cd_auto_20260309_232612_i006",
+      "sessionId": "cdauto_20260309_232612_i006",
+      "round": 1,
+      "candidateMode": "boost_only",
+      "majorChangeType": "c063_midvol_liqhigh_override_block_rebase",
+      "majorChangePath": "config/lab.config.server.lite.json:falsePositiveGate.edgeAwareOverride.interactionBlocks[C063,MIDVOL,VOL_MID_LIQ_HIGH]",
+      "provenance": {
+        "source": "live_r01_edge_override_audit",
+        "patchKey": "target_first_fp_override_block_c063_midvol_liqhigh_v1",
+        "referenceRunId": "tf2_c120c109rej_onlive_probe38_20260309",
+        "note": "single major change from current reference line: replace inactive C110 block with the worst live edge-override leak, C063 MIDVOL/VOL_MID_LIQ_HIGH, which produced 13 override trades and 0 hits in cd_auto_20260309_231737_i005 r01"
+      }
+    },
+    {
+      "runId": "cd_auto_20260309_234107_i008",
+      "sessionId": "cdauto_20260309_234107_i008",
+      "round": 1,
+      "candidateMode": "boost_only",
+      "majorChangeType": "adaptive_frontier_live_core_family_propagation_v1",
+      "majorChangePath": "src/pipeline/step_c_pattern_mine.mjs:patternPoolEntryMatches + config/lab.config.server.lite.json:falsePositiveGate.edgeAwareOverride.interactionBlocks",
+      "provenance": {
+        "source": "live_salvage_core_and_retired_patterns",
+        "patchKey": "target_first_stepc_live_core_family_propagation_v1",
+        "referenceRunId": "tf2_c120c109rej_onlive_probe38_20260309",
+        "note": "single major change from current reference line: revert exploratory C063 override block and let Step C adaptive frontier propagate repeated coreBoost families (C050/C065/C047/C062) and hard-retired family (C063) at cluster-family level instead of exact-template-only matching"
+      }
+    },
+    {
+      "runId": "cd_auto_20260309_234350_i009",
+      "sessionId": "cdauto_20260309_234350_i009",
+      "round": 1,
+      "candidateMode": "boost_only",
+      "majorChangeType": "adaptive_frontier_live_core_tighten_v1",
+      "majorChangePath": "config/lab.config.server.lite.json:pattern.prototypeSelection/adaptiveFrontier",
+      "provenance": {
+        "source": "i008_epoch1_no_frontier_shift",
+        "patchKey": "target_first_stepc_live_core_tighten_v1",
+        "referenceRunId": "tf2_c120c109rej_onlive_probe38_20260309",
+        "note": "single major change from current reference line: keep live core family propagation, then tighten adaptive frontier around live core by lowering minPrototypeFloor to 48, raising quality thresholds to 0.60/0.55, lowering maxPrototypeCeil to 96, and increasing salvageBoostBias to 0.14 after i008 still opened flat at 8.70% with runtimePrototypes 89"
+      }
+    },
+    {
+      "runId": "cd_auto_20260309_235124_i001",
+      "sessionId": "cdauto_20260309_235124_i001",
+      "round": 1,
+      "candidateMode": "boost_only",
+      "majorChangeType": "adaptive_frontier_live_core_tighten_v1",
+      "majorChangePath": "config/lab.config.server.lite.json:pattern.prototypeSelection/adaptiveFrontier",
+      "provenance": {
+        "source": "restart_after_remote_sync_and_contract_fix",
+        "patchKey": "target_first_stepc_live_core_tighten_v1",
+        "referenceRunId": "tf2_c120c109rej_onlive_probe38_20260309",
+        "note": "same single major change as i009, but this is the first run that actually reads the synced remote config and validator updates; runtimePrototypes opened at 48 instead of 89"
+      }
+    }
+  ]
+}

@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "updatedAt": "2026-03-24T00:00:00Z",
+  "purpose": "Canonical reusable A-free exact-discovery artifacts for follow-up runs. Reuse these exact server-side artifacts unless the period, surface, tokenizer spec, split policy, or discovery contract changes.",
+  "serverRoot": "/home/moltook/apps/stockdesk-lab-lite",
+  "reuseContract": {
+    "surface": "v3_contextual_plus_lite",
+    "splitPolicy": "strict_label_boundary",
+    "searchMode": "exact_indexed_kernel_v1",
+    "discoveryMode": "A_free_open_market",
+    "notes": [
+      "If period, surface, tokenizer spec, split policy, or discovery semantics change, rebuild the affected artifact instead of reusing it.",
+      "The accepted direct A-free 200k baseline remains the source of truth for uncapped exactness and speed comparisons.",
+      "The recommended day-capped operating discovery line remains day_capped_top2_v1 with minHitCount=4.",
+      "The current pinned A-free primary line subset is the frozen 7-rule catalog; it keeps the prior future-survivor 6-rule set and manually adds PP_935d6457f10a from the relaxed trainPrecision>=0.90 line.",
+      "Because PP_935d6457f10a came from the relaxed trainPrecision>=0.90 path, afree_primary is an operating benchmark, not a pure exact-only benchmark.",
+      "The canonical live operating path is now the registry-driven live priority daily ops stack documented in meta/live_priority_ops_contract.md and meta/live_priority_reusable_artifacts.json.",
+      "Within that stack this A-free operating catalog runs as lineId=afree_primary under selectionMode=union_all, so output is the full symbol-day deduped recommendation set rather than a top-2 cap.",
+      "A-free reusable artifacts remain unchanged for now; the new breadth-gate work is for the separate plus-lite widened research line until an explicit A-free experiment is scheduled.",
+      "The widened plus-lite research family (`same_day_plus_recent_upto_1d..7d`) is separate from these pinned A-free reusable artifacts until a widened catalog is explicitly frozen."
+    ]
+  },
+  "acceptedDirectAfreeBaseline": {
+    "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_discovery_200k_native_batch_v1_20260321",
+    "catalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_discovery_200k_native_batch_v1_20260321/step-perfect-prototype/catalog.json",
+    "manifestPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_discovery_200k_native_batch_v1_20260321/step-perfect-prototype/manifest.json",
+    "ruleIdsSha256": "5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf",
+    "catalogContentSha256": "f363b60b930bfc82351653145a15425f0ed6a54b7cad8b0e64580fe97ca9731a",
+    "exactRules": 53,
+    "exploredStates": 200000,
+    "elapsedSec": 84.31,
+    "maxRssKb": 1664284
+  },
+  "reusableAfreeMinHit10Catalog": {
+    "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_discovery_200k_minhit10_rowproj128_probe_v1_20260321",
+    "catalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_discovery_200k_minhit10_rowproj128_probe_v1_20260321/step-perfect-prototype/catalog.json",
+    "manifestPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_discovery_200k_minhit10_rowproj128_probe_v1_20260321/step-perfect-prototype/manifest.json",
+    "ruleIdsSha256": "14ababf24199d0fcad5b319665ec4566a3aeb13324684de91c23e937250b8cac",
+    "catalogContentSha256": "69879f1fe84e28f8948cab652cbad07ad7fef502931c808327375a5a49f0c8cb",
+    "exactRules": 33,
+    "exploredStates": 200000,
+    "elapsedSec": 60.01,
+    "maxRssKb": 2023876,
+    "minHitCount": 10,
+    "rowProjectedCandidateThreshold": 128
+  },
+  "reusableAfreeTrainExactIndex": {
+    "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_stream_index_build_v3_20260321",
+    "indexDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_stream_index_build_v3_20260321/step-perfect-prototype-indexed-stream",
+    "manifestPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_stream_index_build_v3_20260321/step-perfect-prototype-indexed-stream/manifest.json",
+    "summaryPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_stream_index_build_v3_20260321/step-perfect-prototype-indexed-stream/summary.json"
+  },
+  "dayCappedTop2CanonicalAfreeBaseline": {
+    "runId": "perfect_proto_stepb_afree_daycap2_train_discovery_200k_v1_20260321",
+    "catalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_train_discovery_200k_v1_20260321/step-perfect-prototype/catalog.json",
+    "manifestPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_train_discovery_200k_v1_20260321/step-perfect-prototype/manifest.json",
+    "ruleIdsSha256": "e0c391269da6fa5f350d71f8fe7a1ff257f6d3a3477eae0ebbbb17423e0b74a1",
+    "catalogContentSha256": "580af6184c218610728a16b080638f8fdd86c3870a937311a0ee6821917299ad",
+    "exactRules": 9,
+    "exploredStates": 200000,
+    "hitCountMode": "day_capped_symbol_count",
+    "hitCountDaySymbolCap": 2,
+    "minHitCount": 6
+  },
+  "dayCappedTop2RecommendedAfreeCatalog": {
+    "runId": "perfect_proto_stepb_afree_daycap2_train_discovery_200k_minhit4_v1_20260321",
+    "catalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_train_discovery_200k_minhit4_v1_20260321/step-perfect-prototype/catalog.json",
+    "manifestPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_train_discovery_200k_minhit4_v1_20260321/step-perfect-prototype/manifest.json",
+    "ruleIdsSha256": "61ab2fef0594e31e1644eded4b643d439e48f4d04996d43806f3af974add3c4e",
+    "catalogContentSha256": "904b257c859a82d60f82101a426f243a139c870b04e87136324a8b17afd0eb89",
+    "exactRules": 78,
+    "exploredStates": 200000,
+    "hitCountMode": "day_capped_symbol_count",
+    "hitCountDaySymbolCap": 2,
+    "minHitCount": 4
+  },
+  "dayCappedTop2Unclamped20MTrainCatalog": {
+    "runId": "perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321",
+    "catalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321/step-perfect-prototype/catalog.json",
+    "manifestPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321/step-perfect-prototype/manifest.json",
+    "summaryPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321/step-perfect-prototype/summary.json",
+    "ruleIdsSha256": "a3305d82f74cc480460a0be3894ec67ca140e836ac6addd847679b83c283b84d",
+    "catalogContentSha256": "7564458bd465a57916b566259045c3cb741d739a6032a68ba563ffbc8aaf4fba",
+    "exactRules": 68226,
+    "exploredStates": 20000000,
+    "hitCountMode": "day_capped_symbol_count",
+    "hitCountDaySymbolCap": 2,
+    "minHitCount": 2,
+    "maxRules": 100000,
+    "maxSearchStates": 20000000,
+    "elapsedWall": "1:59:38",
+    "maxRssKb": 6026936
+  },
+  "dayCappedTop2Operating7RuleCatalog": {
+    "selectionId": "operating_7rule_plus_pp935d6457f10a_v1",
+    "catalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_precision90_maxhit15_20m_v1_20260322/operating_7rule_plus_pp935d6457f10a_v1/catalog.json",
+    "manifestPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_precision90_maxhit15_20m_v1_20260322/operating_7rule_plus_pp935d6457f10a_v1/manifest.json",
+    "catalogContentSha256": "d94a55a33f4ad1fe3a0185d26154408c57a967ebfcc69bdb9a591f40584bea39",
+    "ruleIdsSha256": "65619b5bcdc57dbd894709a3dd17a5d03edb734e5734941c7d06e639898a40c1",
+    "ruleCount": 7,
+    "lineRole": "afree_primary",
+    "sourceCatalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_train_precision90_maxhit15_20m_v1_20260322/step-perfect-prototype/catalog.json",
+    "sourceCatalogSha256": "6c8e3250234b47281096f6662bcc79821a80fc6b6a56082666972b4635ee69a1",
+    "derivedFrom": {
+      "previousOperatingSelectionId": "operating_6rule_oos5hit100_future0318_plus_0c87a6a77f60_v1",
+      "manualPromotionRuleId": "PP_935d6457f10a",
+      "manualPromotionSourceRunId": "perfect_proto_stepb_afree_daycap2_train_precision90_maxhit15_20m_v1_20260322",
+      "manualPromotionOosRunId": "perfect_proto_stepb_afree_relaxed500_oos_eval_v1_20260322",
+      "manualPromotionFutureRunId": "perfect_proto_stepb_afree_oos90survivor39_future0318_eval_v1_20260322",
+      "selectionRule": "Kept the existing 6-rule operating subset and manually added PP_935d6457f10a from the relaxed trainPrecision>=0.90 catalog because it posted raw open OOS 9/10; note that this added rule was only 1/2 on the 2026-02-01..2026-03-18 future replay.",
+      "benchmarkInterpretation": "This operating subset is valid for live stack comparisons, but it is not a pure exact-only benchmark because PP_935d6457f10a came from the relaxed trainPrecision>=0.90 line."
+    },
+    "liveApplyContract": {
+      "pathMode": "afree_open_live_pack_only",
+      "selectionMode": "union_all",
+      "excludeRecommendationCloseRetPctGte": 28,
+      "sourceType": "perfect_prototype_stepb_open_eval_pack",
+      "lineId": "stepb_dplus1_plus_lite",
+      "surface": "v3_contextual_plus_lite"
+    },
+    "stackMembership": {
+      "stackId": "canonical_live_priority_stack_v1_20260324",
+      "registryPath": "config/ops/live_priority_registry.server.json",
+      "contractDocPath": "meta/live_priority_ops_contract.md",
+      "artifactsDocPath": "meta/live_priority_reusable_artifacts.json",
+      "lineId": "afree_primary"
+    },
+    "rules": [
+      "PP_0c87a6a77f60",
+      "PP_25820a1eaeaf",
+      "PP_332c954c7516",
+      "PP_471c80cbdd29",
+      "PP_4e55c09a1d6a",
+      "PP_935d6457f10a",
+      "PP_cefa17c34587"
+    ],
+    "runWrapper": "/home/saida/code/stockdesk-lab-lite/tools/run_stepb_afree_operating_5rule_after_close.sh"
+  },
+  "reusableOpenOosPack": {
+    "runId": "perfect_proto_stepb_afree_53rule_open_oos_eval_v1_20260321",
+    "inputPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_53rule_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-pack/daily_pack.jsonl",
+    "summaryPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_53rule_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-pack/summary.json",
+    "period": {
+      "from": "2025-01-01",
+      "to": "2026-01-31"
+    },
+    "usableRows": 253743
+  },
+  "reusableOpenOosReport": {
+    "runId": "perfect_proto_stepb_afree_53rule_open_oos_eval_v1_20260321",
+    "reportDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_53rule_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report",
+    "summaryPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_53rule_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_summary.json",
+    "ruleReportPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_53rule_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_rule_report.json",
+    "dedupedMatchesPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_53rule_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_deduped_symbols.jsonl",
+    "heapMbUsedForReport": 6144
+  },
+  "reusableOpenOosReportMinHit10": {
+    "runId": "perfect_proto_stepb_afree_33rule_minhit10_open_oos_eval_v1_20260321",
+    "reportDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_33rule_minhit10_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report",
+    "summaryPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_33rule_minhit10_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_summary.json",
+    "ruleReportPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_33rule_minhit10_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_rule_report.json",
+    "heapMbUsedForReport": 6144,
+    "dedupedMatches": 0,
+    "dedupedHits": 0,
+    "matchedRuleCount": 0
+  },
+  "dayCappedTop2CanonicalOpenOosReport": {
+    "runId": "perfect_proto_stepb_afree_daycap2_open_oos_eval_v1_20260321",
+    "reportDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report",
+    "summaryPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_summary.json",
+    "ruleReportPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_rule_report.json",
+    "dedupedMatchesPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_deduped_symbols.jsonl",
+    "selectionMode": "top2_per_day_union",
+    "selectionMaxSymbolsPerDay": 2,
+    "selectedRows": 31,
+    "selectedHits": 8,
+    "selectedPrecision": 0.25806451612903225,
+    "heapMbUsedForReport": 6144
+  },
+  "dayCappedTop2RecommendedOpenOosReport": {
+    "runId": "perfect_proto_stepb_afree_daycap2_minhit4_open_oos_eval_v1_20260321",
+    "reportDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_minhit4_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report",
+    "summaryPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_minhit4_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_summary.json",
+    "ruleReportPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_minhit4_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_rule_report.json",
+    "dedupedMatchesPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_minhit4_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_deduped_symbols.jsonl",
+    "selectionMode": "top2_per_day_union",
+    "selectionMaxSymbolsPerDay": 2,
+    "selectedRows": 137,
+    "selectedHits": 52,
+    "selectedPrecision": 0.3795620437956204,
+    "heapMbUsedForReport": 6144
+  },
+  "dayCappedTop2Unclamped20MOpenOosReport": {
+    "runId": "perfect_proto_stepb_afree_daycap2_68226_open_oos_eval_v1_20260321",
+    "reportDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_68226_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report",
+    "summaryPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_68226_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_summary.json",
+    "ruleReportPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_68226_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_rule_report.json",
+    "dedupedMatchesPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_68226_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-report/oos_deduped_symbols.jsonl",
+    "selectionMode": "top2_per_day_union",
+    "selectionMaxSymbolsPerDay": 2,
+    "selectedRows": 512,
+    "selectedHits": 202,
+    "selectedPrecision": 0.39453125,
+    "matchedRules": 47496,
+    "heapMbUsedForReport": 6144
+  },
+  "dayCappedTop2Oos5Hit100FutureEval": {
+    "runId": "perfect_proto_stepb_afree_daycap2_oos5hit100_15_future_eval_v1_20260321",
+    "filteredCatalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321/5f7e122624562dc3/catalog.json",
+    "summaryPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_oos5hit100_15_future_eval_v1_20260321/step-perfect-prototype-open-future-report/oos_summary.json",
+    "ruleReportPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_oos5hit100_15_future_eval_v1_20260321/step-perfect-prototype-open-future-report/oos_rule_report.json",
+    "dedupedMatchesPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_oos5hit100_15_future_eval_v1_20260321/step-perfect-prototype-open-future-report/oos_deduped_symbols.jsonl",
+    "selectionMode": "top2_per_day_union",
+    "selectionMaxSymbolsPerDay": 2,
+    "filteredRuleCount": 15,
+    "selectedRows": 10,
+    "selectedHits": 5,
+    "selectedPrecision": 0.5
+  },
+  "oos100Future0318Survivor772Catalog": {
+    "selectionId": "oos100_1y_future0318_100pct_772_v1",
+    "catalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321/oos100_1y_future0318_100pct_772_v1/catalog.json",
+    "manifestPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321/oos100_1y_future0318_100pct_772_v1/manifest.json",
+    "catalogContentSha256": "16c48d77da7137aaf393b153df537568d94e1c4d3ef935c4943247ec7eb2e563",
+    "ruleIdsSha256": "ad4bb9482b25362adc8762cb2afa38c6359b7fb14a8308e78aeffaf97e121358",
+    "ruleCount": 772
+  },
+  "oos100Future0318FourOfFour3Catalog": {
+    "selectionId": "oos100_future0318_4of4_3_v1",
+    "catalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321/oos100_future0318_4of4_3_v1/catalog.json",
+    "manifestPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321/oos100_future0318_4of4_3_v1/manifest.json",
+    "catalogContentSha256": "f72bb9b68504fb470280133895a38c3186bdd0d2234d026b23c225f65f414e30",
+    "ruleIdsSha256": "70725a2fc92f2d286da6d907a467cb248e9361f51146beb8a508e592897c117d",
+    "ruleCount": 3
+  },
+  "oos100Future0318ThreeOfThree15Catalog": {
+    "selectionId": "oos100_future0318_3of3_15_v1",
+    "catalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321/oos100_future0318_3of3_15_v1/catalog.json",
+    "manifestPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321/oos100_future0318_3of3_15_v1/manifest.json",
+    "catalogContentSha256": "5a9731d4d98d2aa9738b1f0918daa4339d38025d850aa178cef341685305f750",
+    "ruleIdsSha256": "c24d739acb66f6cadea6d9b59f9d7ca07420a4caf0f16b2055262a17b1dab7d0",
+    "ruleCount": 15
+  },
+  "oos100Future0318Survivor772Live0319Apply": {
+    "runId": "perfect_proto_stepb_afree_daycap2_oos100_future0318_survivor772_live0319_eval_v1_20260322",
+    "reportDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_oos100_future0318_survivor772_live0319_eval_v1_20260322/step-perfect-prototype-open-live-apply",
+    "summaryPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_oos100_future0318_survivor772_live0319_eval_v1_20260322/step-perfect-prototype-open-live-apply/summary.json",
+    "dedupedMatchesPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_oos100_future0318_survivor772_live0319_eval_v1_20260322/step-perfect-prototype-open-live-apply/deduped_symbols.jsonl",
+    "selectionMode": "top2_per_day_union"
+  },
+  "oos100Future0318Survivor772Live0320Apply": {
+    "runId": "perfect_proto_stepb_afree_daycap2_oos100_future0318_survivor772_live0320_eval_v1_20260321",
+    "reportDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_oos100_future0318_survivor772_live0320_eval_v1_20260321/step-perfect-prototype-open-live-apply",
+    "summaryPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_oos100_future0318_survivor772_live0320_eval_v1_20260321/step-perfect-prototype-open-live-apply/summary.json",
+    "dedupedMatchesPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_oos100_future0318_survivor772_live0320_eval_v1_20260321/step-perfect-prototype-open-live-apply/deduped_symbols.jsonl",
+    "selectionMode": "top2_per_day_union"
+  }
+}

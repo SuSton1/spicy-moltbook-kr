@@ -1,0 +1,99 @@
+{
+  "kind": "tp12_train100_positive_motif_contrastive_contract_v1",
+  "patchKey": "tp12_train100_positive_motif_contrastive_v1",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "label": {
+    "entryPolicy": "GLOBAL_NEXT_SESSION_OPEN",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "stopPolicy": "NO_STOP"
+  },
+  "objective": {
+    "minHitDecisionDatesPerYear": 2,
+    "minHitSymbolDatesPerYear": 2,
+    "minTotalPositiveSymbolDates": 18,
+    "requireFalsePositiveRows": 0,
+    "requireTrainPrecision": 1.0
+  },
+  "expression": {
+    "form": "positive_motif_anchor_and_not_conditional_veto",
+    "maxAnchorAtoms": 4,
+    "maxVetoClauses": 4,
+    "maxVetoAtomsPerClause": 3,
+    "maxTotalAtoms": 10
+  },
+  "featurePolicy": {
+    "useDailyOhlcv": true,
+    "useCrossSectionRank": true,
+    "useMarketContext": true,
+    "useSupportContext": "explicit_optional",
+    "useSideDaily": false,
+    "useIntraday": false,
+    "useThemeSector": false
+  },
+  "thresholdGrid": {
+    "rankBuckets": ["bottom20", "bottom30", "mid20_80", "top30", "top20", "top10"],
+    "states": ["low", "mid", "high", "very_high"],
+    "counts": [0, 1, 2, 3, 5, 8, 13, 21]
+  },
+  "forbiddenExpressionFields": [
+    "symbolIdRaw",
+    "dateIdRaw",
+    "hitTarget",
+    "hitDate",
+    "maxForwardReturn",
+    "minForwardDrawdown",
+    "futureHigh",
+    "futureLow",
+    "targetBeforeStop",
+    "stopBeforeTarget",
+    "entryDateFutureOpen"
+  ],
+  "qualityGates": {
+    "minActiveMonths": 12,
+    "maxTopSymbolShare": 0.15,
+    "maxTopMonthShare": 0.2,
+    "minFeatureFamilyCount": 2
+  },
+  "searchLimits": {
+    "maxAnchorStates": 250000,
+    "maxGeneratedAnchors": 25000,
+    "maxAnchorsForVeto": 10,
+    "maxVetoClausesPerAnchor": 50,
+    "maxVetoStatesPerAnchor": 500
+  },
+  "outputPaths": {
+    "contractAssertSummary": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/contract/contract_assert_summary.json",
+    "trainLabelUniverse": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/universe/train_label_universe.jsonl.gz",
+    "trainLabelUniverseSummary": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/universe/train_label_universe_summary.json",
+    "preHitSnapshots": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/snapshots/pre_hit_chart_snapshots.jsonl.gz",
+    "preHitSnapshotManifest": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/snapshots/pre_hit_chart_snapshot_manifest.json",
+    "symbolicMotifFeatures": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/motifs/symbolic_motif_features_train.jsonl.gz",
+    "symbolicMotifManifest": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/motifs/symbolic_motif_feature_manifest.json",
+    "symbolicMotifCatalog": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/motifs/symbolic_motif_catalog.jsonl.gz",
+    "symbolicMotifCatalogManifest": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/motifs/symbolic_motif_catalog_manifest.json",
+    "positiveMotifAnchors": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/anchors/positive_motif_anchor_catalog.jsonl.gz",
+    "positiveMotifMiningSummary": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/anchors/positive_motif_mining_summary.json",
+    "motifNegativeControls": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/negatives/motif_negative_controls.jsonl.gz",
+    "motifNegativeControlSummary": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/negatives/motif_negative_control_summary.json",
+    "anchorFullNegativeVerification": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/verify/anchor_full_negative_verification.jsonl.gz",
+    "anchorFullNegativeSummary": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/verify/anchor_full_negative_summary.json",
+    "falsePositiveContrastSummary": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/contrast/false_positive_contrast_summary.json",
+    "vetoClauseCandidates": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/contrast/veto_clause_candidates.jsonl.gz",
+    "foundPatterns": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/search/train100_positive_motif_found_patterns.jsonl.gz",
+    "rejectedPatterns": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/search/train100_positive_motif_rejected_patterns.jsonl.gz",
+    "vetoSetcoverSummary": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/search/positive_motif_veto_setcover_summary.json",
+    "verifiedSurvivors": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/verify/train100_positive_motif_verified_survivors.jsonl.gz",
+    "verifierSummary": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/verify/train100_positive_motif_verifier_summary.json",
+    "certificate": "artifacts/runs/tp12_train100_positive_motif_contrastive_v1/certificates/train100_positive_motif_certificate.json"
+  },
+  "oosReadAllowed": false,
+  "fallbackAllowed": false
+}

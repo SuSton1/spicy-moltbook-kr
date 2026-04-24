@@ -1,0 +1,292 @@
+{
+  "generatedAt": "2026-03-22T00:00:00Z",
+  "serverHost": "spicy-moltbook",
+  "cleanupKey": "server_safe_artifact_cleanup_old_pluslite_recent3d_v1",
+  "policy": "delete old non-pinned intermediate files only; keep canonical v7 train templates intact; do not touch widened current scratch or afree pinned artifacts",
+  "keptRunIds": [
+    "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v7_20260320_train"
+  ],
+  "itemCount": 31,
+  "totalBytes": 20947598234,
+  "items": [
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_1m_probe_v1_20260320_train/step-b/templates_lite.jsonl",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_1m_probe_v1_20260320_train/step-b/templates_lite.jsonl",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_1m_probe_v1_20260320_train",
+      "sizeBytes": 1353033705,
+      "reason": "large reconstructed Step-B template pack from old probe family",
+      "recoverHint": "rerun historical plus-lite recent_impulse_3d budget probe/train wrapper from experiment_registry entries 213-221",
+      "ageGroup": "2026-03-20 plus-lite 3d budget train family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_heap4096_train/step-b/templates_lite.jsonl",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_heap4096_train/step-b/templates_lite.jsonl",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_heap4096_train",
+      "sizeBytes": 1681290237,
+      "reason": "large reconstructed Step-B template pack from old probe family",
+      "recoverHint": "rerun historical plus-lite recent_impulse_3d budget probe/train wrapper from experiment_registry entries 213-221",
+      "ageGroup": "2026-03-20 plus-lite 3d budget train family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_train/step-b/templates_lite.jsonl",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_train/step-b/templates_lite.jsonl",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_train",
+      "sizeBytes": 1681290237,
+      "reason": "large reconstructed Step-B template pack from old probe family",
+      "recoverHint": "rerun historical plus-lite recent_impulse_3d budget probe/train wrapper from experiment_registry entries 213-221",
+      "ageGroup": "2026-03-20 plus-lite 3d budget train family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v2_20260320_train/step-b/templates_lite.jsonl",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v2_20260320_train/step-b/templates_lite.jsonl",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v2_20260320_train",
+      "sizeBytes": 1681290237,
+      "reason": "large reconstructed Step-B template pack from old probe family",
+      "recoverHint": "rerun historical plus-lite recent_impulse_3d budget probe/train wrapper from experiment_registry entries 213-221",
+      "ageGroup": "2026-03-20 plus-lite 3d budget train family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v3_20260320_train/step-b/templates_lite.jsonl",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v3_20260320_train/step-b/templates_lite.jsonl",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v3_20260320_train",
+      "sizeBytes": 1681290237,
+      "reason": "large reconstructed Step-B template pack from old probe family",
+      "recoverHint": "rerun historical plus-lite recent_impulse_3d budget probe/train wrapper from experiment_registry entries 213-221",
+      "ageGroup": "2026-03-20 plus-lite 3d budget train family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v4_20260320_train/step-b/templates_lite.jsonl",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v4_20260320_train/step-b/templates_lite.jsonl",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v4_20260320_train",
+      "sizeBytes": 1681290237,
+      "reason": "large reconstructed Step-B template pack from old probe family",
+      "recoverHint": "rerun historical plus-lite recent_impulse_3d budget probe/train wrapper from experiment_registry entries 213-221",
+      "ageGroup": "2026-03-20 plus-lite 3d budget train family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v5_20260320_train/step-b/templates_lite.jsonl",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v5_20260320_train/step-b/templates_lite.jsonl",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v5_20260320_train",
+      "sizeBytes": 1681290237,
+      "reason": "large reconstructed Step-B template pack from old probe family",
+      "recoverHint": "rerun historical plus-lite recent_impulse_3d budget probe/train wrapper from experiment_registry entries 213-221",
+      "ageGroup": "2026-03-20 plus-lite 3d budget train family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6_20260320_train/step-b/templates_lite.jsonl",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6_20260320_train/step-b/templates_lite.jsonl",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6_20260320_train",
+      "sizeBytes": 1681290237,
+      "reason": "large reconstructed Step-B template pack from old probe family",
+      "recoverHint": "rerun historical plus-lite recent_impulse_3d budget probe/train wrapper from experiment_registry entries 213-221",
+      "ageGroup": "2026-03-20 plus-lite 3d budget train family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6r_20260320_train/step-b/templates_lite.jsonl",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6r_20260320_train/step-b/templates_lite.jsonl",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6r_20260320_train",
+      "sizeBytes": 1681290237,
+      "reason": "large reconstructed Step-B template pack from old probe family",
+      "recoverHint": "rerun historical plus-lite recent_impulse_3d budget probe/train wrapper from experiment_registry entries 213-221",
+      "ageGroup": "2026-03-20 plus-lite 3d budget train family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_20m_20260320_heap4096_train/step-b/templates_lite.jsonl",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_20m_20260320_heap4096_train/step-b/templates_lite.jsonl",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_20m_20260320_heap4096_train",
+      "sizeBytes": 1681290237,
+      "reason": "large reconstructed Step-B template pack from old probe family",
+      "recoverHint": "rerun historical plus-lite recent_impulse_3d budget probe/train wrapper from experiment_registry entries 213-221",
+      "ageGroup": "2026-03-20 plus-lite 3d budget train family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_20m_20260320_train/step-b/templates_lite.jsonl",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_20m_20260320_train/step-b/templates_lite.jsonl",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_20m_20260320_train",
+      "sizeBytes": 1681290237,
+      "reason": "large reconstructed Step-B template pack from old probe family",
+      "recoverHint": "rerun historical plus-lite recent_impulse_3d budget probe/train wrapper from experiment_registry entries 213-221",
+      "ageGroup": "2026-03-20 plus-lite 3d budget train family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_1m_probe_v1_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_1m_probe_v1_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_1m_probe_v1_20260320_train",
+      "sizeBytes": 97138153,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_heap4096_train/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_heap4096_train/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_heap4096_train",
+      "sizeBytes": 97138153,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_train",
+      "sizeBytes": 97138153,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v2_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v2_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v2_20260320_train",
+      "sizeBytes": 97138153,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v3_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v3_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v3_20260320_train",
+      "sizeBytes": 97138153,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v4_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v4_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v4_20260320_train",
+      "sizeBytes": 97138153,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v5_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v5_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v5_20260320_train",
+      "sizeBytes": 97138153,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6_20260320_train",
+      "sizeBytes": 97138153,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6r_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6r_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6r_20260320_train",
+      "sizeBytes": 97138153,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_20m_20260320_heap4096_train/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_20m_20260320_heap4096_train/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_20m_20260320_heap4096_train",
+      "sizeBytes": 97138153,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_20m_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_20m_20260320_train/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_20m_20260320_train",
+      "sizeBytes": 97138153,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_heap4096_oos/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_heap4096_oos/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_20260320_heap4096_oos",
+      "sizeBytes": 27825091,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v2_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v2_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v2_20260320_oos",
+      "sizeBytes": 27825091,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v3_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v3_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v3_20260320_oos",
+      "sizeBytes": 27825091,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v4_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v4_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v4_20260320_oos",
+      "sizeBytes": 27825091,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v5_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v5_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v5_20260320_oos",
+      "sizeBytes": 27825091,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6_20260320_oos",
+      "sizeBytes": 27825091,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6r_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6r_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6r_20260320_oos",
+      "sizeBytes": 27825091,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v7_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v7_20260320_oos/step-a/duckdb_raw_candidates.tsv",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v7_20260320_oos",
+      "sizeBytes": 27825091,
+      "reason": "Step-A raw intermediate TSV; reproducible from step-a rerun",
+      "recoverHint": "rerun src/cli.mjs step-a with the original run config/run-id family",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6_20260320_train/step-b/.exact-mining-cache/eb366a2242d958e9426aad8e2c4083ffdaf9a4e62a28778ec14606bcbcc94fcb/snapshot.bin",
+      "relativePath": "artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6_20260320_train/step-b/.exact-mining-cache/eb366a2242d958e9426aad8e2c4083ffdaf9a4e62a28778ec14606bcbcc94fcb/snapshot.bin",
+      "runId": "perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v6_20260320_train",
+      "sizeBytes": 1490541748,
+      "reason": "exact mining cache snapshot for obsolete probe variant",
+      "recoverHint": "rebuild by rerunning old probe or direct exact-indexed mining path",
+      "ageGroup": "2026-03-20 plus-lite 3d budget oos family"
+    }
+  ]
+}

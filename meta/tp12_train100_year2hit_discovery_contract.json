@@ -1,0 +1,88 @@
+{
+  "kind": "tp12_train100_year2hit_discovery_contract_v1",
+  "contractId": "tp12_train100_year2hit_discovery_v1",
+  "patchKey": "tp12_train100_year2hit_discovery_v1",
+  "updatedAt": "2026-04-21T00:00:00+09:00",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "coreYears": [
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "target": {
+    "minHitDecisionDatesPerYear": 2,
+    "minHitSymbolDatesPerYear": 2,
+    "minPositiveSymbolDatesTotal": 18,
+    "requiredTrainPrecision": 1,
+    "maxFalsePositiveRows": 0
+  },
+  "label": {
+    "labelConfigId": "tp12_target12_next_global_session_open_hold3_no_stop_v1",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "entryPolicy": "GLOBAL_NEXT_SESSION_OPEN",
+    "stopPolicy": "no_stop",
+    "requireEntryFeasibilitySummary": true
+  },
+  "preflight": {
+    "failOnOosPath": true,
+    "failOnRowOutsideTrainRange": true,
+    "requireHitTargetField": true,
+    "requireEntryFeasibilitySummary": true,
+    "requireEntryFeasibilityStatusPassed": true
+  },
+  "atomBuilder": {
+    "includeSourceTokens": true,
+    "includeTokenFamilies": true,
+    "includeTokenPrefixAtoms": true,
+    "includeTokenCountAtoms": true,
+    "requireContextFeatures": false,
+    "numericFields": [
+      "openToCloseReturn",
+      "return1d",
+      "rangePct",
+      "closeLocation",
+      "tradedValueRankPct",
+      "marketUpRatio",
+      "marketMedianReturn1d",
+      "limitUpProxyCount"
+    ]
+  },
+  "mining": {
+    "maxPatternAtoms": 6,
+    "maxEvaluatedCandidates": 500000,
+    "maxAtomCount": 512,
+    "maxSeedAtomMatchRows": 250000,
+    "minSeedPositiveSymbolDatesTotal": 18,
+    "minPositiveDecisionDatesTotal": 18,
+    "requireSearchComplete": true,
+    "emitRejected": false
+  },
+  "qualityGate": {
+    "failOnZeroAccepted": false,
+    "maxTopSymbolShare": 0.2,
+    "maxTopDateShare": 0.15,
+    "maxTopYearShare": 0.2,
+    "requireVerificationComplete": true
+  },
+  "hardStops": [
+    "Do not read OOS paths or OOS rows while building train100 candidates.",
+    "Do not treat date precision 100% as row precision 100%.",
+    "Do not accept any candidate with even one false-positive symbol/date row.",
+    "Do not use symbolId, symbol name, future high/low, hit date, or OOS result as an atom.",
+    "Do not silently fill missing required context features."
+  ]
+}

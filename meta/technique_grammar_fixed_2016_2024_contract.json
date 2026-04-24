@@ -1,0 +1,118 @@
+{
+  "kind": "technique_grammar_contract_v1",
+  "contractId": "tp12_year2hit_multisurface_fixed_mainline_v1",
+  "updatedAt": "2026-04-18T13:30:00+09:00",
+  "baseLookbackLadderContractPath": "meta/tp12_no_stop_lookback_ladder_contract.json",
+  "fixedResearchContractPath": "meta/tp12_no_stop_fixed_year2hit_research_contract.json",
+  "labelId": "tp12_no_stop_hit_3d",
+  "yearHitMetric": "unique_decision_dates",
+  "coreYears": [
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+  ],
+  "excludedBoundaryYears": [
+    2016
+  ],
+  "allowedScopeIds": [
+    "LOW_GAP_TOP",
+    "LOW",
+    "MID",
+    "TOP"
+  ],
+  "allowedLookbackCandidateIds": [
+    "lb1",
+    "lb3",
+    "lb5",
+    "lb8"
+  ],
+  "clauseShape": {
+    "anchor": {
+      "min": 1,
+      "max": 1
+    },
+    "retest": {
+      "min": 0,
+      "max": 1
+    },
+    "compression": {
+      "min": 0,
+      "max": 1
+    },
+    "confirm": {
+      "min": 0,
+      "max": 2
+    },
+    "invalidate": {
+      "min": 0,
+      "max": 1
+    }
+  },
+  "generation": {
+    "minTotalClauses": 2,
+    "maxGeneratedCandidatesPerSeed": 128
+  },
+  "recurrence": {
+    "discoveryMinYearsWithHitGe2": 4,
+    "discoveryAltMinYearsWithHitGe1": 6,
+    "promotionMinYearsWithHitGe2": 5,
+    "promotionMinCoveredYears": 5,
+    "minSignalsPer20TradingDays": 3,
+    "maxYearShare": 0.5,
+    "minYearEventCount": 2
+  },
+  "bankDiscovery": {
+    "screenMaxSearchStates": 200000,
+    "minUsableWindows": 4,
+    "minRollingOosHitRate": 0.3,
+    "minOosYearsWithHitGe2": 4,
+    "minSignalsPer20TradingDays": 4,
+    "maxTop1DateShare": 0.1
+  },
+  "shortlist": {
+    "minPromotionHitRate": 0.3,
+    "minSignalsPer20TradingDays": 4,
+    "maxSignalsPer20TradingDays": 15,
+    "targetSignalsPer20TradingDays": 8,
+    "maxTemplatesPerMechanism": 8,
+    "maxTemplatesTotal": 16
+  },
+  "promotion": {
+    "finalMinOosHitRate": 0.5,
+    "finalMinSelectedRows": 80,
+    "finalSignalsPer20TradingDaysMin": 8,
+    "finalSignalsPer20TradingDaysMax": 12
+  },
+  "templateScreen": {
+    "screenMaxSearchStates": 200000,
+    "minUsableWindows": 4,
+    "minRollingOosHitRate": 0.28,
+    "minOosYearsWithHitGe2": 4,
+    "minSignalsPer20TradingDays": 2,
+    "maxSignalsPer20TradingDays": 8,
+    "maxTop1DateShare": 0.1
+  },
+  "yearConsensus": {
+    "minConsensusYearsPresent": 4,
+    "minConsensusYearsWithHitGe1": 3,
+    "minConsensusYearsWithZeroNegative": 3,
+    "minAggregateOosHitRate": 0.5,
+    "minAggregateOosHitCount": 4,
+    "minAggregateOosMatchedDateCount": 4,
+    "maxRuleSize": 6
+  },
+  "hardStops": [
+    "Do not reopen exact-rule year2x7/year2x8 discovery as the primary path.",
+    "Do not collapse the search surface back to MA_RETEST only; reserve banks must remain explicit siblings.",
+    "Do not treat year2hit as a discovery-stage hard prune for multisurface survivor generation."
+  ],
+  "notes": [
+    "This fixed sibling keeps year2hit as a post-discovery validator over a wider multisurface pool.",
+    "The explicit year-hit metric is unique decision dates.",
+    "Cluster lanes, reserve banks, and seed-lattice breadth are part of the mainline, not diagnostics."
+  ]
+}

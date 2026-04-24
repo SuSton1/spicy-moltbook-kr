@@ -1,0 +1,134 @@
+{
+  "kind": "tp12_train100_year2hit_discovery_contract_v1",
+  "contractId": "tp12_train100_counterexample_exact_completion_v1",
+  "patchKey": "tp12_train100_counterexample_exact_completion_v1",
+  "updatedAt": "2026-04-22T00:00:00+09:00",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "coreYears": [
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "target": {
+    "minHitDecisionDatesPerYear": 2,
+    "minHitSymbolDatesPerYear": 2,
+    "minPositiveSymbolDatesTotal": 18,
+    "requiredTrainPrecision": 1,
+    "maxFalsePositiveRows": 0
+  },
+  "label": {
+    "labelConfigId": "tp12_target12_next_global_session_open_hold3_no_stop_v1",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "entryPolicy": "GLOBAL_NEXT_SESSION_OPEN",
+    "stopPolicy": "no_stop",
+    "requireEntryFeasibilitySummary": true
+  },
+  "preflight": {
+    "failOnOosPath": true,
+    "failOnRowOutsideTrainRange": true,
+    "requireHitTargetField": true,
+    "requireEntryFeasibilitySummary": true,
+    "requireEntryFeasibilityStatusPassed": true
+  },
+  "atomBuilder": {
+    "includeSourceTokens": true,
+    "includeTokenFamilies": true,
+    "includeTokenPrefixAtoms": true,
+    "includeTokenCountAtoms": true,
+    "requireContextFeatures": true,
+    "contextJoinMode": "stream_sorted_symbol_date",
+    "numericAtomMode": "bucket_only",
+    "requiredNumericFields": [
+      "openToCloseReturn",
+      "return1d",
+      "rangePct",
+      "closeLocation",
+      "marketUpRatio",
+      "marketMeanReturn1d",
+      "limitUpProxyCount"
+    ],
+    "numericFields": [
+      "gapPct",
+      "openToCloseReturn",
+      "return1d",
+      "return3d",
+      "return5d",
+      "return10d",
+      "return20d",
+      "rangePct",
+      "rangeRel20",
+      "closeLocation",
+      "closeOverMa5",
+      "closeOverMa20",
+      "closeOverMa60",
+      "tradedValueRel20",
+      "tradedValueRel60",
+      "returnVol20",
+      "closeToHigh20Pct",
+      "closeFromLow20Pct",
+      "marketUpRatio",
+      "marketUpRatio5",
+      "marketUpRatio20",
+      "marketMeanReturn1d",
+      "marketMeanReturn5",
+      "marketMeanReturn20",
+      "limitUpProxyCount",
+      "limitUpProxyAvg5",
+      "limitUpProxyAvg20",
+      "limitUpProxyRel20"
+    ]
+  },
+  "mining": {
+    "maxPatternAtoms": 7,
+    "maxEvaluatedCandidates": 800000,
+    "maxAtomCount": 768,
+    "maxSeedAtomMatchRows": 250000,
+    "minSeedPositiveSymbolDatesTotal": 18,
+    "minPositiveDecisionDatesTotal": 18,
+    "progressEveryCandidates": 10000,
+    "requireSearchComplete": true,
+    "emitRejected": false
+  },
+  "qualityGate": {
+    "failOnZeroAccepted": false,
+    "maxTopSymbolShare": 0.2,
+    "maxTopDateShare": 0.15,
+    "maxTopYearShare": 0.2,
+    "requireVerificationComplete": true
+  },
+  "hardStops": [
+    "Do not read OOS paths or OOS rows while building train100 candidates.",
+    "Do not relax requiredTrainPrecision below 1.",
+    "Do not treat date precision 100% as row precision 100%.",
+    "Do not accept any candidate with even one false-positive symbol/date row.",
+    "Do not use symbolId, symbol name, future high/low, hit date, OOS result, or next-entry price movement as an atom.",
+    "Do not silently fill missing required context features."
+  ],
+  "counterexampleExactCompletion": {
+    "searchStrategy": "counterexample_exact_completion",
+    "maxVisitedStates": 50000,
+    "maxSeeds": 0,
+    "maxCounterexampleScan": 16,
+    "progressEveryStates": 1000,
+    "allowIncomplete": false,
+    "notes": [
+      "Choose a live false-positive support row as the counterexample.",
+      "Branch over every atom absent from that counterexample row that preserves the train100 year gate.",
+      "If maxVisitedStates or seed limit is hit, the result is incomplete and cannot be used as an absence proof."
+    ]
+  }
+}

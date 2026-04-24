@@ -1,0 +1,74 @@
+{
+  "kind": "tp12_no_stop_lookback_ladder_contract_v1",
+  "contractId": "tp12_no_stop_low_gap_top_lookback_ladder_v1",
+  "updatedAt": "2026-04-07T23:55:00+09:00",
+  "scopeId": "LOW_GAP_TOP",
+  "baseRollingContractPath": "meta/tp12_no_stop_rolling_research_contract.json",
+  "candidateSelection": {
+    "sparseCandidateIds": [
+      "lb1",
+      "lb2",
+      "lb3",
+      "lb5",
+      "lb8"
+    ],
+    "denseFillCandidateIds": [
+      "lb4",
+      "lb6",
+      "lb7"
+    ]
+  },
+  "lookbackCandidates": [
+    {
+      "candidateId": "lb1",
+      "stage": "sparse",
+      "lookbackTradingDays": 1
+    },
+    {
+      "candidateId": "lb2",
+      "stage": "sparse",
+      "lookbackTradingDays": 2
+    },
+    {
+      "candidateId": "lb3",
+      "stage": "sparse",
+      "lookbackTradingDays": 3
+    },
+    {
+      "candidateId": "lb4",
+      "stage": "dense_fill",
+      "lookbackTradingDays": 4
+    },
+    {
+      "candidateId": "lb5",
+      "stage": "sparse",
+      "lookbackTradingDays": 5
+    },
+    {
+      "candidateId": "lb6",
+      "stage": "dense_fill",
+      "lookbackTradingDays": 6
+    },
+    {
+      "candidateId": "lb7",
+      "stage": "dense_fill",
+      "lookbackTradingDays": 7
+    },
+    {
+      "candidateId": "lb8",
+      "stage": "sparse",
+      "lookbackTradingDays": 8
+    }
+  ],
+  "hardStops": [
+    "Do not open this ladder before the recent_impulse_1d rolling branch final confirm is judged.",
+    "Do not use HIGH8, close28, or stop-first metrics as the promotion reason for a wider lookback.",
+    "Do not widen scope before a winning lookback survives final confirm.",
+    "Do not attempt 9d~12d experiments before the current 8d ceiling proves useful."
+  ],
+  "notes": [
+    "This is a deferred scaffold for future TP12 no-stop lookback expansion under LOW_GAP_TOP only.",
+    "The sparse ladder is 1d, 2d, 3d, 5d, 8d.",
+    "The dense fill is 4d, 6d, 7d and must remain closed until sparse ladder evidence is green."
+  ]
+}

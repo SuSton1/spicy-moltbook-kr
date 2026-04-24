@@ -1,0 +1,239 @@
+{
+  "version": 1,
+  "updatedAt": "2026-03-19T13:08:42Z",
+  "goalMode": "LEGACY_PNL_V1",
+  "positionSemantics": "SINGLE_POSITION_V1",
+  "archivedKeys": [
+    "d1_score_margin_strong_candidate_bypass",
+    "liquidity_ratio_strong_candidate_bypass",
+    "d2_daytype_semantics_relaxation",
+    "false_positive_decision_mode_blend",
+    "false_positive_edge_override_gate_relax",
+    "false_positive_model_sign_prior",
+    "false_positive_training_source_executed_only",
+    "false_positive_label_semantics_rewrite",
+    "false_positive_label_semantics_mild_reweight",
+    "false_positive_strong_candidate_bypass_evalsafe",
+    "freeze_online_learning_probe12_d2stack",
+    "freeze_online_learning_only_probe12_d2stack",
+    "agreement_rerank_promote_trade_only",
+    "perfect_proto_oos_exclude_close28pct_report_v1",
+    "perfect_proto_stepb_dplus1_baseline_line_v1",
+    "perfect_proto_stepb_dplus1_train_oos_wrapper_v1",
+    "perfect_proto_stepb_dplus1_train_oos_leaderboard_v1",
+    "perfect_proto_stepb_dplus1_risk_guardrails_v1",
+    "perfect_proto_stepb_dplus1_nogap_alignment_v1",
+    "perfect_proto_stepb_dplus1_contract_self_contained_v1",
+    "perfect_proto_stepb_dplus1_nogap_contract_lock_v1",
+    "perfect_proto_stepb_dplus1_selection_integrity_v1",
+    "perfect_proto_stepb_dplus1_boundary_provenance_symmetry_v1",
+    "perfect_proto_stepb_dplus1_leaderboard_semantic_cleanup_v1",
+    "perfect_proto_stepb_dplus1_wrapper_e2e_smoke_v1",
+    "perfect_proto_stepb_dplus1_contract_closure_v1",
+    "perfect_proto_stepb_dplus1_long_reference_run_v1",
+    "perfect_proto_stepb_dplus1_long_reference_post_scrub_v1",
+    "perfect_proto_apply_recommendation_close_ret_order_independent_lookup_v1",
+    "perfect_proto_stepb_v3_contextual_plus_lite_surface_v1"
+  ],
+  "notes": [
+    "These experiments remain valid as legacy diagnosis history.",
+    "Do not promote them as primary success under TARGET_FIRST_V2."
+  ],
+  "archivedEntries": [
+    {
+      "date": "2026-03-13",
+      "patchKey": "perfect_proto_oos_exclude_close28pct_report_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_oos_postfilter_close28_20250120_20260312_20260313_172050"
+      ],
+      "summary": "Excluded OOS recommendation rows whose recommendation-date closeRetPct was >= 28% and recomputed post-filter prototype OOS metrics from original matches. Removed 296 matched rows (171 hits, 125 negatives); zero-negative matched rules fell from 401 to 344 and hit2 zero-negative rules fell from 142 to 60."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_baseline_line_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_sanity_20260319_ksmoke_v2"
+      ],
+      "summary": "Completed the Step-B D+1 baseline contract line. Added an explicit baseline config and Step-B contract metadata for NEXT_DAY_OPEN / 3-day / +8% / -4% on the legacy v3_contextual no-gap line, kept the predictive guard intact, passed local/server verify, and confirmed baselineExactnessClaimable=true with trainExactnessDriftRuleCount=0 on the server sanity baseline run."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_train_oos_wrapper_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_sanity_20260319_ksmoke_v2"
+      ],
+      "summary": "Completed the Step-B D+1 train/OOS server wrapper. Added an explicit split-policy-gated server-only baseline runner that builds train Step-A/Step-B, mines the legacy no-gap catalog, reapplies on train, evaluates OOS, and records split policy plus train/OOS windows in the baseline manifest. Local/server verify passed and the server sanity run completed successfully with decision_date_only split policy."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_train_oos_leaderboard_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_sanity_20260319_ksmoke_v2"
+      ],
+      "summary": "Completed the Step-B D+1 train/OOS leaderboard. Added combined leaderboard outputs with catalog-vs-train-reapply provenance, explicit train exactness drift flags, baselineExactnessClaimable manifest state, and per-rule train/OOS metrics. Local/server verify passed and the server sanity baseline now reports trainExactnessDriftRuleCount=0 with no sub-1.0 train precision drift buckets."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_risk_guardrails_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_sanity_20260319_ksmoke_v2"
+      ],
+      "summary": "Completed the Step-B D+1 risk guardrails bundle. Added baseline manifest, train reapply drift summary, and OOS guardrail outputs so rule-count, date/symbol concentration, and OOS zero-negative survivorship can be read without exactness drift ambiguity. Local/server verify passed and the server sanity run reports baselineExactnessClaimable=true and trainExactnessDriftRuleCount=0."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_nogap_alignment_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_speed_sanity_20260319_013000"
+      ],
+      "summary": "Aligned the Step-B D+1 baseline wrapper with the historical no-gap benchmark by forcing maxGapTradingDays=100000 through server wrapper and leaderboard paths. Local/server verify passed, and the server speed sanity run produced 4000 exact rules on 20000140 explored states in 1266.8s with baselineExactnessClaimable=true, confirming the old ~3k-rule cadence is recovered under aligned conditions."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_contract_self_contained_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_sanity_20260319_ksmoke_v2",
+        "perfect_proto_stepb_dplus1_speed_sanity_20260319_013000"
+      ],
+      "summary": "Closed the Step-B D+1 baseline contract hardening bundle. The baseline config is now self-contained with explicit featureAsOf=t-1, exactCollectionMode=train_precision_1_only, and no-gap maxGapTradingDays=100000 semantics. Local/server verify passed, wrapper helper smoke passed, and the previously recovered old no-gap speed gate remained preserved."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_nogap_contract_lock_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_sanity_20260319_ksmoke_v2",
+        "perfect_proto_stepb_dplus1_speed_sanity_20260319_013000"
+      ],
+      "summary": "Locked stepb_dplus1_baseline to the historical no-gap comparison semantics. The server wrapper now fail-fast rejects arbitrary max-gap overrides under the same line id, preserving apples-to-apples comparison with the recovered ~3k-rule lineage."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_selection_integrity_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_sanity_20260319_ksmoke_v2",
+        "perfect_proto_stepb_dplus1_speed_sanity_20260319_013000"
+      ],
+      "summary": "Added fail-fast selectionMode integrity checks across Step-B train report, OOS report, raw apply, close28 apply, and leaderboard manifest. Local/server verify passed and the dedicated leaderboard smoke now proves mismatched selection modes are rejected instead of silently merged."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_boundary_provenance_symmetry_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_sanity_20260319_ksmoke_v2",
+        "perfect_proto_stepb_dplus1_speed_sanity_20260319_013000"
+      ],
+      "summary": "Closed the Step-B boundary provenance asymmetry. strict_label_boundary and decision_date_only now both emit explicit provenance artifacts, and reversed or overlapping train/OOS windows are rejected fail-fast. Local/server verify passed."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_leaderboard_semantic_cleanup_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_sanity_20260319_ksmoke_v2",
+        "perfect_proto_stepb_dplus1_speed_sanity_20260319_013000"
+      ],
+      "summary": "Cleaned up Step-B leaderboard semantics so train/OOS support fields are explicit and coverage naming no longer mixes raw and deduped meanings. Local/server verify passed, and the combined leaderboard and guardrail outputs now expose deduped positive coverage plus explicit train and OOS unique date and symbol counts."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_wrapper_e2e_smoke_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_sanity_20260319_ksmoke_v2",
+        "perfect_proto_stepb_dplus1_speed_sanity_20260319_013000"
+      ],
+      "summary": "Added a tiny Step-B wrapper end-to-end smoke that covers train and OOS config rewrite plus boundary provenance helper behavior without launching heavy server-only mining. Local/server verify passed, and the smoke now guards the baseline wrapper helper contract alongside the existing Step-B smokes."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_contract_closure_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_sanity_20260319_ksmoke_v2",
+        "perfect_proto_stepb_dplus1_speed_sanity_20260319_013000"
+      ],
+      "summary": "Closed the remaining Step-B D+1 baseline contract gap before the long reference run. The real server wrapper now sources the shared helper library, direct baseline Step-B execution fails fast on invalid contractVersion/strategyMode/top-level parity mismatches, boundary provenance is symmetric, and the combined leaderboard/guardrail path now enforces artifact selection and hash consistency. Local and server verify passed while preserving the recovered historical ~3k-rule no-gap cadence."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_long_reference_run_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_long_reference_20260319_142559"
+      ],
+      "summary": "Completed the hardened Step-B D+1 long reference run under decision_date_only no-gap semantics. Train mining reproduced the recovered historical cadence with 89781 Step-B rows, 4000 exact rules, and 20000140 explored states. Train reapply stayed exact with zero drift, and OOS guardrails remained broad with 3412 matched rules, 741 zero-negative rules, 334 hit>=2 zero-negative rules, 245 unique matched dates, and 417 unique matched symbols."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_dplus1_long_reference_post_scrub_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_long_reference_post_scrub_20260319_ko"
+      ],
+      "summary": "Re-ran the hardened Step-B D+1 long reference after historical invalid candle scrub and recommendation close-return sidecar rebuild. Train cadence stayed intact while OOS zero-negative survivorship improved."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_apply_recommendation_close_ret_order_independent_lookup_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_plus_lite_budget10k_20m_heap8g_rerun_20260319"
+      ],
+      "summary": "Made legacy close28 apply order-independent after plus-lite surfaced a post-scrub candle ordering bug. Local/server verify passed, unsorted-candle smoke passed, and the blocked plus-lite run completed end-to-end on rerun."
+    },
+    {
+      "date": "2026-03-19",
+      "patchKey": "perfect_proto_stepb_v3_contextual_plus_lite_surface_v1",
+      "status": "completed",
+      "scope": "legacy_only",
+      "probeId": null,
+      "runIds": [
+        "perfect_proto_stepb_dplus1_budget10k_20m_20260319",
+        "perfect_proto_stepb_dplus1_plus_lite_budget10k_20m_heap8g_rerun_20260319"
+      ],
+      "summary": "Compared v3_contextual vs v3_contextual_plus_lite at fixed budget 10000 rules / 20000000 states. plus-lite improved hit>=3 and close28 zero-negative survivorship, but coverage narrowed and concentration worsened; keep v3_contextual as the default baseline for now."
+    }
+  ]
+}

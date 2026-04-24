@@ -1,0 +1,179 @@
+{
+  "kind": "tp12_year2hit_zero_fp_micro_split_contract_v1",
+  "contractId": "tp12_year2hit_executable_global_zero_fp_cover_v1",
+  "patchKey": "tp12_year2hit_executable_global_zero_fp_cover_v1",
+  "updatedAt": "2026-04-23T00:00:00+09:00",
+  "hitDefinition": "executable_hit_v1",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "coreYears": [
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "entryExecutablePolicy": {
+    "policyId": "tp12_executable_hit_next_open_gap29p5_volume_v1",
+    "entryRule": "NEXT_GLOBAL_SESSION_OPEN",
+    "strictOpenFill": true,
+    "keepNonExecutableRows": true,
+    "nonExecutableRowsCountAsOperationalMisses": true,
+    "minEntryVolumeExclusive": 0,
+    "upperGapPctExclusive": 0.295,
+    "nonExecutableWhen": [
+      "entryVolume <= 0",
+      "entryOpen / decisionClose - 1 >= 0.295"
+    ],
+    "executionFieldsMustBeNestedUnder": "execution"
+  },
+  "target": {
+    "hitDefinition": "executable_hit_v1",
+    "minHitDecisionDatesPerYear": 2,
+    "minHitSymbolDatesPerYear": 2,
+    "minPositiveSymbolDatesTotal": 18,
+    "requiredTrainPrecision": 1,
+    "maxFalsePositiveRows": 0
+  },
+  "parents": {
+    "enabledBaseTypes": [
+      "pattern",
+      "cluster"
+    ],
+    "maxParentRows": 25000,
+    "maxParents": 24,
+    "priorityMode": "fewest_operational_false_positives_then_most_executable_hits"
+  },
+  "globalCover": {
+    "enabled": true,
+    "mode": "cross_parent_union_of_zero_fp_tiles",
+    "cover": {
+      "maxTilesPerCover": 18,
+      "beamWidth": 160,
+      "maxTilePoolForCover": 900,
+      "maxCoverCandidatesPerParent": 40
+    }
+  },
+  "atomBuilder": {
+    "includeSupportPatternAtoms": true,
+    "includeSupportClusterAtoms": true,
+    "includeSupportTokenAtoms": true,
+    "includeTokenFamilyAtoms": true,
+    "includeNumericRankAtoms": true,
+    "maxTokenAtomsPerParent": 160,
+    "maxPatternAtomsPerParent": 160,
+    "maxClusterAtomsPerParent": 120,
+    "rankThresholds": [
+      0.02,
+      0.05,
+      0.1,
+      0.15,
+      0.25,
+      0.33,
+      0.5,
+      0.66,
+      0.7,
+      0.75,
+      0.85,
+      0.9,
+      0.95,
+      0.98
+    ],
+    "rankFields": [
+      "gapPct",
+      "openToCloseReturn",
+      "return1d",
+      "return3d",
+      "return5d",
+      "return10d",
+      "return20d",
+      "rangePct",
+      "rangeRel20",
+      "closeLocation",
+      "closeOverMa5",
+      "closeOverMa20",
+      "closeOverMa60",
+      "tradedValueRel20",
+      "tradedValueRel60",
+      "returnVol20",
+      "closeToHigh20Pct",
+      "closeFromLow20Pct",
+      "marketUpRatio",
+      "marketUpRatio5",
+      "marketUpRatio20",
+      "marketMeanReturn1d",
+      "marketMeanReturn5",
+      "marketMeanReturn20",
+      "limitUpProxyCount",
+      "limitUpProxyAvg5",
+      "limitUpProxyAvg20",
+      "limitUpProxyRel20",
+      "supportPatternCount",
+      "supportClusterCount",
+      "familyDiversity",
+      "nearDuplicatePatternPenalty",
+      "rawEventRowCount",
+      "meanPatternRowEb",
+      "meanPatternDateEb",
+      "maxPatternRowEb",
+      "maxPatternDateEb",
+      "maxPatternRowWilsonLB",
+      "maxPatternDateWilsonLB",
+      "meanClusterRowEb",
+      "meanClusterDateEb",
+      "maxClusterRowEb",
+      "maxClusterDateEb",
+      "maxClusterRowWilsonLB",
+      "maxClusterDateWilsonLB",
+      "supportWeightedClusterRowEb",
+      "selectorScore"
+    ]
+  },
+  "mining": {
+    "includeSourceRuleCores": true,
+    "maxSourceRuleCoreDepth": 8,
+    "maxAtomPoolPerParent": 220,
+    "coreTopAtomCount": 80,
+    "maxCoreAtoms": 3,
+    "maxEvaluatedCoresPerParent": 16000,
+    "maxCoreFalsePositiveRowsForVeto": 40,
+    "maxVetoAtoms": 2,
+    "maxVetoCandidatesPerCore": 80,
+    "minTileHitRows": 1,
+    "maxZeroFpTilesForCoverPerParent": 900,
+    "maxZeroFpTilesOutputPerParent": 400,
+    "maxCandidateTilesOutputPerParent": 600
+  },
+  "cover": {
+    "maxTilesPerCover": 8,
+    "beamWidth": 80,
+    "maxTilePoolForCover": 320,
+    "maxCoverCandidatesPerParent": 20
+  },
+  "hardStops": [
+    "Do not read OOS paths or OOS rows while building train micro-split candidates.",
+    "Do not relax requiredTrainPrecision below 1.",
+    "Do not accept any candidate with even one operational false-positive symbol/date row.",
+    "Do not drop non-executable rows from the mining denominator; keep them as misses unless an explicit diagnostic run says otherwise.",
+    "Do not expose decisionClose, entryOpen, entryHigh, entryLow, entryClose, entryVolume, entryGapPct, targetPrice, hitDateKey, chartMaxForwardReturn, or other execution/outcome fields as top-level atom features.",
+    "Do not use symbolId, symbol name, decision date literals, future high/low, hit date, OOS result, or next-entry price movement as an atom.",
+    "Do not replace missing consensus/context/candle/label inputs with placeholders.",
+    "Only use the explicit enabledBaseTypes, atomBuilder surfaces, and globalCover mode in this contract."
+  ],
+  "outputs": {
+    "emitTileCatalogs": false,
+    "summary": "artifacts/runs/tp12_year2hit_executable_global_zero_fp_cover_v1/train_only/global_cover/micro_split_summary.json",
+    "globalCoverCandidates": "artifacts/runs/tp12_year2hit_executable_global_zero_fp_cover_v1/train_only/global_cover/micro_split_global_year_cover_candidates.jsonl",
+    "globalFinalSurvivors": "artifacts/runs/tp12_year2hit_executable_global_zero_fp_cover_v1/train_only/global_cover/micro_split_global_final_survivors.jsonl"
+  }
+}

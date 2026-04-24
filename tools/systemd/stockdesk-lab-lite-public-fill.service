@@ -1,0 +1,8 @@
+[Unit]
+Description=Stockdesk Lab Lite public daily fill
+After=default.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/moltook/apps/stockdesk-lab-lite
+ExecStart=/usr/bin/bash -lc 'export TZ=Asia/Seoul; cd /home/moltook/apps/stockdesk-lab-lite; bash tools/run_public_fill_once.sh'

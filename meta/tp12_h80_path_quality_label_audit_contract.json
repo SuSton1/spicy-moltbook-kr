@@ -1,0 +1,38 @@
+{
+  "kind": "tp12_h80_path_quality_label_audit_contract_v1",
+  "patchKey": "tp12_h80_path_quality_label_audit_v1",
+  "goalMode": "train_only_path_quality_diagnostic",
+  "scope": "target_first_v2",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "label": {
+    "labelConfigId": "tp12_target12_next_global_session_open_hold3_no_stop_v1",
+    "entryPolicy": "GLOBAL_NEXT_SESSION_OPEN",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "stopPolicy": "no_stop"
+  },
+  "objective": {
+    "mode": "diagnostic_only",
+    "usesFuturePathQualityAsLiveFeature": false,
+    "oosApplyAllowed": false,
+    "lockedSelectorAllowed": false
+  },
+  "pathQualityBuckets": {
+    "nearMissMinPct": 0.08,
+    "hardNegativeMaxForwardReturnPct": 0.04
+  },
+  "hardStops": [
+    "Do not read OOS rows or OOS selector predictions.",
+    "Do not use maxForwardReturn, minForwardReturn, hitDateKey, or any future path metric as a live selector feature.",
+    "Do not emit a locked selector from this diagnostic audit.",
+    "Do not tune thresholds from this audit against OOS.",
+    "Use this artifact only to decide the next explicit train-only objective family."
+  ]
+}

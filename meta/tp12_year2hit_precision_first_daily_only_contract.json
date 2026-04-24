@@ -1,0 +1,84 @@
+{
+  "kind": "tp12_year2hit_precision_first_daily_only_contract_v1",
+  "patchKey": "tp12_year2hit_precision_first_daily_only_v1",
+  "mode": "train_only_precision_admission_gate",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenOosDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "label": {
+    "labelConfigId": "tp12_target12_next_global_session_open_hold3_no_stop_v1",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "entryPolicy": "GLOBAL_NEXT_SESSION_OPEN",
+    "stopPolicy": "no_stop"
+  },
+  "year2hitGate": {
+    "coreYears": [
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024
+    ],
+    "minHitsPerCoreYear": 2,
+    "relaxAllowed": false
+  },
+  "featureScope": {
+    "dailyOnly": true,
+    "sideDailyAllowed": false,
+    "intradayAllowed": false,
+    "themeAllowed": false,
+    "futureLabelFieldsAllowedAsLiveFeatures": false
+  },
+  "acceptance": {
+    "minResearchRawPrecisionLift": 0.03,
+    "minResearchSymbolDatePrecisionLift": 0.03,
+    "minPromotionRawPrecisionLift": 0.05,
+    "minPromotionSymbolDatePrecisionLift": 0.05,
+    "minRawRows": 40000,
+    "minRetainedRowShare": 0.2,
+    "minActiveYears": 4,
+    "minActiveMonths": 36,
+    "minActiveDates": 600,
+    "maxTopSymbolShare": 0.03,
+    "maxTopDateShare": 0.04,
+    "maxTopMonthShare": 0.12,
+    "maxTopPatternClusterShare": 0.35,
+    "minMatchedControlCoverage": 0.85,
+    "minMatchedControlAbsoluteLift": 0.03,
+    "minMatchedControlRelativeLift": 1.15
+  },
+  "inputArtifacts": {
+    "preferredCandidates": "artifacts/runs/tp12_h80_same_day_listwise_context_abstention_v1/train_only_diagnostic/same_day_listwise_context_features.jsonl.gz",
+    "diagnosticBundleCandidates": "artifacts/gptpro_bundles/tp12_same_day_ranker_gptpro_20260422/full_compressed/enriched_consensus_all_folds.jsonl.gz"
+  },
+  "outputArtifacts": {
+    "summary": "artifacts/runs/tp12_year2hit_precision_first_daily_only_v1/train_only_diagnostic/precision_first_daily_summary.json",
+    "selected": "artifacts/runs/tp12_year2hit_precision_first_daily_only_v1/train_only_diagnostic/precision_first_daily_selected.jsonl",
+    "rejected": "artifacts/runs/tp12_year2hit_precision_first_daily_only_v1/train_only_diagnostic/precision_first_daily_rejected.jsonl",
+    "ruleReport": "artifacts/runs/tp12_year2hit_precision_first_daily_only_v1/train_only_diagnostic/precision_first_daily_rule_report.jsonl"
+  },
+  "lockRules": {
+    "emitLockedSelector": false,
+    "oosReplayAllowed": false,
+    "fallbackAllowed": false,
+    "oosTuningAllowed": false
+  },
+  "hardStops": [
+    "Do not read or tune on OOS 2025-01-02..2026-04-17.",
+    "Do not use side-daily, intraday, theme, or external sector data in this patch.",
+    "Do not export future label/path-quality fields as live features.",
+    "Do not relax minHitsPerCoreYear or auto-drop any requested core year.",
+    "Do not emit a locked selector or apply to OOS from this diagnostic patch.",
+    "Do not hidden-fallback to train100, learned ranker, current_like selector, or side-daily branches."
+  ]
+}

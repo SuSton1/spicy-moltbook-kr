@@ -1,0 +1,104 @@
+{
+  "kind": "tp12_no_gap_addon_contract_v1",
+  "contractId": "tp12_no_gap_addon_lb5_v1",
+  "updatedAt": "2026-04-11T23:40:00+09:00",
+  "baseLookbackLadderContractPath": "meta/tp12_no_stop_lookback_ladder_contract.json",
+  "baseCandidateId": "lb5",
+  "addonCandidates": [
+    {
+      "candidateId": "NG_CLOSE_BASE",
+      "label": "LOW close-only gapless baseline",
+      "stage": "screen",
+      "baseFamilyId": "LOW_CLOSE_ONLY",
+      "addonId": "BASE"
+    },
+    {
+      "candidateId": "NG_CLOSE_RETENTION_V1",
+      "label": "LOW close-only + retention",
+      "stage": "screen",
+      "baseFamilyId": "LOW_CLOSE_ONLY",
+      "addonId": "RETENTION_V1"
+    },
+    {
+      "candidateId": "NG_CLOSE_REVTURN_V1",
+      "label": "LOW close-only + reversal turn",
+      "stage": "screen",
+      "baseFamilyId": "LOW_CLOSE_ONLY",
+      "addonId": "REVTURN_V1"
+    },
+    {
+      "candidateId": "NG_CLOSE_LIQVOL_V1",
+      "label": "LOW close-only + liquidity versus volatility",
+      "stage": "screen",
+      "baseFamilyId": "LOW_CLOSE_ONLY",
+      "addonId": "LIQVOL_V1"
+    },
+    {
+      "candidateId": "NG_CLOSE_COMPRESSION_V1",
+      "label": "LOW close-only + compression release",
+      "stage": "screen",
+      "baseFamilyId": "LOW_CLOSE_ONLY",
+      "addonId": "COMPRESSION_V1"
+    },
+    {
+      "candidateId": "NG_CLOSE_SEQRECENT_V1",
+      "label": "LOW close-only + recent sequence shape",
+      "stage": "screen",
+      "baseFamilyId": "LOW_CLOSE_ONLY",
+      "addonId": "SEQRECENT_V1"
+    },
+    {
+      "candidateId": "NG_JUMP_BASE",
+      "label": "LOW jump-below gapless baseline",
+      "stage": "screen",
+      "baseFamilyId": "LOW_JUMP_ONLY",
+      "addonId": "BASE"
+    },
+    {
+      "candidateId": "NG_JUMP_RETENTION_V1",
+      "label": "LOW jump-below + retention",
+      "stage": "screen",
+      "baseFamilyId": "LOW_JUMP_ONLY",
+      "addonId": "RETENTION_V1"
+    },
+    {
+      "candidateId": "NG_JUMP_REVTURN_V1",
+      "label": "LOW jump-below + reversal turn",
+      "stage": "screen",
+      "baseFamilyId": "LOW_JUMP_ONLY",
+      "addonId": "REVTURN_V1"
+    },
+    {
+      "candidateId": "NG_JUMP_LIQVOL_V1",
+      "label": "LOW jump-below + liquidity versus volatility",
+      "stage": "screen",
+      "baseFamilyId": "LOW_JUMP_ONLY",
+      "addonId": "LIQVOL_V1"
+    }
+  ],
+  "candidateSelection": {
+    "screenCandidateIds": [
+      "NG_CLOSE_BASE",
+      "NG_CLOSE_RETENTION_V1",
+      "NG_CLOSE_REVTURN_V1",
+      "NG_CLOSE_LIQVOL_V1",
+      "NG_CLOSE_COMPRESSION_V1",
+      "NG_CLOSE_SEQRECENT_V1",
+      "NG_JUMP_BASE",
+      "NG_JUMP_RETENTION_V1",
+      "NG_JUMP_REVTURN_V1",
+      "NG_JUMP_LIQVOL_V1"
+    ],
+    "deferredCandidateIds": []
+  },
+  "hardStops": [
+    "Keep lookback fixed at lb5 while the no-gap addon matrix is being screened.",
+    "Do not reuse LOW_GAP_TOP gap-rank tokens or lowGapTop generalized tokens in this branch.",
+    "Do not promote any candidate to 20M final confirm unless its 200k rolling screen beats the canonical LOW_GAP_TOP lb5 screen baseline."
+  ],
+  "notes": [
+    "This branch tests true gapless low-close and low-jump baselines with one addon family at a time.",
+    "Primary comparison target remains canonical LOW_GAP_TOP plus lb5 screen hit rate 31.08% and final hit rate 28.57%.",
+    "All first-pass candidates are 200k rolling screens only."
+  ]
+}

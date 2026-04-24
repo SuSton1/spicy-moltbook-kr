@@ -1,0 +1,117 @@
+{
+  "kind": "technique_grammar_contract_v1",
+  "contractId": "tp12_technique_discovery_bank_first_v1",
+  "updatedAt": "2026-04-17T10:00:00+09:00",
+  "baseLookbackLadderContractPath": "meta/tp12_no_stop_lookback_ladder_contract.json",
+  "labelId": "tp12_no_stop_hit_3d",
+  "coreYears": [
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "excludedBoundaryYears": [
+    2016
+  ],
+  "allowedScopeIds": [
+    "LOW_GAP_TOP",
+    "LOW",
+    "MID",
+    "TOP"
+  ],
+  "allowedLookbackCandidateIds": [
+    "lb1",
+    "lb3",
+    "lb5",
+    "lb8"
+  ],
+  "clauseShape": {
+    "anchor": {
+      "min": 1,
+      "max": 1
+    },
+    "retest": {
+      "min": 0,
+      "max": 1
+    },
+    "compression": {
+      "min": 0,
+      "max": 1
+    },
+    "confirm": {
+      "min": 0,
+      "max": 2
+    },
+    "invalidate": {
+      "min": 0,
+      "max": 1
+    }
+  },
+  "generation": {
+    "minTotalClauses": 2,
+    "maxGeneratedCandidatesPerSeed": 96
+  },
+  "recurrence": {
+    "discoveryMinYearsWithHitGe2": 5,
+    "discoveryAltMinYearsWithHitGe1": 7,
+    "promotionMinYearsWithHitGe2": 7,
+    "promotionMinCoveredYears": 7,
+    "minSignalsPer20TradingDays": 4,
+    "maxYearShare": 0.5,
+    "minYearEventCount": 2
+  },
+  "bankDiscovery": {
+    "screenMaxSearchStates": 200000,
+    "minUsableWindows": 5,
+    "minRollingOosHitRate": 0.3,
+    "minOosYearsWithHitGe2": 4,
+    "minSignalsPer20TradingDays": 4,
+    "maxTop1DateShare": 0.12
+  },
+  "shortlist": {
+    "minPromotionHitRate": 0.3,
+    "minSignalsPer20TradingDays": 4,
+    "maxSignalsPer20TradingDays": 15,
+    "targetSignalsPer20TradingDays": 8,
+    "maxTemplatesPerMechanism": 6,
+    "maxTemplatesTotal": 12
+  },
+  "promotion": {
+    "finalMinOosHitRate": 0.5,
+    "finalMinSelectedRows": 80,
+    "finalSignalsPer20TradingDaysMin": 8,
+    "finalSignalsPer20TradingDaysMax": 12
+  },
+  "hardStops": [
+    "Do not reopen exact-rule year2x7/year2x8 discovery as the primary path.",
+    "Do not require train precision=1.0 before bank-level recurrence is established.",
+    "Do not make intraday confirm mandatory during T0~T2.5 discovery."
+  ],
+  "notes": [
+    "Technique discovery is grammar-first and event-recurrence-first.",
+    "7/8 years with >=2 hits is a promotion target, not an initial hard kill.",
+    "The exact miner remains a later-stage in-bank refiner."
+  ],
+  "templateScreen": {
+    "screenMaxSearchStates": 200000,
+    "minUsableWindows": 5,
+    "minRollingOosHitRate": 0.28,
+    "minOosYearsWithHitGe2": 5,
+    "minSignalsPer20TradingDays": 2,
+    "maxSignalsPer20TradingDays": 8,
+    "maxTop1DateShare": 0.1
+  },
+  "yearConsensus": {
+    "minConsensusYearsPresent": 4,
+    "minConsensusYearsWithHitGe1": 3,
+    "minConsensusYearsWithZeroNegative": 3,
+    "minAggregateOosHitRate": 0.5,
+    "minAggregateOosHitCount": 4,
+    "minAggregateOosMatchedDateCount": 4,
+    "maxRuleSize": 6
+  }
+}

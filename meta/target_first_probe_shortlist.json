@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "updatedAt": "2026-03-09T00:00:00Z",
+  "goalMode": "TARGET_FIRST_V2",
+  "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+  "smoke": [
+    "probe12",
+    "probe38",
+    "probe42"
+  ],
+  "confirm": [
+    "probe12",
+    "probe13",
+    "probe38",
+    "probe39",
+    "probe40",
+    "probe41",
+    "probe42",
+    "probe43",
+    "probe44",
+    "probe54",
+    "probe59"
+  ],
+  "promotion": [
+    "probe12",
+    "probe38",
+    "probe42",
+    "probe54",
+    "probe59"
+  ]
+}

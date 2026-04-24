@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "source": "seed_default",
+  "weights": {
+    "trend": 0.16,
+    "candle": 0.14,
+    "volume": 0.2,
+    "shape": 0.18,
+    "gap": 0.08
+  }
+}

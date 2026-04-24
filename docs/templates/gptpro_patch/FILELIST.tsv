@@ -1,0 +1,11 @@
+# TYPE<TAB>PATH<TAB>MUST_HAVE_TEST<TAB>OWNER<TAB>NOTE
+# TYPE: MOD | NEW | DEL | MOVE
+# MOVE path format: old/path.ext=>new/path.ext
+# MUST_HAVE_TEST: yes | no
+
+MOD	src/example/engine.ts	yes	owner_name	core 계산 로직 수정
+MOD	tests/example/engine.test.ts	yes	owner_name	회귀 테스트 보강
+NEW	src/example/new_policy.ts	yes	owner_name	신규 정책 모듈
+DEL	src/example/legacy_policy.ts	no	owner_name	폐기 로직 삭제
+MOVE	src/example/old_name.ts=>src/example/new_name.ts	yes	owner_name	파일명 변경
+

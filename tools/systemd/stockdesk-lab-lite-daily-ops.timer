@@ -1,0 +1,9 @@
+[Unit]
+Description=Run Stockdesk Lab Lite daily ops stack
+
+[Timer]
+OnCalendar=Mon..Fri 16:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

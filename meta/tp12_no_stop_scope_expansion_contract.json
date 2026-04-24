@@ -1,0 +1,45 @@
+{
+  "kind": "tp12_no_stop_scope_expansion_contract_v1",
+  "contractId": "tp12_no_stop_scope_expand_lb5_v1",
+  "updatedAt": "2026-04-11T20:45:00+09:00",
+  "baseLookbackLadderContractPath": "meta/tp12_no_stop_lookback_ladder_contract.json",
+  "baseCandidateId": "lb5",
+  "scopeCandidates": [
+    {
+      "scopeId": "LOW_GAP_TOP",
+      "stage": "baseline"
+    },
+    {
+      "scopeId": "LOW",
+      "stage": "expand"
+    },
+    {
+      "scopeId": "MID",
+      "stage": "expand"
+    },
+    {
+      "scopeId": "TOP",
+      "stage": "expand"
+    }
+  ],
+  "candidateSelection": {
+    "screenScopeIds": [
+      "LOW"
+    ],
+    "deferredScopeIds": [
+      "MID",
+      "TOP"
+    ]
+  },
+  "hardStops": [
+    "Keep the winning lookback fixed at lb5 while scope expansion is being tested.",
+    "Do not reopen year-gating or replay-format retesting on the same canonical lb5 bank.",
+    "Do not skip directly from LOW_GAP_TOP to MID or TOP before LOW itself is judged.",
+    "Do not use HIGH8, close28, or stop-first metrics as the promotion reason for a wider scope."
+  ],
+  "notes": [
+    "This branch starts after canonical lb5 final confirm and live-like replay equivalence are frozen.",
+    "The first live scope-expansion candidate is LOW under the same lb5 TP12 no-stop contract.",
+    "MID and TOP remain deferred until LOW is judged on the same untouched comparison policy."
+  ]
+}

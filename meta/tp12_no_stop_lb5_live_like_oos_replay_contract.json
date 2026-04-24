@@ -1,0 +1,46 @@
+{
+  "kind": "tp12_no_stop_lb5_live_like_oos_replay_contract_v1",
+  "contractId": "tp12_no_stop_lb5_live_like_oos_replay_v1",
+  "updatedAt": "2026-04-11T16:30:00+09:00",
+  "scopeId": "LOW_GAP_TOP",
+  "baseCandidateId": "lb5",
+  "lookbackTradingDays": 5,
+  "selectionMode": "union_all",
+  "baseRollingContractPath": "meta/tp12_no_stop_rolling_research_contract.json",
+  "trainWindow": {
+    "from": "2016-08-12",
+    "to": "2024-12-27"
+  },
+  "oosWindow": {
+    "from": "2025-01-02",
+    "to": "2026-03-27"
+  },
+  "labelContract": {
+    "primaryLabelId": "tp12_no_stop_hit_3d",
+    "secondaryLabelId": "tp12_no_stop_hit_4d"
+  },
+  "baselineRunIds": {
+    "baseRunId": "tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408",
+    "sourceRunId": "tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408_final_confirm_source",
+    "scopeRunId": "tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408_final_confirm_scope"
+  },
+  "baselineMetrics": {
+    "curatedRuleCount": 29182,
+    "oosCandidateRows": 533,
+    "oosSelectedRows": 105,
+    "oosHitRows": 30,
+    "oosHitRate": 0.2857142857142857,
+    "oosUniqueMatchedDates": 87,
+    "oosUniqueMatchedSymbols": 98,
+    "oosTop1DateShare": 0.0380952380952381
+  },
+  "hardStops": [
+    "Do not change the canonical frozen lb5 catalog while running the live-like replay audit.",
+    "Do not reinterpret close28 or HIGH8 metrics as success criteria for this audit.",
+    "Do not reopen year-gating variants as part of this branch."
+  ],
+  "notes": [
+    "This audit replays the untouched OOS one requested date at a time with the same frozen catalog used by the canonical batch apply.",
+    "The acceptance criterion is strict row-set equivalence against the canonical batch raw and deduped OOS outputs."
+  ]
+}

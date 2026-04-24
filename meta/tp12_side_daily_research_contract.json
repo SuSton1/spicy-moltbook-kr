@@ -1,0 +1,59 @@
+{
+  "kind": "tp12_side_daily_research_contract_v1",
+  "contractId": "tp12_side_daily_low_gap_top_no_stop_effective_floor_20160812_v3",
+  "scopeId": "LOW_GAP_TOP",
+  "updatedAt": "2026-04-06T11:10:00+09:00",
+  "decisionWindow": {
+    "from": "2016-08-12",
+    "to": "2026-03-30"
+  },
+  "control": {
+    "trainDateFrom": "2016-08-12",
+    "trainDateTo": "2024-12-31",
+    "oosDateFrom": "2025-01-02",
+    "oosDateTo": "2026-03-30",
+    "stepALaneSet": [
+      "recent_impulse_1d"
+    ],
+    "targetLabelIds": [
+      "tp12_no_stop_hit_3d",
+      "tp12_no_stop_hit_4d"
+    ],
+    "allowlistPolicy": "required_low_gap_top_allowlist_exact_pair_v1",
+    "commonSupportPolicy": "pair_exact_intersection_v1"
+  },
+  "comparisonOrder": [
+    "daily_only_no_stop",
+    "daily_plus_investor",
+    "daily_plus_program",
+    "daily_plus_investor_program"
+  ],
+  "familyMatrix": {
+    "investor_daily": "core",
+    "program_daily": "core",
+    "trade_strength_daily": "conditional",
+    "shorting_daily": "pending_probe",
+    "loan_daily": "pending_probe",
+    "credit_daily": "pending_probe",
+    "sector_daily": "pending_mapping_contract"
+  },
+  "deferExecutionLearning": true,
+  "hardStops": [
+    "no stop/buy/sell deep-learning before the daily-only no-stop TP12 control is frozen and side-daily additive lift is measured",
+    "no side-family promotion without both common-support and deployment comparisons against the same frozen daily control",
+    "no broader Step A expansion before LOW_GAP_TOP is green",
+    "no new exact TP12/SL4/3d search tuning before the no-stop scientific comparison is closed",
+    "no stop-first or delayed-stop policy result may replace daily_only_no_stop as the first scientific baseline"
+  ],
+  "notes": [
+    "This is the frozen effective-floor contract for the first scientific side-daily reruns.",
+    "The requested calendar floor 2016-01-05 is unreachable under the strict hybrid 40/150 and featureAsOf=t-1 daily feature contract.",
+    "The first reachable decision-date floor is 2016-08-12, so comparisons must freeze there instead of rerunning an impossible 2016-01-05 request.",
+    "scopeId is the downstream comparison scope, while control.stepALaneSet must stay aligned to the actual Step A lane ids carried by broad manifest rows.",
+    "For the first LOW_GAP_TOP side-daily control, the downstream allowlist scope is LOW_GAP_TOP but the broad Step A lane remains recent_impulse_1d.",
+    "The first control is daily-only and uses no-stop TP12 labels only.",
+    "The first scientific comparison order is daily-only, daily+investor, daily+program, daily+investor+program.",
+    "trade_strength_daily stays conditional until its historical floor is proven.",
+    "Exact TP12/SL4/3d tuning is frozen for this branch; execution-policy work becomes legitimate only after the no-stop scientific comparison and additive family verdict are both written."
+  ]
+}

@@ -1,0 +1,1 @@
+export { calibratePerfectPrototypeSupportTop1QueryRanker as calibratePerfectPrototypeSupportVetoSurvivorTop1Ranker } from "./perfect_prototype_support_top1_query_calibrate.mjs"

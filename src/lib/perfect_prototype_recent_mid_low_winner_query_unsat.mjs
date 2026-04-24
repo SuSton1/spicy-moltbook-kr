@@ -1,0 +1,1 @@
+export { buildPerfectPrototypeSupportTop1QueryUnsat as buildPerfectPrototypeRecentMidLowWinnerQueryUnsat } from "./perfect_prototype_support_top1_query_unsat.mjs"

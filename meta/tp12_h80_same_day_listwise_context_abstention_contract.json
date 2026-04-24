@@ -1,0 +1,76 @@
+{
+  "kind": "tp12_h80_same_day_listwise_context_abstention_contract_v1",
+  "patchKey": "tp12_h80_same_day_listwise_context_abstention_v1",
+  "mode": "train_only_same_day_listwise_context_abstention",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "label": {
+    "labelConfigId": "tp12_target12_next_global_session_open_hold3_no_stop_v1",
+    "entryPolicy": "GLOBAL_NEXT_SESSION_OPEN",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "stopPolicy": "no_stop",
+    "requireEntryFeasibilitySummary": true
+  },
+  "objective": {
+    "dailySelectionMode": "abstention_first_top1_diagnostic",
+    "primaryPolicyId": "listwise_context_quality_v1",
+    "primaryTopCutRows": 150,
+    "targetWilsonLower95": 0.8,
+    "minSelectedRows": 150,
+    "absoluteMinSelectedRows": 100
+  },
+  "inputs": {
+    "candidates": "artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/train_only_foundation/enriched_consensus_all_folds.jsonl",
+    "pathLabels": "artifacts/runs/tp12_h80_global_next_session_regen_v1_r3/step-tp12-year2hit-positive-first/candidate_events.jsonl"
+  },
+  "outputs": {
+    "summary": "artifacts/runs/tp12_h80_same_day_listwise_context_abstention_v1/train_only_diagnostic/same_day_listwise_context_abstention_summary.json",
+    "selections": "artifacts/runs/tp12_h80_same_day_listwise_context_abstention_v1/train_only_diagnostic/same_day_listwise_context_abstention_selections.jsonl",
+    "features": "artifacts/runs/tp12_h80_same_day_listwise_context_abstention_v1/train_only_diagnostic/same_day_listwise_context_features.jsonl.gz"
+  },
+  "featureGroups": {
+    "sameDayRelativeRanks": true,
+    "supportSaturation": true,
+    "supportOvercrowding": true,
+    "clusterDiversity": true,
+    "rawMomentumIntensity": true,
+    "liquidityCapacity": true,
+    "marketBreadthRegime": true,
+    "pathQualityLabelsForMetricsOnly": true
+  },
+  "negativeClassPolicy": {
+    "targetPct": 0.12,
+    "nearMissMinPct": 0.08,
+    "hardNegativeMaxForwardReturnPct": 0.04,
+    "labelClassUsedAsLiveFeature": false
+  },
+  "topCuts": [50, 75, 100, 150, 200, 300, 500, 978],
+  "guardrails": {
+    "oosReadAllowed": false,
+    "oosTuningAllowed": false,
+    "fallbackAllowed": false,
+    "lockedSelectorEmissionAllowed": false,
+    "failOnForbiddenDateRange": true,
+    "failOnMissingPathLabels": true,
+    "failOnDuplicateSymbolDateCandidate": true,
+    "failOnFuturePathQualityLiveFeatureExport": true
+  },
+  "acceptance": {
+    "researchForcedTop1HitRateDeltaMin": 0.03,
+    "h80MinSelectedRows": 150,
+    "h80TargetWilsonLower95": 0.8,
+    "h80LockedSelectorAllowed": false
+  },
+  "notes": [
+    "This is a train-only diagnostic feature/ranking path, not a production selector.",
+    "A separate explicit locked-selector patch is required if a nested H80 gate ever passes.",
+    "OOS 2025-01-02..2026-04-17 must not be read by this path."
+  ]
+}

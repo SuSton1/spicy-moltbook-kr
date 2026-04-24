@@ -1,0 +1,344 @@
+# TP12 Year2Hit Multisurface Fixed Mainline Worklog
+
+## 2026-04-18 KST
+- umbrella patch:
+  - `tp12_year2hit_multisurface_fixed_mainline_v1`
+- branch intent:
+  - add explicit fixed-window/year2hit sibling paths without reopening the dead exact `year2x7/year2x8` discovery line
+  - keep runtime deterministic and fail-fast; no hidden auto-switching and no fallback-style behavior
+- code areas completed this turn:
+  - fixed-window contract + derived side-daily carrier contract
+  - fixed cluster-bank discovery/template sibling contract builders and wrappers
+  - reserve-bank clause-context fail-fast assertions
+  - year-hit metric alignment with explicit `yearHitMetric=unique_decision_dates`
+  - post-discovery overlay-control comparison scaffold
+  - new smokes and verify wiring for the fixed/year2hit path
+- key explicit files added:
+  - `meta/tp12_no_stop_fixed_year2hit_research_contract.json`
+  - `meta/technique_grammar_fixed_2016_2024_contract.json`
+  - `src/lib/tp12_no_stop_fixed_contract.mjs`
+  - `src/lib/technique_cluster_bank_discovery_fixed_contract.mjs`
+  - `src/lib/technique_cluster_template_screen_fixed_contract.mjs`
+  - `src/lib/tp12_year2hit_overlay_control.mjs`
+  - `tools/run_tp12_no_stop_fixed_source_pack.sh`
+  - `tools/run_stepb_1d_tp12_no_stop_scope_fixed.sh`
+  - `tools/run_technique_cluster_bank_discovery_fixed.sh`
+  - `tools/run_technique_cluster_template_fixed.sh`
+  - `tools/run_tp12_year2hit_scientific_overlay_pipeline.sh`
+- verification:
+  - local `bash scripts/verify.sh` passed on `2026-04-18`
+  - synced server `bash tools/run_server_command.sh npm run verify` passed on `2026-04-18`
+- experiment state:
+  - no new runtime experiment was launched in this turn
+  - before the first fixed-window/year2hit run, still follow the experiment continuity contract:
+    - read `meta/active_research_contract.json`
+    - read `meta/active_research_handoff.md`
+    - read `meta/experiment_patch_memory.json`
+    - run `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+    - run duplicate checks for the intended experiment patch key
+
+## 2026-04-18 KST runtime continuation
+- continuity contract executed before the first fixed-window runtime:
+  - re-read `meta/active_research_contract.json`
+  - re-read `meta/active_research_handoff.md`
+  - re-read `meta/experiment_patch_memory.json`
+  - ran `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+  - duplicate checks passed for:
+    - `tp12_year2hit_seed_lattice_expansion_v1`
+    - `tp12_year2hit_cluster_lane_mainline_v1`
+- first runtime honesty check:
+  - current authoritative side-daily control-input pack rows do not carry multiscope or multilookback keys
+  - confirmed missing row fields:
+    - `scopeId`
+    - `candidateScopeId`
+    - `lookbackCandidateId`
+    - `candidateId`
+  - result:
+    - do not fabricate a fake seed-lattice runtime from those rows
+    - first honest runtime remains the fixed cluster-lane path
+- first fixed runtime attempt:
+  - launched:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r1`
+  - it failed immediately before scientific execution
+  - root cause:
+    - fixed derived carrier contract was loaded by the strict rolling contract loader without:
+      - `decisionWindow`
+      - a compatible contract mode
+  - symptom:
+    - `decisionWindow.from is missing or invalid: <null>`
+  - adjudication:
+    - treat `r1` as invalid pre-launch infrastructure/code bug
+    - do not register `r1`
+- root-cause fix completed:
+  - `src/lib/tp12_no_stop_rolling_contract.mjs`
+    - added explicit `carrier_fixed_window_v1` contract mode
+  - `src/lib/tp12_no_stop_fixed_contract.mjs`
+    - derived carrier now emits:
+      - `contractMode=carrier_fixed_window_v1`
+      - copied `decisionWindow`
+  - `tools/smoke_tp12_no_stop_fixed_contract.mjs`
+    - now asserts the derived carrier reloads through the rolling loader
+- verification after the carrier fix:
+  - local `bash scripts/verify.sh` re-ran to completion without a newly observed failure tied to the carrier patch
+  - server `bash tools/run_server_command.sh npm run verify` completed with exit code `0`
+- authoritative live runtime:
+  - launched clean rerun:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r2`
+  - queued follow-up:
+    - `tp12_year2hit_cluster_template_fixed_v1_20260418_r2`
+  - authoritative plan:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_cluster_bank_lanes_v1_seed_r3/cluster_bank_discovery_plan.json`
+  - launch shell pid:
+    - `1805417`
+  - live fixed T3 wrapper pid:
+    - `1805419`
+  - first child fixed runner pid:
+    - `1805452`
+  - first child source-pack pid:
+    - `1805485`
+  - first child control-input pid:
+    - `1805513`
+  - first step-a pid:
+    - `1805685`
+  - launch log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_year2hit_cluster_lane_mainline_v1_20260418_r2.launch.log`
+  - live child at launch check:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r2_ma_retest_low_gap_top_lb5_cluster_ma_retest_low_gap_top_lb5_fcf0cbba2b`
+    - split:
+      - `screen_2019`
+    - phase:
+      - fixed source pack started and step-a entered
+- registration:
+  - no result registered yet
+  - wait for completed fixed T3/T4 outcomes only
+
+## 2026-04-18 KST user-directed stop + 2016~2026 data audit
+- user redirected the work away from year2hit runtime monitoring and asked for a deep source-data audit first
+- live run stop:
+  - stopped the active fixed chain before verdict:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r3`
+    - queued `tp12_year2hit_cluster_template_fixed_v1_20260418_r3`
+  - verified no matching fixed wrapper/source/scope/miner pid remained alive on server after stop
+  - no experiment result registered:
+    - user-directed stop before a completed verdict
+- server data audit range:
+  - `data/candle_daily.jsonl`
+    - min=`2016-01-04`
+    - max=`2026-04-17`
+    - rows=`4,467,213`
+    - distinct dates=`2,522`
+  - `data/universe_daily.jsonl`
+    - min=`2016-01-04`
+    - max=`2026-04-17`
+    - rows=`3,299,874`
+    - distinct dates=`2,522`
+  - `latest_common_data_date=2026-04-17`
+- hard integrity checks:
+  - `historical_invalid_candle_audit_v1`
+    - invalid symbols=`0`
+    - invalid rows=`0`
+    - invalid universe pairs=`0`
+    - audit path:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/data_quality/historical_invalid_candle_audit_20160101_20261231_20260417_191510.json`
+  - duplicate symbol/date pairs:
+    - candle=`0`
+    - universe=`0`
+    - nontrading=`0`
+  - overlap violations:
+    - candle vs nontrading=`0`
+    - universe vs nontrading=`0`
+  - universe orphan pairs without matching candle rows=`0`
+  - blank/null/impossible row checks:
+    - candle blank symbol/date=`0/0`
+    - candle null ohlcv=`0`
+    - candle impossible price/volume structure=`0`
+    - universe blank symbol/date=`0/0`
+    - universe null or negative `avgTradingValue20d` / `marketCapKrw`=`0`
+- specific date check:
+  - `2024-12-31`
+    - candle rows=`0`
+    - universe rows=`0`
+    - nontrading rows=`0`
+  - repo context check:
+    - existing coverage-contract notes already treat this as `KRX holiday` / effective-coverage boundary, not as the main current defect
+- material anomaly finding:
+  - severe single-date partial-coverage anomalies detected:
+    - `2017-09-22`
+    - `2017-12-20`
+    - `2018-02-06`
+    - `2018-03-02`
+    - `2022-05-02`
+    - `2023-07-11`
+    - `2025-09-19`
+  - severe anomaly count under `prev_ratio < 0.80` and `local_ratio < 0.80`:
+    - `7`
+  - strongest cases:
+    - `2017-09-22`
+      - `222` rows vs `1274` previous-day rows
+      - `1053` previous symbols missing on focus date
+      - missing market mix:
+        - `KSQ=1052`
+        - `STK=1`
+    - `2017-12-20`
+      - `222` rows vs `1297` previous-day rows
+      - `1075` previous symbols missing
+      - missing market mix:
+        - `KSQ=1075`
+    - `2018-02-06`
+      - `627` rows vs `1293` previous-day rows
+      - `667` previous symbols missing
+      - missing market mix:
+        - `KSQ=667`
+    - `2018-03-02`
+      - `618` rows vs `1293` previous-day rows
+      - `677` previous symbols missing
+      - missing market mix:
+        - `KSQ=677`
+    - `2022-05-02`
+      - `957` rows vs `2027` previous-day rows
+      - `1071` previous symbols missing
+      - missing market mix:
+        - `KSQ=1053`
+        - `UNKNOWN=17`
+        - `STK=1`
+    - `2023-07-11`
+      - `885` rows vs `2072` previous-day rows
+      - `1187` previous symbols missing
+      - missing market mix:
+        - `KSQ=1167`
+        - `UNKNOWN=17`
+        - `STK=3`
+    - `2025-09-19`
+      - `1689` rows vs `2411` previous-day rows
+      - missing market mix:
+        - `STK=656`
+        - `KSQ=130`
+- read:
+  - row-level integrity is clean
+  - the real blocker is not duplicates/nulls/impossible candles
+  - the real blocker is isolated date-level partial coverage, mostly `KSQ` on the strongest anomaly dates
+  - do not resume year2hit experiments until these anomaly dates are adjudicated or repaired
+
+## 2026-04-18 KST first valid split progress
+- first valid split completed:
+  - run:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r3_ma_retest_low_gap_top_lb5_cluster_ma_retest_low_gap_top_lb5_fcf0cbba2b_screen_2019_scope`
+  - split-specific carrier confirmed:
+    - `coreYears=[2017,2018]`
+  - fixed OOS apply-close28 result:
+    - `sourceRows=119`
+    - `dedupedMatchedRows=60`
+    - `dedupedMatchedPositiveRows=17`
+    - `lineLevelHitRate=0.283333`
+    - `uniqueMatchedDates=56`
+    - `uniqueMatchedSymbols=54`
+  - interpretation:
+    - first split survived the split-specific year2hit correction path
+    - OOS precision is positive but below the working 0.30 screen bar
+- queue advanced correctly to the next split:
+  - active split:
+    - `screen_2020`
+  - split-specific carrier confirmed:
+    - `coreYears=[2017,2018,2019]`
+  - live miner snapshot:
+    - `rowsScanned=386`
+    - `exploredStates=71680`
+    - `rulesCollected=177`
+    - `topExactDateMassShare≈0.067041`
+    - `etaSeconds≈317.5`
+- registration:
+  - no result registered yet
+  - continue tracking the full fixed T3 chain before adjudication
+
+## 2026-04-18 KST split-specific year2hit correction
+- invalid live rerun discovered and stopped:
+  - run:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r2`
+  - root cause:
+    - fixed scope wrapper still fed the same multi-window derived carrier to every split
+    - as a result, `screen_2019` miner still saw:
+      - `coreYears=2017..2023`
+    - this is scientifically invalid because the train window only spans `2016-08-12..2018-12-31`
+  - adjudication:
+    - treat `r2` as invalid
+    - do not register `r2`
+- root-cause fix applied:
+  - `src/lib/tp12_no_stop_fixed_contract.mjs`
+    - added split-aware search-contract resolver
+    - single-split derived carrier now shrinks `searchContract.coreYears` to the train years available in that split
+  - `tools/run_stepb_1d_tp12_no_stop_scope_fixed.sh`
+    - now creates one carrier contract per split under:
+      - `step-perfect-prototype-1d-tp12-no-stop-fixed/window_contracts/*.json`
+    - search and window-report stages now read the split-specific carrier, not the multi-window carrier
+  - `src/lib/tp12_no_stop_rolling_contract.mjs`
+    - fixed carrier mode no longer requires `windows.length >= 2`
+  - `tools/smoke_tp12_no_stop_fixed_contract.mjs`
+    - now asserts:
+      - `screen_2019 -> coreYears=[2017,2018]`
+      - `confirm_2024 -> coreYears=[2017..2023]`
+- verification after the split-specific fix:
+  - local `bash scripts/verify.sh` exited `0`
+  - server `bash tools/run_server_command.sh npm run verify` exited `0`
+- new authoritative live rerun:
+  - fixed T3:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r3`
+  - queued fixed T4:
+    - `tp12_year2hit_cluster_template_fixed_v1_20260418_r3`
+  - launch shell pid:
+    - `1835456`
+  - fixed T3 wrapper pid:
+    - `1835458`
+  - first fixed child wrapper pid:
+    - `1835491`
+  - first fixed scope-window pid:
+    - `1836717`
+  - first fixed miner pid:
+    - `1836860`
+  - launch log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_year2hit_cluster_lane_mainline_v1_20260418_r3.launch.log`
+  - first child:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r3_ma_retest_low_gap_top_lb5_cluster_ma_retest_low_gap_top_lb5_fcf0cbba2b`
+  - first split:
+    - `screen_2019`
+  - split-specific carrier verification:
+    - window contract path:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_year2hit_cluster_lane_mainline_v1_20260418_r3_ma_retest_low_gap_top_lb5_cluster_ma_retest_low_gap_top_lb5_fcf0cbba2b/step-perfect-prototype-1d-tp12-no-stop-fixed/window_contracts/screen_2019.json`
+    - resolved `coreYears=[2017,2018]`
+    - live miner command confirmed:
+      - `--core-years=2017,2018`
+- first valid split outcomes under the corrected fixed path:
+  - `screen_2019`
+    - `sourceRows=119`
+    - `dedupedMatchedRows=60`
+    - `dedupedMatchedPositiveRows=17`
+    - `lineLevelHitRate=0.283333`
+    - `uniqueMatchedDates=56`
+    - `uniqueMatchedSymbols=54`
+    - read:
+      - positive but below the working 0.30 screen bar
+  - `screen_2020`
+    - split-specific carrier remained correct:
+      - `coreYears=[2017,2018,2019]`
+    - `sourceRows=250`
+    - `dedupedMatchedRows=109`
+    - `dedupedMatchedPositiveRows=36`
+    - `lineLevelHitRate=0.330275`
+    - `uniqueMatchedDates=82`
+    - `uniqueMatchedSymbols=101`
+    - read:
+      - first corrected split above the 0.30 working screen bar
+- queue advanced cleanly after `screen_2020`
+  - active next split:
+    - `screen_2021`
+  - source stage completed and scope stage is now live
+  - split-specific carrier remained correct:
+    - `coreYears=[2017,2018,2019,2020]`
+  - first live miner snapshot:
+    - `rowsScanned=638`
+    - `exploredStates=14336`
+    - `rulesCollected=291`
+    - `topExactDateMassShare≈0.155905`
+    - `etaSeconds≈489.8`
+- registration:
+  - no result registered yet
+  - wait for completed fixed T3/T4 outcomes only

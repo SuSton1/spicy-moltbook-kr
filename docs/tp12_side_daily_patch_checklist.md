@@ -1,0 +1,1806 @@
+# TP12 Daily + Side-Daily Patch Checklist
+
+## 2026-04-17 Unified Bank-First Rearchitecture
+- branch:
+  - `feat/tp12-unified-bankfirst-rearchitecture-v1`
+- umbrella patch key:
+  - `tp12_unified_bankfirst_rearchitecture_v1`
+- explicit experiment keys:
+  - `tp12_no_stop_scope_expansion_low_lb5_screen_v1`
+  - `tp12_technique_cluster_bank_lanes_v1`
+  - `tp12_technique_bank_reserve_v1`
+  - `tp12_technique_clause_core_consensus_v1`
+  - `tp12_technique_structural_atom_consensus_v1`
+  - `tp12_execution_learning_fixed_support_v1`
+- hard rules:
+  - keep old `technique_bank_shortlist_v1`, `technique_bank_discovery_plan_v1`, `technique_template_screen_plan_v1`, exact `technique_year_consensus_summary_v1` paths intact as historical reproducibility paths
+  - add only explicit sibling paths; no hidden auto-switching and no fallback-style branch changes
+  - do not reopen `MA_RETEST__LOW_GAP_TOP__lb5 -> repaired T4 -> exact year-consensus` unchanged
+  - do not auto-widen `LOW -> MID/TOP`
+  - do not auto-promote `exact -> clause-core -> structural-atom`
+
+### Actual-Start Checklist
+- [ ] preflight:
+  - reread `meta/active_research_handoff.md`, `meta/experiment_patch_memory.json`, `meta/experiment_registry.jsonl`
+  - keep the old negative exact line explicitly closed in the new handoff notes
+  - run duplicate checks before any new experiment launch
+- [ ] checklist/worklog:
+  - keep this section as the live execution checklist for the integrated patch
+  - add a dedicated worklog entry if implementation spans multiple turns
+- [ ] cluster-bank shortlist v1:
+  - add `src/lib/technique_clause_groups.mjs`
+  - add `src/lib/technique_cluster_bank_shortlist.mjs`
+  - add `tools/build_technique_cluster_bank_shortlist.mjs`
+  - shortlist must preserve mechanism diversity with cluster lanes plus reserve banks
+  - `invalidateClauseIds` must not define cluster identity; keep them as diagnostic profile only
+- [ ] cluster-bank discovery plan v1:
+  - add `src/lib/technique_cluster_bank_discovery_plan.mjs`
+  - add `tools/build_technique_cluster_bank_discovery_plan.mjs`
+  - output `selectedClusterBanks` rather than raw bank clause unions
+  - reserve banks must remain explicit entries, never silently merged into lane unions
+- [ ] cluster template screen plan v1:
+  - add `src/lib/technique_cluster_template_screen_contract.mjs`
+  - add `tools/build_technique_cluster_template_screen_plan.mjs`
+  - add `tools/build_technique_cluster_template_screen_candidate_contract.mjs`
+  - add `tools/run_technique_cluster_template_rolling.sh`
+  - add `tools/server_run_technique_cluster_template_rolling.sh`
+  - lane selection must be `leader + breadth`, not raw top-N rank slicing
+- [ ] template screen summary v1 diagnostics:
+  - keep screen pass/fail gates unchanged
+  - add explicit lane/cluster metadata and concentration diagnostics
+  - make `concentrationReject` visible when `maxTop1DateShare` is the only blocker
+- [ ] clause-core consensus v1:
+  - add `src/lib/technique_clause_core_consensus.mjs`
+  - add `tools/build_technique_clause_core_consensus_summary.mjs`
+  - add `tools/build_technique_clause_core_rerun_plan.mjs`
+  - output constrained rerun hypotheses, not direct operating promotion artifacts
+- [ ] structural-atom consensus v1:
+  - add `src/lib/technique_structural_atom_consensus.mjs`
+  - add `tools/build_technique_structural_atom_projection.mjs`
+  - add `tools/build_technique_structural_atom_consensus_summary.mjs`
+  - keep token-axis/month-quarter/overlap regroup strictly diagnostic only
+- [ ] scope expansion runner integration:
+  - add `tools/run_tp12_scope_expansion_stage.sh`
+  - add `tools/server_run_tp12_scope_expansion_stage.sh`
+  - enforce `LOW first`, `lb5 fixed`, and fail fast on unsupported scope/stage combinations
+- [ ] fixed-support execution-learning integration:
+  - add `meta/tp12_execution_learning_fixed_support_contract.json`
+  - add `tools/build_tp12_execution_learning_fixed_support_report.mjs`
+  - add `tools/run_tp12_execution_learning_fixed_support.sh`
+  - add `tools/server_run_tp12_execution_learning_fixed_support.sh`
+  - fail fast if frozen donor support drifts
+- [ ] verify/smokes:
+  - add cluster shortlist/discovery/template-plan smokes
+  - add clause-core and structural-atom consensus smokes
+  - add syntax checks for new runners and builders
+  - pass local `bash scripts/verify.sh`
+  - pass synced server `npm run verify`
+- [ ] post-implementation execution order:
+  - run `LOW x lb5` scope expansion first
+  - run cluster-bank shortlist/discovery/template rolling next
+
+## 2026-04-18 Year2Hit Multisurface Fixed Mainline
+- branch:
+  - `feat/tp12-year2hit-multisurface-fixed-mainline-v1`
+- umbrella patch key:
+  - `tp12_year2hit_multisurface_fixed_mainline_v1`
+- explicit sub-patch keys:
+  - `tp12_fixed_window_technique_grammar_sibling_v1`
+  - `tp12_year2hit_seed_lattice_expansion_v1`
+  - `tp12_year2hit_cluster_lane_mainline_v1`
+  - `tp12_year2hit_reserve_bank_rootfix_v1`
+  - `tp12_year2hit_date_metric_alignment_v1`
+  - `tp12_year2hit_post_discovery_overlay_control_v1`
+  - `tp12_year2hit_clause_core_after_pass_v1`
+  - `tp12_year2hit_structural_atom_bridge_v1`
+- hard rules:
+  - keep dead exact `year2x7/year2x8` discovery lines closed as historical controls only
+  - add only explicit fixed-window sibling paths; no hidden rolling reuse at runtime
+  - treat `year2hit` as post-discovery overlay/control logic, not discovery-stage hard fallback pruning
+  - use explicit `yearHitMetric=unique_decision_dates` for the new year2hit line
+
+### Implementation Status
+- [x] fixed-window sibling contract added
+  - `meta/tp12_no_stop_fixed_year2hit_research_contract.json`
+  - `src/lib/tp12_no_stop_fixed_contract.mjs`
+- [x] technique grammar sibling contract added
+  - `meta/technique_grammar_fixed_2016_2024_contract.json`
+  - `src/lib/technique_grammar_contract.mjs` / `src/lib/tp12_no_stop_rolling_contract.mjs` accept explicit `yearHitMetric`
+- [x] fixed source/scope wrappers added
+  - `tools/run_tp12_no_stop_fixed_source_pack.sh`
+  - `tools/run_stepb_1d_tp12_no_stop_scope_fixed.sh`
+- [x] fixed cluster-bank/template sibling builders and wrappers added
+  - `src/lib/technique_cluster_bank_discovery_fixed_contract.mjs`
+  - `src/lib/technique_cluster_template_screen_fixed_contract.mjs`
+  - `tools/run_technique_cluster_bank_discovery_fixed.sh`
+  - `tools/run_technique_cluster_template_fixed.sh`
+- [x] reserve-bank context root-cause fix added
+  - fail fast when cluster/reserve entries lack required clause context
+- [x] year-hit metric alignment added
+  - downstream reports and technique recurrence/year-consensus can now use `unique_decision_dates`
+- [x] post-discovery overlay/control scaffold added
+  - `src/lib/tp12_year2hit_overlay_control.mjs`
+  - `tools/build_tp12_year2hit_gate_summary.mjs`
+  - `tools/run_tp12_year2hit_scientific_overlay_pipeline.sh`
+- [x] smokes and verify coverage added
+  - fixed-contract / fixed-cluster / metric-alignment / overlay-control smoke coverage
+- [x] local verification passed on `2026-04-18`
+  - `bash scripts/verify.sh`
+- [x] synced server verification passed on `2026-04-18`
+  - `bash tools/run_server_command.sh npm run verify`
+- [ ] no new fixed-window/year2hit experiment launched yet
+  - next runtime step must still follow bootstrap + duplicate-check continuity rules before launch
+  - run exact, clause-core, structural-atom consensus as sibling comparisons on the same T4 inputs
+  - run fixed-support execution-learning as a separate operating branch
+
+## 2026-04-06 Priority Override
+- freeze new exact-search work under `TP12 / SL4 / 3d`
+- freeze stop-first evaluation as the main research path
+- force the branch through the first `daily_only_no_stop` scientific comparison before any execution-policy work
+- keep buy / sell / stop deep-learning explicitly closed until that comparison and the first additive family verdict are written
+- keep the existing `daily_only_no_stop` scientific baseline frozen even if a later `12% no-stop rolling selection` branch is opened
+- detailed deep patch plan:
+  - `docs/tp12_side_daily_no_stop_deep_patch_plan.md`
+
+## Scope
+- goal:
+  - build a patch-ready, server-only `daily + side-daily` TP12 path that does not depend on long-history 1-minute data
+  - keep the existing daily Step A / Step D path stable while adding explicit side-daily feature artifacts and bridged experiment inputs
+  - test side-daily families only by their incremental value over the current daily baseline
+- non-goals:
+  - do not block this path on the Kiwoom minute-history question
+  - do not rewrite current minute builders into side-daily builders
+  - do not silently drop unavailable side families to keep an experiment running
+  - do not let side-daily families change the Step A candidate universe itself
+
+## Core Thesis
+- first find / keep the signal with daily rules
+- restart discovery from the `2016` daily train floor
+- first solve `TP12 hit existence` without stop-loss logic
+- then test whether side-daily families:
+  - reject bad daily candidates better
+  - choose a better execution policy better
+- only after the no-stop TP12 signal is stable:
+  - learn buy / sell / stop policy as a separate downstream stage
+- do not assume a side-daily family is useful until it improves OOS metrics on the same candidate/date support
+
+## Confirmed Inputs
+- daily canonical is already closed:
+  - `data/candle_daily.jsonl`: `2016-01-04 ~ 2026-04-03`
+  - `data/universe_daily.jsonl`: `2016-01-04 ~ 2026-04-03`
+- the next discovery stage should reuse the full `2016-01-04` daily floor instead of a recent-only shortcut
+- strongest current TP12 source remains `LOW_GAP_TOP`
+- fresh narrowed OOS allowlist + manifest path is already proven:
+  - `artifacts/tp12_intraday/allowlist/run=perfect_proto_low_gap_top_support_scorecard_router_v31_oos/rows.jsonl`
+  - `artifacts/tp12_intraday/request_manifest/run=perfect_proto_low_gap_top_support_scorecard_router_v31_oos_fresh/requests.jsonl`
+- Kiwoom side-daily families already implemented and green:
+  - `investor_daily`
+  - `program_daily`
+  - `trade_strength_daily`
+- Kiwoom 1-minute history is currently blocked as a long-history canonical source:
+  - real pilot proved depth/completeness issues
+  - this side-daily path must remain valid even if minute stays blocked
+
+## Architecture Freeze
+- core research path:
+  - `daily Step A / Step D baseline`
+  - plus explicit `side-daily feature` artifacts
+  - plus explicit `side-daily bridged feature pack`
+- sequencing freeze:
+  - `Stage 1`: daily-only, no-stop TP12 rule discovery
+  - `Stage 2`: daily + side-daily additive lift on the same no-stop target
+  - `Stage 3`: buy / sell / stop policy learning after the signal target is fixed
+- minute path:
+  - optional branch only
+  - not a dependency for the side-daily core path
+- source of truth:
+  - server-only heavy collection and canonical merge
+- candidate universe:
+  - always reuse broad `Step A` candidate outputs
+  - never derive the universe from Step B / Step D winners
+- experiment structure:
+  - same manifest
+  - same date split
+  - same gate
+  - compare `daily control` vs `daily + side family`
+
+## Canonical Family Ladder
+### Core Canonical Families
+- `investor_daily`
+- `program_daily`
+
+### Conditional Canonical Families
+- `trade_strength_daily`
+  - allowed only after explicit coverage/depth proof for the intended date window
+
+### Next Families To Promote
+- `shorting_daily`
+- `loan_daily`
+- `credit_daily`
+
+### Deferred Until Mapping Contract Exists
+- `sector_daily`
+  - requires an explicit symbol-to-sector alignment contract before promotion
+
+### Explicitly Deferred
+- all long-history minute families
+- intraday investor charts
+- broker / orderbook / VI / realtime-only feeds
+
+## Join Contract
+- manifest provenance row:
+  - `requestId`
+  - `symbol`
+  - `decisionDateKey`
+  - `stepALaneId`
+  - `prevDateKey`
+  - `windowDateKeys`
+- side-daily canonical join:
+  - `(datasetId, symbol, dateKey)`
+- side-daily feature row grain:
+  - one row per `(requestId, symbol, decisionDateKey, gateId)`
+- bridged feature-pack join:
+  - MVP: `(symbol, decisionDateKey)`
+  - hard-stop:
+    - pre-bridge pair uniqueness audit must prove the feature pack has no duplicate `(symbol, decisionDateKey)` rows in the evaluated slice
+  - if future Step D packs expose safe lane-level keys, promote bridge join to `(symbol, decisionDateKey, stepALaneId)`
+
+## Data Artifacts
+### Canonical Side-Daily Files
+- `data/intraday_side/investor_daily.jsonl`
+- `data/intraday_side/program_daily.jsonl`
+- `data/intraday_side/trade_strength_daily.jsonl`
+- future:
+  - `data/intraday_side/shorting_daily.jsonl`
+  - `data/intraday_side/loan_daily.jsonl`
+  - `data/intraday_side/credit_daily.jsonl`
+  - `data/intraday_side/sector_daily.jsonl`
+
+### Derived Side-Daily Feature Artifact
+- `artifacts/tp12_side_daily/features/run=<id>/feature_rows.jsonl`
+
+### Bridged Experiment Input
+- `artifacts/tp12_side_daily/bridged_feature_pack/run=<id>/decision_candidates_feature_pack_side_<gateId>.jsonl`
+
+### Pipeline Summary
+- `artifacts/tp12_side_daily/pipeline/run=<id>/pipeline_summary.json`
+
+## Experiment Protocol
+### Control
+- current daily feature pack only
+- same Step A source
+- same Step D slice
+- same evaluation date range
+- first control is `no-stop TP12 target discovery`, not stop-first execution
+
+### Target Discovery Baseline
+- use fixed no-stop TP12 target labels first
+- recommended first target family:
+  - `tp12_no_stop_hit_3d`
+  - `tp12_no_stop_hit_4d`
+- keep stop-loss semantics out of this stage entirely
+- objective:
+  - prove that the signal family still lifts target-hit metrics from the `2016` train floor through OOS
+
+### Variant Families
+- `daily + investor`
+- `daily + program`
+- `daily + investor + program`
+- `daily + trade_strength` only on proven common-support windows
+- later:
+  - `daily + shorting`
+  - `daily + loan`
+  - `daily + credit`
+  - `daily + sector`
+  - `daily + all promoted families`
+
+### Required Evaluation Views
+- `common-support view`
+  - compare only rows/dates where all tested families are available
+  - purpose: pure incremental predictive lift
+- `deployment view`
+  - compare actual usable rows/dates for each family
+  - purpose: real operational value after coverage loss
+
+### Primary Metrics
+- `targetHitRate`
+- `targetHitCount`
+- `executedTargetHitRateEval`
+- `winRate`
+- `avgNetRet`
+
+### Stage-Specific Metric Emphasis
+- `Stage 1 / Stage 2`:
+  - primary:
+    - `targetHitRate`
+    - `targetHitCount`
+    - `matchedDates`
+  - secondary:
+    - `winRate`
+    - `avgNetRet`
+- `Stage 3` only:
+  - execution metrics become primary:
+    - `executedTargetHitRateEval`
+    - `avgNetRet`
+    - policy-specific net return
+
+### Required Companion Metrics
+- `selectedRows`
+- `matchedDates`
+- `coverageDateFrom`
+- `coverageDateTo`
+- `abstainRate`
+
+## Gate Order
+### Gate 1
+- `d0_close` veto only
+- use side-daily families to decide:
+  - keep candidate
+  - reject candidate
+
+### Gate 2
+- still `d0_close`
+- still evaluated first on no-stop TP12 targets
+- use side-daily families to improve target-hit discrimination before any stop policy is learned
+
+### Gate 3
+- `d0_close` execution router
+- use side-daily families to decide:
+  - `stop_first`
+  - `delay1_4d`
+  - `abstain`
+
+### Deferred Gates
+- `d1_0905`
+- `d1_0915`
+- `d1_0930`
+- these remain minute-dependent and are not part of the side-daily MVP
+
+## Leakage Rules
+- side-daily `d0_close` features may use only:
+  - `prevDateKey`
+  - `decisionDateKey`
+- no `D+1` or later side-daily rows may appear in `d0_close` features
+- rolling windows are allowed only if the window ends at `decisionDateKey`
+- labels remain outcome-only
+- `Stage 1 / Stage 2` labels are no-stop target labels first:
+  - `tp12_no_stop_hit_3d`
+  - `tp12_no_stop_hit_4d`
+  - optional later:
+    - `tp12_no_stop_hit_5d`
+- execution labels are explicitly downstream-only:
+  - `tp12_first`
+  - `sl4_first`
+  - `no_barrier_hit`
+  - `stop_first_net_ret`
+  - `delay1_4d_net_ret`
+  - `bestPolicyChoice`
+
+## Hard Stops
+- fail if the side-daily core path depends on minute artifacts
+- fail if side-daily is evaluated only on stop-first execution labels before the no-stop TP12 discovery stage is closed
+- fail if a new execution-policy model is introduced before the no-stop TP12 baseline is recorded from the `2016` train floor
+- fail if new exact-search tuning under `TP12 / SL4 / 3d` is reopened as the primary branch
+- fail if `HIGH8 / close28` supplier metrics are mixed into a new `12% no-stop selection` promotion claim
+- fail if a new `12% no-stop selection` branch mutates the frozen `daily_only_no_stop` scientific-control artifacts instead of writing a sibling run family
+- fail if stop-first or delayed-stop results are used to justify signal existence before the no-stop scientific comparison is closed
+- fail if buy / sell / stop deep-learning starts before the additive family comparison versus `daily_only_no_stop` is written
+- fail if a tested side family is missing a written probe/depth/QC decision
+- fail if `trade_strength_daily` is treated as full-range canonical without explicit floor proof
+- fail if `sector_daily` is promoted before a symbol-to-sector mapping contract exists
+- fail if any tested variant changes the candidate universe instead of only features / gating / routing
+- fail if side-daily experiments are compared on different candidate/date support without an explicit `common-support view`
+- fail if any `(datasetId, symbol, dateKey)` pair is missing inside a supposedly supported slice
+- fail if any `(datasetId, symbol, dateKey)` pair is duplicated
+- fail if a bridge step encounters duplicate `(symbol, decisionDateKey)` rows in the evaluated feature-pack slice
+- fail if canonical side-daily writes happen outside the single-writer merge tool
+- fail if local heavy runs or local canonical writes are used for side-daily collection
+- fail if a family is silently dropped to keep an experiment green
+
+## Risk Register
+- `coverage illusion`
+  - a family can look strong only because it shrinks the usable OOS date range
+- `selection bias`
+  - using winners or narrowed trades instead of broad Step A candidates invalidates lift claims
+- `bridge ambiguity`
+  - duplicate `(symbol, decisionDateKey)` rows can corrupt feature-pack joins
+- `family-depth asymmetry`
+  - different families can have different historical floors
+- `stale Step A provenance`
+  - narrowed runs must start from a fresh broad OOS Step A source
+- `overfitting by family pile-on`
+  - adding every family at once hides which one actually improved OOS
+- `execution-before-signal`
+  - learning stop/buy/sell policy before the no-stop TP12 signal is stabilized can hide whether the signal exists at all
+
+## Sequential Bundles
+### Bundle 0: Scope Freeze
+- [x] freeze `daily + side-daily` as a separate core path from minute
+- [x] add this checklist and a sibling plan doc
+- [x] mark the Kiwoom minute checklist as the optional branch, not the core path
+- [x] update handoff/resume to point future work here first
+- [x] freeze the research sequence:
+  - `2016` train floor
+  - `no-stop TP12 discovery first`
+  - `execution/deep-learning later`
+
+### Bundle 0.5: No-Stop Target Discovery Freeze
+- [x] define the first no-stop TP12 target contract:
+  - `tp12_no_stop_hit_3d`
+  - `tp12_no_stop_hit_4d`
+- [x] record the exact train/OOS split policy used from the `2016` floor
+- [ ] record the daily-only control metrics before any side-daily family is tested
+
+### Bundle 0.6: Split / Control Freeze Contract
+- [x] write the exact comparison contract for the first `2016`-floor rerun:
+  - `trainDateFrom`
+  - `trainDateTo`
+  - `oosDateFrom`
+  - `oosDateTo`
+  - `stepALaneSet`
+  - `targetLabelIds`
+  - `allowlist policy`
+  - `common-support policy`
+- [x] freeze the contract in `meta/tp12_side_daily_research_contract.json`:
+  - `contractId = tp12_side_daily_low_gap_top_no_stop_effective_floor_20160812_v3`
+  - `decisionWindow = 2016-08-12 ~ 2026-03-30`
+  - `train = 2016-08-12 ~ 2024-12-31`
+  - `oos = 2025-01-02 ~ 2026-03-30`
+  - `scopeId = LOW_GAP_TOP`
+  - `stepALaneSet = [recent_impulse_1d]`
+- [ ] write the first daily-only no-stop control artifact paths:
+  - discovery run id
+  - feature-pack path
+  - score/report path
+  - OOS comparison report path
+- [x] freeze the first scientific order:
+  - daily-only no-stop control
+  - daily + investor
+  - daily + program
+  - daily + investor + program
+  - `trade_strength` only after explicit floor proof
+- [x] explicitly defer all buy/sell/stop deep-learning work until Bundle 7 is green
+
+### Bundle 0.7: Daily-Only Control Artifact Builder
+- [x] add:
+  - `src/lib/tp12_side_daily_control_builder.mjs`
+  - `src/lib/tp12_side_daily_contract.mjs`
+  - `tools/build_tp12_side_daily_control.mjs`
+  - `tools/run_tp12_side_daily_control.sh`
+  - `tools/server_run_tp12_side_daily_control.sh`
+  - `tools/smoke_tp12_side_daily_control.mjs`
+  - `tools/smoke_tp12_side_daily_contract.mjs`
+- [x] freeze the control outputs as explicit files:
+  - `decision_candidates_feature_pack_control.jsonl`
+  - `no_stop_label_rows.jsonl`
+  - `control_summary.json`
+- [x] make the builder fail-fast on:
+  - duplicate manifest `(symbol, decisionDateKey)` pairs
+  - missing feature-pack coverage
+  - split rows outside frozen train/OOS windows
+  - `stepALaneSet` mismatch
+  - unsupported target label ids
+- [x] keep target labels out of the control feature pack rows
+- [x] load the frozen research contract by default from:
+  - `meta/tp12_side_daily_research_contract.json`
+- [ ] use the builder to write the first real frozen control artifact on the server
+
+### Bundle 0.8: Control-Input Pack Builder / 2016 Floor Proof
+- [x] add:
+  - `src/lib/tp12_side_daily_control_input_pack.mjs`
+  - `tools/build_tp12_side_daily_control_input_pack.mjs`
+  - `tools/smoke_tp12_side_daily_control_input_pack.mjs`
+  - `tools/run_tp12_side_daily_control_inputs.sh`
+  - `tools/server_run_tp12_side_daily_control_inputs.sh`
+- [x] define the exact purpose:
+  - build fresh train/oos open daily packs
+  - merge them into one exact base input pack for the first `daily-only no-stop` control rerun
+- [x] make the input-pack builder fail-fast on:
+  - duplicate `(symbol, decisionDateKey)` pairs across train/oos
+  - zero-row train pack
+  - zero-row oos pack
+  - overlapping train/oos decision-date coverage
+- [x] add a hard floor check:
+  - if the merged pack does not reach the frozen effective train floor, fail immediately
+- [x] record the currently proven blocker:
+  - existing broad open packs only cover:
+    - train `2020-11-27 ~ 2024-12-27`
+    - oos `2025-01-02 ~ 2026-01-29`
+  - so the `2016` train floor is not yet proven by current artifacts
+- [x] run the first real server control-input build:
+  - run id:
+    - `tp12_side_daily_control_inputs_low_gap_top_2016_floor_v1`
+  - observed result:
+    - fail-fast `control input pack does not reach requested train floor: requested=2016-01-05 actual=2016-08-12`
+  - observed train pack facts:
+    - `requestedPeriod = 2016-01-05 ~ 2024-12-31`
+    - `selectedDecisionCoverage.from = 2016-08-12`
+    - `datasetContract.minDateKey = 2016-08-12`
+    - `rowsWritten = 34756`
+  - canonical interpretation:
+    - wrapper/root-path issue is closed
+    - the blocker is the strict daily feature warmup contract:
+      - `template.localWindow = 40`
+      - `template.globalWindow = 150`
+      - `featureAsOf = t-1`
+    - `LOW_GAP_TOP + recent_impulse_upto_1d + strict_label_boundary` is not the actual cause of the January miss
+    - the first reachable train decision date under the current daily contract is `2016-08-12`
+  - hard stop:
+    - do not rerun the same control-input patch key unchanged
+    - next patch must freeze the effective train floor at `2016-08-12` before rerun
+
+### Bundle 1: Family Promotion Matrix
+- [x] document family status:
+  - `investor_daily = core`
+  - `program_daily = core`
+  - `trade_strength_daily = conditional`
+  - `shorting/loan/credit = pending probe`
+  - `sector = pending mapping contract`
+- [x] add explicit probe/depth checklist rows for:
+  - `shorting_daily`
+  - `loan_daily`
+  - `credit_daily`
+  - `sector_daily`
+
+### Bundle 2: Side-Daily Canonical Expansion
+- [ ] extend:
+  - `tools/kiwoom_rest_client.py`
+  - `tools/kiwoom_side_daily_common.py`
+  - `tools/backfill_kiwoom_side_daily.py`
+  - `tools/qc_kiwoom_side_daily_stage.py`
+  - `tools/merge_kiwoom_side_daily_stage.py`
+- [ ] add canonical support for:
+  - `shorting_daily`
+  - `loan_daily`
+  - `credit_daily`
+  - `sector_daily`
+- [ ] add smokes for each new family before promotion
+
+### Bundle 3: Side-Daily Feature Builder
+- [x] add:
+  - `src/lib/tp12_side_daily_feature_builder.mjs`
+  - `tools/build_tp12_side_daily_feature_dataset.mjs`
+  - `tools/run_tp12_side_daily_feature_dataset.sh`
+  - `tools/server_run_tp12_side_daily_feature_dataset.sh`
+  - `tools/smoke_tp12_side_daily_feature_dataset.mjs`
+- [x] add reusable no-stop target contract:
+  - `src/lib/tp12_no_stop_target_contract.mjs`
+- [x] MVP gate:
+  - `d0_close`
+- [x] feature families:
+  - `investor_*`
+  - `program_*`
+  - `trade_strength_*` only when supported
+  - later:
+    - `shorting_*`
+    - `loan_*`
+    - `credit_*`
+    - `sector_*`
+- [x] first label set:
+  - no-stop TP12 labels only
+- [x] execution labels stay disabled in this bundle
+
+### Bundle 4: Side-Daily Feature Bridge
+- [x] add:
+  - `src/lib/tp12_side_daily_feature_bridge.mjs`
+  - `tools/build_tp12_side_daily_feature_pack_bridge.mjs`
+  - `tools/run_tp12_side_daily_feature_pack_bridge.sh`
+  - `tools/server_run_tp12_side_daily_feature_pack_bridge.sh`
+  - `tools/smoke_tp12_side_daily_feature_bridge.mjs`
+- [x] prefix bridged features with `side.`
+- [x] add pre-bridge pair uniqueness audit
+
+### Bundle 5: Dedicated Side-Daily Pipeline
+- [x] add:
+  - `tools/run_kiwoom_tp12_side_daily_pipeline.sh`
+  - `tools/server_run_kiwoom_tp12_side_daily_pipeline.sh`
+- [x] keep minute wrappers untouched
+- [x] write explicit pipeline summary under `artifacts/tp12_side_daily/pipeline/`
+
+### Bundle 6: Verify Wiring
+- [x] extend `scripts/verify.sh` with:
+  - `smoke_tp12_side_daily_feature_dataset.mjs`
+  - `smoke_tp12_side_daily_feature_bridge.mjs`
+  - `smoke_tp12_side_daily_control.mjs`
+  - shell syntax checks for new wrappers
+- [x] require local smoke green before server sync
+- [ ] require server `npm run verify` after every bundle
+
+### Bundle 7: First Scientific Comparison
+- [ ] run first `LOW_GAP_TOP` `d0_close` comparison:
+  - control: daily only
+  - variant: `daily + investor`
+  - variant: `daily + program`
+  - variant: `daily + investor + program`
+- [ ] require both:
+  - `common-support view`
+  - `deployment view`
+- [ ] record lift report in handoff + experiment memory
+- [ ] keep the first comparison on no-stop TP12 target labels only
+- [ ] require the report to answer separately:
+  - did hit-rate improve?
+  - did hit-count improve?
+  - did matched dates shrink?
+  - did avgNetRet improve without changing execution policy?
+
+### Bundle 8: Execution Router
+- [ ] only start after Bundle 7 and Bundle 7.5 are both explicitly judged:
+  - Bundle 7 closed the first additive-family verdict
+  - Bundle 7.5 closed whether `12% no-stop selection` itself deserves a new supplier branch
+- [ ] add side-daily `d0_close` router labels:
+  - `stop_first`
+  - `delay1_4d`
+  - `abstain`
+- [ ] compare router against current fixed execution baseline
+
+### Bundle 7.5: 12% No-Stop Rolling Selection Branch
+- [ ] open a sibling machine-readable contract for `LOW_GAP_TOP / recent_impulse_1d / TP12 no-stop` rolling selection
+- [ ] keep the existing scientific baseline frozen:
+  - `daily_only_no_stop`
+  - `daily_plus_investor`
+  - `daily_plus_program`
+  - `daily_plus_investor_program`
+- [ ] add a dedicated no-stop Step-B config:
+  - `targetPct = 0.12`
+  - `stopLossPct = 0`
+  - `lineId = stepb_dplus1_plus_lite_target12_no_stop`
+- [ ] add an explicit rolling-window contract:
+  - W1 train `2016-08-12 ~ 2018-12-31`, OOS `2019-01-02 ~ 2019-12-31`
+  - W2 train `2017-01-02 ~ 2019-12-31`, OOS `2020-01-02 ~ 2020-12-31`
+  - W3 train `2018-01-02 ~ 2020-12-31`, OOS `2021-01-04 ~ 2021-12-30`
+  - W4 train `2019-01-02 ~ 2021-12-31`, OOS `2022-01-03 ~ 2022-12-29`
+  - W5 train `2020-01-02 ~ 2022-12-30`, OOS `2023-01-02 ~ 2023-12-28`
+  - W6 train `2021-01-04 ~ 2023-12-29`, OOS `2024-01-02 ~ 2024-12-27`
+  - final confirm train `2016-08-12 ~ 2024-12-27`, OOS `2025-01-02 ~ 2026-03-27`
+- [ ] add per-window source-pack wrapper(s) that rebuild exact train/oos open packs under the no-stop config
+- [ ] add per-window mining wrapper(s) that rerun `LOW_GAP_TOP` only:
+  - screen windows at `200K`
+  - final confirm at `20M`
+- [ ] keep primary promotion metric on:
+  - `tp12_no_stop_hit_3d`
+- [ ] keep secondary robustness metric on:
+  - `tp12_no_stop_hit_4d`
+- [ ] add per-window report outputs:
+  - train selected rows / hit rows / hit rate
+  - oos selected rows / hit rows / hit rate
+  - unique matched dates
+  - hit-date concentration such as `top1DateShare`
+  - zero-negative / repeated-date rule counts
+- [ ] add one rolling summary artifact that aggregates all screen windows and the final untouched confirm
+- [ ] fail the branch if the first two rolling windows collapse to near-zero usable support and do not silently widen the contract
+- [ ] do not promote the branch on screen windows alone:
+  - the untouched `2025-01-02 ~ 2026-03-27` confirm must remain separate
+
+### Bundle 9: Wider Rollout
+- [ ] if `LOW_GAP_TOP` is green, expand to `LOW`
+- [ ] only after that, consider broader Step A lanes
+- [ ] do not widen before the side-family lift is proven on the narrower family
+
+### Bundle 9.5: Deferred LOW_GAP_TOP Lookback Ladder Expansion
+- [ ] do not open until Bundle 7.5 final confirm is closed and written to handoff
+- [ ] use the deferred plan document:
+  - `/home/saida/code/stockdesk-lab-lite/docs/tp12_side_daily_no_stop_lookback_ladder_future_plan.md`
+- scaffold now available:
+  - `meta/tp12_no_stop_lookback_ladder_contract.json`
+  - `tools/build_tp12_no_stop_lookback_ladder_candidate_contract.mjs`
+  - `tools/run_stepb_tp12_no_stop_lookback_ladder.sh`
+  - `tools/build_tp12_no_stop_lookback_ladder_summary.mjs`
+- [ ] keep `scopeId = LOW_GAP_TOP` fixed for the first pass
+- [ ] run sparse lookback ladder only:
+  - `recent_impulse_upto_1d`
+  - `recent_impulse_upto_2d`
+  - `recent_impulse_upto_3d`
+  - `recent_impulse_upto_5d`
+  - `recent_impulse_upto_8d`
+- [ ] use the same rolling windows as Bundle 7.5
+- [ ] keep the promotion metric on `tp12_no_stop_hit_3d`
+- [ ] keep `tp12_no_stop_hit_4d` as robustness only
+- [ ] reject any wider lookback that wins only by shrinking OOS support to trivial size
+- [ ] reject any wider lookback that depends on one-date concentration
+- [ ] only if sparse ladder is green, fill the missing interior lookbacks:
+  - `4d`
+  - `6d`
+  - `7d`
+- [ ] only send the winning lookback to full final confirm
+- [ ] only after winner confirm is green, expand scope in order:
+  - `LOW_GAP_TOP`
+  - `LOW`
+  - `MID`
+  - `TOP`
+- [ ] do not propose `9d~12d` until the current `8d` ceiling itself is proven valuable
+- [ ] if `9d~12d` is later approved, do infra expansion as a separate patch before any experiment runs
+
+### Bundle 7.6: lb5 Year2x7 Stability Audit
+- [x] freeze a strict follow-up plan for:
+  - `LOW_GAP_TOP`
+  - `lb5`
+  - `2017..2023`
+  - minimum `2` train hits per year
+- [x] keep boundary years out of the stability gate only:
+  - `2016`
+  - `2024`
+- [x] add a machine-readable research contract for the strict `year2x7` audit/replay branch
+- [x] add a rule-level year coverage audit tool that emits:
+  - per-rule yearly hit counts
+  - core-year pass/fail
+  - strict survivor rule ids
+- [x] rebuild a strict frozen subset catalog from the completed canonical `lb5` bank without reopening mining
+- [x] replay the strict subset on the same untouched OOS:
+  - `2025-01-02 ~ 2026-03-27`
+- [x] emit a strict subset replay summary with:
+  - `selectedRows`
+  - `hitRows`
+  - `hitRate`
+  - `uniqueMatchedDates`
+  - `uniqueMatchedSymbols`
+  - `top1DateShare`
+- [x] record the strict subset verdict:
+  - `0 / 29,182` survivors under `2017..2023` with minimum `2` hits per year
+  - no rule even satisfies `2017..2023` with minimum `1` hit per year across all seven core years
+- [x] do not open the same strict `year2x7` search-v2 unchanged
+- [x] do not jump straight to a new `20M` rerun before the strict subset replay is judged
+- [x] probe nearest relaxed year-coverage subsets on the same canonical `lb5` bank:
+  - `ge1_in_6of7`
+  - `ge1_in_5of7`
+  - `ge2_in_3of7_no_gap2`
+- [x] record the relaxed replay verdict:
+  - `ge1_in_6of7 = 1 / 11 = 9.09%`
+  - `ge1_in_5of7 = 22 / 84 = 26.19%`
+  - `ge2_in_3of7_no_gap2 = 8 / 30 = 26.67%`
+  - none beat the canonical `lb5` untouched OOS baseline `30 / 105 = 28.57%`
+- [x] do not open the same relaxed year-coverage search-v2 filters unchanged
+
+## Bundle 7.7: Canonical lb5 live-like OOS replay audit
+- [x] add the live-like replay contract:
+  - `meta/tp12_no_stop_lb5_live_like_oos_replay_contract.json`
+- [x] add the live-like replay loader/report utilities:
+  - `src/lib/tp12_no_stop_lb5_live_like_oos_replay_contract.mjs`
+  - `src/lib/tp12_no_stop_lb5_live_like_oos_replay_report.mjs`
+- [x] add the summary builder and server-only wrappers:
+  - `tools/build_tp12_no_stop_lb5_live_like_oos_replay_summary.mjs`
+  - `tools/run_tp12_no_stop_lb5_live_like_oos_replay.sh`
+  - `tools/server_run_tp12_no_stop_lb5_live_like_oos_replay.sh`
+- [x] add smoke coverage and wire `scripts/verify.sh`:
+  - `tools/smoke_tp12_no_stop_lb5_live_like_oos_replay_contract.mjs`
+  - `tools/smoke_tp12_no_stop_lb5_live_like_oos_replay_summary.mjs`
+- [x] rerun server `npm run verify`
+- [x] run the canonical `lb5` live-like replay audit on the untouched OOS:
+  - run id:
+    - `tp12_no_stop_lb5_live_like_oos_replay_v1_20260411`
+  - requested OOS dates:
+    - `244`
+  - wall clock:
+    - `851 sec`
+- [x] record the equivalence verdict:
+  - batch raw matches:
+    - `105`
+  - replay raw matches:
+    - `105`
+  - batch deduped selections:
+    - `105`
+  - replay deduped selections:
+    - `105`
+  - batch OOS:
+    - `30 / 105 = 28.57%`
+  - replay OOS:
+    - `30 / 105 = 28.57%`
+  - `rawSetMatch = true`
+  - `dedupedSetMatch = true`
+  - `rawCountByDateMatch = true`
+  - `dedupedCountByDateMatch = true`
+- [x] freeze the interpretation:
+  - canonical `lb5` batch apply is already live-like faithful
+  - do not reopen replay-format doubts on the same canonical `lb5` run unchanged
+
+## Immediate Next Actions
+1. keep the frozen scientific baseline and additive-family verdict as-is:
+   - baseline remains `daily_only_no_stop`
+   - additive `investor/program` first wave is negative under the current contract
+2. add the new sibling `12% no-stop rolling selection` contract and config without mutating the scientific-control root
+3. wire server-only rolling source-pack and `LOW_GAP_TOP` mining wrappers for the six `3y train + 1y OOS` screen windows
+4. add per-window and aggregated rolling reports with:
+   - `tp12_no_stop_hit_3d` primary metrics
+   - `tp12_no_stop_hit_4d` secondary robustness metrics
+5. only after the rolling screen is closed, run the untouched full-train confirm on:
+   - train `2016-08-12 ~ 2024-12-27`
+   - OOS `2025-01-02 ~ 2026-03-27`
+6. keep execution-policy learning downstream-only until the branch decides whether a real `12% no-stop` supplier exists
+
+## 2026-04-05 Effective-Floor Control Follow-up
+- `tp12_side_daily_control_inputs_low_gap_top_effective_floor_20160812_v1` is green:
+  - `rowCount = 40624`
+  - `trainRowCount = 34756`
+  - `oosRowCount = 5868`
+  - `decisionDateFrom = 2016-08-12`
+  - `decisionDateTo = 2026-03-27`
+- new root-cause fix:
+  - the side-daily research contract had been using downstream scope `LOW_GAP_TOP` as if it were the raw Step A lane id
+  - actual broad Step A / allowlist / request-manifest rows carry `stepALaneId = recent_impulse_1d`
+  - the frozen contract must separate:
+    - `scopeId = LOW_GAP_TOP`
+    - `control.stepALaneSet = [recent_impulse_1d]`
+- current remaining blocker before the first scientific `daily-only no-stop` control artifact:
+  - no full-period downstream `LOW_GAP_TOP` daily pack / exact allowlist exists yet
+  - existing server-side downstream `LOW_GAP_TOP` packs still begin at `2020-11-27`
+  - do not build the first scientific control artifact until that full-period downstream allowlist exists
+- helper added so the unblock path is deterministic once the rerun finishes:
+  - `tools/build_tp12_side_daily_downstream_full_period_pack.mjs`
+  - `tools/run_tp12_side_daily_downstream_full_period_pack.sh`
+  - `tools/server_run_tp12_side_daily_downstream_full_period_pack.sh`
+  - `tools/smoke_tp12_side_daily_downstream_full_period_pack.mjs`
+  - `tools/run_tp12_side_daily_full_period_allowlist.sh`
+  - `tools/server_run_tp12_side_daily_full_period_allowlist.sh`
+  - `tools/build_tp12_side_daily_full_period_manifest.mjs`
+  - `tools/run_tp12_side_daily_full_period_manifest.sh`
+  - `tools/server_run_tp12_side_daily_full_period_manifest.sh`
+  - `tools/smoke_tp12_side_daily_full_period_manifest.mjs`
+  - `src/lib/tp12_side_daily_family_variants.mjs`
+  - `tools/smoke_tp12_side_daily_family_variants.mjs`
+  - `tools/run_tp12_side_daily_scientific_control_pipeline.sh`
+  - `tools/server_run_tp12_side_daily_scientific_control_pipeline.sh`
+  - `tools/run_tp12_side_daily_scientific_post_rerun.sh`
+  - `tools/server_run_tp12_side_daily_scientific_post_rerun.sh`
+  - `src/lib/tp12_side_daily_scientific_comparison.mjs`
+  - `tools/build_tp12_side_daily_scientific_comparison_report.mjs`
+  - `tools/run_tp12_side_daily_scientific_comparison_report.sh`
+  - `tools/server_run_tp12_side_daily_scientific_comparison_report.sh`
+  - `tools/smoke_tp12_side_daily_scientific_comparison_report.mjs`
+- exact order after the rerun turns green:
+  1. merge downstream train/oos packs into one exact full-period pack
+  2. build the narrowed full-period exact allowlist from that merged pack
+  3. build the full-period narrowed Step A manifest from train/oos broad Step A sources plus that allowlist
+  4. freeze the first scientific-control bundle:
+    - `daily_only_no_stop`
+    - `daily_plus_investor`
+    - `daily_plus_program`
+    - `daily_plus_investor_program`
+  5. build one exact `selection_manifest.json` that binds each variant to its selected-row artifact
+  6. only then score the first scientific comparison on that frozen bundle
+- deterministic wrapper now exists for the strict post-rerun path:
+  - `bash tools/server_run_tp12_side_daily_scientific_post_rerun.sh --downstream-run-dir=... --train-run-dir=... --oos-run-dir=... --feature-pack-path=...`
+  - omit `--variant-selection-map=...` to stop after `pipeline_summary.json`
+  - provide `--variant-selection-map=...` to continue through:
+    - `selection_manifest.json`
+    - `scientific_comparison_report.json`
+
+## Bundle 10.0 - TP12 no-gap addon 200k matrix on lb5
+- [x] define a true gapless addon contract with `LOW_CLOSE_ONLY` / `LOW_JUMP_ONLY`
+- [x] strip gap-derived event/context/token paths so the no-gap branch is genuinely gapless
+- [x] run all ten `200k` screen candidates on the shared `lb5` rolling source packs
+- [x] rank the full 10-candidate matrix against canonical `LOW_GAP_TOP + lb5`
+- [x] register the result as closed-negative
+- result:
+  - best no-gap candidate:
+    - `NG_CLOSE_BASE = 187 / 793 = 23.58%`
+  - canonical screen baseline:
+    - `LOW_GAP_TOP + lb5 = 115 / 370 = 31.08%`
+  - verdict:
+    - every no-gap candidate underperformed the canonical baseline
+    - do not reopen the same `tp12_no_gap_addon_screen_v1` matrix unchanged
+
+## Bundle 11.0 - Year2x8 Core-Year Prune Infrastructure
+- [x] add a machine-readable year2x8 bank-discovery contract:
+  - `meta/tp12_year2x8_bank_discovery_research_contract.json`
+- [x] add reusable year2x8 contract/grid loaders:
+  - `src/lib/tp12_year2x8_contract.mjs`
+  - `src/lib/tp12_bank_grid_contracts.mjs`
+- [x] add a dedicated year-hit guard helper:
+  - `src/lib/perfect_prototype_year_hit_guard.mjs`
+- [x] extend rolling-contract parsing so derived rolling contracts can carry:
+  - `enableYearHitUpperBoundPrune`
+  - `coreYears`
+  - `excludedBoundaryYears`
+  - `minTrainHitsPerCoreYear`
+- [x] extend miner option plumbing and CLI flags:
+  - `--enable-year-hit-upper-bound-prune=true`
+  - `--core-years=2017,2018,2019,2020,2021,2022,2023,2024`
+  - `--min-train-hits-per-core-year=2`
+- [x] fail fast if year prune is enabled and:
+  - `coreYears` is empty
+  - `minTrainHitsPerCoreYear` is missing or invalid
+- [x] add search-time telemetry:
+  - `yearHitUpperBoundPruneCount`
+  - `yearHitUpperBoundPruneCountByFamily`
+  - `yearHitUpperBoundReasonCounts`
+  - `coreYears`
+  - `minTrainHitsPerCoreYear`
+- [x] add rejected-rule samples for year-hit prune with:
+  - `coreYearSatisfiedCount`
+  - `minCoreYearHitCount`
+  - `coreYearHitCounts`
+- [x] add smoke coverage:
+  - `tools/smoke_perfect_prototype_year_hit_guard.mjs`
+  - `tools/smoke_perfect_prototype_year_hit_prune.mjs`
+
+## Bundle 11.1 - Year2x8 16-Cell Bank Discovery Matrix
+- [x] keep `2016` excluded from core-year gating only because the first usable decision date is `2016-08-12`
+- [x] include `2024` in the core-year gate
+- [x] define the year2x8 cell universe:
+  - scope:
+    - `LOW_GAP_TOP`
+    - `LOW`
+    - `MID`
+    - `TOP`
+  - lookback:
+    - `lb1`
+    - `lb3`
+    - `lb5`
+    - `lb8`
+- [x] add matrix wrappers/builders:
+  - `tools/build_tp12_year2x8_bank_discovery_candidate_contract.mjs`
+  - `tools/run_tp12_year2x8_bank_discovery_matrix.sh`
+  - `tools/server_run_tp12_year2x8_bank_discovery_matrix.sh`
+  - `tools/build_tp12_year2x8_bank_discovery_summary.mjs`
+- [x] run each cell under:
+  - rolling `3y train + next 1y OOS`
+  - `200k`
+  - year2x8 prune enabled
+- [x] emit:
+  - `cell_summary.json`
+  - `matrix_summary.json`
+  - `matrix_report.md`
+- [x] aggregate for each cell:
+  - `ruleCount`
+  - `year2x8CandidateRuleCount`
+  - `oosSelectedRows`
+  - `oosHitRows`
+  - `oosHitRate`
+  - `signalsPer20TradingDays`
+  - `oosHitCountByYear`
+  - `top1DateShare`
+  - `usableWindowCount`
+- [x] 1-cell dry run first:
+  - `LOW_GAP_TOP x lb5`
+  - confirm `yearHitUpperBoundPruneCount > 0`
+  - confirm rejection samples carry `coreYearSatisfiedCount`
+- [x] dry-run verdict:
+  - `tp12_year2x8_bank_discovery_200k_v1_20260411_dryrun_r2`
+  - `LOW_GAP_TOP x lb5` ended with `usableWindowCount = 0`
+  - `w1~w6` all died at seed stage with `seedTokensSelected = 0`, `rulesCollected = 0`
+  - seed year-prune counts by window:
+    - `w1 = 613`
+    - `w2 = 618`
+    - `w3 = 633`
+    - `w4 = 645`
+    - `w5 = 646`
+    - `w6 = 644`
+- [x] stop the branch immediately if all 16 cells have `year2x8CandidateRuleCount = 0`
+  - final matrix verdict:
+    - all `16/16` cells ended with `usableWindowCount = 0`
+    - all `16/16` cells ended with `year2x8CandidateRuleCount = 0`
+    - no screen survivor existed, so Bundle 11.2 was intentionally not opened
+
+## Bundle 11.2 - Year2x8 Top-Cell 20M Final Confirm
+- [x] add final-confirm wrappers/builders:
+  - `tools/run_tp12_year2x8_topcell_final_confirm.sh`
+  - `tools/server_run_tp12_year2x8_topcell_final_confirm.sh`
+  - `tools/build_tp12_year2x8_final_confirm_summary.mjs`
+- [ ] only send top `2~3` cells from Bundle 11.1
+- [ ] final contract:
+  - train `2016-08-12 ~ 2024-12-27`
+  - OOS `2025-01-02 ~ 2026-03-27`
+  - `20M`
+  - `maxRules = 300000`
+  - year2x8 prune kept on
+- [ ] final success target:
+  - `OOS hit rate >= 50%`
+  - `selectedRows >= 80`
+  - `signalsPer20TradingDays >= 8`
+  - `uniqueMatchedDates >= 70`
+  - `top1DateShare <= 0.06`
+- [ ] fail the exact daily-only year2x8 branch if the top final cell cannot clear at least `40%`
+  - branch closure note:
+    - no top cell survived Bundle 11.1, so the exact daily-only year2x8 branch was closed before Bundle 11.2 final confirm
+
+## Bundle 11.3 - Year2x8 Live-Like Replay Audit
+- [x] add generic year2x8 live-like replay wrappers/builders:
+  - `tools/run_tp12_year2x8_live_like_replay.sh`
+  - `tools/server_run_tp12_year2x8_live_like_replay.sh`
+  - `tools/build_tp12_year2x8_live_like_replay_summary.mjs`
+- [ ] replay the winning final cell one requested date at a time
+- [ ] verify:
+  - batch apply vs day-by-day replay equality
+  - `signalsPer20TradingDays`
+  - `noSignalDayShare`
+  - `daysWithMultipleCandidates`
+- [ ] live-like accept gate:
+  - `signalsPer20TradingDays = 8~12`
+  - batch/live-like equality `true`
+  - branch closure note:
+    - Bundle 11.3 was not opened because Bundle 11.1 produced zero surviving cells
+
+## Bundle T0 - Technique Feature Derivation
+- [x] add a machine-readable technique grammar contract:
+  - `meta/technique_grammar_contract.json`
+- [x] add a machine-readable technique seed-template catalog:
+  - `meta/technique_seed_templates.json`
+- [x] add reusable contract/common loaders:
+  - `src/lib/technique_common.mjs`
+  - `src/lib/technique_grammar_contract.mjs`
+- [x] add technique feature-derivation helpers:
+  - `src/lib/technique_feature_derivation.mjs`
+- [x] derive only deterministic features from existing daily/intraday surfaces:
+  - `tech.distanceToMa20`
+  - `tech.distanceToMa120`
+  - `tech.anchorRecencyDays`
+  - `tech.anchorRunup`
+  - `tech.pullbackDepthFromBreakout`
+  - `tech.gapFillRatio`
+  - `tech.openingDrive`
+  - `tech.vwapHold`
+  - `tech.intradayBreakoutStrength`
+  - `tech.closeStrengthAfterBreakout`
+- [x] keep T0 fail-fast:
+  - no synthetic `52w` or `ma240` proxy is allowed unless the upstream row explicitly carries the raw level input
+  - numeric-feature collisions between `numericFeatureMap` and `featureVec` must throw
+
+## Bundle T1 - Technique Grammar
+- [x] add a reusable clause library:
+  - `src/lib/technique_clause_library.mjs`
+- [x] define grammar clause groups:
+  - `anchor`
+  - `retest`
+  - `compression`
+  - `confirm`
+  - `invalidate`
+- [x] enforce generator cardinality constraints:
+  - `anchor = exactly 1`
+  - `retest = 0~1`
+  - `compression = 0~1`
+  - `confirm = 0~2`
+  - `invalidate = 0~1`
+- [x] keep the grammar controlled:
+  - candidate generation must fail if a seed references an unknown clause id
+  - discovery must fail if generated templates violate group cardinality or the minimum clause count
+
+## Bundle T2 - Technique Candidate Generator
+- [x] add the deterministic template generator:
+  - `src/lib/technique_template_generator.mjs`
+- [x] generate templates from `seed template -> clause pool expansion`, not a fixed named-technique list
+- [x] require each generated candidate to carry:
+  - `candidateTemplateId`
+  - `seedId`
+  - `mechanismId`
+  - `clauseSet`
+  - `allClauseIds`
+  - `scopeCandidates`
+  - `lookbackCandidateIds`
+  - `generationRank`
+- [x] cap expansion deterministically:
+  - use `generation.maxGeneratedCandidatesPerSeed`
+  - keep lexical/deterministic ordering before truncation
+
+## Bundle T2.5 - Event-Only Recurrence Screen
+- [x] add event-row matcher/builder:
+  - `src/lib/technique_event_row_builder.mjs`
+  - `tools/build_technique_event_rows.mjs`
+- [x] add recurrence scorer/report:
+  - `src/lib/technique_recurrence_scorer.mjs`
+  - `tools/build_technique_recurrence_report.mjs`
+- [x] emit recurrence metrics before any exact mining:
+  - `yearEventCount`
+  - `yearHitCount`
+  - `yearHitRate`
+  - `yearsWithHitGe1`
+  - `yearsWithHitGe2`
+  - `coveredYears`
+  - `maxYearShare`
+  - `signalsPer20TradingDays`
+- [x] keep discovery gate softer than promotion:
+  - discovery:
+    - `5/8 years with >=2 hits`
+    - or `7/8 years with >=1 hit`
+  - promotion:
+    - `7/8 years with >=2 hits`
+- [x] do not reopen the dead exact-rule year gate at this stage:
+  - T2.5 is `event-only recurrence`, not `exact-rule year2x8 mining`
+
+## Bundle T2.6 - Technique Discovery Verification
+- [x] add local smoke coverage:
+  - `tools/smoke_technique_template_generator.mjs`
+  - `tools/smoke_technique_event_rows.mjs`
+  - `tools/smoke_technique_recurrence_scorer.mjs`
+- [x] wire new files into `scripts/verify.sh`
+- [x] local `bash scripts/verify.sh` passes
+- [x] server `npm run verify` passes
+- [x] fix recurrence source-day denominator propagation for default scope/lookback:
+  - `src/lib/technique_recurrence_scorer.mjs`
+  - `tools/build_technique_recurrence_report.mjs`
+  - `tools/smoke_technique_recurrence_scorer.mjs`
+- [x] seed template dry-run confirms non-empty event rows and non-empty recurrence summaries:
+  - authoritative rerun:
+    - `tp12_technique_seed_dryrun_v1_20260412_r3`
+  - event rows:
+    - `56,189`
+  - matched templates:
+    - `153`
+  - recurrence discovery-pass templates:
+    - `35`
+  - recurrence promotion-pass templates:
+    - `35`
+  - discovery/promotion bank ids:
+    - `3 / 3`
+- [ ] before opening `T3 Bank Discovery 200k`:
+  - convert the seed dry-run survivors into a concrete bank shortlist
+  - keep raw bank recurrence summaries as mechanism-level broad buckets only
+  - do not treat `MA_RETEST__LOW_GAP_TOP__lb5` raw aggregate counts as final tradable signal volume
+
+## Bundle T2.7 - Technique Bank Shortlist
+- [x] add shortlist contract section to `meta/technique_grammar_contract.json`:
+  - `minPromotionHitRate = 0.30`
+  - `minSignalsPer20TradingDays = 4`
+  - `maxSignalsPer20TradingDays = 15`
+  - `targetSignalsPer20TradingDays = 8`
+  - `maxTemplatesPerMechanism = 6`
+  - `maxTemplatesTotal = 12`
+- [x] implement shortlist builder:
+  - `src/lib/technique_bank_builder.mjs`
+  - `tools/build_technique_bank_shortlist.mjs`
+  - `tools/smoke_technique_bank_builder.mjs`
+- [x] fix shortlist clause-group extraction for generated templates:
+  - read grouped clause ids from `template.clauseSet.*` when legacy top-level ids are absent
+- [x] wire shortlist smoke into `scripts/verify.sh`
+- [x] local `bash scripts/verify.sh` passes after shortlist patch
+- [x] synced server `npm run verify` passes after shortlist patch
+- [x] regenerate authoritative shortlist artifact from the positive seed dry-run:
+  - source run:
+    - `tp12_technique_seed_dryrun_v1_20260412_r3`
+  - artifact:
+    - `artifacts/runs/tp12_technique_seed_dryrun_v1_20260412_r3/bank_shortlist.json`
+- [x] shortlist result is now concrete:
+  - `eligibleTemplateCount = 18`
+  - `dedupedTemplateCount = 12`
+  - `shortlistedTemplateCount = 6`
+  - `shortlistedBankCount = 1`
+  - shortlisted mechanism counts:
+    - `MA_RETEST = 6`
+  - shortlisted bank:
+    - `MA_RETEST__LOW_GAP_TOP__lb5`
+- [x] representative top shortlisted template:
+  - id:
+    - `ma_retest_seed__anchor-ma120-break--confirm-close-near-high--confirm-sponsor-quality--invalidate-failed-breakout-count20`
+  - `observedHitRate = 34.69%`
+  - `signalsPer20TradingDays = 6.10`
+  - `yearsWithHitGe2 = 8`
+  - clause groups:
+    - `anchorClauseIds = [anchor_ma120_break]`
+    - `confirmClauseIds = [confirm_close_near_high, confirm_sponsor_quality]`
+    - `invalidateClauseIds = [invalidate_failed_breakout_count20]`
+- [x] next-step constraint:
+  - do not reopen full raw mechanism aggregates in `T3`
+  - drive `T3 Bank Discovery 200k` from the shortlist artifact
+  - use `observedScopeIds` / `observedLookbackCandidateIds`, not broad seed candidate ranges
+
+## Bundle T3 - Technique Bank Discovery Plan Freeze
+- [x] add shortlist-driven T3 plan helpers:
+  - `src/lib/technique_bank_discovery_contract.mjs`
+  - `tools/build_technique_bank_discovery_candidate_contract.mjs`
+  - `tools/build_technique_bank_discovery_summary.mjs`
+  - `tools/run_technique_bank_discovery_rolling.sh`
+  - `tools/server_run_technique_bank_discovery_rolling.sh`
+  - `tools/smoke_technique_bank_discovery_contract.mjs`
+- [x] fix async contract loading in `tools/build_technique_bank_discovery_plan.mjs`
+  - root cause:
+    - `loadTechniqueGrammarContract(...)` must be awaited before reading `bankDiscovery`
+- [x] wire T3 contract/summary/runner checks into `scripts/verify.sh`
+- [x] local `bash scripts/verify.sh` passes after the T3 plan freeze patch
+- [x] synced server `npm run verify` passes after the T3 plan freeze patch
+- [x] authoritative server-side T3 plan artifact rebuilt from the shortlist:
+  - source shortlist run:
+    - `tp12_technique_seed_dryrun_v1_20260412_r3`
+  - server artifact:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_seed_dryrun_v1_20260412_r3/bank_discovery_plan.json`
+- [x] authoritative T3 entry is now frozen:
+  - `selectedBankCount = 1`
+  - `bankId = MA_RETEST__LOW_GAP_TOP__lb5`
+  - `scopeId = LOW_GAP_TOP`
+  - `lookbackCandidateId = lb5`
+  - `shortlistedTemplateCount = 6`
+  - `topTemplateId = ma_retest_seed__anchor-ma120-break--confirm-close-near-high--confirm-sponsor-quality--invalidate-failed-breakout-count20`
+- [x] clause groups frozen into the T3 entry:
+  - `anchorClauseIds = [anchor_ma120_break]`
+  - `compressionClauseIds = [compression_compaction20]`
+  - `confirmClauseIds = [confirm_close_near_high, confirm_positive_close_retention_prevclose, confirm_sponsor_quality]`
+  - `invalidateClauseIds = [invalidate_failed_breakout_count20]`
+- [x] next-step constraint:
+  - open `T3 bank discovery rolling` only from the plan artifact
+  - do not reopen raw recurrence aggregates as if they were already tradable banks
+  - first launch should be a shortlist-driven `1-cell` screen for `MA_RETEST__LOW_GAP_TOP__lb5`
+
+## Bundle T3 - Disk Recovery And Rerun (2026-04-12)
+- [x] diagnose server-side `ENOSPC` after the first shortlist-driven T3 launch
+- [x] confirm safe deletion candidates from closed negative branches:
+  - `tp12_year2x8_bank_discovery_200k_v1_20260411*`
+  - `tp12_no_gap_addon_screen_v1_20260411*`
+  - `tp12_no_stop_lb5_year2x7_audit_replay_v1_20260411*`
+  - `tp12_no_stop_lb5_year_coverage_relaxed_replay_v1_20260411*`
+- [x] delete closed negative artifacts on server and recover disk space:
+  - removed directories: `310`
+  - disk recovered from `0G avail / 100%` to `61G avail / 79%`
+- [x] relaunch shortlist-driven T3 run as clean rerun:
+  - run id: `tp12_technique_bank_discovery_rolling_v1_20260412_r2`
+  - bank: `MA_RETEST__LOW_GAP_TOP__lb5`
+- [ ] track `w1~w6` to rolling completion before any T4/T5 work
+
+## Bundle T3 - First Shortlist-Driven Rolling Result (2026-04-12)
+- [x] complete shortlist-driven `T3` rolling rerun for `MA_RETEST__LOW_GAP_TOP__lb5`
+- [x] confirm bank-level screen pass from server summary artifact:
+  - run id: `tp12_technique_bank_discovery_rolling_v1_20260412_r2`
+  - `selectedBankCount = 1`
+  - `passBankCount = 1`
+  - `topBankId = MA_RETEST__LOW_GAP_TOP__lb5`
+- [x] record bank-level rolling result:
+  - `oosSelectedRows = 370`
+  - `oosHitRows = 115`
+  - `oosHitRate = 31.08%`
+  - `usableWindowCount = 6`
+  - `signalsPer20TradingDays = 5.02`
+  - `yearsWithAtLeast2Hits = 6`
+  - `top1DateShare = 9.52%`
+- [x] next-step decision:
+  - open `T4 year-consensus builder` for `MA_RETEST__LOW_GAP_TOP__lb5`
+  - do not reopen raw recurrence aggregates or exact-rule year hard gates
+
+## Bundle T4 - Template Isolate / Rolling / Consensus Prep
+- [x] add template-screen plan + contract layer:
+  - `src/lib/technique_template_screen_contract.mjs`
+  - `tools/build_technique_template_screen_plan.mjs`
+  - `tools/build_technique_template_screen_candidate_contract.mjs`
+  - `tools/build_technique_template_screen_summary.mjs`
+- [x] extend `meta/technique_grammar_contract.json` with deterministic `templateScreen` stage-gate config
+- [x] add template-pack filtering so rolling runs actually isolate one template:
+  - `tools/build_technique_template_filtered_pack.mjs`
+  - patch `tools/run_stepb_1d_tp12_no_stop_scope_window.sh` to use template-filtered train/oos packs when `techniqueTemplateScreen` is present
+- [x] add template rolling wrappers:
+  - `tools/run_technique_template_rolling.sh`
+  - `tools/server_run_technique_template_rolling.sh`
+- [x] add T4 smokes and wire them into `scripts/verify.sh`
+- [x] local `bash scripts/verify.sh`
+- [x] synced server `npm run verify`
+- [x] build authoritative template-screen plan from the passed bank:
+  - bank: `MA_RETEST__LOW_GAP_TOP__lb5`
+  - source shortlist: `tp12_technique_seed_dryrun_v1_20260412_r3`
+  - plan artifact: `artifacts/runs/tp12_technique_template_screen_v1_20260414/template_screen_plan.json`
+  - selected template count: `1`
+  - top template: `ma_retest_seed__anchor-ma120-break--confirm-close-near-high--confirm-sponsor-quality--invalidate-failed-breakout-count20`
+- [x] open first template-only rolling screen from the plan artifact
+  - first run id: `tp12_technique_template_rolling_v1_20260414_r2`
+  - first child run id: `tp12_technique_template_rolling_v1_20260414_r2_ma_retest_seed_anchor_ma120_break_confirm_close_near_high_confirm_sponsor_quality_invalidate_fai`
+  - first run status: stopped after `w1` because template-filtered packs only wrote `filter_summary.json`, so OOS apply could not verify coverage period on the filtered input
+- [x] patch template-filtered packs to emit compat `summary.json` and `manifest.json`
+  - root-cause files: `tools/build_technique_template_filtered_pack.mjs`, `tools/smoke_technique_template_filtered_pack.mjs`
+  - local `bash scripts/verify.sh`: passed
+  - synced server `npm run verify`: passed
+- [x] relaunch clean rerun with the coverage fix applied on the server repo
+  - rerun id: `tp12_technique_template_rolling_v1_20260414_r3`
+  - rerun child id: `tp12_technique_template_rolling_v1_20260414_r3_ma_retest_seed_anchor_ma120_break_confirm_close_near_high_confirm_sponsor_quality_invalidate_fai`
+  - current status: `w1` completed end-to-end and produced OOS apply summary; runner has already advanced into `w2 source`
+  - `w1` raw OOS summary: `18 / 40 = 45.00%`, unique matched dates `38`, unique matched symbols `39`
+
+## Bundle D0 - Positive-First Year-Constrained Discovery Branch
+- [x] freeze the next discovery branch key before code edits:
+  - `tp12_positive_first_year_constrained_discovery_v1`
+- [x] run target-first bootstrap before opening the branch:
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- [x] reread canonical research metadata before edits:
+  - `meta/active_research_contract.json`
+  - `meta/active_research_handoff.md`
+  - `meta/experiment_patch_memory.json`
+- [x] duplicate-check the branch key before edits:
+  - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_positive_first_year_constrained_discovery_v1`
+- [x] freeze branch intent:
+  - replace discovery-stage template/bank rolling with train-only positive-first pattern discovery
+  - search `2017~2024` recurrent positives first, then verify zero train negatives second
+  - keep `rolling` and untouched OOS as post-discovery validation only
+- [x] freeze hard-stop semantics:
+  - no OOS leakage during discovery
+  - no hand-picked bias such as "strong close is better" or "upper wick is worse"
+  - keep broad structural atoms so both strong-close and upper-wick breakout shapes remain discoverable
+  - if `year>=2` survivors are zero, close the branch negative instead of silently relaxing
+  - if zero-negative survivors are zero, close the branch negative instead of silently relaxing
+- [x] add discovery contract + atom/transaction/index scaffolding:
+  - `meta/technique_pattern_discovery_contract.json`
+  - `src/lib/technique_pattern_discovery_contract.mjs`
+  - `src/lib/technique_structural_atom_builder.mjs`
+  - `src/lib/technique_atomic_transaction_builder.mjs`
+  - `src/lib/technique_positive_year_index.mjs`
+- [x] add discovery tools + smoke coverage:
+  - `tools/build_technique_atomic_transactions.mjs`
+  - `tools/build_technique_positive_year_index.mjs`
+  - `tools/smoke_technique_structural_atom_builder.mjs`
+  - `tools/smoke_technique_atomic_transactions.mjs`
+  - `tools/smoke_technique_positive_year_index.mjs`
+- [x] wire D0/D1/D2/D3 smoke checks into `scripts/verify.sh`
+- [x] local `bash scripts/verify.sh`
+- [x] synced server `npm run verify`
+- [x] open discovery-stage miner/verifier/ranker work after D0~D3 verify closes green:
+  - `src/lib/technique_closed_pattern_miner.mjs`
+  - `src/lib/technique_zero_negative_verifier.mjs`
+  - `src/lib/technique_survivor_ranker.mjs`
+- [x] add discovery-stage toolchain + smoke coverage:
+  - `tools/build_technique_closed_patterns.mjs`
+  - `tools/build_technique_zero_negative_report.mjs`
+  - `tools/build_technique_pattern_discovery_summary.mjs`
+  - `tools/run_technique_positive_first_discovery.sh`
+  - `tools/smoke_technique_closed_pattern_miner.mjs`
+  - `tools/smoke_technique_zero_negative_verifier.mjs`
+  - `tools/smoke_technique_survivor_ranker.mjs`
+- [x] wire D4/D5/D6 smoke + syntax checks into `scripts/verify.sh`
+- [x] launch the first server-only full-train positive-first discovery run after the patch freeze closes green
+  - canonical row source fixed to:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_side_daily_full_period_low_gap_top_allowlist_effective_floor_20160812_v1_r2/step-perfect-prototype-open-train-pack/daily_pack.jsonl`
+  - default context fixed to:
+    - `scope=LOW_GAP_TOP`
+    - `lookbackCandidateId=lb1`
+  - active run id:
+    - `tp12_positive_first_discovery_v1_20260415_r1`
+  - D2/D3 server summaries already closed:
+    - transactions `34767`, positives `10085`, negatives `24682`, unique atoms `84`
+    - indexed positives `9888`, year positives `2017~2024 = 468, 667, 663, 1842, 2172, 1237, 1524, 1315`
+- [x] close the first full-train closed-miner root-cause failure before reopening discovery
+  - first D4 attempt died with server Node OOM inside `tools/build_technique_closed_patterns.mjs`
+  - root cause was `src/lib/technique_closed_pattern_miner.mjs` retaining the entire raw pattern frontier and large textual support signatures in memory
+  - fix applied:
+    - replace full raw-pattern retention with incremental closed-signature aggregation
+    - replace large textual tidset signatures with hashed support signatures
+  - local `bash scripts/verify.sh`: passed after the miner fix
+  - synced server `npm run verify`: passed after the miner fix
+- [x] wait for the reopened D4~D6 rerun to finish and inspect survivor counts
+  - authoritative run id:
+    - `tp12_positive_first_discovery_v1_20260415_r1`
+  - final D4 summary:
+    - eligible atoms `83`
+    - explored nodes `18,154,153`
+    - pruned-by-year `981,613`
+    - raw recurrent patterns `18,154,153`
+    - closed recurrent patterns `257,199`
+    - max depth `6`
+  - final D5 summary:
+    - evaluated closed patterns `257,199`
+    - zero-negative survivors `0`
+  - final verdict:
+    - the first full-train positive-first discovery run is `closed negative`
+    - recurrent `year>=2` patterns do exist at scale, but none survive full-train zero-negative verification on the canonical TP12 side-daily train pack
+    - do not rerun the same branch unchanged
+
+## Bundle D0b - Positive-First Partitioned Signature Preverify v2
+- [x] freeze the next discovery branch key before code edits:
+  - `tp12_positive_first_partitioned_signature_preverify_v2`
+- [x] run target-first bootstrap before opening the branch:
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- [x] reread canonical research metadata before edits:
+  - `meta/active_research_contract.json`
+  - `meta/active_research_handoff.md`
+  - `meta/experiment_patch_memory.json`
+- [x] duplicate-check the new branch key before edits:
+  - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_positive_first_partitioned_signature_preverify_v2`
+- [x] freeze branch intent:
+  - keep discovery train-only and preserve the hard `2017~2024 each year >=2 positives` gate
+  - replace global positive-closed aggregation with partitioned `scope/lookback` discovery
+  - preserve generator-level distinctions instead of collapsing every pattern that shares the same positive support signature
+  - add negative-index preverify so zero-negative candidates can surface before final exact verification
+- [x] freeze hard-stop semantics:
+  - do not reopen `tp12_positive_first_year_constrained_discovery_v1` unchanged
+  - do not use OOS metrics in discovery or shortlist ranking
+  - do not prune by negative count inside DFS; only use negatives for preverify ranking and final exact verification
+  - if partitioned discovery still yields zero zero-negative survivors, close the branch negative instead of silently relaxing
+- [x] upgrade the discovery contract to v2 semantics:
+  - `partitionMode=scope_lookback`
+  - `embedScopeAtomsInPattern=false`
+  - `embedLookbackAtomsInPattern=false`
+  - `maxPatternSize=5`
+  - family caps and one-atom-per-base-feature exclusivity
+- [x] expand the structural atom layer without directional bias:
+  - add lower-wick, signed-body, close-location, gap-retention/fail, anchor-recency, higher-low-count, breakout-distance, and sponsor-fragility atoms
+  - keep symmetric bucket coverage so strong-close and weak-close / upper-wick and lower-wick shapes remain equally discoverable
+- [x] add v2 discovery runtime pieces:
+  - `src/lib/technique_negative_atom_index.mjs`
+  - `src/lib/technique_pattern_preverifier.mjs`
+  - `tools/build_technique_negative_atom_index.mjs`
+  - `tools/build_technique_pattern_preverify_report.mjs`
+  - `tools/server_run_technique_positive_first_discovery.sh`
+- [x] upgrade the miner/index/verifier/ranker for v2:
+  - partition-first positive year index with pair-admissibility tracking
+  - positive-signature plus generator separation in the closed miner
+  - negative-index preverify before final zero-negative verification
+  - survivor summary that preserves partition key and generator identity
+- [x] add and wire v2 smoke coverage:
+  - `tools/smoke_technique_negative_atom_index.mjs`
+  - `tools/smoke_technique_pattern_preverifier.mjs`
+  - `tools/smoke_technique_atom_bucket_exclusivity.mjs`
+  - `tools/smoke_technique_atom_family_caps.mjs`
+  - refresh `tools/smoke_technique_structural_atom_builder.mjs` to cover mirrored candle/gap cases
+- [x] local `bash scripts/verify.sh`
+- [x] synced server `npm run verify`
+- [x] rerun branch safety gates before opening the first v2 experiment:
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+  - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_positive_first_partitioned_signature_preverify_v2`
+- [x] open the first server-only v2 discovery run only after verify closes green
+- [x] patch the zero-negative stage to avoid bulk JSONL loads after the first v2 run exposed a new root-cause OOM in `tools/build_technique_zero_negative_report.mjs`
+  - keep the discovery contract unchanged
+  - remove full-array `readJsonl()` loads for both patterns and transactions in the zero-negative path
+  - switch to streaming pattern evaluation over a compact transaction atom index
+  - add the exact short-circuit path when `preverify_summary.zeroNegativeCandidateCount=0`, because no downstream exact verifier can recover a zero-negative survivor if preverify already found none
+- [x] rerun only the failed v2 tail after the zero-negative streaming fix
+  - authoritative rerun: `tp12_positive_first_partitioned_signature_preverify_v2_20260415_r2`
+  - atomic transactions `34,767`
+  - indexed positives `9,888`
+  - unique atoms `112`
+  - explored nodes `12,128,584`
+  - positive signatures `392,553`
+  - closed patterns `1,394,335`
+  - preverify zero-negative candidates `0`
+  - final verified zero-negative patterns `0`
+- [x] close `tp12_positive_first_partitioned_signature_preverify_v2` negative after the streaming rerun
+  - the OOM was a real verifier implementation bug and is now fixed
+  - the branch verdict is still negative on logic, not infrastructure: the canonical partitioned/generator-preserving/preverify path produced `0` final zero-negative survivors
+  - do not rerun this exact v2 branch unchanged
+
+## Bundle D0c - Positive-First Purity Partition Closure Search v3
+- [x] freeze the next discovery branch key before code edits:
+  - `tp12_positive_first_purity_partition_closure_search_v3`
+- [x] run target-first bootstrap before opening the branch:
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- [x] reread canonical research metadata before edits:
+  - `meta/active_research_contract.json`
+  - `meta/active_research_handoff.md`
+  - `meta/experiment_patch_memory.json`
+- [x] duplicate-check the new branch key before edits:
+  - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_positive_first_purity_partition_closure_search_v3`
+- [x] freeze v3 branch intent:
+  - keep discovery train-only and preserve the hard `2017~2024 each year >=2 positives` gate
+  - stop treating `scope/lookback` as a sufficient discovery partition; add purity partitions before mining
+  - treat the closed miner as a positive-signature builder, not the final zero-negative selector
+  - move real zero-negative search into closure-first preverify over a compact negative index
+- [x] freeze v3 hard-stop semantics:
+  - do not reopen `tp12_positive_first_year_constrained_discovery_v1` unchanged
+  - do not reopen `tp12_positive_first_partitioned_signature_preverify_v2` unchanged
+  - do not use OOS metrics anywhere in discovery or shortlist ranking
+  - if v3 still yields zero zero-negative survivors, close the branch negative instead of silently relaxing atom bins, support floors, or pattern caps in place
+- [x] upgrade the discovery contract to v3 semantics:
+  - `partitionMode=scope_lookback_regime_shape_liquidity_anchor_age`
+  - keep `maxPatternSize=5`
+  - preserve `oneAtomPerBaseFeature=true`
+  - add `enableClosureFirstPreverify=true`
+  - add v3 exclusivity groups for mirrored candle/close/gap axes
+- [x] add purity partition building before mining:
+  - new `regime`, `shape`, `liquidity`, and `anchor_age` partition components
+  - derive the final partition key before positive-year indexing and negative indexing
+- [x] sharpen the structural atom layer for negative separation rather than template bias:
+  - add upper-wick/body and lower-wick/body ratio buckets
+  - add prev-close retention buckets
+  - add MA60/MA120 support-hold buckets
+  - add breakout recency buckets for high20 / 52w-high context
+  - add MA-spread buckets to separate trend continuation from overextended drift
+  - remove or demote redundant alias atoms that duplicate the same underlying event
+- [x] upgrade the closed miner to preserve a generator frontier instead of only the shortest generators:
+  - keep `positiveSignatureId`, `closureAtomIds`, and a non-dominated `generatorFrontier`
+  - rank frontier candidates by negative-separation potential, not generator length alone
+- [x] replace ranking-only preverify with closure-first zero-negative search:
+  - try closure atoms first because they preserve positive support while stripping negatives
+  - only then allow bounded support-slack extensions that still preserve `year>=2`
+  - fail fast if remaining admissible atoms cannot eliminate the surviving negatives
+- [x] add v3 smoke coverage:
+  - purity partition key builder smoke
+  - closure-first preverify smoke
+  - mirrored axis exclusivity smoke for close/gap/wick families
+- [x] local `bash scripts/verify.sh`
+- [x] synced server `npm run verify`
+- [x] open the first canonical server-only v3 discovery run only after verify closes green
+  - canonical row source fixed to:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_side_daily_full_period_low_gap_top_allowlist_effective_floor_20160812_v1_r2/step-perfect-prototype-open-train-pack/daily_pack.jsonl`
+  - default context fixed to:
+    - `scope=LOW_GAP_TOP`
+    - `lookbackCandidateId=lb1`
+  - active run id:
+    - `tp12_positive_first_purity_partition_closure_search_v3_20260415_r1`
+  - D2/D3 server summaries already closed:
+    - transactions `34767`, positives `10085`, negatives `24682`, unique atoms `129`
+    - indexed positives `9888`, purity partitions `41`
+  - current active stage:
+    - `build_technique_closed_patterns.mjs`
+- [x] close `tp12_positive_first_purity_partition_closure_search_v3` negative after the first canonical run
+  - canonical run id:
+    - `tp12_positive_first_purity_partition_closure_search_v3_20260415_r1`
+  - final summaries:
+    - transactions `34767`, positives `10085`, negatives `24682`, unique atoms `129`
+    - indexed positives `9888`, purity partitions `41`, eligible atoms `1245`
+    - explored nodes `60367736`, positive signatures `562517`, closed patterns `2273509`
+    - preverify zero-negative candidates `0`, final verified zero-negative patterns `0`
+  - interpretation:
+    - finer purity partitioning plus closure-first preverify removed the v2 collapse mechanism and completed without OOM
+    - but the canonical `LOW_GAP_TOP/lb1` full-train source still produced no `2017~2024 year>=2 + zero-negative` survivor
+    - do not rerun this exact v3 branch unchanged
+- [x] open `tp12_contrastive_core_veto_state_machine_v4` as the next canonical discovery branch
+  - patch key:
+    - `tp12_contrastive_core_veto_state_machine_v4`
+  - branch intent:
+    - keep discovery train-only on the canonical TP12 side-daily source
+    - keep the hard recurrence contract `2017~2024 each year >= 2 positives`
+    - change the rule form from `positive conjunction only` to `coreAtomIds AND NOT(vetoAtomIds)`
+    - remove the dead `anchor_age` partition axis from the discovery key
+    - replace contradictory MA cross history atoms with signed MA state atoms
+    - search explicit anti-pattern veto atoms after recurrent core discovery and before final zero-negative verification
+  - hard constraints:
+    - do not reopen `tp12_positive_first_year_constrained_discovery_v1` unchanged
+    - do not reopen `tp12_positive_first_partitioned_signature_preverify_v2` unchanged
+    - do not reopen `tp12_positive_first_purity_partition_closure_search_v3` unchanged
+    - do not use OOS metrics anywhere in discovery, ranking, veto search, or shortlist freeze
+- [x] root-cause patch the v4 closed-pattern OOM before any rerun
+  - failure mode from canonical `v4 r1`:
+    - `tools/build_technique_closed_patterns.mjs` held the full mined signature/generator set in memory until the end of the global run
+    - server run aborted with heap OOM before preverify/zero-negative stages could start
+  - root-cause fix:
+    - add partition-level mining entrypoints in `src/lib/technique_closed_pattern_miner.mjs`
+    - switch `tools/build_technique_closed_patterns.mjs` to partition-by-partition streaming output so rows are flushed immediately instead of after a global in-memory aggregate
+  - local validation after patch:
+    - `node --check src/lib/technique_closed_pattern_miner.mjs`
+    - `node --check tools/build_technique_closed_patterns.mjs`
+    - `node tools/smoke_technique_closed_pattern_miner.mjs`
+    - `bash scripts/verify.sh`
+- [x] bootstrap target-first session before the rerun
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- [x] duplicate-check the rerun experiment key before opening the next server job
+  - approved rerun key:
+    - `tp12_ccvsm_streamed_closed_patterns_r2`
+- [x] close synced server `npm run verify` after the closed-pattern streaming fix
+- [x] open the canonical server-only v4 rerun only after the synced server verify closes green
+  - run id:
+    - `tp12_contrastive_core_veto_state_machine_v4_20260415_r3`
+    - if v4 also produces zero verified survivors, close it negative instead of relaxing the contract in place
+- [x] land the v4 contrastive-veto discovery stack and re-close both verify gates
+  - contract/runtime changes:
+    - enable `coreAtomIds AND NOT(vetoAtomIds)` discovery form on the TP12 side-daily technique stack
+    - drop `anchor_age` from the discovery partition key and use `scope__lookback__regime__shape__liquidity`
+    - replace contradictory MA cross-history atoms with signed MA state atoms in discovery mode
+    - disable alias-style discovery atoms and preserve explicit veto candidates through contrastive search
+    - route final zero-negative verification through veto-aware transaction exclusion semantics
+  - verification changes:
+    - added contrastive veto search smoke and veto-aware zero-negative verifier smoke coverage
+    - fixed the server-only `parallel budget request/ack` smoke race by waiting on the worker lifecycle instead of assuming the request JSON appears within a fixed 10-second startup window
+  - verification status:
+    - local `bash scripts/verify.sh` passed after the v4 stack landed
+    - server `npm run verify` passed after the budget request/ack smoke race fix
+
+- [x] harden technique discovery execution against SSH/session loss without changing the discovery contract:
+  - `tools/run_technique_positive_first_discovery.sh` now writes durable `run_status.json` and `phase_status.json` at each stage
+  - added detached server launch/read helpers:
+    - `tools/launch_technique_positive_first_discovery_detached.sh`
+    - `tools/read_technique_positive_first_discovery_status.sh`
+    - `tools/server_read_technique_positive_first_discovery_status.sh`
+  - `tools/server_run_technique_positive_first_discovery.sh` now supports `--detach`
+- [x] local `bash scripts/verify.sh` passes after the detached discovery execution patch
+- [x] synced server `npm run verify` passes after the detached discovery execution patch
+- [x] reopen the canonical v4 rerun as a detached server-side run after verify closes green
+  - run id:
+    - `tp12_contrastive_core_veto_state_machine_v4_20260415_r3`
+  - detached launch status:
+    - launch json emitted with `pid=29349`
+    - durable status reader confirms `process.alive=true`
+    - durable phase/run status advanced to `closed_patterns`
+  - root-cause conclusion:
+    - the previous `r2` loss was not a proven discovery-logic failure and not a proven server-memory crash
+    - the visible operational root cause was SSH/session-coupled execution under heavy local exec-session pressure, so the long-running server job path is now detached and status-file driven
+- [x] root-cause patch the canonical `v4 r3` contrastive-veto OOM before any further rerun
+  - failure mode from detached `r3`:
+    - `tools/build_technique_contrastive_veto_report.mjs` loaded the full `preverified_patterns.jsonl` through `readJsonl()`
+    - the server process died in `contrastive_veto` with `FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory`
+    - the hot stack was in `Builtin_JsonParse`, so the OOM came from whole-file materialization rather than veto-search logic itself
+  - root-cause fix:
+    - refactor `src/lib/technique_contrastive_veto_search.mjs` to expose reusable runtime / shortlist helpers
+    - switch `tools/build_technique_contrastive_veto_report.mjs` to stream `patterns-path` via `iterateJsonl()`
+    - keep only partition-local top-ranked core patterns in memory and then run veto search per partition
+    - preserve the same contract and zero-negative semantics; only the materialization path changed
+  - regression coverage:
+    - new smoke `tools/smoke_technique_contrastive_veto_report_streaming.mjs`
+    - `scripts/verify.sh` now runs that smoke explicitly
+- [x] local `bash scripts/verify.sh` passes after the contrastive-veto streaming fix
+- [x] synced server `npm run verify` passes after the contrastive-veto streaming fix
+- [x] bootstrap target-first session again before the next canonical rerun
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- [x] duplicate-check the post-veto-streaming rerun key before reopening the canonical server job
+  - approved rerun key:
+    - `tp12_ccvsm_streamed_contrastive_veto_r4`
+- [x] reopen the canonical v4 rerun in detached mode after the contrastive-veto streaming fix
+  - run id:
+    - `tp12_contrastive_core_veto_state_machine_v4_20260415_r4`
+  - constraints:
+    - keep the same authoritative `LOW_GAP_TOP / lb1` source and the same `2017~2024 year>=2 + full-train zero-negative` contract
+    - if `r4` still closes with zero survivors, close `v4` negative instead of relaxing the contract in place
+- [x] register `tp12_ccvsm_core_generator_preservation_v5` before touching the contrastive-preverify schema
+  - new patch key:
+    - `tp12_ccvsm_core_generator_preservation_v5`
+  - root-cause hypothesis:
+    - `src/lib/technique_pattern_preverifier.mjs` is overwriting `generatorAtomIds` with closure-augmented atom sets
+    - `tools/build_technique_contrastive_veto_report.mjs` and `src/lib/technique_contrastive_veto_search.mjs` therefore consume the wrong core pattern definition
+    - if this hypothesis is correct, the canonical `v4` logical verdict is invalid because contrastive veto never searched from the true seed-core generator sets
+- [x] close `tp12_contrastive_core_veto_state_machine_v4` after the canonical detached `r4` rerun
+  - canonical run id:
+    - `tp12_contrastive_core_veto_state_machine_v4_20260415_r4`
+  - terminal summaries:
+    - closed patterns: explored nodes `31758302`, positive signatures `841910`, closed patterns `3182187`
+    - preverify: evaluated `3182187`, retained `3182187`, zero-negative candidates `0`
+    - contrastive veto: evaluated core patterns `1216`, partition count `19`, top patterns per partition `64`, contrastive candidates `0`
+    - final zero-negative verify: evaluated `0`, verified `0`
+  - final verdict:
+    - the streaming contrastive-veto patch fixed the `r3` OOM and allowed `v4` to complete end-to-end under the same canonical contract
+    - but the authoritative canonical TP12 side-daily `LOW_GAP_TOP/lb1` source still produced no `core AND NOT(veto)` survivor that satisfied `2017~2024 each year >=2 positives` plus full-train zero-negative verification
+    - do not rerun this exact v4 branch unchanged
+
+- [x] close `tp12_ccvsm_core_generator_preservation_v5` after the canonical detached `r5` rerun
+  - root-cause patch:
+    - preserve the true seed-core generator through preverify output instead of overwriting `generatorAtomIds` with closure-augmented atoms
+    - export closure working sets separately as `closureAugmentedAtomIds` / `preverifyAtomIds`
+    - harden contrastive normalization to prefer `seedGeneratorAtomIds`
+    - added generator-preservation regression smoke and updated closure-first preverify smoke expectations
+  - verification status:
+    - local `bash scripts/verify.sh` passed after the generator-preservation patch
+    - synced server `npm run verify` passed after the generator-preservation patch
+  - canonical rerun:
+    - `tp12_contrastive_core_veto_state_machine_v4_20260415_r5`
+  - terminal summaries:
+    - closed patterns: explored nodes `31758302`, positive signatures `841910`, closed patterns `3182187`
+    - preverify: evaluated `3182187`, retained `3182187`, zero-negative candidates `0`
+    - contrastive veto: evaluated core patterns `1216`, partition count `19`, top patterns per partition `64`, contrastive candidates `0`
+    - final zero-negative verify: evaluated `0`, verified `0`
+  - final verdict:
+    - the generator/core-preservation root cause was real and is now fixed in code, but the authoritative canonical rerun still produced no survivor under the unchanged `2017~2024 year>=2 + full-train zero-negative` contract
+    - this means the previous negative verdict was not merely an artifact of core-generator contamination; do not reopen this exact `v4`/`v5` contract unchanged
+
+- [x] open `tp12_episode_substrate_state_contract_v6` as the next canonical discovery branch
+  - patch key:
+    - `tp12_episode_substrate_state_contract_v6`
+  - branch intent:
+    - stop retrying row-local `core AND NOT(veto)` discovery on canonical `LOW_GAP_TOP/lb1`
+    - introduce episode/substrate discovery where each candidate rule is built from short symbol-local state sequences instead of a single decision-row atom bag
+    - keep discovery train-only and preserve the hard `2017~2024 each year >= 2 positives` contract
+    - use the episode branch first as a scaffolded executable discovery surface with local/server verify coverage before opening a new canonical server job
+
+- [x] open `tp12_episode_partitioned_substrate_slice_v7` as the next canonical discovery branch
+  - patch key:
+    - `tp12_episode_partitioned_substrate_slice_v7`
+  - branch intent:
+    - stop treating episode/substrate discovery as one global search surface because the canonical `LOW_GAP_TOP/lb1` episode dataset already separates into many materially different `partitionKey` buckets
+    - reuse the v6 episode window builder unchanged and move the next contract change into partition-aware search/reporting
+    - require each searched partition to satisfy the same hard `2017~2024 each year >=2 positives` gate before any substrate search is attempted
+    - keep discovery train-only and preserve the existing zero-negative final gate
+
+- [x] close `tp12_episode_substrate_state_contract_v6` after scaffold verify and canonical first run
+  - scaffold verification:
+    - local `bash scripts/verify.sh` passed on `2026-04-16`
+    - synced server `npm run verify` passed on `2026-04-16`
+  - canonical run:
+    - `tp12_episode_substrate_state_contract_v6_20260416_r1`
+    - source remained the authoritative TP12 side-daily full-period `LOW_GAP_TOP/lb1` train pack
+  - terminal summaries:
+    - episode windows: `episodeRowCount=34767`, `positiveEpisodeCount=10085`, `negativeEpisodeCount=24682`, `symbolCount=9888`, `uniqueEpisodeAtomCount` emitted through the contract summary
+    - episode substrate report: `coreCandidateCount=868`, `verifiedPatternCount=0`
+    - output artifacts: `episode_substrate_summary.json` present, `verified_patterns.jsonl` empty
+  - final verdict:
+    - moving from row-local atom bags to short symbol-local episode/substrate cores did not produce any survivor under the unchanged hard `2017~2024 each year >=2 positives + full-train zero-negative` contract on the canonical source
+    - do not reopen this exact `v6` branch unchanged
+
+- [x] close `tp12_episode_partitioned_substrate_slice_v7` after partition-aware episode search verify and canonical run
+  - verification status:
+    - local `bash scripts/verify.sh` passed on `2026-04-16`
+    - synced server `npm run verify` passed on `2026-04-16`
+  - canonical run:
+    - `tp12_episode_partitioned_substrate_slice_v7_20260416_r1`
+    - source remained the authoritative TP12 side-daily full-period `LOW_GAP_TOP/lb1` train pack
+  - terminal summaries:
+    - episode windows: `episodeRowCount=34767`, `positiveEpisodeCount=10085`, `negativeEpisodeCount=24682`, `symbolCount=1872`, `uniqueEpisodeAtomCount=192`
+    - partition-aware episode substrate report: `partitionCount=45`, `eligiblePartitionCount=19`, `searchedPartitionCount=19`, `coreCandidateCount=9252`, `verifiedPatternCount=0`
+    - top searched partitions each saturated the per-partition cap `maxCoreCandidates=512` while still ending with `verifiedPatternCount=0`
+    - output artifacts: `episode_substrate_summary.json` present, `verified_patterns.jsonl` empty
+  - final verdict:
+    - changing episode/substrate discovery from a single global search to partition-aware search materially increased searched cores, but still produced no survivor under the unchanged hard `2017~2024 each year >=2 positives + full-train zero-negative` contract on the canonical source
+    - do not reopen this exact `v7` branch unchanged
+
+- [x] open `tp12_episode_nearmiss_supervision_v8` as the next canonical discovery branch
+  - patch key:
+    - `tp12_episode_nearmiss_supervision_v8`
+  - branch intent:
+    - stop requiring discovery-stage episode/substrate search to kill every full-train negative on the canonical `LOW_GAP_TOP/lb1` source, because `v6` and `v7` showed that this hard gate leaves no survivor even after partition-aware search
+    - keep the episode + partition search surface, but change supervision from `all matched negatives` to `near-miss negatives` defined inside each eligible partition from current-state atom overlap against the core-matched positive substrate
+    - preserve `2017~2024 each year >= 2 positives` as the discovery gate and continue writing the full matched-negative residue into the report so final confirm is not hidden
+    - treat `v8` as a shortlist-recovery discovery branch only; do not interpret any `near-miss zero-negative` survivor as a final TP12 rule until later full-train / rolling confirm closes separately
+
+- [x] close `tp12_episode_nearmiss_supervision_v8` after canonical run
+  - verification status:
+    - local `bash scripts/verify.sh` passed on `2026-04-16`
+    - synced server `npm run verify` passed on `2026-04-16`
+  - canonical run:
+    - `tp12_episode_nearmiss_supervision_v8_20260416_r1`
+    - source remained the authoritative TP12 side-daily full-period `LOW_GAP_TOP/lb1` train pack
+  - terminal summaries:
+    - episode window summary:
+      - `episodeRowCount=34767`
+      - `positiveEpisodeCount=10085`
+      - `negativeEpisodeCount=24682`
+      - `symbolCount=1872`
+      - `uniqueEpisodeAtomCount=192`
+    - episode substrate summary:
+      - `partitionCount=45`
+      - `eligiblePartitionCount=19`
+      - `searchedPartitionCount=19`
+      - `coreCandidateCount=9252`
+      - `supervisedCoreCandidateCount=9252`
+      - `verifiedPatternCount=0`
+      - `verifiedFullZeroNegativePatternCount=0`
+    - searched partitions again saturated the per-partition `maxCoreCandidates=512` cap while producing no survivor
+    - output artifacts: `episode_substrate_summary.json` present, `verified_patterns.jsonl` empty
+  - final verdict:
+    - changing supervision from all matched negatives to near-miss current-overlap negatives was still insufficient on the canonical source under the current capped search order
+    - do not reopen this exact `v8` branch unchanged
+
+- [x] open `tp12_episode_nearmiss_ranked_enumeration_v9` as the next canonical discovery branch
+  - patch key:
+    - `tp12_episode_nearmiss_ranked_enumeration_v9`
+  - branch intent:
+    - keep the `v8` hypothesis class and near-miss supervision contract, but remove the search-order bias where per-partition core candidates are truncated before global ranking
+    - enumerate the full bounded core space implied by `maxAtomsToConsider` and `maxCoreAtoms`, then rank and slice after enumeration instead of exiting DFS early at `maxCoreCandidates`
+    - replace lexicographic veto-atom truncation with a deterministic score based on supervised-negative coverage and positive contamination before applying `maxVetoCandidatesPerCore`
+    - treat `v9` as a root-cause fix for search bias rather than a threshold relaxation
+
+- [x] close `tp12_episode_nearmiss_ranked_enumeration_v9` after canonical run
+  - verification status:
+    - local `bash scripts/verify.sh` passed on `2026-04-16`
+    - synced server `npm run verify` passed on `2026-04-16`
+  - canonical run:
+    - `tp12_episode_nearmiss_ranked_enumeration_v9_20260416_r1`
+    - source remained the authoritative TP12 side-daily full-period `LOW_GAP_TOP/lb1` train pack
+  - terminal summaries:
+    - episode substrate summary:
+      - `episodeCount=34767`
+      - `partitionCount=45`
+      - `eligiblePartitionCount=19`
+      - `searchedPartitionCount=19`
+      - `coreCandidateCount=7236`
+      - `supervisedCoreCandidateCount=7236`
+      - `verifiedPatternCount=0`
+      - `verifiedFullZeroNegativePatternCount=0`
+    - ranked enumeration removed DFS-order truncation, but searched high-mass partitions still remained bounded by the post-ranking `maxCoreCandidates=512` and `maxVetoCandidatesPerCore=12` caps
+    - output artifacts: `episode_substrate_summary.json` present, `verified_patterns.jsonl` empty
+  - final verdict:
+    - removing search-order bias alone was insufficient on the canonical source because the branch still kept post-ranking per-partition core/veto caps that can exclude surviving patterns from exact bounded enumeration
+    - do not reopen this exact `v9` branch unchanged
+
+- [x] open `tp12_episode_nearmiss_unbounded_enumeration_v10` as the next canonical discovery branch
+  - patch key:
+    - `tp12_episode_nearmiss_unbounded_enumeration_v10`
+  - branch intent:
+    - preserve the `v9` near-miss supervision contract and ranked ordering, but remove the remaining post-ranking per-partition `maxCoreCandidates` and `maxVetoCandidatesPerCore` caps by treating `0` as unbounded inside the already bounded `maxAtomsToConsider=48`, `maxCoreAtoms=2`, `maxVetoAtoms=2` search space
+    - keep discovery train-only and retain the same hard downstream reporting of full-negative residue so this remains a root-cause search fix rather than a threshold relaxation
+
+- [x] close `tp12_episode_nearmiss_unbounded_enumeration_v10` after canonical run
+  - verification status:
+    - local `bash scripts/verify.sh` passed on `2026-04-16`
+    - synced server `npm run verify` passed on `2026-04-16`
+  - canonical run:
+    - `tp12_episode_nearmiss_unbounded_enumeration_v10_20260416_r1`
+    - source remained the authoritative TP12 side-daily full-period `LOW_GAP_TOP/lb1` train pack
+  - terminal summaries:
+    - episode substrate summary:
+      - `episodeCount=34767`
+      - `partitionCount=45`
+      - `eligiblePartitionCount=19`
+      - `searchedPartitionCount=19`
+      - `coreCandidateCount=11109`
+      - `supervisedCoreCandidateCount=11109`
+      - `verifiedPatternCount=0`
+      - `verifiedFullZeroNegativePatternCount=0`
+    - removing post-ranking per-partition caps increased searched cores from `7236` to `11109`, but still produced no survivor
+    - output artifacts: `episode_substrate_summary.json` present, `verified_patterns.jsonl` empty
+  - final verdict:
+    - `v10` proves the remaining candidate caps were not the reason for zero survivors; the near-miss episode hypothesis class itself is exhausted on the canonical `LOW_GAP_TOP/lb1` source under the unchanged hard contract
+    - do not reopen this exact `v10` branch unchanged
+
+
+- [x] open `tp12_episode_matched_control_purity_slice_v11` as the next canonical discovery branch
+  - patch key:
+    - `tp12_episode_matched_control_purity_slice_v11`
+  - branch intent:
+    - stop widening the exhausted `near_miss_current_overlap` episode family on the same canonical source and instead add an explicit source-purification stage before hard zero-negative recheck
+    - build matched positive-vs-control episode pairs inside the existing eligible partition/year buckets, derive contrastive delta atoms from those pairs, and search small `purity slice` predicates that preserve `2017~2024` year>=2 positive support while collapsing matched-control residue
+    - materialize top slice contracts as narrower episode packs and only then rerun the unchanged hard episode substrate search inside each slice pack
+    - keep discovery train-only, keep the final `full-train zero-negative` gate unchanged, and treat this as a problem-definition change rather than a threshold relaxation

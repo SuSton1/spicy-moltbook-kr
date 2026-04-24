@@ -1,0 +1,24 @@
+{
+  "name": "stockdesk-lab-lite",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "doctor": "node src/cli.mjs doctor",
+    "build:native-rowset-kernel": "bash scripts/build_native_rowset_kernel.sh",
+    "verify:native-rowset-kernel": "bash scripts/verify_native_rowset_kernel.sh",
+    "lab:step-a": "node src/cli.mjs step-a",
+    "lab:step-b": "node src/cli.mjs step-b",
+    "lab:step-c": "node src/cli.mjs step-c",
+    "lab:step-d": "node src/cli.mjs step-d",
+    "lab:step-e": "node src/cli.mjs step-e",
+    "lab:cd-loop": "node src/cli.mjs cd-loop",
+    "lab:smoke-confirm": "node src/cli.mjs smoke-confirm",
+    "lab:tune-loop": "node src/cli.mjs tune-loop",
+    "lab:report": "node src/cli.mjs report",
+    "lab:all": "node src/cli.mjs run-all",
+    "lab:all:inc": "node src/cli.mjs run-all --incremental=true",
+    "runs:cleanup": "node scripts/cleanup_runs.mjs",
+    "verify": "bash scripts/verify.sh"
+  }
+}

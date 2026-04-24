@@ -1,0 +1,68 @@
+{
+  "kind": "public_kr_partial_coverage_anomaly_manifest_v1",
+  "updatedAt": "2026-04-18",
+  "notes": [
+    "These dates showed isolated single-date partial coverage in canonical candle_daily/universe_daily.",
+    "Repair must regenerate the full date slice through historical stage/QC/merge. Symbol-level patching is forbidden.",
+    "Universe mode is part of the per-date repair contract. Do not auto-switch modes at runtime.",
+    "2025-09-19 uses all_common because the canonical daily fill path is explicitly configured with --universe-mode=all_common."
+  ],
+  "boundaryDates": [
+    {
+      "dateKey": "2024-12-31",
+      "classification": "effective_coverage_boundary",
+      "reason": "Existing repo notes classify this as KRX holiday / effective trading coverage boundary, not a repair target."
+    }
+  ],
+  "anomalyDates": [
+    {
+      "dateKey": "2017-09-22",
+      "severity": "critical",
+      "defaultUniverseMode": "all_common",
+      "dominantMissingMarketCode": "KSQ",
+      "repairPriority": 1
+    },
+    {
+      "dateKey": "2017-12-20",
+      "severity": "critical",
+      "defaultUniverseMode": "all_common",
+      "dominantMissingMarketCode": "KSQ",
+      "repairPriority": 1
+    },
+    {
+      "dateKey": "2018-02-06",
+      "severity": "high",
+      "defaultUniverseMode": "all_common",
+      "dominantMissingMarketCode": "KSQ",
+      "repairPriority": 1
+    },
+    {
+      "dateKey": "2018-03-02",
+      "severity": "high",
+      "defaultUniverseMode": "all_common",
+      "dominantMissingMarketCode": "KSQ",
+      "repairPriority": 1
+    },
+    {
+      "dateKey": "2022-05-02",
+      "severity": "critical",
+      "defaultUniverseMode": "core_threshold",
+      "dominantMissingMarketCode": "KSQ",
+      "repairPriority": 2
+    },
+    {
+      "dateKey": "2023-07-11",
+      "severity": "critical",
+      "defaultUniverseMode": "core_threshold",
+      "dominantMissingMarketCode": "KSQ",
+      "repairPriority": 2
+    },
+    {
+      "dateKey": "2025-09-19",
+      "severity": "moderate",
+      "defaultUniverseMode": "all_common",
+      "dominantMissingMarketCode": "STK",
+      "repairPriority": 3
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "kind": "tp12_train100_year2hit_unsat_completion_cert_contract_v1",
+  "patchKey": "tp12_train100_year2hit_unsat_completion_cert_v1",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "coreYears": [
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "target": {
+    "minHitDecisionDatesPerYear": 2,
+    "minHitSymbolDatesPerYear": 2,
+    "minPositiveSymbolDatesTotal": 18,
+    "requiredTrainPrecision": 1,
+    "maxFalsePositiveRows": 0
+  },
+  "label": {
+    "labelConfigId": "tp12_target12_next_global_session_open_hold3_no_stop_v1",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "entryPolicy": "GLOBAL_NEXT_SESSION_OPEN",
+    "stopPolicy": "no_stop",
+    "requireEntryFeasibilitySummary": true
+  },
+  "searchScope": {
+    "scopeId": "context_counterexample_atoms_max7_frontier_completion_v1",
+    "sourceCloseoutSummary": "artifacts/runs/tp12_train100_closeout_zero_survivor_v1/closeout_summary.json",
+    "sourceExistenceCertificate": "artifacts/runs/tp12_train100_year2hit_existence_cert_v1/existence_certificate_summary.json",
+    "miningContractPath": "meta/tp12_train100_counterexample_frontier_partition_drain_contract.json",
+    "resumeCheckpointPath": "artifacts/runs/tp12_train100_counterexample_frontier_resume_8m_v1/step-frontier-resume-8m/counterexample_frontier_resume_8m_checkpoint.json",
+    "atomEventsPath": "artifacts/runs/tp12_train100_context_atom_discovery_v1/step-context-atom-discovery/atom_events.jsonl",
+    "maxPatternAtoms": 7,
+    "allowMissingFrontierSourceForCertificate": true,
+    "allowMissingSurvivorCatalogForCertificate": true
+  },
+  "completion": {
+    "partitionCount": 8,
+    "maxAdditionalVisitedStatesPerShard": 1000000,
+    "maxCounterexampleScan": 1,
+    "allowIncomplete": true
+  },
+  "rules": {
+    "oosReadAllowed": false,
+    "emitSelectorAllowed": false,
+    "fallbackAllowed": false,
+    "relaxPrecisionAllowed": false,
+    "relaxYear2HitAllowed": false,
+    "oosReplayAllowed": false
+  },
+  "outputPaths": {
+    "normalizedFrontier": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/frontier/normalized_frontier.jsonl.gz",
+    "frontierNormalizationSummary": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/frontier/frontier_normalization_summary.json",
+    "dominancePrunedFrontier": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/frontier/dominance_pruned_frontier.jsonl.gz",
+    "dominancePruneSummary": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/frontier/dominance_prune_summary.json",
+    "boundsPrunedFrontier": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/frontier/bounds_pruned_frontier.jsonl.gz",
+    "unsatBoundsSummary": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/frontier/unsat_bounds_summary.json",
+    "partitionPlan": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/partition/partition_plan.json",
+    "partitionShardDir": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/partition/shards",
+    "partitionReport": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/partition/partition_report.json",
+    "partitionCompletionStatus": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/partition/partition_completion_status.json",
+    "verifiedSurvivorCatalog": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/survivors/verified_survivor_catalog.jsonl",
+    "survivorVerificationSummary": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/survivors/survivor_verification_summary.json",
+    "certificateSummary": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/certificate/unsat_completion_certificate_summary.json",
+    "certificateReport": "artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/certificate/unsat_completion_certificate_report.md"
+  },
+  "hardStops": [
+    "Do not read OOS paths or OOS rows while completing the train100 year2hit search.",
+    "Do not emit a selector, locked selector, OOS replay, or operating artifact from this certificate path.",
+    "Do not relax requiredTrainPrecision below 1 or maxFalsePositiveRows above 0.",
+    "Do not relax every-year 2-hit decision-date and symbol-date gates.",
+    "If the unresolved frontier source is missing, emit blocked_missing_frontier_source instead of claiming absence.",
+    "A global absence conclusion requires completed partition search, zero remaining frontier, and zero verified survivors."
+  ]
+}
+

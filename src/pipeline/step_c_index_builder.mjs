@@ -1,0 +1,41 @@
+import { hashFileSha1 } from "../lib/champion_bundle.mjs"
+
+export const buildStepCIndexManifest = async ({
+  libraryPath,
+  runtimePath,
+  summaryPath,
+  c0FamilyIndexPath = null,
+  c0SummaryPath = null,
+  c1IndexPath = null,
+  c1SummaryPath = null,
+  c2IndexPath = null,
+  c2SummaryPath = null,
+  c2GroupsPath = null,
+  objective,
+  recallOnly
+}) => ({
+  version: 1,
+  generatedAt: new Date().toISOString(),
+  libraryPath,
+  libraryHash: await hashFileSha1(libraryPath),
+  runtimePath,
+  runtimeHash: await hashFileSha1(runtimePath),
+  summaryPath,
+  summaryHash: await hashFileSha1(summaryPath),
+  c0FamilyIndexPath: c0FamilyIndexPath ?? null,
+  c0FamilyIndexHash: await hashFileSha1(c0FamilyIndexPath),
+  c0SummaryPath: c0SummaryPath ?? null,
+  c0SummaryHash: await hashFileSha1(c0SummaryPath),
+  c1IndexPath: c1IndexPath ?? null,
+  c1IndexHash: await hashFileSha1(c1IndexPath),
+  c1SummaryPath: c1SummaryPath ?? null,
+  c1SummaryHash: await hashFileSha1(c1SummaryPath),
+  c2IndexPath: c2IndexPath ?? null,
+  c2IndexHash: await hashFileSha1(c2IndexPath),
+  c2SummaryPath: c2SummaryPath ?? null,
+  c2SummaryHash: await hashFileSha1(c2SummaryPath),
+  c2GroupsPath: c2GroupsPath ?? null,
+  c2GroupsHash: await hashFileSha1(c2GroupsPath),
+  objective: String(objective ?? "").trim() || null,
+  recallOnly: recallOnly === true
+})

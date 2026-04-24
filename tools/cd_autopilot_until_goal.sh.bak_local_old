@@ -1,0 +1,851 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="${1:-/home/moltook/apps/stockdesk-lab-lite}"
+CONFIG_REL="${CONFIG_REL:-config/lab.config.server.lite.json}"
+CONFIG_PATH="${ROOT}/${CONFIG_REL}"
+
+AUTOPILOT_DIR="${ROOT}/artifacts/autopilot"
+LOG_DIR="${AUTOPILOT_DIR}/logs"
+CHECKPOINT_DIR="${AUTOPILOT_DIR}/checkpoints"
+STATUS_LOG="${AUTOPILOT_DIR}/cd_autopilot_status.jsonl"
+STATE_PATH="${AUTOPILOT_DIR}/cd_autopilot_state.json"
+PID_PATH="${AUTOPILOT_DIR}/cd_autopilot.pid"
+LATEST_WEIGHTS_COPY="${AUTOPILOT_DIR}/champion_weights_latest.json"
+LATEST_SNAPSHOT_COPY="${AUTOPILOT_DIR}/champion_snapshot_latest.json"
+LATEST_CHECKPOINT_LINK="${AUTOPILOT_DIR}/checkpoint_latest"
+CHECKPOINT_KEEP="${CHECKPOINT_KEEP:-40}"
+
+GOAL_PICK_HIT_RATE="${GOAL_PICK_HIT_RATE:-0.60}"
+GOAL_PICKED_COUNT="${GOAL_PICKED_COUNT:-70}"
+LOOP_SLEEP_SEC="${LOOP_SLEEP_SEC:-8}"
+FAIL_BACKOFF_SEC="${FAIL_BACKOFF_SEC:-20}"
+PROMOTION_HIT_BAND="${PROMOTION_HIT_BAND:-0.01}"
+MARGIN_SIGNAL_CONFIRM="${MARGIN_SIGNAL_CONFIRM:-2}"
+MARGIN_UPPER_BOUND_DEFAULT="${MARGIN_UPPER_BOUND_DEFAULT:-0.08}"
+
+DEFAULT_SEED_WEIGHTS="${DEFAULT_SEED_WEIGHTS:-/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/cd_20260228_200354_patchv6/cd-loop/cdsession_20260228_200354_patchv6/r11/e04/weights_final.json}"
+
+mkdir -p "${AUTOPILOT_DIR}" "${LOG_DIR}" "${CHECKPOINT_DIR}"
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "[fatal] jq is required but not found" >&2
+  exit 1
+fi
+
+if [[ -f "${PID_PATH}" ]]; then
+  old_pid="$(cat "${PID_PATH}" 2>/dev/null || true)"
+  if [[ -n "${old_pid}" ]] && ps -p "${old_pid}" >/dev/null 2>&1; then
+    echo "[fatal] autopilot already running (pid=${old_pid})" >&2
+    exit 1
+  fi
+fi
+
+ACTIVE_RUN_PGID=""
+
+collect_stale_cd_auto_pids() {
+  local pid
+  local cmdline
+  local found=""
+  for pid in $(pgrep -f -- '--run-id=cd_auto_' 2>/dev/null || true); do
+    if [[ -z "${pid}" || "${pid}" == "$$" ]]; then
+      continue
+    fi
+    cmdline="$(tr '\0' ' ' < "/proc/${pid}/cmdline" 2>/dev/null || true)"
+    if [[ -z "${cmdline}" ]]; then
+      continue
+    fi
+    if [[ "${cmdline}" == *"src/cli.mjs cd-loop"* || "${cmdline}" == *"npm run lab:cd-loop"* ]]; then
+      found+="${pid}"$'\n'
+    fi
+  done
+  if [[ -n "${found}" ]]; then
+    printf "%s" "${found}" | sort -n | uniq
+  fi
+}
+
+cleanup_stale_cd_auto_processes() {
+  local stale_pids=()
+  local alive_pids=()
+  mapfile -t stale_pids < <(collect_stale_cd_auto_pids)
+  if [[ "${#stale_pids[@]}" -lt 1 ]]; then
+    return
+  fi
+  echo "[$(date +"%Y-%m-%dT%H:%M:%S%z")] [warn] stale cd-auto processes found. terminating: ${stale_pids[*]}" >&2
+  kill "${stale_pids[@]}" >/dev/null 2>&1 || true
+  sleep 2
+  mapfile -t alive_pids < <(collect_stale_cd_auto_pids)
+  if [[ "${#alive_pids[@]}" -gt 0 ]]; then
+    echo "[$(date +"%Y-%m-%dT%H:%M:%S%z")] [warn] force kill stale cd-auto processes: ${alive_pids[*]}" >&2
+    kill -9 "${alive_pids[@]}" >/dev/null 2>&1 || true
+  fi
+}
+
+cleanup_active_run_group() {
+  local pgid="${ACTIVE_RUN_PGID:-}"
+  if [[ -z "${pgid}" ]]; then
+    return
+  fi
+  if ps -p "${pgid}" >/dev/null 2>&1; then
+    kill -TERM -- "-${pgid}" >/dev/null 2>&1 || true
+    sleep 2
+    if ps -p "${pgid}" >/dev/null 2>&1; then
+      kill -KILL -- "-${pgid}" >/dev/null 2>&1 || true
+    fi
+  fi
+  ACTIVE_RUN_PGID=""
+}
+
+on_exit() {
+  cleanup_active_run_group
+  rm -f "${PID_PATH}"
+}
+
+echo "$$" > "${PID_PATH}"
+trap on_exit EXIT INT TERM
+
+cleanup_stale_cd_auto_processes
+
+timestamp() {
+  date +"%Y-%m-%dT%H:%M:%S%z"
+}
+
+float_ge() {
+  awk -v a="$1" -v b="$2" 'BEGIN { exit (a+0 >= b+0 ? 0 : 1) }'
+}
+
+float_gt() {
+  awk -v a="$1" -v b="$2" 'BEGIN { exit (a+0 > b+0 ? 0 : 1) }'
+}
+
+float_eq() {
+  awk -v a="$1" -v b="$2" 'BEGIN { d=a-b; if (d<0) d=-d; exit (d <= 1e-12 ? 0 : 1) }'
+}
+
+resolve_margin_upper_bound() {
+  local from_config=""
+  if [[ -f "${CONFIG_PATH}" ]]; then
+    from_config="$(jq -r '.decisionGate.maxScoreMargin // empty' "${CONFIG_PATH}")"
+    if [[ -n "${from_config}" && "${from_config}" != "null" ]]; then
+      echo "${from_config}"
+      return
+    fi
+  fi
+  echo "${MARGIN_UPPER_BOUND_DEFAULT}"
+}
+
+clamp_margin_value() {
+  local value="${1:-0}"
+  local upper_bound="${2:-${MARGIN_UPPER_BOUND_DEFAULT}}"
+  awk -v v="${value}" -v hi="${upper_bound}" 'BEGIN {
+    x = v + 0
+    h = hi + 0
+    if (x < 0) x = 0
+    if (x > h) x = h
+    printf "%.6f", x
+  }'
+}
+
+resolve_margin_signal() {
+  local best_rate="${1:-0}"
+  local best_count="${2:-0}"
+  if awk -v c="${best_count}" -v g="${GOAL_PICKED_COUNT}" 'BEGIN { exit (c+0 < g+0 ? 0 : 1) }'; then
+    echo "DOWN"
+    return
+  fi
+  if awk -v c="${best_count}" -v g="${GOAL_PICKED_COUNT}" 'BEGIN { exit (c+0 >= g+0 ? 0 : 1) }' &&
+    awk -v r="${best_rate}" -v g="${GOAL_PICK_HIT_RATE}" 'BEGIN { exit (r+0 < g+0 ? 0 : 1) }'; then
+    echo "UP"
+    return
+  fi
+  echo "HOLD"
+}
+
+calc_margin_step_down() {
+  local best_count="${1:-0}"
+  awk -v cnt="${best_count}" -v goal="${GOAL_PICKED_COUNT}" 'BEGIN {
+    gap = goal - cnt
+    if (gap < 0) gap = 0
+    ratio = (goal > 0) ? (gap / goal) : 0
+    step = 0.0012
+    if (ratio >= 0.45) step = 0.0035
+    else if (ratio >= 0.30) step = 0.0028
+    else if (ratio >= 0.15) step = 0.0018
+    printf "%.6f", step
+  }'
+}
+
+calc_margin_step_up() {
+  local best_rate="${1:-0}"
+  awk -v rate="${best_rate}" -v goal="${GOAL_PICK_HIT_RATE}" 'BEGIN {
+    gap = goal - rate
+    if (gap < 0) gap = 0
+    step = 0.0006
+    if (gap >= 0.08) step = 0.0018
+    else if (gap >= 0.05) step = 0.0014
+    else if (gap >= 0.03) step = 0.0010
+    printf "%.6f", step
+  }'
+}
+
+is_better_with_band() {
+  local rate_left="$1"
+  local count_left="$2"
+  local rate_right="$3"
+  local count_right="$4"
+  local band="$5"
+  awk -v rl="${rate_left}" -v cl="${count_left}" -v rr="${rate_right}" -v cr="${count_right}" -v b="${band}" \
+    'BEGIN {
+      d = rl - rr
+      if (d > b) exit 0
+      if (d < -b) exit 1
+      exit (cl > cr ? 0 : 1)
+    }'
+}
+
+resolve_resume_weights() {
+  local from_state=""
+  local from_config=""
+
+  if [[ -f "${STATE_PATH}" ]]; then
+    from_state="$(jq -r '.resumeWeightsPath // empty' "${STATE_PATH}")"
+    if [[ -n "${from_state}" && -f "${from_state}" ]]; then
+      echo "${from_state}"
+      return
+    fi
+  fi
+
+  if [[ -f "${LATEST_WEIGHTS_COPY}" ]]; then
+    echo "${LATEST_WEIGHTS_COPY}"
+    return
+  fi
+
+  if [[ -f "${DEFAULT_SEED_WEIGHTS}" ]]; then
+    echo "${DEFAULT_SEED_WEIGHTS}"
+    return
+  fi
+
+  if [[ -f "${CONFIG_PATH}" ]]; then
+    from_config="$(jq -r '.onlineLearning.startWeightsPath // empty' "${CONFIG_PATH}")"
+    if [[ -n "${from_config}" && -f "${from_config}" ]]; then
+      echo "${from_config}"
+      return
+    fi
+  fi
+
+  echo ""
+}
+
+resolve_margin_from_weights_path() {
+  local weights_path="${1:-}"
+  local summary_path=""
+
+  if [[ -z "${weights_path}" ]]; then
+    echo ""
+    return
+  fi
+
+  summary_path="$(dirname "${weights_path}")/step_d_summary.json"
+  if [[ -f "${summary_path}" ]]; then
+    jq -r '.decisionGate.minScoreMargin // empty' "${summary_path}"
+    return
+  fi
+
+  echo ""
+}
+
+resolve_resume_margin() {
+  local seed_weights_path="${1:-}"
+  local from_state=""
+  local from_global=""
+  local from_global_weights=""
+  local from_seed=""
+  local upper_bound=""
+
+  upper_bound="$(resolve_margin_upper_bound)"
+
+  if [[ -f "${STATE_PATH}" ]]; then
+    from_state="$(jq -r '.resumeMinScoreMargin // empty' "${STATE_PATH}")"
+    if [[ -n "${from_state}" && "${from_state}" != "null" ]]; then
+      clamp_margin_value "${from_state}" "${upper_bound}"
+      return
+    fi
+
+    from_global="$(jq -r '.globalBest.gateMinScoreMargin // .globalBestGateMinScoreMargin // .lastGateMinScoreMargin // empty' "${STATE_PATH}")"
+    if [[ -n "${from_global}" ]]; then
+      clamp_margin_value "${from_global}" "${upper_bound}"
+      return
+    fi
+    from_global_weights="$(jq -r '.globalBest.weightsPath // .resumeWeightsPath // empty' "${STATE_PATH}")"
+    if [[ -n "${from_global_weights}" ]]; then
+      from_seed="$(resolve_margin_from_weights_path "${from_global_weights}")"
+      if [[ -n "${from_seed}" ]]; then
+        clamp_margin_value "${from_seed}" "${upper_bound}"
+        return
+      fi
+    fi
+    from_state="$(jq -r '.lastGateMinScoreMargin // empty' "${STATE_PATH}")"
+    if [[ -n "${from_state}" && "${from_state}" != "null" ]]; then
+      clamp_margin_value "${from_state}" "${upper_bound}"
+      return
+    fi
+    return
+  fi
+
+  if [[ -n "${seed_weights_path}" ]]; then
+    from_seed="$(resolve_margin_from_weights_path "${seed_weights_path}")"
+    if [[ -n "${from_seed}" ]]; then
+      clamp_margin_value "${from_seed}" "${upper_bound}"
+      return
+    fi
+  fi
+
+  from_seed="$(resolve_margin_from_weights_path "${DEFAULT_SEED_WEIGHTS}")"
+  if [[ -n "${from_seed}" ]]; then
+    clamp_margin_value "${from_seed}" "${upper_bound}"
+    return
+  fi
+
+  if [[ -f "${CONFIG_PATH}" ]]; then
+    from_state="$(jq -r '.decisionGate.minScoreMargin // empty' "${CONFIG_PATH}")"
+    if [[ -n "${from_state}" && "${from_state}" != "null" ]]; then
+      clamp_margin_value "${from_state}" "${upper_bound}"
+      return
+    fi
+    return
+  fi
+  echo ""
+}
+
+resolve_resume_second_pick() {
+  local from_state=""
+  local from_config=""
+
+  if [[ -f "${STATE_PATH}" ]]; then
+    from_state="$(jq -c \
+      --argjson goalRate "${GOAL_PICK_HIT_RATE}" \
+      --argjson goalCount "${GOAL_PICKED_COUNT}" \
+      '
+      def clamp(v; lo; hi): if v < lo then lo elif v > hi then hi else v end;
+      (.resumeSecondPickGate // .globalBest.secondPickGate // .globalBestSecondPickGate) as $sp
+      | if $sp == null then
+          empty
+        else
+          (.lastBestPickedCount // .globalBest.pickedCount // 0) as $cnt
+          | (.lastBestPickHitRate // .globalBest.pickHitRate // 0) as $rate
+          | ($sp + {phase: ($sp.phase // $sp.mode // "enforce"), debugLog: ($sp.debugLog // false)} | del(.mode)) as $base
+          | if $cnt < $goalCount then
+              $base
+              | .minFinalScore = clamp((.minFinalScore // 0.60) - 0.01; 0.56; 0.92)
+              | .minExpectedNetRet3d = clamp((.minExpectedNetRet3d // 0.022) - 0.0015; 0.02; 0.04)
+              | .maxGapFromFirst = clamp((.maxGapFromFirst // 0.016) + 0.002; 0.01; 0.022)
+              | .minMarginVsThird = clamp((.minMarginVsThird // 0.001) - 0.0005; 0; 0.01)
+            elif ($cnt >= $goalCount and $rate < $goalRate) then
+              $base
+              | .minFinalScore = clamp((.minFinalScore // 0.60) + 0.01; 0.56; 0.92)
+              | .minExpectedNetRet3d = clamp((.minExpectedNetRet3d // 0.022) + 0.0015; 0.02; 0.04)
+              | .maxGapFromFirst = clamp((.maxGapFromFirst // 0.016) - 0.0015; 0.01; 0.022)
+              | .minMarginVsThird = clamp((.minMarginVsThird // 0.001) + 0.0005; 0; 0.01)
+            else
+              $base
+            end
+        end
+      ' \
+      "${STATE_PATH}")"
+    if [[ -n "${from_state}" && "${from_state}" != "null" ]]; then
+      echo "${from_state}"
+      return
+    fi
+  fi
+
+  if [[ -f "${CONFIG_PATH}" ]]; then
+    from_config="$(jq -c '.decisionGate.secondPick // empty' "${CONFIG_PATH}")"
+    if [[ -n "${from_config}" && "${from_config}" != "null" ]]; then
+      echo "${from_config}"
+      return
+    fi
+  fi
+
+  echo ""
+}
+
+apply_run_seed_to_config() {
+  local seed_weights="$1"
+  local seed_margin="$2"
+  local seed_second_pick="$3"
+  local margin_upper_bound=""
+  local tmp
+  tmp="$(mktemp)"
+  margin_upper_bound="$(resolve_margin_upper_bound)"
+
+  jq \
+    --arg sw "${seed_weights}" \
+    '.onlineLearning.enabled = true
+     | .onlineLearning.startWeightsPath = $sw
+     | .decisionGate.maxPicksPerDay = 2
+     | .cdLoop.stagnationRoundsBeforeRebuildC = 3' \
+    "${CONFIG_PATH}" > "${tmp}"
+
+  if [[ -n "${seed_margin}" ]]; then
+    local clamped_margin=""
+    local tmp2
+    clamped_margin="$(clamp_margin_value "${seed_margin}" "${margin_upper_bound}")"
+    tmp2="$(mktemp)"
+    jq --argjson gm "${clamped_margin}" '.decisionGate.minScoreMargin = $gm' "${tmp}" > "${tmp2}"
+    mv "${tmp2}" "${tmp}"
+  fi
+
+  if [[ -n "${seed_second_pick}" && "${seed_second_pick}" != "null" ]]; then
+    local tmp3
+    tmp3="$(mktemp)"
+    jq --argjson sp "${seed_second_pick}" '.decisionGate.secondPick = ($sp | .phase = (.phase // .mode // "enforce") | del(.mode))' "${tmp}" > "${tmp3}"
+    mv "${tmp3}" "${tmp}"
+  fi
+
+  mv "${tmp}" "${CONFIG_PATH}"
+}
+
+append_status_log() {
+  local payload="$1"
+  echo "${payload}" >> "${STATUS_LOG}"
+}
+
+write_iteration_checkpoint() {
+  local run_id="$1"
+  local session_id="$2"
+  local summary_path="$3"
+  local run_exit="$4"
+  local best_rate="$5"
+  local best_count="$6"
+  local best_two_pick_days="$7"
+  local gate_margin="$8"
+  local gate_second_pick="$9"
+  local global_rate="${10}"
+  local global_count="${11}"
+  local global_margin="${12}"
+  local global_second_pick="${13}"
+  local global_weights="${14}"
+  local promoted="${15}"
+  local goal_reached="${16}"
+  local gate_max_margin=""
+
+  local checkpoint_path="${CHECKPOINT_DIR}/${run_id}"
+  mkdir -p "${checkpoint_path}"
+
+  cp -f "${CONFIG_PATH}" "${checkpoint_path}/config_applied.json" 2>/dev/null || true
+  cp -f "${STATE_PATH}" "${checkpoint_path}/autopilot_state_after.json" 2>/dev/null || true
+  cp -f "${summary_path}" "${checkpoint_path}/cd_loop_summary.json" 2>/dev/null || true
+  if [[ -f "${LATEST_WEIGHTS_COPY}" ]]; then
+    cp -f "${LATEST_WEIGHTS_COPY}" "${checkpoint_path}/champion_weights_latest.json" 2>/dev/null || true
+  fi
+  if [[ -n "${global_weights}" && -f "${global_weights}" ]]; then
+    cp -f "${global_weights}" "${checkpoint_path}/global_best_weights.json" 2>/dev/null || true
+  fi
+  if [[ -f "${LATEST_SNAPSHOT_COPY}" ]]; then
+    cp -f "${LATEST_SNAPSHOT_COPY}" "${checkpoint_path}/champion_snapshot_latest.json" 2>/dev/null || true
+  fi
+  if [[ -f "${summary_path}" ]]; then
+    gate_max_margin="$(jq -r '.finalDecisionGate.maxScoreMargin // empty' "${summary_path}")"
+  fi
+
+  jq -n \
+    --arg ts "$(timestamp)" \
+    --arg runId "${run_id}" \
+    --arg sessionId "${session_id}" \
+    --argjson exitCode "${run_exit}" \
+    --argjson pickHitRate "${best_rate}" \
+    --argjson pickedCount "${best_count}" \
+    --argjson twoPickDays "${best_two_pick_days}" \
+    --argjson gateMinScoreMargin "${gate_margin:-0}" \
+    --argjson gateMaxScoreMargin "${gate_max_margin:-null}" \
+    --argjson gateSecondPick "${gate_second_pick:-null}" \
+    --argjson globalPickHitRate "${global_rate}" \
+    --argjson globalPickedCount "${global_count}" \
+    --argjson globalGateMinScoreMargin "${global_margin:-0}" \
+    --argjson globalSecondPick "${global_second_pick:-null}" \
+    --arg globalWeightsPath "${global_weights}" \
+    --arg promoted "${promoted}" \
+    --arg goalReached "${goal_reached}" \
+    --arg summaryPath "${summary_path}" \
+    '{
+      generatedAt:$ts,
+      runId:$runId,
+      sessionId:$sessionId,
+      runExitCode:$exitCode,
+      best:{pickHitRate:$pickHitRate,pickedCount:$pickedCount,twoPickDays:$twoPickDays},
+      finalDecisionGate:{minScoreMargin:$gateMinScoreMargin,maxScoreMargin:$gateMaxScoreMargin,secondPick:$gateSecondPick},
+      globalBest:{pickHitRate:$globalPickHitRate,pickedCount:$globalPickedCount,weightsPath:$globalWeightsPath,gateMinScoreMargin:$globalGateMinScoreMargin,secondPick:$globalSecondPick},
+      promotedThisRun:($promoted=="true"),
+      goalReached:($goalReached=="true"),
+      summaryPath:$summaryPath
+    }' > "${checkpoint_path}/checkpoint_meta.json"
+
+  ln -sfn "${checkpoint_path}" "${LATEST_CHECKPOINT_LINK}"
+
+  local remove_list=""
+  remove_list="$(ls -1dt "${CHECKPOINT_DIR}"/cd_auto_* 2>/dev/null | awk "NR>${CHECKPOINT_KEEP}")"
+  if [[ -n "${remove_list}" ]]; then
+    while IFS= read -r stale_path; do
+      [[ -z "${stale_path}" ]] && continue
+      rm -rf "${stale_path}" 2>/dev/null || true
+    done <<< "${remove_list}"
+  fi
+
+  echo "${checkpoint_path}"
+}
+
+iteration=0
+while true; do
+  iteration=$((iteration + 1))
+  now_tag="$(date +%Y%m%d_%H%M%S)"
+  run_id="cd_auto_${now_tag}_i$(printf '%03d' "${iteration}")"
+  session_id="cdauto_${now_tag}_i$(printf '%03d' "${iteration}")"
+  run_log="${LOG_DIR}/${run_id}.log"
+
+  seed_weights="$(resolve_resume_weights)"
+  seed_margin="$(resolve_resume_margin "${seed_weights}")"
+  seed_second_pick="$(resolve_resume_second_pick)"
+  seed_second_pick_compact="$(echo "${seed_second_pick:-null}" | tr -d '\n')"
+
+  if [[ -z "${seed_weights}" || ! -f "${seed_weights}" ]]; then
+    echo "[$(timestamp)] [fatal] no valid seed weights path" | tee -a "${run_log}"
+    exit 1
+  fi
+
+  apply_run_seed_to_config "${seed_weights}" "${seed_margin}" "${seed_second_pick}"
+
+  echo "[$(timestamp)] [run] iteration=${iteration} run_id=${run_id} session_id=${session_id} seed_weights=${seed_weights} seed_margin=${seed_margin} seed_second_pick=${seed_second_pick_compact}" | tee -a "${run_log}"
+  append_status_log "$(jq -nc \
+    --arg ts "$(timestamp)" \
+    --arg runId "${run_id}" \
+    --arg sessionId "${session_id}" \
+    --arg seedWeights "${seed_weights}" \
+    --argjson seedMargin "${seed_margin:-0}" \
+    --argjson seedSecondPick "${seed_second_pick:-null}" \
+    --argjson iteration "${iteration}" \
+    '{ts:$ts,runId:$runId,sessionId:$sessionId,iteration:$iteration,status:"started",seed:{weightsPath:$seedWeights,minScoreMargin:$seedMargin,secondPickGate:$seedSecondPick}}')"
+
+  cleanup_stale_cd_auto_processes
+  set +e
+  setsid bash -lc "cd '${ROOT}' && NO_KIS=1 BACKFILL_DISABLE_KIS=1 BACKFILL_KIS_ENABLED=0 NODE_OPTIONS='--max-old-space-size=4096' npm run lab:cd-loop -- --config='${CONFIG_REL}' --run-id='${run_id}' --session-id='${session_id}'" \
+    > >(tee -a "${run_log}") 2>&1 &
+  ACTIVE_RUN_PGID=$!
+  wait "${ACTIVE_RUN_PGID}"
+  run_exit=$?
+  ACTIVE_RUN_PGID=""
+  set -e
+
+  summary_path="${ROOT}/artifacts/runs/${run_id}/cd-loop/${session_id}/cd_loop_summary.json"
+  snapshot_path="${ROOT}/artifacts/runs/${run_id}/cd-loop/champion_snapshot.json"
+
+  if [[ ! -f "${summary_path}" ]]; then
+    append_status_log "$(jq -nc \
+      --arg ts "$(timestamp)" \
+      --arg runId "${run_id}" \
+      --arg sessionId "${session_id}" \
+      --argjson exitCode "${run_exit}" \
+      '{ts:$ts,runId:$runId,sessionId:$sessionId,status:"summary_missing",exitCode:$exitCode}')"
+    echo "[$(timestamp)] [warn] summary missing. backoff ${FAIL_BACKOFF_SEC}s" | tee -a "${run_log}"
+    sleep "${FAIL_BACKOFF_SEC}"
+    continue
+  fi
+
+  best_rate="$(jq -r '.bestRound.bestMetrics.pickHitRate // 0' "${summary_path}")"
+  best_count="$(jq -r '.bestRound.bestMetrics.pickedCount // 0' "${summary_path}")"
+  best_two_pick_days="$(jq -r '.bestRound.bestMetrics.twoPickDays // 0' "${summary_path}")"
+  best_hit_count="$(jq -r '.bestRound.bestMetrics.pickHitCount // 0' "${summary_path}")"
+  best_worker_pool_score_ms="$(jq -r '.bestRound.bestMetrics.workerPoolScoreMs // 0' "${summary_path}")"
+  best_score_ms_per_seed="$(jq -r '.bestRound.bestMetrics.scoreMsPerSeed // 0' "${summary_path}")"
+  best_score_margin_low_days="$(jq -r '.bestRound.bestMetrics.gateReasonCounts.SCORE_MARGIN_LOW // 0' "${summary_path}")"
+  best_promotable="$(jq -r '.bestRound.promotable // false' "${summary_path}")"
+  best_round_tag="$(jq -r '.bestRound.roundTag // empty' "${summary_path}")"
+  best_epoch_num="$(jq -r '.bestRound.bestEpoch // empty' "${summary_path}")"
+  best_epoch_tag=""
+  best_daily_log_path=""
+  best_two_pick_dates_json="[]"
+  best_two_pick_hit_dates_json="[]"
+  if [[ -n "${best_round_tag}" && -n "${best_epoch_num}" && "${best_epoch_num}" =~ ^[0-9]+$ ]]; then
+    best_epoch_tag="$(printf "e%02d" "${best_epoch_num}")"
+    best_daily_log_path="${ROOT}/artifacts/runs/${run_id}/cd-loop/${session_id}/${best_round_tag}/${best_epoch_tag}/daily_online_logs.jsonl"
+    if [[ -f "${best_daily_log_path}" ]]; then
+      best_two_pick_dates_json="$(jq -sc '[.[] | select(.pickCount == 2) | .decisionDateKey]' "${best_daily_log_path}")"
+      best_two_pick_hit_dates_json="$(jq -sc '[.[] | select(.pickCount == 2) | select(([.pickedList[]?.successInWindow] | map(select(. == true)) | length) > 0) | .decisionDateKey]' "${best_daily_log_path}")"
+    fi
+  fi
+  gate_margin="$(jq -r '.finalDecisionGate.minScoreMargin // empty' "${summary_path}")"
+  gate_max_margin="$(jq -r '.finalDecisionGate.maxScoreMargin // empty' "${summary_path}")"
+  gate_second_pick="$(jq -c '.finalDecisionGate.secondPick // empty' "${summary_path}")"
+  champ_weights="$(jq -r '.safeChampion.weightsPath // empty' "${summary_path}")"
+
+  if [[ -n "${champ_weights}" && -f "${champ_weights}" ]]; then
+    cp -f "${champ_weights}" "${LATEST_WEIGHTS_COPY}"
+  else
+    champ_weights="${seed_weights}"
+  fi
+
+  if [[ -f "${snapshot_path}" ]]; then
+    cp -f "${snapshot_path}" "${LATEST_SNAPSHOT_COPY}"
+  fi
+
+  prev_global_rate="0"
+  prev_global_count="0"
+  prev_global_weights=""
+  prev_global_margin=""
+  prev_global_second_pick=""
+  if [[ -f "${STATE_PATH}" ]]; then
+    prev_global_rate="$(jq -r '.globalBest.pickHitRate // .lastBestPickHitRate // 0' "${STATE_PATH}")"
+    prev_global_count="$(jq -r '.globalBest.pickedCount // .lastBestPickedCount // 0' "${STATE_PATH}")"
+    prev_global_weights="$(jq -r '.globalBest.weightsPath // .resumeWeightsPath // empty' "${STATE_PATH}")"
+    prev_global_margin="$(jq -r '.globalBest.gateMinScoreMargin // .globalBestGateMinScoreMargin // .resumeMinScoreMargin // .lastGateMinScoreMargin // empty' "${STATE_PATH}")"
+    prev_global_second_pick="$(jq -c '.globalBest.secondPickGate // .resumeSecondPickGate // empty' "${STATE_PATH}")"
+    if [[ -n "${prev_global_weights}" && ! -f "${prev_global_weights}" ]]; then
+      prev_global_weights=""
+    fi
+  fi
+
+  global_rate="${prev_global_rate}"
+  global_count="${prev_global_count}"
+  global_weights="${prev_global_weights}"
+  global_margin="${prev_global_margin}"
+  global_second_pick="${prev_global_second_pick}"
+  promoted="false"
+
+  if [[ "${best_promotable}" != "true" ]]; then
+    promoted="false"
+  elif [[ -z "${global_weights}" ]]; then
+    global_rate="${best_rate}"
+    global_count="${best_count}"
+    global_weights="${champ_weights}"
+    global_margin="${gate_margin:-${seed_margin}}"
+    global_second_pick="${gate_second_pick:-${seed_second_pick}}"
+    promoted="true"
+  elif is_better_with_band "${best_rate}" "${best_count}" "${global_rate}" "${global_count}" "${PROMOTION_HIT_BAND}"; then
+    global_rate="${best_rate}"
+    global_count="${best_count}"
+    global_weights="${champ_weights}"
+    global_margin="${gate_margin:-${seed_margin}}"
+    global_second_pick="${gate_second_pick:-${seed_second_pick}}"
+    promoted="true"
+  fi
+
+  if [[ -z "${global_weights}" || ! -f "${global_weights}" ]]; then
+    global_weights="${champ_weights}"
+  fi
+  if [[ -z "${global_margin}" ]]; then
+    global_margin="${seed_margin}"
+  fi
+  if [[ -z "${global_margin}" ]]; then
+    global_margin="$(jq -r '.decisionGate.minScoreMargin // 0' "${CONFIG_PATH}")"
+  fi
+  if [[ -z "${global_second_pick}" || "${global_second_pick}" == "null" ]]; then
+    global_second_pick="${seed_second_pick}"
+  fi
+
+  margin_upper_bound="$(resolve_margin_upper_bound)"
+  if [[ -n "${gate_max_margin}" && "${gate_max_margin}" != "null" ]]; then
+    margin_upper_bound="${gate_max_margin}"
+  fi
+  global_margin="$(clamp_margin_value "${global_margin:-0}" "${margin_upper_bound}")"
+  margin_signal="$(resolve_margin_signal "${best_rate}" "${best_count}")"
+  prev_margin_signal="HOLD"
+  prev_margin_streak="0"
+  if [[ -f "${STATE_PATH}" ]]; then
+    prev_margin_signal="$(jq -r '.marginAdjust.lastSignal // "HOLD"' "${STATE_PATH}")"
+    prev_margin_streak="$(jq -r '.marginAdjust.signalStreak // 0' "${STATE_PATH}")"
+  fi
+  prev_margin_streak="$(awk -v n="${prev_margin_streak}" 'BEGIN { x = int(n+0); if (x < 0) x = 0; print x }')"
+  margin_signal_streak="0"
+  if [[ "${margin_signal}" == "HOLD" ]]; then
+    margin_signal_streak="0"
+  elif [[ "${margin_signal}" == "${prev_margin_signal}" ]]; then
+    margin_signal_streak=$((prev_margin_streak + 1))
+  else
+    margin_signal_streak="1"
+  fi
+  margin_confirm_runs="$(awk -v n="${MARGIN_SIGNAL_CONFIRM}" 'BEGIN { x = int(n+0); if (x < 1) x = 1; print x }')"
+  margin_adjust_applied="false"
+  margin_adjust_step="0"
+  resume_next_margin="${global_margin}"
+  if [[ "${margin_signal}" != "HOLD" && "${margin_signal_streak}" -ge "${margin_confirm_runs}" ]]; then
+    if [[ "${margin_signal}" == "DOWN" ]]; then
+      margin_adjust_step="$(calc_margin_step_down "${best_count}")"
+      resume_next_margin="$(awk -v base="${global_margin}" -v step="${margin_adjust_step}" 'BEGIN { printf "%.6f", (base+0) - (step+0) }')"
+    else
+      margin_adjust_step="$(calc_margin_step_up "${best_rate}")"
+      resume_next_margin="$(awk -v base="${global_margin}" -v step="${margin_adjust_step}" 'BEGIN { printf "%.6f", (base+0) + (step+0) }')"
+    fi
+    resume_next_margin="$(clamp_margin_value "${resume_next_margin}" "${margin_upper_bound}")"
+    margin_adjust_applied="true"
+    margin_signal_streak="0"
+  fi
+
+  jq -n \
+    --arg ts "$(timestamp)" \
+    --arg runId "${run_id}" \
+    --arg sessionId "${session_id}" \
+    --arg resumeWeightsPath "${global_weights}" \
+    --arg latestWeightsCopyPath "${LATEST_WEIGHTS_COPY}" \
+    --arg latestSnapshotCopyPath "${LATEST_SNAPSHOT_COPY}" \
+    --argjson resumeSecondPickGate "${global_second_pick:-null}" \
+    --argjson resumeMinScoreMargin "${resume_next_margin:-0}" \
+    --argjson lastBestPickHitRate "${best_rate}" \
+    --argjson lastBestPickedCount "${best_count}" \
+    --argjson lastBestTwoPickDays "${best_two_pick_days}" \
+    --argjson lastBestPickHitCount "${best_hit_count}" \
+    --argjson lastBestWorkerPoolScoreMs "${best_worker_pool_score_ms}" \
+    --argjson lastBestScoreMsPerSeed "${best_score_ms_per_seed}" \
+    --argjson lastBestScoreMarginLowDays "${best_score_margin_low_days}" \
+    --argjson lastBestTwoPickDates "${best_two_pick_dates_json:-[]}" \
+    --argjson lastBestTwoPickHitDates "${best_two_pick_hit_dates_json:-[]}" \
+    --arg bestDailyLogPath "${best_daily_log_path}" \
+    --arg bestPromotable "${best_promotable}" \
+    --argjson globalBestPickHitRate "${global_rate}" \
+    --argjson globalBestPickedCount "${global_count}" \
+    --arg globalBestWeightsPath "${global_weights}" \
+    --argjson globalBestSecondPickGate "${global_second_pick:-null}" \
+    --argjson globalBestGateMinScoreMargin "${global_margin:-0}" \
+    --argjson globalBestGateMaxScoreMargin "${margin_upper_bound:-null}" \
+    --arg promoted "${promoted}" \
+    --argjson lastGateMinScoreMargin "${gate_margin:-0}" \
+    --argjson lastGateMaxScoreMargin "${gate_max_margin:-null}" \
+    --arg marginSignal "${margin_signal}" \
+    --argjson marginSignalStreak "${margin_signal_streak}" \
+    --argjson marginConfirmRuns "${margin_confirm_runs}" \
+    --arg marginAdjustApplied "${margin_adjust_applied}" \
+    --argjson marginAdjustStep "${margin_adjust_step}" \
+    --argjson marginUpperBound "${margin_upper_bound}" \
+    --argjson goalPickHitRate "${GOAL_PICK_HIT_RATE}" \
+    --argjson goalPickedCount "${GOAL_PICKED_COUNT}" \
+    --argjson runExitCode "${run_exit}" \
+    --arg summaryPath "${summary_path}" \
+    --arg snapshotPath "${snapshot_path}" \
+    --arg statusLog "${STATUS_LOG}" \
+    --argjson iteration "${iteration}" \
+    '{
+      updatedAt:$ts,
+      runId:$runId,
+      sessionId:$sessionId,
+      iteration:$iteration,
+      resumeWeightsPath:$resumeWeightsPath,
+      resumeSecondPickGate:$resumeSecondPickGate,
+      resumeMinScoreMargin:$resumeMinScoreMargin,
+      latestWeightsCopyPath:$latestWeightsCopyPath,
+      latestSnapshotCopyPath:$latestSnapshotCopyPath,
+      lastBestPickHitRate:$lastBestPickHitRate,
+      lastBestPickedCount:$lastBestPickedCount,
+      lastBestTwoPickDays:$lastBestTwoPickDays,
+      lastBestPickHitCount:$lastBestPickHitCount,
+      lastBestWorkerPoolScoreMs:$lastBestWorkerPoolScoreMs,
+      lastBestScoreMsPerSeed:$lastBestScoreMsPerSeed,
+      lastBestScoreMarginLowDays:$lastBestScoreMarginLowDays,
+      lastBestTwoPickDates:$lastBestTwoPickDates,
+      lastBestTwoPickHitDates:$lastBestTwoPickHitDates,
+      lastBestDailyLogPath:$bestDailyLogPath,
+      lastBestPromotable:($bestPromotable=="true"),
+      globalBest:{
+        pickHitRate:$globalBestPickHitRate,
+        pickedCount:$globalBestPickedCount,
+        weightsPath:$globalBestWeightsPath,
+        secondPickGate:$globalBestSecondPickGate,
+        gateMinScoreMargin:$globalBestGateMinScoreMargin,
+        gateMaxScoreMargin:$globalBestGateMaxScoreMargin
+      },
+      globalBestSecondPickGate:$globalBestSecondPickGate,
+      globalBestGateMinScoreMargin:$globalBestGateMinScoreMargin,
+      globalBestGateMaxScoreMargin:$globalBestGateMaxScoreMargin,
+      promotedThisRun:($promoted=="true"),
+      lastGateMinScoreMargin:$lastGateMinScoreMargin,
+      lastGateMaxScoreMargin:$lastGateMaxScoreMargin,
+      marginAdjust:{
+        lastSignal:$marginSignal,
+        signalStreak:$marginSignalStreak,
+        confirmRuns:$marginConfirmRuns,
+        applied:($marginAdjustApplied=="true"),
+        step:$marginAdjustStep,
+        upperBound:$marginUpperBound,
+        nextResumeMinScoreMargin:$resumeMinScoreMargin
+      },
+      goal:{pickHitRate:$goalPickHitRate,pickedCount:$goalPickedCount},
+      runExitCode:$runExitCode,
+      summaryPath:$summaryPath,
+      snapshotPath:$snapshotPath,
+      statusLog:$statusLog
+    }' > "${STATE_PATH}"
+
+  goal_reached="false"
+  if float_ge "${best_rate}" "${GOAL_PICK_HIT_RATE}" && float_ge "${best_count}" "${GOAL_PICKED_COUNT}"; then
+    goal_reached="true"
+  fi
+
+  append_status_log "$(jq -nc \
+    --arg ts "$(timestamp)" \
+    --arg runId "${run_id}" \
+    --arg sessionId "${session_id}" \
+    --argjson exitCode "${run_exit}" \
+    --argjson pickHitRate "${best_rate}" \
+    --argjson pickedCount "${best_count}" \
+    --argjson pickHitCount "${best_hit_count}" \
+    --argjson twoPickDays "${best_two_pick_days}" \
+    --argjson workerPoolScoreMs "${best_worker_pool_score_ms}" \
+    --argjson scoreMsPerSeed "${best_score_ms_per_seed}" \
+    --argjson scoreMarginLowDays "${best_score_margin_low_days}" \
+    --argjson twoPickDates "${best_two_pick_dates_json:-[]}" \
+    --argjson twoPickHitDates "${best_two_pick_hit_dates_json:-[]}" \
+    --arg bestPromotable "${best_promotable}" \
+    --argjson globalPickHitRate "${global_rate}" \
+    --argjson globalPickedCount "${global_count}" \
+    --arg globalWeightsPath "${global_weights}" \
+    --argjson globalSecondPickGate "${global_second_pick:-null}" \
+    --argjson globalGateMinScoreMargin "${global_margin:-0}" \
+    --argjson globalGateMaxScoreMargin "${margin_upper_bound:-null}" \
+    --arg promoted "${promoted}" \
+    --argjson gateMinScoreMargin "${gate_margin:-0}" \
+    --argjson gateMaxScoreMargin "${gate_max_margin:-null}" \
+    --arg marginSignal "${margin_signal}" \
+    --argjson marginSignalStreak "${margin_signal_streak}" \
+    --argjson marginConfirmRuns "${margin_confirm_runs}" \
+    --arg marginAdjustApplied "${margin_adjust_applied}" \
+    --argjson marginAdjustStep "${margin_adjust_step}" \
+    --argjson nextResumeMinScoreMargin "${resume_next_margin:-0}" \
+    --arg goalReached "${goal_reached}" \
+    '{ts:$ts,runId:$runId,sessionId:$sessionId,exitCode:$exitCode,best:{pickHitRate:$pickHitRate,pickedCount:$pickedCount,pickHitCount:$pickHitCount,twoPickDays:$twoPickDays,workerPoolScoreMs:$workerPoolScoreMs,scoreMsPerSeed:$scoreMsPerSeed,scoreMarginLowDays:$scoreMarginLowDays,twoPickDates:$twoPickDates,twoPickHitDates:$twoPickHitDates,promotable:($bestPromotable=="true")},globalBest:{pickHitRate:$globalPickHitRate,pickedCount:$globalPickedCount,weightsPath:$globalWeightsPath,secondPickGate:$globalSecondPickGate,gateMinScoreMargin:$globalGateMinScoreMargin,gateMaxScoreMargin:$globalGateMaxScoreMargin},promotedThisRun:($promoted=="true"),gateMinScoreMargin:$gateMinScoreMargin,gateMaxScoreMargin:$gateMaxScoreMargin,marginAdjust:{signal:$marginSignal,streak:$marginSignalStreak,confirmRuns:$marginConfirmRuns,applied:($marginAdjustApplied=="true"),step:$marginAdjustStep,nextResumeMinScoreMargin:$nextResumeMinScoreMargin},goalReached:($goalReached=="true")}')"
+
+  checkpoint_path="$(write_iteration_checkpoint \
+    "${run_id}" \
+    "${session_id}" \
+    "${summary_path}" \
+    "${run_exit}" \
+    "${best_rate}" \
+    "${best_count}" \
+    "${best_two_pick_days}" \
+    "${gate_margin:-0}" \
+    "${gate_second_pick:-null}" \
+    "${global_rate}" \
+    "${global_count}" \
+    "${global_margin:-0}" \
+    "${global_second_pick:-null}" \
+    "${global_weights}" \
+    "${promoted}" \
+    "${goal_reached}")"
+
+  append_status_log "$(jq -nc \
+    --arg ts "$(timestamp)" \
+    --arg runId "${run_id}" \
+    --arg sessionId "${session_id}" \
+    --arg checkpointPath "${checkpoint_path}" \
+    '{ts:$ts,runId:$runId,sessionId:$sessionId,status:"checkpoint_written",checkpointPath:$checkpointPath}')"
+
+  echo "[$(timestamp)] [summary] run_id=${run_id} pickHitRate=${best_rate} pickedCount=${best_count} twoPickDays=${best_two_pick_days} scoreMarginLowDays=${best_score_margin_low_days} workerPoolScoreMs=${best_worker_pool_score_ms} scoreMsPerSeed=${best_score_ms_per_seed} twoPickDates=${best_two_pick_dates_json} promotable=${best_promotable} promoted=${promoted} globalBestRate=${global_rate} globalBestCount=${global_count} globalGateMinScoreMargin=${global_margin} gateMaxScoreMargin=${gate_max_margin} marginSignal=${margin_signal} marginSignalStreak=${margin_signal_streak} marginAdjustApplied=${margin_adjust_applied} nextResumeMinScoreMargin=${resume_next_margin} goalReached=${goal_reached} checkpoint=${checkpoint_path}" | tee -a "${run_log}"
+
+  if [[ "${goal_reached}" == "true" ]]; then
+    echo "[$(timestamp)] [done] goal reached. stopping autopilot." | tee -a "${run_log}"
+    exit 0
+  fi
+
+  if [[ "${run_exit}" -ne 0 ]]; then
+    echo "[$(timestamp)] [warn] cd-loop exit=${run_exit}. backoff ${FAIL_BACKOFF_SEC}s" | tee -a "${run_log}"
+    sleep "${FAIL_BACKOFF_SEC}"
+  else
+    sleep "${LOOP_SLEEP_SEC}"
+  fi
+done

@@ -1,0 +1,1749 @@
+{
+  "project": {
+    "name": "stockdesk-lab-lite",
+    "timezone": "Asia/Seoul"
+  },
+  "timeline": {
+    "anchorDateKey": "2026-03-12",
+    "warmupMonths": 12,
+    "discoveryMonths": 50,
+    "onlineMonths": 9,
+    "lockboxMonths": 4
+  },
+  "event": {
+    "highJumpThreshold": 0.08,
+    "closeJumpThreshold": 0.08,
+    "requireCloseJump": false,
+    "highJumpMode": "FROM_OPEN_EX_GAP",
+    "labelName": "HIGH8_BUYABLE_EX_GAP"
+  },
+  "filters": {
+    "symbolRegex": "^[0-9]{6}$",
+    "excludeTypes": [
+      "ETF",
+      "ETN",
+      "REIT",
+      "OTHER"
+    ],
+    "excludePreferred": true,
+    "excludeSpac": true,
+    "excludeBondLike": true,
+    "minMarketCapKrw": 30000000000,
+    "maxMarketCapKrw": 500000000000,
+    "excludeUnknownMarketCap": true,
+    "minAvgTradingValue20dKrw": 400000000,
+    "minEventTradingValueKrw": 5000000000,
+    "gapTradability": {
+      "enabled": true,
+      "requirePrevClose": true
+    }
+  },
+  "template": {
+    "localWindow": 40,
+    "globalWindow": 150,
+    "sequenceWindows": [
+      40
+    ],
+    "featureAsOf": "t",
+    "negativeSampling": {
+      "enabled": true,
+      "maxNegativesPerPositive": 1,
+      "offsets": [
+        5,
+        10,
+        20
+      ]
+    }
+  },
+  "perfectPrototype": {
+    "strategyMode": "PREJUMP_PREDICTIVE_V1",
+    "contextSurface": "v5_prejump_contextual",
+    "labelMode": "decision_date_next_open"
+  },
+  "similarity": {
+    "scorerVersion": "v2_exact",
+    "topK": 40,
+    "coarseTopN": 220,
+    "coarseTopClusters": 10,
+    "stageWeights": {
+      "global": 0.35,
+      "local": 0.45,
+      "trigger": 0.2
+    },
+    "initialWeights": {
+      "trend": 0.16,
+      "candle": 0.14,
+      "volume": 0.2,
+      "shape": 0.18,
+      "gap": 0.08
+    },
+    "postScoreAdjust": {
+      "enabled": true,
+      "qualityBonusWeight": 0.08,
+      "antiPenaltyWeight": 0.1,
+      "expectedRetBonusWeight": 0.04,
+      "expectedRetScale": 0.08,
+      "winRateBonusWeight": 0,
+      "targetRateBonusWeight": 0.08,
+      "stopRatePenaltyWeight": 0.08,
+      "reasonAwareFeatureRelief": {
+        "enabled": true,
+        "requireLowSupportCountOnly": true,
+        "failedBreakoutScale": 4,
+        "failedBreakoutWeight": 0.22,
+        "gapContinueWeight": 0.16,
+        "gapRevertWeight": 0.12,
+        "executionFeasibilityWeight": 0.18,
+        "eraCoverageWeightForSupportRelief": 0.4,
+        "effectiveEraCountWeightForSupportRelief": 0.35,
+        "entropyWeightForSupportRelief": 0.25,
+        "requireMinEraCoverageRatioForSupportRelief": 0.5,
+        "requireMinEffectiveEraCountRatioForSupportRelief": 0.9,
+        "requireMinEntropyRatioForSupportRelief": 0.4,
+        "maxSingleEraShareExcessForSupportRelief": 0.15,
+        "maxSupportCountPenaltyReliefRatio": 0.45,
+        "maxStopRatePenaltyReliefRatio": 0.22,
+        "stopRateReliefStopRateCap": 0.42
+      },
+      "temporalStability": {
+        "enabled": true,
+        "targetEraCoverageRatio": 1.0,
+        "eraCoverageWeight": 0.0,
+        "maxSingleEraShare": 0.38,
+        "singleEraPenaltyWeight": 0.08,
+        "minEraSupportCount": 12,
+        "lowEraSupportPenaltyWeight": 0.05,
+        "singleEraEvidenceScaling": {
+          "enabled": true,
+          "coverageWeight": 0.35,
+          "supportWeight": 0.35,
+          "effectiveEraCountWeight": 0.2,
+          "entropyWeight": 0.1,
+          "minEffectiveEraCount": 2,
+          "minPenaltyRatio": 0.25
+        }
+      },
+      "executionPrior": {
+        "enabled": true,
+        "minFillProb": 0.78,
+        "lowFillPenaltyWeight": 0.08,
+        "highSlippageRisk": 0.14,
+        "slippagePenaltyWeight": 0.45,
+        "feasibilityLowFillReliefWeight": 0.2,
+        "feasibilitySlippageReliefWeight": 0.08,
+        "feasibilityLiquidityReliefWeight": 0.12,
+        "lowLiquidityMinAvgTradingValue20dKrw": 1200000000,
+        "lowLiquidityPenaltyWeight": 0.08,
+        "blockedOrderPenaltyWeight": 0.05,
+        "afterCostScale": 0.08,
+        "positiveAfterCostBonusWeight": 0.02,
+        "negativeAfterCostPenaltyWeight": 0.04
+      }
+    },
+    "coarsePruneHealth": {
+      "warnAbove": 0.9,
+      "failAbove": 0.98,
+      "failHard": true,
+      "failSoft": true
+    },
+    "adaptiveCoarseBudget": {
+      "enabled": true,
+      "onlyWhenDegenerate": true,
+      "prototypeShare": 0.4,
+      "minTopN": 40,
+      "topKHeadroom": 8
+    },
+    "minTradeScore": 0,
+    "earlyAbandon": {
+      "enabled": true,
+      "groupLevel": true,
+      "featureLevel": true,
+      "orderStrategy": "weight_variance"
+    }
+  },
+  "decisionGate": {
+    "minFinalScore": 0.45,
+    "minScoreMargin": 0.0012,
+    "maxScoreMargin": 0.05,
+    "useScoreMarginGate": true,
+    "useMaxScoreMarginGate": false,
+    "maxPicksPerDay": 1,
+    "hitWindowDays": 3,
+    "hitEval": {
+      "useStopLoss": true,
+      "stopLossPct": 0.04,
+      "sameDayTiePolicy": "STOP_WINS"
+    },
+    "inversionAdjust": {
+      "enabled": false,
+      "maxSwapMargin": 0.02,
+      "secondBoost": 0,
+      "qualityWeight": 0.04
+    },
+    "similarityGate": {
+      "enabled": true,
+      "minRawSimilarity": 0.255,
+      "minLocalStageScore": 0.44,
+      "minTriggerStageScore": 0.2
+    },
+    "similarityDisambiguation": {
+      "enabled": false,
+      "minTop1Top2Gap": 0.018,
+      "minPositiveNegativeGap": 0.012,
+      "negativeBuckets": ["STOP_FIRST", "TIMEOUT_NEGATIVE"]
+    },
+    "minExpectedNetRet3d": 0,
+    "requirePositiveExpectedNetRet3d": true,
+    "secondPick": {
+      "debugLog": false,
+      "minFinalScore": 0.57,
+      "minExpectedNetRet3d": 0.026,
+      "requirePositiveExpectedNetRet3d": true,
+      "maxGapFromFirst": 0.0172,
+      "minMarginVsThird": 0.0005,
+      "phase": "disabled"
+    },
+    "agreementGate": {
+      "enabled": true,
+      "enforcementMode": "shadow",
+      "candidatePool": 10,
+      "consensusTopN": 2,
+      "stabilityTopN": 2,
+      "minConsensusCount": 2,
+      "minStabilityRate": 0.5,
+      "minAgreementScore": 0.58,
+      "rerank": {
+        "enabled": false,
+        "promoteTradeOnly": true,
+        "candidatePool": 4,
+        "maxSwapMargin": 0.008,
+        "minUtilityGain": 0.012,
+        "finalScoreWeight": 0.1,
+        "agreementScoreWeight": 0.72,
+        "consensusRateWeight": 0.32,
+        "stabilityRateWeight": 0.12,
+        "tradeDecisionBonus": 0.08,
+        "consensusLowPenaltyWeight": 0.24,
+        "stabilityLowPenaltyWeight": 0.06,
+        "scoreLowPenaltyWeight": 0.04
+      },
+      "fallback": {
+        "enabled": true,
+        "candidatePool": 10,
+        "allowedReasons": ["AGREEMENT_CONSENSUS_LOW"]
+      },
+      "shadowRejectPrecisionGuard": {
+        "enabled": true,
+        "allowedReasons": ["AGREEMENT_CONSENSUS_LOW"],
+        "allowedSelectionModes": ["EXPLOIT"],
+        "blockedFallbackReasons": ["NO_PASSING_ALT"],
+        "requireNoFallback": true
+      },
+      "model": {
+        "enabled": true,
+        "minSamplesForInference": 24,
+        "minTrainRows": 48,
+        "minPositiveRows": 8,
+        "minNegativeRows": 12,
+        "onlineLearningRate": 0.05,
+        "trainEpochs": 5,
+        "l2": 0.0015,
+        "outcomeMode": "target_stop_priority",
+        "timeoutNetRetDeadband": 0.002,
+        "targetHitWeight": 1.8,
+        "stopHitWeight": 2.1,
+        "timeoutPositiveWeight": 0.45,
+        "timeoutNegativeWeight": 0.9
+      },
+      "viewWeights": {
+        "expectedRet": 12,
+        "quality": 0.12,
+        "anti": 0.08,
+        "pHit": 0.6,
+        "pFill": 0.3,
+        "pStop": 0.45,
+        "slippageRisk": 0.18,
+        "margin": 0.15
+      },
+      "stabilityWeights": {
+        "expectedRet": 10,
+        "quality": 0.14,
+        "anti": 0.1,
+        "pHit": 0.65,
+        "pFill": 0.32,
+        "pStop": 0.55,
+        "slippageRisk": 0.22,
+        "margin": 0.2
+      }
+    },
+    "scoreRecovery": {
+      "enabled": true,
+      "mode": "hard",
+      "allowedGateReasons": ["SCORE_MARGIN_LOW"],
+      "maxFinalScoreShortfall": 0.0345,
+      "maxScoreMarginShortfall": 0.0016,
+      "minRawSimilarity": 0.255,
+      "minLocalStageScore": 0.44,
+      "minExpectedNetRet3d": 0.015,
+      "maxFalsePositiveRisk": 0.52,
+      "minFillProb": 0.99,
+      "pathGuards": {
+        "allowedRuleDayTypes": ["THIN_LIQUIDITY_TRAP"],
+        "allowedDayTypes": ["GAP_FADE_RISK"],
+        "allowedPolicySources": ["MODEL_PRIMARY"],
+        "maxAvgSlippageRisk": 0.116
+      }
+    },
+    "scoreRecalibration": {
+      "enabled": true,
+      "mode": "shadow",
+      "allowedPrimaryComponents": ["POST_ADJUST_HEAVY"],
+      "allowedPrimarySubcomponents": ["SUPPORT_COUNT_PENALTY"],
+      "subcomponentPolicies": {},
+      "eraSupportReasonPolicies": {
+        "LOW_SUPPORT_COUNT": {
+          "maxPenaltyCap": 0.02,
+          "requireMinEraCoverageRatio": 0.5,
+          "requireMinEffectiveEraCount": 1.8,
+          "requireMinEffectiveEraCountRatio": 0.9,
+          "requireMinEntropyRatio": 0.4,
+          "requireMaxSingleEraShareExcess": 0,
+          "requireMinFillProb": 0.75,
+          "allowedCompositeTypes": ["ERA_SUPPORT_PLUS_OTHER", "ERA_SUPPORT_PLUS_STOP_RATE"]
+        }
+      },
+      "maxPenaltyCapByComponent": {
+        "POST_ADJUST_HEAVY": 0.04,
+        "REGIME_EXPERT_HEAVY": 0.04,
+        "EXTENDED_BIAS_HEAVY": 0.02,
+        "TRADE_QUALITY_HEAVY": 0.03,
+        "EXECUTION_PRIOR_HEAVY": 0.03
+      },
+      "maxPenaltyCapBySubcomponent": {},
+      "baseScoreFloor": 0.24,
+      "minRawSimilarity": 0.255,
+      "minLocalStageScore": 0.44,
+      "minExpectedNetRet3d": 0,
+      "minFillProb": 0.75
+    },
+    "perfectPrototypeGate": {
+      "enabled": false,
+      "mode": "off",
+      "catalogPath": "",
+      "selectionMode": "champion_only",
+      "dedupeSymbolsPerDay": true,
+      "maxRulesPerSymbol": 8
+    },
+    "exploration": {
+      "enabled": false,
+      "epsilon": 0.02,
+      "candidatePool": 3,
+      "minPickedCountForEnable": 40,
+      "killSwitchEnv": "CD_LOOP_DISABLE_EXPLORATION"
+    },
+    "coverageRecovery": {
+      "enabled": true,
+      "targetPickedCount": 68,
+      "minScoreMarginRatio": 0.55,
+      "minQualityScore": 0.56,
+      "minExpectedNetRet3d": 0.008,
+      "maxRecoveryShare": 0.25,
+      "minObservedHitRate": 0.42,
+      "minObservedSamples": 10,
+      "requirePositiveExpectedNetRet3d": true,
+      "scoreMarginHandoff": {
+        "enabled": true,
+        "minScoreMarginFloorRatio": 0,
+        "minExpectedNetRet3d": 0.05,
+        "minQualityScore": 0,
+        "minFinalScore": 0.42,
+        "minTargetStopEdge3d": 0,
+        "maxAntiScore": 0.2,
+        "minFillProb": 0.995,
+        "maxSlippageRisk": 0.12,
+        "requirePositiveExpectedNetRet3d": true
+      }
+    },
+    "strongEdgeBypass": {
+      "enabled": true,
+      "minQualityScore": 0.56,
+      "maxAntiScore": 0.12,
+      "minFillProb": 0.75,
+      "minTargetRate3d": 0.45,
+      "minExpectedNetRet3d": 0.008,
+      "minConfidence": 0.1
+    },
+    "top1Rerank": {
+      "enabled": true,
+      "objectiveMode": "backbone_plus_target_delta",
+      "candidatePool": 10,
+      "maxTargetRank": 3,
+      "maxSwapMargin": 0.06,
+      "minUtilityGain": 0.0015,
+      "finalScoreWeight": 0.15,
+      "baseScoreWeight": 0.23,
+      "expectedRetWeight": 0.03,
+      "qualityWeight": 0.34,
+      "winRateWeight": 0.0,
+      "commonAlignmentWeight": 0.0,
+      "antiScorePenaltyWeight": 0.65,
+      "targetRateWeight": 0.08,
+      "stopRatePenaltyWeight": 0.12,
+      "pHitWeight": 0.55,
+      "pStopFirstPenaltyWeight": 0.05,
+      "fillProbWeight": 1.4,
+      "failedBreakoutPenaltyWeight": 0.08,
+      "gapContinueWeight": 0.05,
+      "gapRevertPenaltyWeight": 0.06,
+      "executionFeasibilityWeight": 0.08,
+      "failedBreakoutScale": 4,
+      "scoreMarginWeight": 0.0,
+      "scoreMarginBand": {
+        "enabled": true,
+        "minPreferredMargin": 0.009,
+        "maxPreferredMargin": 0.013,
+        "lowMarginScale": 0.004,
+        "highMarginScale": 0.008,
+        "lowMarginPenaltyWeight": 0.28,
+        "highMarginPenaltyWeight": 0.18
+      },
+      "overconfidencePenalty": {
+        "enabled": true,
+        "highScoreMarginThreshold": 0.017,
+        "highScoreMarginScale": 0.008,
+        "highScoreMarginPenaltyWeight": 0.35
+      },
+      "slippageRiskPenaltyWeight": 0.55,
+      "temporalStability": {
+        "enabled": false,
+        "targetEraCoverageRatio": 0.5,
+        "eraCoverageWeight": 0.0,
+        "maxSingleEraShare": 0.75,
+        "singleEraPenaltyWeight": 0.0,
+        "minEraSupportCount": 2,
+        "lowEraSupportPenaltyWeight": 0.0
+      },
+      "delta": {
+        "targetStopEdgeWeight": 1.0,
+        "expectedRetWeight": 0.35,
+        "hitMinusStopWeight": 0.35,
+        "qualityWeight": 0.15,
+        "antiPenaltyWeight": 0.2,
+        "failedBreakoutPenaltyWeight": 0.08,
+        "gapContinueWeight": 0.06,
+        "gapRevertPenaltyWeight": 0.05,
+        "executionFeasibilityWeight": 0.08,
+        "failedBreakoutScale": 4
+      },
+      "stageGlobalWeight": 0.0,
+      "stageLocalWeight": 0.0,
+      "stageTriggerWeight": 0.0
+    },
+    "top1MicroCorrection": {
+      "strongFillTieBreak": {
+        "enabled": false
+      }
+    },
+    "calibration": {
+      "enabled": true,
+      "pHit": {
+        "intercept": -1,
+        "finalScoreWeight": 0.6,
+        "qualityWeight": 0.5,
+        "targetRateWeight": 0.7,
+        "expectedRetWeight": 1.2,
+        "scoreMarginWeight": 0.7,
+        "blendGlobalWeight": 0.35,
+        "blendRegimeWeight": 0.15,
+        "temperature": 1.6,
+        "anchorMinWeight": 0.1
+      },
+      "rankRelative": {
+        "enabled": true,
+        "only": false,
+        "finalScoreZWeight": 1.15,
+        "marginZWeight": 0.55,
+        "rankSignalWeight": 0.4,
+        "stageScoreWeight": 0.2
+      }
+    },
+    "metaSelector": {
+      "enabled": true,
+      "allowNoTrade": true,
+      "executionDiagnosticMode": false,
+      "pStopMode": "utility_only",
+      "softReasons": [
+        "META_CONFIDENCE_LOW"
+      ],
+      "edgeAwareOverride": {
+        "enabled": true,
+        "allowedReasons": [
+          "META_PSTOP_HIGH",
+          "META_PHIT_LOW",
+          "META_UTILITY_LOW",
+          "META_UTILITY_NEGATIVE"
+        ],
+        "minTargetStopEdge3d": 0.06,
+        "minExpectedNetRet3d": 0.015,
+        "minTradeQualityPrototypeResidual": null,
+        "minQualityScore": null,
+        "minFillProb": 0.72,
+        "maxPStopFirst": 0.62,
+        "minConfidence": 0.08,
+        "minScoreMargin": 0.0015
+      },
+      "utility": {
+        "pHitWeight": 0.7,
+        "pStopPenaltyWeight": 1,
+        "scoreMarginWeight": 0.4,
+        "fillProbWeight": 0.45,
+        "slippagePenaltyWeight": 0.28
+      },
+      "tradeThresholds": {
+        "minCalibratedPHit": 0.0,
+        "maxPStopFirst": 0.45,
+        "minFillProb": 0.48,
+        "minConfidence": 0.2
+      },
+      "shadowThresholds": {
+        "minCalibratedPHit": 0.0,
+        "maxPStopFirst": 0.55,
+        "minFillProb": 0.4,
+        "minConfidence": 0.1
+      },
+      "tradeUtilityFloor": 0.02,
+      "shadowUtilityFloor": -0.1
+    },
+    "regimeExperts": {
+      "enabled": true,
+      "lowVolAction": "BLOCK",
+      "lowVolScoreMultiplier": 0.8,
+      "highVolScoreMultiplier": 1,
+      "midVolScoreMultiplier": 1,
+      "defaultScoreMultiplier": 1
+    },
+    "orderSimulator": {
+      "enabled": true,
+      "minFillProb": 0.48,
+      "maxSlippageBps": 25,
+      "feeBps": 15,
+      "baseSlippageBps": 8,
+      "spreadWeight": 120,
+      "volatilityWeight": 80,
+      "illiquidityWeight": 90
+    },
+    "executionGate": {
+      "enabled": true,
+      "targetLcb": 0.07,
+      "minGlobalSamples": 60,
+      "requireGlobalFloor": true,
+      "blockWhenGlobalUnknown": false,
+      "shadowWhenGlobalUnknown": false,
+      "requireRegimeApproval": false,
+      "minRegimeSamples": 12,
+      "blockWhenRegimeUnknown": false,
+      "shadowWhenRegimeUnknown": false,
+      "enforceHardGlobalFloor": false,
+      "feedbackDelayDays": 1,
+      "calibrationWindowDays": 120,
+      "feedbackScope": "update_only",
+      "liquidity": {
+        "enabled": true,
+        "minLiquidityRatio": 0.6,
+        "minAvgTradingValue20dKrw": 800000000,
+        "hardCapMinAvgTradingValue20dKrw": 700000000,
+        "blockWhenAvgTradingValueUnknown": true,
+        "maxDataFreshnessDays": 1,
+        "blockedRegimePrefixes": [
+          "VOL_LOW_"
+        ],
+        "blockRiskCodes": [
+          "LOW_LIQUIDITY_SOFT",
+          "SMALL_MARKET_CAP"
+        ]
+      },
+      "softStart": {
+        "enabled": true,
+        "untilGlobalSamples": 120,
+        "targetLcb": 0.06,
+        "minGlobalSamples": 24,
+        "requireGlobalFloor": false,
+        "shadowWhenGlobalUnknown": false,
+        "requireRegimeApproval": false,
+        "minRegimeSamples": 8,
+        "shadowWhenRegimeUnknown": false
+      },
+      "strongEdgeOverride": {
+        "enabled": true,
+        "bypassCalibrationFloor": false,
+        "allowedMetaReasons": [
+          "META_PSTOP_HIGH",
+          "META_PHIT_LOW",
+          "META_CONFIDENCE_LOW",
+          "META_SHADOW",
+          "META_THRESHOLD_FAIL"
+        ],
+        "allowedUncertaintyReasons": [
+          "SCORE_MARGIN_LOW",
+          "TARGET_RATE_LOW"
+        ],
+        "minQualityScore": 0.46,
+        "maxAntiScore": 0.18,
+        "minFillProb": 0.9,
+        "minTargetRate3d": null,
+        "minTargetStopEdge3d": 0.06,
+        "minExpectedNetRet3d": 0.02,
+        "minTradeQualityPrototypeResidual": null,
+        "minConfidence": 0.18,
+        "minFinalScore": 0.655,
+        "minScoreMargin": null,
+        "maxPStopFirst": 0.515,
+        "temporalStability": {
+          "enabled": true,
+          "minEraCoverageRatio": 1,
+          "maxSingleEraShare": 0.35,
+          "minEraSupportCount": 4,
+          "minEraSupportMin": 12,
+          "maxEraWinRateStd": 0.12,
+          "maxEraExpectedNetRetStd": 0.012
+        }
+      },
+      "agreementGuard": {
+        "enabled": true,
+        "defaultAction": "shadow",
+        "defaultReasonMode": "shadow",
+        "strongEdgeBypass": {
+          "enabled": true,
+          "allowedReasons": [
+            "AGREEMENT_CONSENSUS_LOW",
+            "AGREEMENT_STABILITY_LOW"
+          ],
+          "minTargetStopEdge3d": 0.075,
+          "minExpectedNetRet3d": 0.02,
+          "minFillProb": 0.88,
+          "maxPStopFirst": 0.52,
+          "minConfidence": 0.01,
+          "minQualityScore": 0.46,
+          "minFinalScore": 0.62,
+          "minScoreMargin": null
+        },
+        "targetFirstBypass": {
+          "enabled": true,
+          "allowedReasons": [
+            "AGREEMENT_CONSENSUS_LOW",
+            "AGREEMENT_STABILITY_LOW"
+          ],
+          "minTargetRate3d": 0.95,
+          "maxStopRate3d": 0.05,
+          "minTargetStopEdge3d": 0.75,
+          "minExpectedNetRet3d": 0.05,
+          "minFillProb": 0.8,
+          "maxPStopFirst": 0.22,
+          "minConfidence": 0.35,
+          "minQualityScore": 0.48,
+          "minFinalScore": 0.78,
+          "minScoreMargin": 0.002
+        },
+        "defaults": {
+          "minTargetStopEdge3d": 0.09,
+          "minExpectedNetRet3d": 0.021,
+          "minFillProb": 0.78,
+          "maxPStopFirst": 0.49,
+          "minConfidence": 0.01,
+          "minTradeQualityPrototypeResidual": null,
+          "minQualityScore": null,
+          "minScoreMargin": 0.0012
+        },
+        "reasonModes": {
+          "AGREEMENT_CONSENSUS_LOW": "inherit",
+          "AGREEMENT_STABILITY_LOW": "inherit",
+          "AGREEMENT_SCORE_LOW": "inherit"
+        },
+        "contracts": {
+          "AGREEMENT_CONSENSUS_LOW": {
+            "enabled": true,
+            "minTargetStopEdge3d": 0.13,
+            "minExpectedNetRet3d": 0.023,
+            "minFillProb": 0.8,
+            "maxPStopFirst": 0.46,
+            "minConfidence": 0.01,
+            "minTradeQualityPrototypeResidual": 0.005,
+            "minQualityScore": null,
+            "minScoreMargin": 0.0012
+          },
+          "AGREEMENT_STABILITY_LOW": {
+            "enabled": false
+          },
+          "AGREEMENT_SCORE_LOW": {
+            "enabled": false
+          }
+        }
+      },
+      "uncertainty": {
+        "minScoreMargin": 0.0012,
+        "minExpectedNetRet3d": -0.001,
+        "minQualityScore": 0.56,
+        "minTargetRate3d": 0.5,
+        "minTargetStopEdge3d": 0.06,
+        "maxStopRate3d": 0.45,
+        "softReasons": [
+          "QUALITY_LOW"
+        ]
+      },
+      "toxicRegime": {
+        "enabled": true,
+        "updateOnly": true,
+        "minSamples": 60,
+        "maxHitRateLcb95": 0.0,
+        "action": "SHADOW"
+      }
+    },
+    "falsePositiveGate": {
+      "enabled": true,
+      "action": "shadow",
+      "maxRisk": 0.58,
+      "minGlobalSamples": 48,
+      "minSegmentSamples": 12,
+      "blockWhenUnknown": false,
+      "shadowWhenUnknown": true,
+      "calibrationWindowDays": 160,
+      "history": {
+        "priorCount": 8,
+        "priorRisk": 0.5,
+        "globalWeight": 0.4,
+        "routeBucketWeight": 0.25,
+        "regimeWeight": 0.2,
+        "prototypeWeight": 0.15
+      },
+      "heuristics": {
+        "enabled": true,
+        "weight": 0.35,
+        "pStopWeight": 1.2,
+        "lowFillWeight": 0.9,
+        "lowMarginWeight": 0.8,
+        "lowQualityWeight": 0.65,
+        "antiScoreWeight": 0.7,
+        "slippageRiskWeight": 0.6,
+        "lowLiquidityWeight": 0.55,
+        "negativeExpectedRetWeight": 0.5,
+        "minScoreMargin": 0.0015,
+        "minFillProb": 0.55,
+        "minQualityScore": 0.58,
+        "minAvgTradingValue20dKrw": 800000000,
+        "expectedRetScale": 0.015,
+        "slippageRiskScale": 0.08
+      },
+      "edgeAwareOverride": {
+        "enabled": true,
+        "minTargetStopEdge3d": 0.06,
+        "minExpectedNetRet3d": 0.015,
+        "minFillProb": 0.78,
+        "maxPStopFirst": 0.52,
+        "minConfidence": 0.08,
+        "minScoreMargin": 0.0015,
+        "interactionBlocks": [
+          {
+            "prototypeClusterId": "C120",
+            "agreementDecision": "REJECT",
+            "routeBucket": "MIDVOL",
+            "regimeTag": "VOL_MID_LIQ_HIGH"
+          },
+          {
+            "prototypeClusterId": "C109",
+            "agreementDecision": "REJECT",
+            "routeBucket": "MIDVOL",
+            "regimeTag": "VOL_MID_LIQ_HIGH"
+          }
+        ]
+      },
+      "model": {
+        "enabled": true,
+        "minSamplesForInference": 24,
+        "minTrainRows": 40,
+        "minPositiveRows": 6,
+        "minNegativeRows": 12,
+        "onlineLearningRate": 0.08,
+        "trainEpochs": 6,
+        "l2": 0.002,
+        "decisionMode": "model_only"
+      }
+    },
+    "dayTypeRouter": {
+      "enabled": true,
+      "sampleSize": 5,
+      "strongCandidate": {
+        "minQualityScore": 0.64,
+        "minExpectedNetRet3d": 0.01,
+        "minMargin": 0.0035,
+        "minPHit": 0.62
+      },
+      "classifiers": {
+        "trend": {
+          "minTop1Margin": 0.006,
+          "minTop1QualityScore": 0.64,
+          "minTop1ExpectedNetRet3d": 0.01,
+          "minAvgPHit": 0.62,
+          "minStrongCandidateShare": 0.4
+        },
+        "noise": {
+          "maxTop1Margin": 0.0025,
+          "maxTop1QualityScore": 0.62,
+          "maxTop1ExpectedNetRet3d": 0.006,
+          "maxAvgPHit": 0.58,
+          "maxStrongCandidateShare": 0.25
+        },
+        "executionHostile": {
+          "minAvgSlippageRisk": 0.08,
+          "maxMedianLiquidityKrw": 1800000000,
+          "maxAvgFillProb": 0.72,
+          "minLowFillShare": 0.4
+        },
+        "noTrade": {
+          "maxTop1ExpectedNetRet3d": 0.002,
+          "maxAvgPHit": 0.53,
+          "maxStrongCandidateShare": 0.12
+        },
+        "meanReversion": {
+          "maxTop1Margin": 0.003,
+          "minTop1ExpectedNetRet3d": 0.006
+        },
+        "gapFadeRisk": {
+          "minTop1Margin": 0.004,
+          "minTop1ExpectedNetRet3d": 0.008,
+          "maxAvgPHit": 0.6,
+          "minLowFillShare": 0.2
+        },
+        "thinLiquidityTrap": {
+          "maxMedianLiquidityKrw": 1200000000,
+          "minLowLiquidityShare": 0.5,
+          "minAvgSlippageRisk": 0.05
+        }
+      },
+      "policies": {
+        "BALANCED": {},
+        "TREND": {
+          "minFinalScoreDelta": -0.004,
+          "minExpectedNetRet3dDelta": -0.001,
+          "minScoreMarginMultiplier": 0.9,
+          "maxPicksPerDay": 1,
+          "tauExecMultiplier": 0.98,
+          "tauFpMultiplier": 1.02,
+          "maxExecutedPicks": 1,
+          "maxFragileExecuted": 1,
+          "maxLowLiquidityExecuted": 0,
+          "maxExecutionHostileExecuted": 1,
+          "maxSameRouteBucket": 1,
+          "maxSameRegimeTag": 1,
+          "maxSamePrototypeFamily": 1
+        },
+        "MEAN_REVERSION": {
+          "noTrade": false,
+          "minFinalScoreDelta": 0.003,
+          "minExpectedNetRet3dDelta": 0.001,
+          "minScoreMarginMultiplier": 1.1,
+          "maxPicksPerDay": 1,
+          "tauExecMultiplier": 1.02,
+          "tauFpMultiplier": 0.97,
+          "maxExecutedPicks": 1,
+          "maxFragileExecuted": 1,
+          "maxLowLiquidityExecuted": 0,
+          "maxExecutionHostileExecuted": 0,
+          "maxSameRouteBucket": 1,
+          "maxSameRegimeTag": 1,
+          "maxSamePrototypeFamily": 1
+        },
+        "GAP_FADE_RISK": {
+          "noTrade": true,
+          "minFinalScoreDelta": 0.008,
+          "minExpectedNetRet3dDelta": 0.002,
+          "minScoreMarginMultiplier": 1.3,
+          "maxPicksPerDay": 1,
+          "tauExecMultiplier": 1.08,
+          "tauFpMultiplier": 0.9,
+          "maxExecutedPicks": 0,
+          "maxFragileExecuted": 0,
+          "maxLowLiquidityExecuted": 0,
+          "maxExecutionHostileExecuted": 0,
+          "maxSameRouteBucket": 0,
+          "maxSameRegimeTag": 0,
+          "maxSamePrototypeFamily": 0
+        },
+        "NOISE": {
+          "noTrade": true,
+          "minFinalScoreDelta": 0.01,
+          "minExpectedNetRet3dDelta": 0.002,
+          "minScoreMarginMultiplier": 1.4,
+          "maxPicksPerDay": 1,
+          "tauExecMultiplier": 1.08,
+          "tauFpMultiplier": 0.9,
+          "maxExecutedPicks": 0,
+          "maxFragileExecuted": 0,
+          "maxLowLiquidityExecuted": 0,
+          "maxExecutionHostileExecuted": 0,
+          "maxSameRouteBucket": 0,
+          "maxSameRegimeTag": 0,
+          "maxSamePrototypeFamily": 0
+        },
+        "EXECUTION_HOSTILE": {
+          "noTrade": false,
+          "minFinalScoreDelta": 0.006,
+          "minExpectedNetRet3dDelta": 0.001,
+          "minScoreMarginMultiplier": 1.2,
+          "maxPicksPerDay": 1,
+          "tauExecMultiplier": 1.08,
+          "tauFpMultiplier": 0.92,
+          "maxExecutedPicks": 1,
+          "maxFragileExecuted": 0,
+          "maxLowLiquidityExecuted": 0,
+          "maxExecutionHostileExecuted": 0,
+          "maxSameRouteBucket": 1,
+          "maxSameRegimeTag": 1,
+          "maxSamePrototypeFamily": 1
+        },
+        "THIN_LIQUIDITY_TRAP": {
+          "noTrade": true,
+          "minFinalScoreDelta": 0.012,
+          "minExpectedNetRet3dDelta": 0.002,
+          "minScoreMarginMultiplier": 1.5,
+          "maxPicksPerDay": 1,
+          "tauExecMultiplier": 1.1,
+          "tauFpMultiplier": 0.88,
+          "maxExecutedPicks": 0,
+          "maxFragileExecuted": 0,
+          "maxLowLiquidityExecuted": 0,
+          "maxExecutionHostileExecuted": 0,
+          "maxSameRouteBucket": 0,
+          "maxSameRegimeTag": 0,
+          "maxSamePrototypeFamily": 0
+        },
+        "NO_TRADE": {
+          "noTrade": true,
+          "minFinalScoreDelta": 0.012,
+          "minExpectedNetRet3dDelta": 0.002,
+          "minScoreMarginMultiplier": 1.5,
+          "maxPicksPerDay": 1,
+          "tauExecMultiplier": 1.1,
+          "tauFpMultiplier": 0.88,
+          "maxExecutedPicks": 0,
+          "maxFragileExecuted": 0,
+          "maxLowLiquidityExecuted": 0,
+          "maxExecutionHostileExecuted": 0,
+          "maxSameRouteBucket": 0,
+          "maxSameRegimeTag": 0,
+          "maxSamePrototypeFamily": 0
+        }
+      },
+      "model": {
+        "enabled": true,
+        "minTrainingRows": 40,
+        "minSamplesForInference": 30,
+        "minClassRows": 4,
+        "minConfidence": 0.42,
+        "minConfidenceGap": 0.03,
+        "preferModelWhenAvailable": true,
+        "allowAggressiveOverride": false,
+        "overrideMode": "confident_override",
+        "noTradeOverrideMode": "rule_only",
+        "emitShadowDecision": true,
+        "edgeAwareShadow": {
+          "enabled": true,
+          "minTop1ExpectedNetRet3d": 0.012,
+          "minAvgPHit": 0.58,
+          "minStrongCandidateShare": 0.28,
+          "maxAvgSlippageRisk": 0.09,
+          "minAvgFillProb": 0.62,
+          "minTop1Margin": 0.003,
+          "allowedRuleDayTypes": [
+            "BALANCED",
+            "TREND"
+          ]
+        },
+        "edgeTradeEscape": {
+          "enabled": true,
+          "minTop1ExpectedNetRet3d": 0.015,
+          "maxAvgSlippageRisk": 0.116,
+          "minAvgFillProb": 0.99,
+          "minTop1Margin": 0,
+          "allowedRuleDayTypes": [
+            "THIN_LIQUIDITY_TRAP"
+          ],
+          "allowedPredictedDayTypes": [
+            "GAP_FADE_RISK"
+          ],
+          "policyOverrides": {
+            "noTrade": false,
+            "minFinalScoreDelta": -0.03,
+            "minExpectedNetRet3dDelta": 0.002,
+            "minScoreMarginMultiplier": 0,
+            "tauExecMultiplier": 1.08,
+            "tauFpMultiplier": 0.9,
+            "maxPicksPerDay": 1,
+            "maxExecutedPicks": 1,
+            "maxFragileExecuted": 1,
+            "maxLowLiquidityExecuted": 1,
+            "maxExecutionHostileExecuted": 1,
+            "maxSameRouteBucket": 1,
+            "maxSameRegimeTag": 1,
+            "maxSamePrototypeFamily": 1
+          }
+        }
+      }
+    },
+    "opportunityBudget": {
+      "enabled": true,
+      "action": "shadow",
+      "maxExecutedPicks": 1,
+      "maxFragileExecuted": 1,
+      "maxLowLiquidityExecuted": 0,
+      "maxExecutionHostileExecuted": 1,
+      "maxSameRouteBucket": 1,
+      "maxSameRegimeTag": 1,
+      "maxSamePrototypeFamily": 1,
+      "fragileMaxFalsePositiveRisk": 0.52,
+      "fragileMinScoreMargin": 0.002,
+      "lowLiquidityMinAvgTradingValue20dKrw": 1200000000,
+      "executionHostileMaxSlippageRisk": 0.08,
+      "executionHostileMinFillProb": 0.75
+    },
+    "regimeRouter": {
+      "enabled": true,
+      "routingMode": "vol3",
+      "defaultBucket": "__DEFAULT__",
+      "strictWeightLoad": true,
+      "bucketMap": {},
+      "weightsByBucket": {
+        "LOWVOL": "config/weights/route_lowvol.json",
+        "MIDVOL": "config/weights/route_midvol.json",
+        "HIGHVOL": "config/weights/route_highvol.json",
+        "__DEFAULT__": "config/weights/route_default.json"
+      }
+    },
+    "adaptiveMinFinalScore": {
+      "enabled": false,
+      "strategy": "quality_aware",
+      "targetMinPicked": 10,
+      "targetMaxPicked": 15,
+      "step": 0.004,
+      "hysteresis": 2,
+      "warmupDays": 6,
+      "minLcbFloor": 0.1,
+      "minBudgetedConversion80Floor": 0.2,
+      "minFloor": 0.36,
+      "maxCeil": 0.62
+    }
+  },
+  "onlineLearning": {
+    "enabled": true,
+    "learningRate": 0.012,
+    "reinforceBeta": 0.2,
+    "weightFloor": 0.02,
+    "startWeightsPath": "config/weights/start_weights.base.json",
+    "generalization": {
+      "enabled": true,
+      "promotionScope": "eval",
+      "useEvalForPromotion": true,
+      "splitMode": "chronological",
+      "updateRatio": 0.7,
+      "evalMinDays": 20,
+      "targetPickedControlDays": 80,
+      "feedbackDelayDays": 1,
+      "purgeGapDays": 2,
+      "pairwise": {
+        "enabled": true,
+        "positiveTopN": 3,
+        "negativeTopN": 5,
+        "pairwiseWeight": 0.35,
+        "hardNegativeWeight": 0.6,
+        "rankLossMarginScale": 0.02,
+        "rankLossMaxFactor": 3,
+        "maxUpdatesPerDay": 12
+      },
+      "evalFoldOffset": 0,
+      "weightRegularization": {
+        "enabled": true,
+        "minActiveGroupWeight": 0.05,
+        "maxSingleGroupWeight": 0.34,
+        "weightEntropyFloor": 0.78,
+        "maxDailyWeightShiftL1": 0.12
+      },
+      "extendedBias": {
+        "enabled": true,
+        "routeBucketBiasWeight": 0.12,
+        "regimeBiasWeight": 0.08,
+        "prototypeBiasWeight": 0.1,
+        "maxAbsBias": 0.08,
+        "l2Penalty": 0.002,
+        "learningRate": 0.01,
+        "outcomeMode": "realized_net_ret",
+        "positiveNetRetScale": 0.08,
+        "negativeNetRetScale": 0.04,
+        "netRetDeadband": 0.002
+      },
+        "tradeQualityPrior": {
+          "enabled": true,
+          "routeBucketWeight": 0.12,
+          "regimeWeight": 0.08,
+          "prototypeWeight": 0.14,
+        "maxAbsAdjustment": 0.12,
+        "priorSamples": 8,
+        "targetWeight": 0.72,
+        "stopPenaltyWeight": 0.9,
+        "timeoutPositiveWeight": 0.08,
+        "timeoutNegativePenaltyWeight": 0.24,
+        "netRetWeight": 0.32,
+        "netRetScale": 0.04,
+        "applyToRanker": false,
+        "sourceMode": "selected_candidates",
+        "featureAdjustment": {
+          "enabled": true,
+          "maxAbsAdjustment": 0.03,
+          "failedBreakoutPenaltyWeight": 0.01,
+          "gapContinueWeight": 0.012,
+          "gapRevertPenaltyWeight": 0.01,
+          "executionFeasibilityWeight": 0.014,
+          "failedBreakoutScale": 4
+        }
+      }
+    }
+  },
+  "holdoutPolicy": {
+    "enabled": true,
+    "frozenEvalOnlyForFinal": true,
+    "forbidEvalDrivenPromotion": false,
+    "minEvalDays": 20,
+    "minLockboxDays": 20,
+    "minFeedbackDelayDays": 1
+  },
+  "qualityGate": {
+    "enabled": true,
+    "minEvalSamples": 20,
+    "minPickCountEval": 15,
+    "maxPickCountEval": 24,
+    "minPickHitRateEval": 0.35,
+    "minPickHitRateEvalLcb95": 0.18,
+    "minHitAt1Eval": 0.35,
+    "maxTopKOracleGapEval": 0.02,
+    "minOracleHitRateTopKEval": 0.95,
+    "requireZeroLookaheadViolations": true,
+    "lockbox": {
+      "enabled": true,
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "minTrades": 10,
+      "minTargetHitCount": 4,
+      "minTargetHitRate": 0.2,
+      "minTargetHitsPer20TradingDays": 1,
+      "maxStopRate": 0.45,
+      "maxTimeoutNegativeRate": 0.35,
+      "minWinRate": null,
+      "minAvgNetRet": null,
+      "minCumulativeReturn": null,
+      "maxDrawdown": 0.35
+    }
+  },
+  "runManifest": {
+    "enabled": true,
+    "requireConfigHash": true,
+    "requireCodeHash": true,
+    "requireSeedPath": true
+  },
+  "bundlePolicy": {
+    "enabled": true,
+    "maxArchiveMb": 200,
+    "profile": "slim",
+    "includeStepCArtifacts": true,
+    "excludeHeavyDailyLogs": true
+  },
+  "opsSlo": {
+    "enabled": true,
+    "maxStepDMinutes": 30,
+    "maxMemoryMb": 8192,
+    "maxFailureRatePct": 1,
+    "rollbackOnGateFail": true
+  },
+  "smokeConfirm": {
+    "phase": "both",
+    "smokeRuns": 2,
+    "confirmRuns": 4,
+    "stopOnSmokeFailure": true,
+    "forceStepC": false
+  },
+  "cdLoop": {
+    "maxRounds": 3,
+    "minEpochsPerRound": 2,
+    "maxEpochsPerRound": 3,
+    "plateauEpochs": 3,
+    "minHitRateImprove": 0.0015,
+    "stopNoImproveRounds": 2,
+    "stagnationRoundsBeforeRebuildC": 2,
+    "finalStopNoImproveRounds": 2,
+    "minUsageForDrop": 12,
+    "dropHitRateDelta": 0.02,
+    "dropMinAvgRegret": 0.01,
+    "dropMinMissRate": 0.75,
+    "dropStreakRounds": 2,
+    "perRoundDropCapRatio": 0.25,
+    "clusterMinKeep": 2,
+    "rapidImproveHitRateDelta": 0.05,
+    "unstableNoCandidateRateDelta": 0.02,
+    "unstableRegretDelta": 0.01,
+    "minOnePickDaysForPromotion": 1,
+    "minPickedCountForPromotion": 10,
+    "maxPickedCountForPromotion": 15,
+    "maxTwoPickDaysForPromotion": 0,
+    "minPickHitRateLcb95ForPromotion": 0.12,
+    "minTop1ToOracleConversionForPromotion": 0.35,
+    "minBudgetedConversion80ForPromotion": 0.2,
+    "maxRankLossAvgEvalForPromotion": 0.03,
+    "maxLookaheadViolationsForPromotion": 0,
+    "maxScoreMsPerSeedForPromotion": 1.35,
+    "maxScoreMsPerSeedRegression": 0.15,
+    "zeroOnePickResetStreak": 2,
+    "weightCarry": {
+      "enabled": true,
+      "maxPrototypeChangeRate": 0.35
+    },
+    "scoreMarginSweep": {
+      "enabled": false,
+      "deltas": [
+        -0.012,
+        -0.009,
+        -0.006,
+        -0.003,
+        0,
+        0.003,
+        0.006
+      ],
+      "minPickHitRateGain": 0.03,
+      "minPickHitCountGain": 2,
+      "minPickHitRateLcb95Gain": 0.004,
+      "minTop1ToOracleConversionGain": 0.03,
+      "minPickHitCount": 12
+    },
+    "regimeGuard": {
+      "enabled": true,
+      "minPicksPerBucket": 8,
+      "maxHitRateGapFromLcb": 0.2,
+      "minQualifiedBuckets": 1
+    },
+    "inversion": {
+      "enabled": true,
+      "enableOnStreak": 2,
+      "disableOnStreak": 2,
+      "minDualPickDays": 12,
+      "minRateDelta": 0.06,
+      "minBeatDays": 2,
+      "boostStep": 0.004,
+      "maxSecondBoost": 0.02,
+      "maxSwapMargin": 0.02,
+      "qualityWeight": 0.04
+    },
+    "secondPickController": {
+      "enabled": true,
+      "minSamples": 12,
+      "rateMargin": 0.012,
+      "expectedAdvantageMargin": 0.0025,
+      "expectedOverrideMaxRatePenalty": 0.004,
+      "gapStep": 0.0012,
+      "minGap": 0.01,
+      "maxGap": 0.022,
+      "expectedStep": 0.0015,
+      "minExpectedFloor": 0.02,
+      "maxMinExpected": 0.03
+    },
+    "commonState": {
+      "enabled": true,
+      "emaAlpha": 0.35,
+      "emaFloor": 0.08,
+      "fullConfidencePicks": 30,
+      "minTradesPerScore": 3,
+      "fullConfidenceTrades": 10,
+      "maxPrototypeScores": 180,
+      "maxRegimeScores": 80,
+      "minAbsScore": 0.03,
+      "minPickHitRateLcb95ForMerge": 0.12,
+      "minBudgetedConversion80ForMerge": 0.2
+    },
+    "dOnlySprint": {
+      "enabled": false,
+      "rounds": 1,
+      "minEpochsWhenOracleHealthy": 4,
+      "oracleTopKFloor": 0.98,
+      "oracleCoverageGapMaxForKeepC": 0.03,
+      "minPickHitRateLcb95": 0.1,
+      "minBudgetedConversion80": 0.2,
+      "maxRankLossAvgEval": 0.03,
+      "noImproveRoundsToResumeC": 2
+    },
+    "researchGates": {
+      "enabled": true,
+      "lineDiscard": {
+        "minD": 0.4,
+        "minE": 0.4
+      },
+      "parentPromotion": {
+        "minD": 0.5,
+        "minE": 0.55
+      }
+    },
+    "stability": {
+      "enabled": true,
+      "windowRounds": 5,
+      "minImprovedRounds": 3,
+      "maxPickHitRateStd": 0.2,
+      "maxPickHitRateLcbStd": 0.12
+    },
+    "swa": {
+      "enabled": true,
+      "topRounds": 5,
+      "minRounds": 3,
+      "maxPickHitRateStd": 0.2,
+      "maxPickHitRateLcbStd": 0.12
+    },
+    "promotionDebt": {
+      "enabled": true,
+      "minFalsePositiveRejectedCountEval": 6,
+      "minFalsePositiveRejectionPrecisionEval": 0.5,
+      "requirePolicyFingerprintChange": true,
+      "requireLockboxEligible": true
+    },
+    "lockboxGate": {
+      "enabled": true,
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "minTrades": 10,
+      "minTargetHitCount": 4,
+      "minTargetHitRate": 0.2,
+      "minTargetHitsPer20TradingDays": 1,
+      "maxStopRate": 0.45,
+      "maxTimeoutNegativeRate": 0.35,
+      "minWinRate": null,
+      "minAvgNetRet": null,
+      "minCumulativeReturn": null,
+      "maxDrawdown": 0.35,
+      "requireZeroLookaheadViolations": true,
+      "maxPolicyDriftScore": 0.55,
+      "minBucketConsistency": 0.3,
+      "minRegimeConsistency": 0.2,
+      "minAgreementDecisionConsistency": 0.35,
+      "minAgreementReasonConsistency": 0.15,
+      "maxTraceMismatchRate": 0.25,
+      "maxTraceCriticalMismatchDays": 0,
+      "minFalsePositiveRejectedCount": 6,
+      "minFalsePositiveRejectionPrecision": 0.5
+    },
+    "acceptedBaselineProbeCycle": {
+      "enabled": true,
+      "enforceAcceptedBaselineParent": true,
+      "maxStructuralExperimentsPerPlateau": 1,
+      "minNoCodeProbesBeforePlateau": 1,
+      "plateauAfterNonImprovement": 3,
+      "plateauAfterStepEMissing": 2,
+      "requirePlateauForStructuralExperiment": true
+    },
+    "researchProbeCycle": {
+      "enabled": false,
+      "parentSource": "candidate_peak",
+      "enforceResearchParent": true,
+      "maxStructuralExperimentsPerPlateau": 1,
+      "minNoCodeProbesBeforePlateau": 1,
+      "plateauAfterNonImprovement": 3,
+      "plateauAfterStepEMissing": 2,
+      "requirePlateauForStructuralExperiment": true
+    },
+    "familyPool": {
+      "enabled": true,
+      "outputPath": "meta/family_pool.json",
+      "minProductionFamilies": 1,
+      "productionMinDTargetHitRate": 0.5,
+      "productionMinETargetHitRate": 0.5,
+      "watchlistMinDTargetHitRate": 0.4,
+      "watchlistMinETargetHitRate": 0.4,
+      "minDPickedDays": 8,
+      "minELockboxPicks": 8,
+      "minEraCoverageRatio": 0.5,
+      "minEntropyRatio": 0.2,
+      "requireRepresentativeFamily": true
+    }
+  },
+  "guardrails": {
+    "enforceStepAEngineDuckdb": true,
+    "forbidLegacyEscapeEverywhere": true,
+    "enforceExactScorer": true,
+    "forbidApproximateIndexInStrict": true,
+    "enforceHybrid15040Contracts": true
+  },
+  "backtest": {
+    "goalMode": "TARGET_FIRST_V2",
+    "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+    "entry": "NEXT_DAY_OPEN",
+    "holdDays": 3,
+    "targetPct": 0.08,
+    "stopLossPct": 0.04,
+    "feeBps": 15,
+    "slippageBps": 5,
+    "singlePosition": false,
+    "maxNewEntriesPerDay": 1
+  },
+  "pattern": {
+    "mode": "hybrid_150_40",
+    "ruleQuantiles": [
+      0.3,
+      0.5,
+      0.7
+    ],
+    "maxGlobalPrototypes": 300,
+    "maxLocalPrototypes": 120,
+    "globalClusterBins": 3,
+    "globalClusterBinMode": "adaptive",
+    "globalClusterMinBins": 3,
+    "globalClusterMaxBins": 5,
+    "minRuleSupportRatio": 0.03,
+    "recallOnly": false,
+    "permanentDropListPath": "",
+    "excludeFeatureGroups": [],
+    "quality": {
+      "enabled": true,
+      "minTradesPerCluster": 8,
+      "prototypeClusterBlend": 0.7,
+      "retScale": 0.08,
+      "weights": {
+        "winRate": 0.35,
+        "targetRate": 0.2,
+        "avgNetRet": 0.35,
+        "stopRate": 0.1
+      }
+    },
+    "antiPattern": {
+      "enabled": true,
+      "extraNegRetWeight": 0.5
+    },
+    "contrastive": {
+      "enabled": true,
+      "blend": 0.35,
+      "minSamplesPerCluster": 30,
+      "liftCap": 3,
+      "antiNegRateWeight": 0.35
+    },
+    "c0": {
+      "enabled": true,
+      "inputMode": "auto",
+      "familyBuildSource": "positive_only",
+      "minFamilySupport": 6,
+      "maxFamilyShare": 0.22,
+      "minEraCoverageRatio": 0.5,
+      "minEraCoverageRatioForBackfill": 0.5,
+      "minEffectiveEraCountRatio": 0.6,
+      "minEffectiveEraCountRatioForBackfill": 0.5,
+      "minNormalizedEraEntropy": 0.25,
+      "minNormalizedEraEntropyForBackfill": 0.2,
+      "maxSingleEraShare": 0.72,
+      "maxSingleEraShareForBackfill": 0.55,
+      "minShapeCohesion": 0.58,
+      "minFeatureCohesion": 0.56,
+      "maxNegativeContaminationRate": 0.38,
+      "shortlistFamilyCount": 18,
+      "familyBackfillFloor": 10,
+      "familyBackfillMax": 8,
+      "familySignature": {
+        "useGlobalBins": true,
+        "useShapeBucket": true,
+        "useFeatureBucket": true,
+        "useTemplateKindMix": false,
+        "useJumpBand": true,
+        "globalKeyCount": 3,
+        "featureKeyCount": 2
+      },
+      "scoreWeights": {
+        "recurrence": 0.28,
+        "shapeCohesion": 0.18,
+        "featureCohesion": 0.16,
+        "eraCoverage": 0.14,
+        "effectiveEraCount": 0.08,
+        "normalizedEraEntropy": 0.08,
+        "regimeCoverage": 0.1,
+        "negativeContaminationPenalty": 0.08,
+        "singleEraPenalty": 0.04,
+        "failedBreakoutPenalty": 0.03,
+        "gapContinueBonus": 0.02,
+        "gapRevertPenalty": 0.02,
+        "executionFeasibilityBonus": 0.02,
+        "prototypeQualityBonus": 0.05,
+        "corePrototypeShareBonus": 0.04,
+        "penaltyPrototypePenalty": 0.03,
+        "quarantinePrototypePenalty": 0.04,
+        "failedBreakoutScale": 4,
+        "overCommonNoisePenalty": 0.02
+      }
+    },
+    "c1": {
+      "enabled": true,
+      "maxProbeFamilies": 18,
+      "explicitFamilyIds": [],
+      "minFamilySupport": 6,
+      "maxFamilyRepresentatives": 96,
+      "probeProfile": "C1_FAMILY_PROBE",
+      "probeScope": "update",
+      "familyPassMinTargetHitRateEval": 0.1,
+      "familyPassMinExecutedTargetHitRateEval": 0.08,
+      "familyPassMinSelectionHitAt1Eval": 0.08,
+      "selectionHitAt1MetricMode": "agreement_fallback_aware",
+      "selectionHitAt1AgreementFallbackAwareMinDaysEval": 1,
+      "selectionHitAt1AgreementFallbackAwareAllowedPrimaryGateReasons": [
+        "AGREEMENT_FALLBACK_PASS"
+      ],
+      "familyPassMinPickedDaysEval": 4,
+      "familyPassMinTargetsPer20EvalDays": 0.8,
+      "familyPassMinExecutionCoverageEval": 0.2,
+      "familyPassMaxStopRateEval": 0.6,
+      "familyPassMaxTimeoutNegativeRateEval": 0.6,
+      "familyBackfillFloor": 4,
+      "familyBackfillMax": 4,
+      "retainTopProbeArtifacts": 0,
+      "cleanupScratch": true,
+      "lockboxEval": {
+        "enabled": false,
+        "persistArtifacts": false,
+        "minPickFloor": 1,
+        "maxConcurrentFamilies": 4
+      },
+      "bundleEval": {
+        "enabled": false,
+        "minPickFloorDWeak": 6,
+        "minPickFloorEWeak": 6,
+        "minPickFloorDStrong": 10,
+        "minPickFloorEStrong": 10,
+        "defaultAbstainWhenNoConsensus": true,
+        "maxConcurrentBundles": 4
+      },
+      "scoreWeights": {
+        "precision": 0.34,
+        "execution": 0.24,
+        "coverage": 0.22,
+        "rank": 0.12,
+        "prototypeQuality": 0.08,
+        "coreShareBonus": 0.04,
+        "penaltyPenalty": 0.03,
+        "quarantinePenalty": 0.04,
+        "stopPenalty": 0.05,
+        "timeoutPenalty": 0.03
+      }
+    },
+    "c2": {
+      "enabled": true,
+      "minFamiliesForDedup": 2,
+      "maxFamiliesForPairwise": 24,
+      "similarityThreshold": 0.72,
+      "top1AgreementThreshold": 0.7,
+      "symbolDayJaccardThreshold": 0.65,
+      "pickedDayJaccardThreshold": 0.65,
+      "executionOverlapThreshold": 0.55,
+      "maxBehaviorPenaltyDistance": 0.3,
+      "rankOverlapThreshold": 0.55,
+      "retainShadowFamilies": true,
+      "fallbackToC1IfTooSmall": true,
+      "minRepresentativeFamilies": 2,
+      "minRepresentativeTargetsPer20EvalDays": 0.2,
+      "minRepresentativeExecutionCoverageEval": 0.05,
+      "minRepresentativeScoreFloor": 0.18,
+      "representativePolicy": "quality_first_with_coverage_guard",
+      "similarityPolicyVersion": "c2_overlap_graph_v1",
+      "targetCoverageNorm": 1,
+      "scoreWeights": {
+        "symbolDay": 0.24,
+        "pickedDay": 0.18,
+        "top1": 0.18,
+        "rank": 0.12,
+        "execution": 0.14,
+        "regime": 0.08,
+        "behaviorPenalty": 0.06,
+        "precision": 0.34,
+        "executionQuality": 0.24,
+        "coverage": 0.22,
+        "rankQuality": 0.12,
+        "prototypeQuality": 0.08,
+        "coreShareBonus": 0.04,
+        "penaltyPenalty": 0.03,
+        "quarantinePenalty": 0.04,
+        "stopPenalty": 0.05,
+        "timeoutPenalty": 0.03
+      }
+    },
+    "prototypeSelection": {
+      "enabled": true,
+      "minPerCluster": 1,
+      "maxCandidatesPerCluster": 72,
+      "recentShare": 0.35,
+      "anchorShare": 0.65,
+      "recencyHalfLifeDays": 220,
+      "qualityWeight": 0.55,
+      "retWeight": 0.22,
+      "winRateWeight": 0.15,
+      "recencyWeight": 0.12,
+      "temporalDiversityWeight": 0.28,
+      "dominantEraPenaltyWeight": 0.14,
+      "minTemporalCoverageForEraBoost": 0.5,
+      "minTemporalEffectiveEraCountRatio": 0.55,
+      "minTemporalEntropyRatio": 0.25,
+      "antiPenaltyWeight": 0.24,
+      "maxPerSymbol": 4,
+      "maxClusterShare": 0.18,
+      "minDistinctClusters": 24,
+      "minClusterSupport": 5,
+      "minQualityTrades": 6,
+      "minContrastiveSamples": 18,
+      "minQualityScore": 0.5,
+      "minPrototypeFloor": 48,
+      "minNegativePrototypeFloor": 12,
+      "adaptiveFrontier": {
+        "enabled": true,
+        "candidateMode": "boost_only",
+        "minPrototypeFloor": 48,
+        "qualityAcceptThreshold": 0.6,
+        "qualityNearThreshold": 0.55,
+        "maxPrototypeCeil": 96,
+        "salvageBoostBias": 0.14,
+        "salvagePenaltyBias": 0.06,
+        "previousRunEAssistWeight": 0.05,
+        "previousRunEThreshold": 0.4,
+        "salvagePoolPath": "meta/salvaged_pattern_pool.json",
+        "quarantinePoolPath": "meta/pattern_quarantine_pool.json",
+        "prototypeLedgerPath": "meta/prototype_contribution_ledger.json",
+        "ledgerCoreBias": 0.08,
+        "ledgerPenaltyBias": 0.08,
+        "ledgerWatchlistBias": 0.03,
+        "ledgerMinConfidence": 0.35
+      },
+      "minClusterFloor": 24,
+      "maxBackfillAdditions": 128,
+      "maxBackfillRatio": 2,
+      "relaxRounds": 6,
+      "relaxMinQualityScoreStep": 0.03,
+      "relaxMinContrastiveSamplesStep": 6
+    },
+    "temporalStability": {
+      "enabled": true,
+      "eraCount": 4,
+      "warnMaxSingleEraShare": 0.58,
+      "warnMinEraCoverageRatio": 0.5,
+      "warnMinEffectiveEraCountRatio": 0.5,
+      "warnMinNormalizedEraEntropy": 0.2,
+      "selectionEnabled": true,
+      "minEraCoverageRatio": 0.5,
+      "maxSingleEraShare": 0.75,
+      "minEraSupportCount": 2,
+      "minEffectiveEraCountRatio": 0.5,
+      "minNormalizedEraEntropy": 0.2,
+      "maxEraWinRateStd": 1.0,
+      "prototypeEraCapEnabled": true,
+      "maxSelectedPrototypeEraShare": 0.5,
+      "returnTailRebalanceEnabled": true,
+      "targetSelectedExpectedNetRet3dAvg": 0.03,
+      "maxReturnTailSwaps": 8,
+      "minReturnTailExpectedNetRet3d": 0.05,
+      "minReturnTailQualityScore": 0.5,
+      "relaxMinEraCoverageRatioStep": 0.125,
+      "relaxMaxSingleEraShareStep": 0.05,
+      "relaxMinEraSupportCountStep": 1,
+      "relaxMinEffectiveEraCountRatioStep": 0.1,
+      "relaxMinNormalizedEraEntropyStep": 0.1,
+      "relaxMaxEraWinRateStdStep": 0.0
+    },
+    "commonState": {
+      "enabled": true,
+      "refreshEnabled": true,
+      "refreshTopN": 256,
+      "confidenceScale": 1.0
+    },
+    "championCommonStatePath": "artifacts/autopilot/state/common_state/champion_common_state.json"
+  },
+  "lightweight": {
+    "enabled": true,
+    "artifactPolicy": {
+      "tier": "exploratory",
+      "exploratory": {
+        "writeDailyLogs": false,
+        "writeSampledDebug": false,
+        "writeFeaturePackRows": false,
+        "writeDecisionCandidatesIndex": false
+      },
+      "confirm": {
+        "writeDailyLogs": false,
+        "writeSampledDebug": false,
+        "writeFeaturePackRows": false,
+        "writeDecisionCandidatesIndex": false
+      },
+      "promotion": {
+        "writeDailyLogs": true,
+        "writeSampledDebug": true,
+        "writeFeaturePackRows": true,
+        "writeDecisionCandidatesIndex": true
+      }
+    },
+    "pipeline": {
+      "preferLiteArtifacts": true
+    },
+    "stepA": {
+      "engine": "duckdb",
+      "outputMode": "both",
+      "bitset": {
+        "enabled": true
+      },
+      "duckdb": {
+        "enabled": true,
+        "cliPath": "tools/bin/duckdb",
+        "databasePath": ":memory:"
+      }
+    },
+    "stepB": {
+      "inputMode": "auto",
+      "outputMode": "lite",
+      "roundFeatureDigits": 6,
+      "quantizeSeqScale": 10000,
+      "runtimePack": {
+        "enabled": false
+      }
+    },
+    "stepC": {
+      "inputMode": "auto"
+    },
+    "stepD": {
+      "executionProfile": "full_audit",
+      "cdLoopEpochExecutionProfile": "fast_online",
+      "persistOnlineAuditArtifactsInFastMode": true,
+      "persistOnlineFeaturePackRows": false,
+      "prepareLockboxDuringStepD": false,
+      "writeFeaturePackRows": false,
+      "writeDailyLogs": false,
+      "writeDecisionCandidatesIndex": false,
+      "sampledDebugLog": {
+        "enabled": false,
+        "evalOnly": true,
+        "selectedOrRejectedOnly": true,
+        "topK": 10
+      },
+      "lockboxArtifactCache": {
+        "enabled": true,
+        "cacheDir": "artifacts/cache/stepd_lockbox"
+      },
+      "overrideGuard": {
+        "enabled": true,
+        "failOnConfigDiff": true,
+        "failOnRuntimeDiff": true,
+        "allowedConfigDiffKeys": [],
+        "allowedRuntimeDiffKeys": []
+      },
+      "reuseRuntimeCache": true,
+      "keepWorkerPoolAlive": true,
+      "scoringWorkers": 2,
+      "workerChunkSize": 384
+    }
+  },
+  "dataPaths": {
+    "candleDailyJsonl": "data/candle_daily.jsonl",
+    "universeJsonl": "data/universe_daily.jsonl",
+    "symbolMasterJsonl": "data/symbol_master.jsonl",
+    "hourly60mJsonl": "data/optional_empty.jsonl",
+    "newsJsonl": "data/optional_empty.jsonl"
+  }
+}

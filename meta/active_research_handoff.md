@@ -1,0 +1,11107 @@
+# Active Research Handoff
+
+## 2026-04-21 Year2Hit Positive-First Foundation Patch
+- code patch status:
+  - `tp12_year2hit_positive_first_foundation_v1` is implemented as an explicit train-first sibling path
+  - GPT Pro share analysis was extracted locally into `/tmp/gptpro_fastest.md` and `/tmp/gptpro_patch.md`
+  - no OOS experiment was launched in this turn
+  - full local train-side dry path was exercised outside the registry to validate patch mechanics:
+    - label build: 3,699,947 valid labels, 298,148 hits, 0 invalid labels
+    - explicit boundary skips: 6,987 OOS-horizon rows and 960 terminal-forward rows
+    - tokenizer: 3,625,338 tokenized rows, 74,609 below-min-token rows skipped by contract
+    - candidate miner: 3,166 year2hit raw survivors, 96 quality/materializable survivors after maxMatchRows cap
+    - materializer: 460,503 candidate-event rows, 147,264 hit rows, 31.98% train row hit rate
+    - train gate + quality gate + gated catalog + OOS preflight all passed for the 96 quality survivors
+- root-cause fixes included:
+  - deterministic `+12%` label/event builder from raw candle rows
+  - explicit train label horizon guard so 2024 train labels cannot use 2025 OOS bars
+  - explicit terminal-forward skip policy for delisted/end-of-series rows that cannot be labeled
+  - broad as-of tokenization over candle/universe features
+  - streaming tokenization so 2.9GB label event input does not OOM
+  - positive-first single/pair seed mining plus bounded year-balanced beam expansion with compact typed-array postings
+  - quality prefilter before materialization so broad raw survivors do not explode into multi-GB candidate-event artifacts
+  - candidate event materialization into the existing `patternId`/`decisionDateKey`/`hitTarget` train gate contract, limited to quality/materializable candidates
+  - post-train quality gate for precision, breadth, and concentration before OOS preflight
+  - OOS preflight now accepts an explicit quality-gate summary and rejects zero or hash-mismatched quality survivors when supplied
+- new explicit wrappers:
+  - `tools/run_tp12_year2hit_trainfirst_mining_pipeline.sh`
+  - `tools/server_run_tp12_year2hit_trainfirst_mining_pipeline.sh`
+- verification:
+  - local `bash scripts/verify.sh` passed on `2026-04-21` after the deep-review fixes
+  - server `bash tools/run_server_command.sh npm run verify` must be rerun after this handoff update
+- no-fallback notes:
+  - label config is explicit in `meta/tp12_year2hit_train_2016_2024_contract.json`
+  - below-min-token rows are excluded only by explicit `belowMinTokenPolicy=skip_below_min`
+  - train-side materialization only uses candidates with explicit candidate quality pass
+  - the new pipeline does not relax `minHitsPerCoreYear`
+  - the new pipeline does not run OOS from raw candidates; it requires train gate, quality gate, gated catalog, and preflight artifacts
+
+## 2026-04-18 Year2Hit Multisurface Fixed Mainline Patch
+- code patch status:
+  - `tp12_year2hit_multisurface_fixed_mainline_v1` is implemented as an explicit sibling path
+  - this patch does not reopen the dead exact `year2x7/year2x8` discovery line and does not add any fallback-style runtime branch
+- root-cause fixes included:
+  - explicit fixed-window TP12 research contract and derived side-daily carrier contract
+  - fixed cluster-bank discovery/template sibling contract builders and wrappers
+  - reserve-bank clause-context fail-fast assertions
+  - explicit `yearHitMetric=unique_decision_dates` support across downstream summaries, technique recurrence, and year-consensus
+  - post-discovery year2hit overlay/control comparison scaffold
+- verification:
+  - local `bash scripts/verify.sh` passed on `2026-04-18`
+  - synced server `bash tools/run_server_command.sh npm run verify` passed on `2026-04-18`
+- runtime state:
+  - no fixed-window/year2hit experiment was launched in this turn
+  - before the first new experiment on this line:
+    - read `meta/active_research_contract.json`
+    - read `meta/active_research_handoff.md`
+    - read `meta/experiment_patch_memory.json`
+    - run `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+    - run duplicate checks for the intended experiment patch key
+- do-not-repeat reminder:
+  - keep unchanged exact `year2x7/year2x8` discovery closed
+  - keep `clause-core` and `structural-atom` as explicit sibling/diagnostic routes, not hidden automatic promotion paths
+
+## 2026-04-06 Strategic Freeze
+- freeze new exact-search work under `TP12 / SL4 / 3d` for this branch
+- the first mandatory scientific baseline remains `daily_only_no_stop`
+- side-daily value must be measured against that frozen no-stop baseline before any execution-policy promotion
+- buy / sell / stop deep-learning remains downstream-only until:
+  - the no-stop scientific comparison is written
+  - the first additive family verdict is written
+- current critical path is now:
+  1. rerun full-period downstream `LOW_GAP_TOP`
+  2. freeze the scientific-control bundle on the same full-period allowlist / manifest
+  3. score the first scientific comparison
+  4. only then design downstream donor export and execution-policy learning
+- working doc:
+  - `docs/tp12_side_daily_no_stop_deep_patch_plan.md`
+
+## Shared Data Status
+- `2026-04-04`: server-only KR historical daily backfill is complete for the previously missing pre-2020 range.
+- canonical coverage now closes end-to-end at:
+  - `data/candle_daily.jsonl`: `2016-01-04 ~ 2026-04-03`
+  - `data/universe_daily.jsonl`: `2016-01-04 ~ 2026-04-03`
+- note:
+  - `2016-01-01` is not a trading day, so the earliest valid KR daily row is `2016-01-04`
+  - these files are not guaranteed to be physically sorted by date in file order; use actual min/max scans, not first/last line checks
+- completed server runs:
+  - historical inputs: `kr_hist_inputs_2016_2020_retry_checkpoint`
+  - remaining backfill + merge + sidecar + verify: `kr_hist_remaining_2016_2017_20260404c`
+- generated historical inputs now live at:
+  - `data/historical_symbol_lifecycle.jsonl`
+    - `1577` symbols
+    - `325` delisted
+  - `data/historical_shares_intervals.jsonl`
+    - `1,397,246` interval rows
+- root-cause fixes that were required to finish the backfill:
+  - `tools/merge_public_kr_historical_stage.py` now uses fail-fast hardlink snapshots for merge backups instead of full-file copies, which had been exhausting server disk during quarter merges
+  - `scripts/sync_to_server.sh` now excludes `artifacts/backfill/` so local syncs do not delete server-only historical stage outputs
+  - `tools/smoke_public_kr_historical_stage_tools.py` now regression-checks both contracts:
+    - merge backups must preserve the original inode via hardlink snapshots
+    - `scripts/sync_to_server.sh` must continue excluding `artifacts/backfill/`
+  - `tools/merge_public_kr_historical_stage.py` no longer uses deprecated `datetime.utcnow()` in the historical merge path
+- completion gate:
+  - server `bash tools/run_public_kr_historical_backfill.sh --from=2016-01-01 --to=2017-12-31 --run-id=kr_hist_remaining_2016_2017_20260404c --max-workers-per-shard=3`
+  - final server `npm run verify`: passed on `2026-04-04`
+
+## TP12 Kiwoom Intraday Planning Status
+- `2026-04-04`: TP12 intraday patch planning is now frozen in:
+  - `docs/tp12_kiwoom_intraday_patch_checklist.md`
+- confirmed design decisions:
+  - keep the current daily TP12 path stable
+  - add a separate Kiwoom intraday subsystem instead of reusing `hourly60m`
+  - use `Step A broad candidate universe` as the canonical minute-data manifest source
+  - collect minute bars on `D-1..D+4` windows only
+  - use Python for raw collection/QC/merge and Node for manifest/feature builders
+  - keep heavy backfill server-only
+- confirmed highest-priority datasets:
+  - `ka10080` minute bars
+  - `ka10060` investor daily
+  - `ka90013` program daily
+  - `ka10047` trade strength daily
+  - `ka10014` shorting daily
+  - `ka10068` / `ka20068` loan daily
+  - `ka10013` credit daily
+  - `ka20009` / `ka10051` / `ka10010` sector daily / sector flow
+- confirmed implementation order:
+  - `kiwoom_rest_client.py`
+  - `probe_kiwoom_rest_contract.py`
+  - `probe_kiwoom_rest_depth.py`
+  - `build_tp12_stepa_intraday_manifest.mjs`
+  - side-daily stage/QC/merge
+  - minute stage/QC/merge
+  - derived intraday feature dataset builder
+- hard stops:
+  - no hidden fallback path
+  - no raw minute reuse of `hourly60m`
+  - no full-file loading of raw minute partitions
+  - no heavy local collection
+  - no canonical merge outside a single-writer merge tool
+
+## TP12 Kiwoom Bundle 9 Status
+- `2026-04-05`: allowlist-backed real manifest execution exposed two distinct root causes and both are now repaired.
+- confirmed real artifacts:
+  - LOW_GAP_TOP allowlist built from downstream daily pack:
+    - `artifacts/tp12_intraday/allowlist/run=perfect_proto_low_gap_top_support_scorecard_router_v31_oos/rows.jsonl`
+    - `rowCount=4831`
+    - `decisionDateFrom=2025-01-02`
+    - `decisionDateTo=2026-01-30`
+- refreshed OOS broad source:
+  - `artifacts/runs/tp12_intraday_recent_impulse_upto_1d_oos_stepa_refresh_20260405_01/step-a/events_high8_lite.jsonl`
+- repaired root causes:
+  - reused OOS `Step A` artifacts spanning `2025-01-02 ~ 2026-01-30` had drifted from current canonical daily provenance
+  - the manifest builder also assumed a global candle trading calendar, which is wrong for symbols missing a global trading day
+- landed fix path:
+  - `tools/server_run_stepa_recent_impulse_oos_refresh.sh`
+    - server-only wrapper
+    - rebuilds a fresh broad `recent_impulse_upto_Nd` OOS `Step A` source against current canonical daily data
+    - writes `artifacts/runs/<run-id>/step-a_refresh_summary.json`
+  - `tools/build_tp12_stepa_intraday_manifest.mjs`
+    - now derives `D-1..D+4` windows from each symbol's own candle sequence
+    - no longer assumes `prevDateKey` must equal the previous global trading date
+- current result:
+  - fresh OOS `recent_impulse_upto_1d` `Step A` + real LOW_GAP_TOP allowlist manifest now succeeds:
+    - `artifacts/tp12_intraday/request_manifest/run=perfect_proto_low_gap_top_support_scorecard_router_v31_oos_fresh/requests.jsonl`
+    - `rowCount=4831`
+    - `allowlistRowCount=4831`
+    - `allowlistMatchedRowCount=4831`
+    - `decisionDateFrom=2025-01-02`
+    - `decisionDateTo=2026-01-30`
+- next action:
+  - start the first real Kiwoom collection pilot from the narrowed manifest above
+  - keep symbol-local window semantics fixed for all future intraday request-manifest builds
+  - follow the master remaining-work checklist in:
+    - `docs/tp12_kiwoom_intraday_patch_checklist.md`
+  - immediate order is now:
+    1. close minute timestamp/session contract
+    2. run a `20-symbol` real side-daily + minute pilot
+    3. pass full-window QC
+    4. build `d0_close` feature rows
+    5. build a same-universe baseline-vs-bridged OOS comparison summary
+
+## TP12 Kiwoom Bundle 1 Status
+- `2026-04-04`: bundle 1 is now implemented locally and synced to server.
+- landed files:
+  - `tools/kiwoom_rest_client.py`
+  - `tools/probe_kiwoom_rest_contract.py`
+  - `tools/probe_kiwoom_rest_depth.py`
+  - `tools/smoke_kiwoom_rest_client.py`
+  - `tools/smoke_kiwoom_rest_probes.py`
+- verify chain:
+  - `scripts/verify.sh` now runs the two Kiwoom smoke scripts
+- root-cause contract fix discovered during live probe:
+  - `ka90013` and `ka10047` are not served from `/api/dostk/chart`
+  - the correct path is `/api/dostk/mrkcond`
+  - `tools/kiwoom_rest_client.py` now uses explicit `api-id -> URI` mapping instead of assuming the chart path for all datasets
+- current live server probe results:
+  - contract probe summary:
+    - `artifacts/tmp/kiwoom_contract_probe_20260404.json`
+  - depth probe summary:
+    - `artifacts/tmp/kiwoom_depth_probe_20260404.json`
+  - observed contracts:
+    - `ka10080` recent anchor: `900` rows, `cont-yn=Y`, `next-key` present
+    - `ka10060` historical anchor: `100` rows, oldest row in first page block `2015-08-07`
+    - `ka90013` historical anchor: `20` rows, oldest row in first page block `2015-12-03`
+    - `ka10047` recent block: `60` rows, oldest row in first block `2026-01-06`
+  - depth sample with conservative page caps:
+    - `ka10080` `12` pages -> oldest observed `2026-02-23T12:36:00`
+    - `ka10060` `8` pages -> oldest observed `2012-10-05`
+    - `ka90013` `8` pages -> oldest observed `2015-05-14`
+    - `ka10047` `8` pages -> oldest observed `2024-04-11`
+- interpretation:
+  - minute data clearly works as reverse continuation, but full 2016 depth is not proven yet
+  - investor/program side-daily history already reaches back into the target train window under conservative probes
+  - trade-strength history is materially shorter in the first depth sample and needs a deeper policy decision before treating it as a 10-year canonical side dataset
+
+## TP12 Kiwoom Bundle 2 Status
+- `2026-04-04`: Step A intraday manifest bundle is now implemented locally and synced to server.
+- landed files:
+  - `tools/build_tp12_stepa_intraday_manifest.mjs`
+  - `tools/smoke_tp12_stepa_intraday_manifest.mjs`
+- verify chain:
+  - `scripts/verify.sh` now runs `smoke_tp12_stepa_intraday_manifest.mjs`
+- manifest contract:
+  - source of truth is `step-a/events_high8_lite.jsonl` plus `step-a/step_a_summary.json`
+  - output rows are broad-candidate safe and preserve Step A provenance
+  - each row emits `D-1..D+4` `windowDateKeys` based on the symbol's own canonical candle sequence
+  - each row carries:
+    - `stepALaneId`
+    - `impulseSourceDateKey`
+    - `impulseLookbackDays`
+    - `eventLabel`
+    - `highJumpThreshold`
+    - `highJumpMode`
+    - `recentImpulseLookbackTradingDays`
+    - `sourceEventsPath`
+    - `sourceSummaryPath`
+    - `runId`
+- strict behavior:
+  - default tail policy is `require_full_window`
+  - if a decision date cannot form a complete `D-1..D+4` window, the builder fails fast
+  - `allow_partial` exists only as an explicit CLI policy, not an automatic fallback
+- next delivery branch:
+  - `tools/backfill_kiwoom_side_daily.py`
+  - `tools/backfill_kiwoom_intraday_1m.py`
+  - stage/QC/merge wrappers for both
+
+## Current Kiwoom Intraday TP12 Patch Plan Status
+- `2026-04-04`: Kiwoom REST auth and first server probes are confirmed.
+- proven server-side:
+  - OAuth token issuance works
+  - `ka10080` minute chart returns rows on recent anchors and exposes `cont-yn=Y`
+  - `ka10060`, `ka90013`, `ka10047`, and `ka10064` return valid data from the server
+- important contract finding:
+  - minute history behaves like a reverse-continuation contract
+  - direct old-date minute jumps did not return rows in the first probe, so the collector must walk backward by `next-key`
+- planning artifact:
+  - full patch-ready checklist now lives in:
+    - `/home/saida/code/stockdesk-lab-lite/docs/tp12_kiwoom_intraday_patch_checklist.md`
+- next delivery branch:
+  - do not start heavy Kiwoom backfill yet
+  - first deliver:
+    - `tools/kiwoom_rest_client.py`
+    - `tools/probe_kiwoom_rest_depth.py`
+    - `tools/build_tp12_stepa_intraday_manifest.mjs`
+    - verify smokes for the above
+  - only after depth probe proves the intended floor should minute backfill start
+
+## Current TP12 Promotable-First + TOP Sub-Scope Patch Status
+- `2026-04-02`: phase `0G` code patch and first heavy `TOP_1D` A/B rerun are both complete.
+- current TP12 broad control still remains unchanged by default:
+  - `1D`
+  - `recent_impulse_upto_1d`
+  - `strict_label_boundary`
+  - `NEXT_DAY_OPEN / 3d / TP12 / SL4`
+  - baseline surface / baseline conjunction / `max-rule-size=6`
+- new promotable-first behavior remains explicit and opt-in only:
+  - `tools/server_run_stepb_1d_tp12_regime_cells_200k.sh` accepts `--promotable-first=true`
+  - the wrapper passes promotable breadth thresholds (`10/6/4`) and optional top-date / top-fold share ceilings only when the promotable flag is enabled
+  - no hidden fallback or implicit path switch was added
+- current promotable-first search changes are:
+  - hard prune via monotone upper bounds for train matched dates / months / folds and optional top-date / top-fold share ceilings
+  - breadth-first candidate ordering and deterministic final rule ranking that can prefer promotable breadth when enabled
+  - TP12 probe metrics now persist:
+    - `trainCandidateEfficiency`
+    - `trainPromotableUpperBoundPruneCount`
+    - `promotableRuleYield`
+    - `cleanOosYield`
+    - `runtimePerPromotableRuleMs`
+- root-cause fixes discovered during patch + first rerun:
+  - `src/lib/perfect_prototype_miner.mjs` had a `promotableMinTrainMatchedFolds` initialization-order bug that surfaced under verify; validation now runs after promotable breadth thresholds are initialized
+  - `src/lib/perfect_prototype_indexed_miner.mjs` initially wrote `promotableOrdering` as an enumerable rule property, which broke structured sink / parquet-style schema expectations; it is now stored as a non-enumerable property
+  - `tools/server_run_stepb_1d_tp12_regime_cells_200k.sh` originally assumed all `TOP/MID/LOW` child artifacts exist, so `--cell-ids=TOP_1D` reruns failed after a successful child mine; the parent wrapper now builds report args only for selected cells and the subset-wrapper guard smoke covers this contract
+- verification status:
+  - local `bash scripts/verify.sh`: passed after the subset-wrapper fix
+  - server `npm run verify`: passed on `2026-04-02` after the same fix
+- phase `0H` patch is now complete:
+  - explicit TP12 `TOP` recent-only sub-scopes now exist without mutating the broad control:
+    - `TOP_RECENT_GAP_TOPHIGH`
+    - `TOP_RECENT_CLOSE_ABOVE`
+    - `TOP_RECENT_JUMP_ABOVE`
+    - `TOP_RECENT_CROWDING_HIGH`
+    - `TOP_RECENT_CROWDING_LOWMID`
+  - new files landed:
+    - `src/lib/perfect_prototype_tp12_top_subscope_filter.mjs`
+    - `tools/build_perfect_prototype_tp12_top_subscope_filtered_pack.mjs`
+    - `tools/build_stepb_1d_tp12_top_subscopes_report.mjs`
+    - `tools/server_run_stepb_1d_tp12_top_subscopes_200k.sh`
+    - `tools/smoke_perfect_prototype_tp12_top_subscope_filtered_pack.mjs`
+    - `tools/smoke_stepb_1d_tp12_top_subscopes_report.mjs`
+    - `tools/smoke_stepb_1d_tp12_top_subscopes_subset_wrapper_guard.mjs`
+  - the new top-subscope wrapper is subset-safe by construction:
+    - it reuses the existing broad TP12 control packs
+    - it only aggregates selected sub-scope children into the final report
+    - it does not require all sub-scopes to exist on subset reruns
+  - phase `0H` verification status:
+    - local `bash scripts/verify.sh`: passed on `2026-04-03`
+    - server `npm run verify`: passed on `2026-04-03`
+- first heavy top-subscope baseline rerun is now complete:
+  - parent run: `perfect_proto_stepb_1d_tp12_top_subscopes_control_200k_20260403`
+  - all five recent-only `TOP` sub-scopes completed successfully at `200K`
+  - strongest narrow scope is now `TOP_RECENT_JUMP_ABOVE`
+    - `316` train-perfect rules
+    - train promotable breadth `10/6/4 = 0`
+    - OOS zero-negative rules `37`
+    - OOS perfect `>=3 dates = 0`
+    - close28 line `2/7 = 28.57%`
+    - wall `233s`
+  - other scope snapshots:
+    - `TOP_RECENT_CROWDING_HIGH`: zero-neg `35`, close28 `5/21 = 23.81%`
+    - `TOP_RECENT_CROWDING_LOWMID`: zero-neg `18`, close28 `11/84 = 13.10%`
+    - `TOP_RECENT_CLOSE_ABOVE`: zero-neg `13`, close28 `5/35 = 14.29%`
+    - `TOP_RECENT_GAP_TOPHIGH`: zero-neg `8`, close28 `9/41 = 21.95%`
+  - sub-scope conclusion:
+    - narrowing `TOP` helped isolate a stronger source, but all five scopes still had train promotable breadth `10/6/4 = 0`
+    - all five scopes still had `OOS perfect >=3 dates = 0`
+    - the blocker is no longer broad `TOP` attribution; it is now tiny-pocket concentration even inside the strongest narrow scope
+- first heavy A/B result on the current strongest cell (`TOP_1D`, which is effectively `top_close_recent` on this substrate):
+  - control `perfect_proto_stepb_1d_tp12_top_cell_control_200k_r2_20260402`
+    - `546` train-perfect rules
+    - train promotable breadth `10/6/4 = 0`
+    - OOS zero-negative rules `19`
+    - OOS perfect `>=3 dates = 0`
+    - close28 line `7/45 = 15.56%`
+    - wall `423s`
+  - promotable-first `perfect_proto_stepb_1d_tp12_top_cell_promotable_first_200k_r2_20260402`
+    - `0` rules
+    - seed-level promotable upper-bound prunes `651`
+    - close28 line `0/0`
+    - wall `4s`
+- interpretation:
+  - current promotable-first pruning is directionally correct but too aggressive for the broad `TOP_1D` cell
+  - the patch proved the new prune/order path can collapse runtime massively, but at the current `10/6/4` upper-bound settings it kills all seeds before any usable TP12 rule survives
+  - the control path still only yields tiny OOS-perfect pockets (`19` zero-neg rules, but `0` OOS perfect rules repeating over `>=3` dates)
+- next recommended experiment is now updated:
+  - do **not** rerun broad TP12 or escalate to `2M`
+  - do **not** use current promotable-first settings on the broad `TOP_1D` cell again
+  - the first narrow rerun (`perfect_proto_stepb_1d_tp12_top_subscope_jump_above_promotable_relaxed_200k_20260403`) exposed a real parser bug:
+    - omitted promotable share thresholds were coerced to `0`
+    - every seed was rejected with `PROMOTABLE_BEST_TOP1_DATE_HIT_SHARE_ABOVE_MAX`
+    - this root cause is now fixed in `perfect_prototype_search_bounds.mjs` and `perfect_prototype_indexed_miner.mjs`
+  - the post-fix rerun (`perfect_proto_stepb_1d_tp12_top_subscope_jump_above_promotable_relaxed_fixshare_200k_20260403`) still ended with `0` rules, but now for the real reason:
+    - `TOP_RECENT_JUMP_ABOVE`
+    - train filter: `1536 rows / 848 dates / 50 months`
+    - oos filter: `345 rows / 215 dates / 13 months`
+    - wall `112s`
+    - train explored states `200000`
+    - promotable upper-bound prune count `20047`
+    - dominant reject reasons:
+      - `PROMOTABLE_UPPER_BOUND_BELOW_MIN_TRAIN_MATCHED_DATES = 15960`
+      - `PROMOTABLE_UPPER_BOUND_BELOW_MIN_TRAIN_MATCHED_FOLDS = 4073`
+      - `PROMOTABLE_UPPER_BOUND_BELOW_MIN_TRAIN_MATCHED_MONTHS = 14`
+  - ordering-only tiebreak rerun is now complete:
+    - `perfect_proto_stepb_1d_tp12_top_subscope_jump_above_ordering_only_tiebreak_200k_20260403`
+    - root cause of the previous `ordering-only => 0 rules` failure is fixed:
+      - breadth-first ordering was outranking negative-drop / precision too early
+      - moving promotable breadth behind negative-drop / precision restored the expected narrow baseline behavior
+    - resulting verdict now matches the narrow baseline instead of collapsing:
+      - `TOP_RECENT_JUMP_ABOVE`
+      - `316` train-perfect rules
+      - train promotable breadth `10/6/4 = 0`
+      - OOS zero-negative `37`
+      - OOS perfect `>=3 dates = 0`
+      - close28 line `2/7 = 28.57%`
+      - wall `232s`
+  - updated next experiment:
+    - do **not** spend more time on `TOP_RECENT_JUMP_ABOVE` ordering-only variants
+    - ordering-path root cause is closed, but the narrow TOP winner still produces only tiny OOS-perfect pockets
+    - the next meaningful scope change is `LOW` subtype splitting under the same TP12 baseline contract
+    - target first low sub-scopes:
+      - `LOW_GAP_TOP`
+      - `LOW_GAP_HIGH`
+      - `LOW_JUMP_BELOW`
+    - keep the same contract (`1D / NEXT_DAY_OPEN / 3d / TP12 / SL4 / 200K`)
+    - keep baseline surface / baseline conjunction / `max-rule-size=6`
+    - do not escalate to `2M` unless a low sub-scope finally produces non-zero train promotable breadth and at least one repeated OOS-perfect rule
+
+- phase `0J` patch + first heavy LOW-subscope baseline rerun are now complete:
+  - explicit TP12 `LOW` sub-scopes now exist without mutating the broad control:
+    - `LOW_GAP_TOP`
+    - `LOW_GAP_HIGH`
+    - `LOW_JUMP_BELOW`
+  - new files landed:
+    - `src/lib/perfect_prototype_tp12_low_subscope_filter.mjs`
+    - `tools/build_perfect_prototype_tp12_low_subscope_filtered_pack.mjs`
+    - `tools/build_stepb_1d_tp12_low_subscopes_report.mjs`
+    - `tools/server_run_stepb_1d_tp12_low_subscopes_200k.sh`
+    - `tools/smoke_perfect_prototype_tp12_low_subscope_filtered_pack.mjs`
+    - `tools/smoke_stepb_1d_tp12_low_subscopes_report.mjs`
+    - `tools/smoke_stepb_1d_tp12_low_subscopes_subset_wrapper_guard.mjs`
+  - phase `0J` verification status:
+    - local `bash scripts/verify.sh`: passed on `2026-04-03`
+    - server `npm run verify`: passed on `2026-04-03`
+- first heavy low-subscope baseline rerun is now complete:
+  - parent run: `perfect_proto_stepb_1d_tp12_low_subscopes_control_200k_20260403`
+  - all three recent-only `LOW` sub-scopes completed successfully at `200K`
+  - strongest narrow scope is now `LOW_GAP_TOP`
+    - `909` train-perfect rules
+    - train promotable breadth `10/6/4 = 0`
+    - OOS zero-negative rules `84`
+    - OOS perfect `>=3 dates = 0`
+    - close28 line `10/29 = 34.48%`
+    - wall `474s`
+  - other scope snapshots:
+    - `LOW_JUMP_BELOW`: zero-neg `23`, close28 `14/42 = 33.33%`
+    - `LOW_GAP_HIGH`: zero-neg `37`, close28 `5/17 = 29.41%`
+  - sub-scope conclusion:
+    - narrowing `LOW` isolated a materially stronger TP12 source than `TOP` on line-level readout
+    - but all three scopes still had train promotable breadth `10/6/4 = 0`
+    - all three scopes still had `OOS perfect >=3 dates = 0`
+    - the blocker is now narrow LOW tiny-pocket concentration, not broad regime attribution
+- updated next experiment after LOW baseline:
+  - do **not** rerun broad TP12 or escalate to `2M`
+  - do **not** spend more time on `TOP_RECENT_JUMP_ABOVE` ordering-only variants
+  - the next meaningful rerun is `LOW_GAP_TOP` only under the same TP12 baseline contract
+  - keep the same contract (`1D / NEXT_DAY_OPEN / 3d / TP12 / SL4 / 200K`)
+  - keep baseline surface / baseline conjunction / `max-rule-size=6`
+  - next patch should be `LOW_GAP_TOP` relaxed promotable-first v2:
+    - weaker seed-stage promotable upper bounds than final `10/6/4`
+    - final collection / ranking still judged by `10/6/4`
+    - ordering and prune remain independently toggleable
+  - do not escalate to `2M` unless `LOW_GAP_TOP` finally produces non-zero train promotable breadth and at least one repeated OOS-perfect rule
+
+- first heavy `LOW_GAP_TOP` relaxed promotable-first rerun is now complete:
+  - parent run: `perfect_proto_stepb_1d_tp12_low_gap_top_promotable_relaxed_200k_20260403`
+  - contract stayed fixed at `1D / NEXT_DAY_OPEN / 3d / TP12 / SL4 / 200K`
+  - relaxed seed-stage promotable bounds were `6/4/3`
+  - result:
+    - `135` train-perfect rules
+    - train promotable breadth `10/6/4 = 0`
+    - OOS zero-negative rules `15`
+    - OOS perfect `>=3 dates = 0`
+    - close28 line `8/37 = 21.62%`
+    - wall `515s`
+  - comparison vs `LOW_GAP_TOP` baseline:
+    - mined rules `909 -> 135`
+    - OOS zero-negative `84 -> 15`
+    - close28 line `10/29 = 34.48% -> 8/37 = 21.62%`
+    - wall `474s -> 515s`
+  - interpretation:
+    - relaxed promotable-first no longer collapses to zero rules on narrow LOW scope
+    - but it is still the wrong search bias for this TP12 family at `200K`
+    - it degrades both exact-rule quality and line-level readout while also slowing the run
+- updated next experiment after `LOW_GAP_TOP` relaxed rerun:
+  - do **not** promote this relaxed `6/4/3` promotable-first configuration
+  - do **not** escalate this path to `2M`
+  - if LOW gets another search-side experiment, it must split ordering and prune independently and justify itself against the existing `LOW_GAP_TOP` baseline
+  - otherwise the next meaningful change is no longer another broad/narrow search tweak; it must be a different scope or contract hypothesis
+
+- first heavy `LOW_GAP_TOP` ordering-only rerun is now complete:
+  - parent run: `perfect_proto_stepb_1d_tp12_low_gap_top_ordering_only_200k_20260403`
+  - contract stayed fixed at `1D / NEXT_DAY_OPEN / 3d / TP12 / SL4 / 200K`
+  - promotable prune remained disabled
+  - promotable ordering remained enabled
+  - result:
+    - `909` train-perfect rules
+    - train promotable breadth `10/6/4 = 0`
+    - OOS zero-negative rules `84`
+    - OOS perfect `>=3 dates = 0`
+    - close28 line `10/29 = 34.48%`
+    - wall `474s`
+  - comparison vs `LOW_GAP_TOP` baseline:
+    - mined rules `909 -> 909`
+    - OOS zero-negative `84 -> 84`
+    - close28 line `10/29 = 34.48% -> 10/29 = 34.48%`
+    - wall `474s -> 474s`
+  - interpretation:
+    - ordering-only no longer collapses the narrow LOW scope
+    - but it does not improve train promotable breadth or repeated OOS-perfect TP12 evidence
+    - the remaining LOW blocker is not search-ordering; it is the current TP12 contract itself
+- updated next experiment after `LOW_GAP_TOP` ordering-only rerun:
+  - do **not** spend more time on additional LOW search-side variants under the same `TP12 / 3d / SL4` contract
+  - do **not** escalate `LOW_GAP_TOP` to `2M`
+  - keep `LOW_GAP_TOP` as the strongest supplier scope
+  - the next meaningful change is a contract split:
+    - discovery contract: broad `3d within 12% touch` style mover discovery
+    - clean validation contract: current `TP12 / SL4 / 3d`
+- contract-split patch status:
+  - added server-only `LOW_GAP_TOP` contract-split report tooling that reuses the existing frozen catalog + train/oos packs and does not rebuild packs or re-mine
+  - touch discovery contract is explicit: `NEXT_DAY_OPEN / 3d / +12% touch / no stop gate`
+  - clean validation contract is still sourced from the existing `TP12 / SL4 / 3d` leaderboard/report artifacts
+  - local verify now covers `smoke_tp12_touch_contract` and `smoke_stepb_1d_tp12_contract_split_report` plus syntax checks for the report/wrapper
+  - server `npm run verify` reran successfully before the heavy contract-split experiment
+- first heavy `LOW_GAP_TOP` contract-split rerun is now complete:
+  - run: `perfect_proto_stepb_1d_tp12_low_gap_top_touch_contract_200k_20260403`
+  - touch discovery result:
+    - train promotable breadth `10/6/4 = 0`
+    - OOS zero-negative rules `47`
+    - OOS perfect `>=3 dates = 3`
+    - raw touch line `76/206 = 36.89%`
+  - clean validation result:
+    - train promotable breadth `10/6/4 = 0`
+    - OOS zero-negative rules `84`
+    - OOS perfect `>=3 dates = 0`
+    - close28 line `10/29 = 34.48%`
+  - bridge result:
+    - retained OOS zero-negative rules `29/47`
+    - retained OOS perfect `>=3-date` rules `0/3`
+    - verdict: `signal_exists_clean_contract_blocks`
+  - interpretation:
+    - `LOW_GAP_TOP` does contain repeated TP12 mover signals under the broad touch contract
+    - the current clean execution contract `NEXT_DAY_OPEN / 3d / TP12 / SL4` blocks those repeated movers before they can survive as promotable exact rules
+    - the next meaningful step is no longer exact-search tuning; it is execution-contract redesign built on the surviving touch-discovery donor cohort
+
+
+- phase `0N` touch-broadening patch + first heavy `LOW_GAP_TOP` broadening rerun are now complete:
+  - new donor-broadening tooling exists and is server-safe:
+    - `src/lib/perfect_prototype_tp12_touch_broadening.mjs`
+    - `tools/build_stepb_1d_tp12_touch_broadening_report.mjs`
+    - `tools/server_run_stepb_1d_tp12_touch_broadening_low_gap_top_200k.sh`
+    - `tools/smoke_stepb_1d_tp12_touch_broadening_report.mjs`
+  - the broadening path reuses the existing `LOW_GAP_TOP` frozen catalog plus train/oos packs from the baseline control and does not rebuild packs or re-mine
+  - first heavy run is complete:
+    - run: `perfect_proto_stepb_1d_tp12_low_gap_top_touch_broadening_200k_20260403`
+    - donor rules: `31`
+    - donor clusters: `3`
+    - consensus candidates: `4`
+    - qualified candidates: `4`
+    - broadened union selected rules: `3`
+    - broadened union train breadth: `21 dates / 16 months / 4 folds`, precision `0.4884`
+    - broadened union OOS touch line: `7/10 = 70.00%`
+    - broadened union OOS matched dates: `7`
+    - broadened union OOS zero-negative: `0`
+    - broadened union OOS perfect `>=3 dates`: `0`
+    - verdict: `broadening_reaches_train_promotable_breadth`
+  - interpretation:
+    - donor clustering + consensus broadening is the first TP12 path that actually created a train-promotable breadth candidate/union under `LOW_GAP_TOP`
+    - however the broadened union is still too small and too impure on OOS to count as a promotable replacement
+    - touch broadening is therefore a useful donor-diagnostic substrate, not yet a final TP12 rule bank
+  - updated next step:
+    - do **not** go back to exact-search tuning under the clean `TP12 / SL4` contract
+    - keep `LOW_GAP_TOP` touch discovery as the donor source
+    - the next meaningful work is execution-contract redesign or donor-side execution learning on top of the surviving touch cohort
+
+
+- phase `0O` touch-scorecard bundle patch + first heavy `LOW_GAP_TOP` scorecard rerun are now complete:
+  - new touch-scorecard bundle tooling exists and is server-safe:
+    - `src/lib/perfect_prototype_tp12_touch_scorecard_bundle.mjs`
+    - `tools/build_stepb_1d_tp12_touch_scorecard_report.mjs`
+    - `tools/server_run_stepb_1d_tp12_touch_scorecard_low_gap_top_200k.sh`
+    - `tools/smoke_stepb_1d_tp12_touch_scorecard_report.mjs`
+  - the scorecard path reuses the existing `LOW_GAP_TOP` frozen catalog plus train/oos packs from the baseline control and does not rebuild packs or re-mine
+  - first heavy run is complete:
+    - run: `perfect_proto_stepb_1d_tp12_low_gap_top_touch_scorecard_200k_20260403`
+    - donor rules: `31`
+    - donor clusters: `3`
+    - qualified broadened candidates: `4`
+    - candidate terms: `19`
+    - qualified terms: `19`
+    - tried scorecard solutions: `498`
+    - candidate previews retained: `256`
+    - scorecard solved: `0`
+    - baseline touch OOS line: `76/206 = 36.89%`
+    - baseline touch OOS perfect `>=3 dates`: `3`
+    - verdict: `no_feasible_touch_scorecard_bundle`
+    - wall: `58s`
+  - interpretation:
+    - the touch-scorecard bundle path is wired correctly and can enumerate donor / cluster / broadened bundle terms at server scale
+    - however, under the current bundle floors (`selectedRows >= 60`, `matchedDates >= 15`, `matchedMonths >= 8`, `matchedFolds = 4`, `top1DateHitShare <= 0.20`), no feasible bundle exists
+    - the strongest preview candidate was still too small (`12 rows / 12 dates / 10 months / 4 folds`), so the blocker is coverage, not scorecard plumbing
+  - updated next step:
+    - do **not** spend more time on additional exact-search tuning under the clean `TP12 / SL4` contract
+    - keep `LOW_GAP_TOP` touch discovery as the donor source
+    - next work should target coverage-preserving donor aggregation or execution-contract redesign, not more tiny-pocket exact-rule search
+
+## 2026-04-03 1D TP12 LOW_GAP_TOP touch bundle-union coverage selector
+- phase `0P` coverage-preserving touch bundle-union patch + first heavy `LOW_GAP_TOP` bundle rerun are now complete:
+  - new touch bundle-union tooling exists and is server-safe:
+    - `src/lib/perfect_prototype_tp12_touch_label_matrix.mjs`
+    - `src/lib/perfect_prototype_tp12_touch_bundle_selector.mjs`
+    - `src/lib/perfect_prototype_tp12_touch_veto_builder.mjs`
+    - `tools/build_stepb_1d_tp12_touch_bundle_union_report.mjs`
+    - `tools/server_run_stepb_1d_tp12_touch_bundle_union_low_gap_top_200k.sh`
+    - `tools/smoke_stepb_1d_tp12_touch_bundle_union_report.mjs`
+  - the bundle-union path reuses the existing `LOW_GAP_TOP` frozen catalog plus train/oos packs from the baseline control and does not rebuild packs or re-mine
+  - first heavy run is complete:
+    - run: `perfect_proto_stepb_1d_tp12_low_gap_top_touch_bundle_union_200k_20260403`
+    - donor rules: `31`
+    - donor clusters: `3`
+    - qualified broadened candidates: `4`
+    - qualified terms: `19`
+    - label-matrix train rows with any term: `46`
+    - label-matrix OOS rows with any term: `11`
+    - selected positive terms: `2`
+    - veto candidates: `0`
+    - selected veto tokens: `0`
+    - baseline touch OOS line: `76/206 = 36.89%`
+    - bundle-union OOS line: `4/4 = 100.00%`
+    - bundle-union OOS breadth: `4 dates / 4 months / 3 folds`
+    - verdict: `precision_lift_coverage_shortfall`
+  - interpretation:
+    - row-level donor aggregation works and can recover a very high-precision touch bundle
+    - however coverage collapses too far (`206 -> 4` selected rows, `161 -> 4` matched dates), so this is another tiny-pocket tradeoff rather than a promotable touch rule bank
+    - there was no failure-pocket veto opportunity in this run; the selector simply converged to two cluster terms
+  - updated next step:
+    - do **not** revisit exact-search tuning under the clean `TP12 / SL4` contract
+    - do **not** promote the touch bundle-union as-is; it is high precision but far below the required coverage floor
+    - next work should focus on coverage-preserving donor aggregation beyond exact/cluster consensus, or move directly to execution-contract redesign on top of the confirmed `LOW_GAP_TOP` touch signal
+
+## 2026-04-03 1D TP12 LOW_GAP_TOP touch parent-lift bundle
+- phase `0Q` parent-lift patch + first heavy `LOW_GAP_TOP` rerun are now complete:
+  - new touch parent-lift tooling exists and is server-safe:
+    - `src/lib/perfect_prototype_tp12_touch_parent_lift_bank.mjs`
+    - `tools/build_stepb_1d_tp12_touch_parent_lift_report.mjs`
+    - `tools/server_run_stepb_1d_tp12_touch_parent_lift_low_gap_top_200k.sh`
+    - `tools/smoke_stepb_1d_tp12_touch_parent_lift_report.mjs`
+  - the parent-lift path reuses the existing `LOW_GAP_TOP` frozen catalog plus train/oos packs from the baseline touch control and does not rebuild packs or re-mine
+  - first heavy run is complete:
+    - run: `perfect_proto_stepb_1d_tp12_low_gap_top_parent_lift_bundle_200k_20260403`
+    - donor rules: `31`
+    - donor clusters: `3`
+    - qualified broadened candidates: `4`
+    - seed bundle selected terms: `0`
+    - seed bundle OOS touch line: `31/65 = 47.69%`
+    - parent-lift raw candidates: `3`
+    - qualified parent terms: `0`
+    - combined label-matrix OOS rows with any term: `11`
+    - selected veto tokens: `2`
+    - baseline touch OOS line: `76/206 = 36.89%`
+    - final parent-lift report verdict: `no_feasible_touch_bundle_union`
+    - wall: `8s`
+  - interpretation:
+    - the parent/generalized candidate generator is wired correctly, but under the current train floors it produces no qualified positive parent-lift terms
+    - the donor/cluster/broadening term bank is still too narrow to form a coverage-preserving positive bundle
+    - the residual `31/65 = 47.69%` line comes from a veto-trimmed subset, not from newly admitted positive parent-lift terms, so it is not promotable
+  - updated next step:
+    - do **not** spend more time on additional exact-search tuning under the clean `TP12 / SL4` contract
+    - do **not** rerun the same parent-lift generator/threshold stack; this exact path is now recorded as inconclusive
+    - next work should widen donor aggregation beyond the current exact/cluster/broadening term bank, or move directly to execution-contract redesign on top of the confirmed `LOW_GAP_TOP` touch signal
+
+## 2026-04-03 1D TP12 LOW_GAP_TOP touch donor execution-menu stop recovery
+- phase `0R` execution-menu patch + first heavy `LOW_GAP_TOP` rerun are now complete:
+  - new fixed-donor execution-menu tooling exists and is server-safe:
+    - `src/lib/perfect_prototype_tp12_execution_policy.mjs`
+    - `tools/build_stepb_1d_tp12_execution_menu_report.mjs`
+    - `tools/server_run_stepb_1d_tp12_execution_menu_low_gap_top_200k.sh`
+    - `tools/smoke_stepb_1d_tp12_execution_menu_report.mjs`
+  - the execution-menu path reuses the existing `LOW_GAP_TOP` frozen catalog and touch donor cohort, builds a fresh strict-boundary recent `LOW_GAP_TOP` pack for `2026-02-01 ~ 2026-04-02`, and evaluates a fixed execution menu instead of re-mining rules
+  - verification status:
+    - local `npm run verify`: passed on `2026-04-03`
+    - server `npm run verify`: passed on `2026-04-03` after rebuilding and re-verifying the server native rowset kernel so the runtime contract matched the current Node ABI again
+  - first heavy run is complete:
+    - run: `perfect_proto_stepb_1d_tp12_low_gap_top_execution_menu_stop_recovery_v1_20260403`
+    - donor OOS touch line: `76/206 = 36.89%`
+    - donor recent touch line: `21/51 = 41.18%`
+    - donor OOS stop-before-touch share: `28/76 = 36.84%`
+    - donor recent stop-before-touch share: `11/21 = 52.38%`
+    - baseline clean stop-first policy (`3d / TP12 / SL4`):
+      - OOS: `48/206 = 23.30%`, avgNetRet `+0.23%`
+      - recent: `10/51 = 19.61%`, avgNetRet `-0.68%`
+    - best overall policy:
+      - `touch_anchor_tp12_no_stop_3d`
+      - OOS: `76/206 = 36.89%`, avgNetRet `+0.64%`
+      - recent: `21/51 = 41.18%`, avgNetRet `-1.35%`
+    - best stop-aware policy:
+      - `tp12_sl4_stop_delay1_4d`
+      - OOS: `61/206 = 29.61%`, avgNetRet `+1.32%`
+      - recent: `19/51 = 37.25%`, avgNetRet `+2.11%`
+      - verdict: `stop_recovery_policy_found`
+  - interpretation:
+    - the donor cohort confirms the blocker is execution, not signal existence
+    - pure no-stop preserves the most touch hits, but a practical stop-aware recovery path now exists
+    - delaying the stop by one bar and extending hold to `4d` materially improves the clean baseline on both OOS and recent while keeping positive average return
+  - updated next step:
+    - do **not** return to exact-search tuning under the same clean `TP12 / SL4 / 3d` contract
+    - keep `LOW_GAP_TOP` touch discovery as the donor substrate
+    - next experiments should stay inside execution-contract redesign:
+      - refine delayed-stop variants around the winning `SL4 delay1 / 4d` shape
+      - compare stop delay and hold extension separately instead of reopening signal-side mining
+      - add any further entry/exit variation only if it preserves the fixed donor-cohort evaluation setup
+
+## Perfect Prototype Live Ops
+- After market close, do not re-mine prototype rules.
+- Current canonical live operating path is the registry-driven daily ops stack:
+  - `tools/run_daily_ops_once.sh`
+  - `tools/server_run_daily_ops_stack.mjs`
+  - `config/ops/live_priority_registry.server.json`
+  - `meta/live_priority_ops_contract.md`
+  - `meta/live_priority_reusable_artifacts.json`
+  - `meta/public_kr_daily_ingest_contract.md`
+- Current canonical fill contract:
+  - `close_only_placeholder` is a `nontrading_status`, not a candle
+  - sidecar path: `data/nontrading_symbol_daily.jsonl`
+  - daily fill summary path: `artifacts/runs/<daily_run_id>/fill/fill_summary.json`
+- Current canonical daily ops report paths:
+  - `artifacts/runs/<daily_run_id>/live/final_summary.json`
+  - `artifacts/runs/<daily_run_id>/live/final_union.jsonl`
+  - `artifacts/runs/<daily_run_id>/daily_ops_summary.json`
+  - `artifacts/runs/<daily_run_id>/report.md`
+- Current canonical live filter contract:
+  - every active live line excludes matched rows whose recommendation-date close return is `>= +28%` before dedupe
+  - this filter is now enforced on `afree_primary`, `1d/7d/8d_primary`, and `1d/7d/8d_secondary`
+- Current `1d` research split is now explicit:
+  - `TOP` keeper lines remain `1d_primary` / `1d_secondary` on `same_day_plus_recent_upto_1d`
+  - `MID/LOW` recovery work must stay on the separate recent-only line `stepb_dplus1_plus_lite_recent_mid_low`
+  - recent-only `MID/LOW` discovery must be row-cohort based, not token-bucket seeded
+  - recent-only indexed mining must require `row_lane_meta.parquet` even when lane-stratified mining is otherwise disabled
+  - recent-only cohort scopes must be built from lane row metadata + cohort membership tokens, not from required-root-token intersections alone
+  - recent-only curated shadow freeze must fail fast unless selection provenance includes:
+    - `selectionLineId=stepb_dplus1_plus_lite_recent_mid_low`
+    - `selectionSurface=v6_contextual_plus_lite_recent_only_lane_local_pool8`
+    - `selectionContractId`
+    - `selectionAllowedFamilyIds`
+    - `selectionDiscoveryUniverseId=recent_impulse_upto_1d`
+    - `selectionManifestPath`
+  - live-priority stack state now needs two tracks:
+    - `latest_success.json` for the last successful target date
+    - `latest_activity.json` for in-progress stack execution telemetry
+  - current LOW blocker is now pinned more narrowly:
+    - LOW entry is open (`cohort row count` and `accepted root seed count` are both non-zero)
+    - LOW purity is not the active blocker
+    - the current LOW collapse is search-time breadth loss below `minHitCount`
+    - current diagnostic signature is high `searchBelowMinHitCount`, zero `boundPruneCount`, and zero final LOW survivors
+  - current LOW recovery patch direction is:
+    - split `low_close_continuation` into subtype families:
+      - `low_gap_top_continuation`
+      - `low_gap_high_continuation`
+      - `low_jump_below_continuation`
+    - run LOW recovery on a dedicated low-only recent wrapper
+    - lengthen LOW root stage
+    - lower LOW-only search-time min-hit while keeping exact `train precision=1.0`
+    - recent-only constrained root scopes must use deterministic per-scope budget fairness so the first LOW subtype cannot consume the full allocated search budget before later subtype scopes run
+    - any non-zero LOW fold breadth threshold is invalid unless the wrapper pins an explicit chronological fold scheme; `lowFamilyMinTrainMatchedFolds > 0` with `foldScheme=null` must fail fast
+    - keep `TOP` / `MID` operating lines unchanged and keep `1d_low_recent_shadow` out of registry until a frozen shadow artifact exists
+  - LOW discovery is no longer the primary blocker:
+    - the synced low-only `v7d` rerun produced `5` exact LOW rules across the three LOW subtype families
+    - low-only line-level close28 OOS was `4 selected / 2 hits`
+    - the active blocker is now LOW shadow promotion granularity, not LOW rule discovery
+  - current LOW shadow-promotion patch direction is:
+    - add explicit contract `recent_only_low_shadow_bundle_v1`
+    - keep per-rule recent-only shadow freeze unchanged for `TOP/MID`
+    - allow LOW shadow promotion to evaluate a bundle of exact LOW subtype rules on close28/day-dedup line-level metrics
+    - LOW bundle promotion must remain explicit and fail fast; it is not a hidden fallback from the per-rule freeze contract
+    - LOW bundle candidate metrics must persist:
+      - `selectionBundleRuleIds`
+      - `selectionBundleMetrics`
+      - `selectionBundlePromotable`
+      - `selectionBundleRejectReasons`
+    - recent-only report must emit `recent_low_bundle_candidate.json`
+    - `1d_low_recent_shadow` still stays out of registry until a frozen bundle-shadow artifact exists
+  - current Haesung-specific blocker is now narrower than LOW promotion:
+    - `2026-03-18 / 076610` is covered by train-exact LOW rules in the `20M` low-only catalog
+    - the matched rules are not individually OOS-perfect
+    - the next patch direction is `low_gap_top_continuation` only, not broad LOW rediscovery
+    - targeted search must support explicit tokenized support cases via `--support-cases-file`
+    - targeted search must also support donor-neighborhood narrowing around the current Haesung-supporting donor rule:
+      - support-case payload may include `donorRuleIds`
+      - support-case payload may include `donorTokens`
+      - donor-neighborhood search must narrow root/prefix expansion instead of just reordering broad LOW search
+    - targeted leaderboard/freeze contract must surface:
+      - `supportCaseIds`
+      - `supportCaseCount`
+      - `haesungSupport`
+      - `supportCaseRootSeedCandidateCount`
+      - `supportCaseFilteredRootSeedCount`
+      - `supportCaseEffectiveRootSeedCount`
+      - `supportCaseCompressionRatio`
+      - `supportCaseMatchedRuleCount`
+      - `supportCaseMatchedRuleIds`
+    - targeted curated selection contract is `haesung_low_gap_top_oos100_v1`
+    - success means one rule satisfies all of:
+      - matches `076610:2026-03-18`
+      - `train precision=1.0`
+      - `openOosPrecision=1.0`
+      - `openOosMatchCount>=3`
+      - `openOosUniqueMatchedDates>=3`
+      - `trainMatchedMonthCount>=4`
+      - `trainMatchedFoldCount>=4`
+    - targeted support-case runs must fail fast if telemetry is missing or if effective root count remains above the configured cap
+  - current `v14` conclusion changes the next patch direction:
+    - donor-aware targeted compression succeeded
+    - the targeted run still failed to produce a rule that simultaneously satisfied:
+      - `haesungSupport=true`
+      - `train precision=1.0`
+      - `openOosPrecision=1.0`
+    - this is now treated as a breadth/generalization problem, not a support-case compression problem
+    - `low_gap_top` now needs generalized TP-cluster discovery before exact refinement
+  - current breadth blocker is explicit:
+    - `20M` low-only `low_gap_top` exact mining produced many rules but no `10+ matched-date` exact rules
+    - max observed train breadth in the exact family remained below the desired operating target
+    - repeated budget increases are not the next preferred fix
+  - current generalized patch direction is:
+    - add `low_gap_top` TP/FP cluster differential reporting
+    - add generalized regime tags derived from retention / gap-continuation / dry-up / trend / isolation / body-wick context
+    - run a generalized subgroup prepass before exact mining
+    - use temporal stability proxy (`matchedMonthCount`, `matchedFoldCount`, `top1DateHitShare`) to reject brittle broad roots
+    - support-case anchored runs remain probe-only; final generalized mining must run without support-case bias
+    - generalized hardening now also requires:
+      - `tag:lowGapTop.fpRisk:*` is exclusion-only and must never qualify as a subgroup root seed
+      - subgroup root acceptance requires positive quality (`subgroupScore > 0`, `subgroupTpLift > 0`)
+      - accepted generalized roots must be collapsed into deterministic bundle-seed manifests before exact refinement
+      - exact refinement to stay inside generalized subgroup roots during early prefix expansion
+      - generalized breadth floors must survive into early exact refinement (`matchedDateCount >= 10`, `matchedMonthCount >= 6`, `matchedFoldCount >= 4`)
+      - generalized final wrapper to fail fast on any `--support-cases-file` / `--support-case-*` flag
+      - TP/FP differential reporting to operate on row-level matched clusters, not rule-token frequency only
+      - zero-rule generalized runs must fail with an explicit empty-catalog summary before curated freeze is attempted
+    - next success milestone is not Haesung alone:
+      - first require generalized subgroup survivors with `matchedDateCount >= 10`
+      - then require `train100 + OOS100`
+      - only then require `haesungSupport=true`
+  - current subgroup-system patch direction is:
+    - singleton generalized roots are no longer sufficient as the only bridge into exact refinement
+    - subgroup discovery must emit manifest records, not just root token survivors
+    - manifest fields must include:
+      - `subgroupId`
+      - `bundleTokens`
+      - `bundleAxes`
+      - `matchedDateCount`
+      - `matchedMonthCount`
+      - `matchedFoldCount`
+      - `coverageShare`
+      - `precision`
+      - `tpLift`
+      - `wracc`
+      - `fpPenalty`
+      - `top1DateHitShare`
+      - `selectionFrequency`
+      - `foldPresenceCount`
+      - `windowPresenceCount`
+    - stability/diversity filtering now sits between subgroup discovery and exact refinement
+    - exact refinement must run only inside selected subgroup manifests
+    - `haesungSupport` remains a final acceptance filter after generalized mining, not a discovery bias
+  - current v20 patch direction is:
+    - `low_gap_top` must now be treated as a staged subgroup pipeline, not a single-loop exact search
+    - broad subgroup discovery should rank candidates by breadth / coverage / WRAcc / TP lift instead of hard-gating on `subgroupScore > 0`
+    - subgroup manifests must carry subgroup cover (`date/month/fold` coverage) so weak single axes do not zero out bundle breadth
+    - stability and diversity are canonical stages before exact refinement, not optional post-processing
+    - early exact refinement must preserve a configurable fraction of subgroup breadth rather than reusing the broad subgroup absolute `10/6/4` floor directly
+    - zero-result generalized runs must now resolve into staged reasons:
+      - `no_subgroup_candidates`
+      - `no_stable_subgroups`
+      - `no_diverse_subgroups`
+      - `no_exact_refinements`
+      - `no_oos_perfect_rules`
+    - the next successful generalized probe should first prove staged subgroup survival before exact `train100 + OOS100` is expected
+  - current v20 probe outcome is now pinned:
+    - run `perfect_proto_low_gap_top_subgroup_pipeline_v20_probe200k_20260326` passed subgroup survival but produced zero exact rules
+    - observed staged counts:
+      - `subgroupCandidateCount = 24`
+      - `subgroupQualifiedCandidateCount = 24`
+      - `subgroupManifestCandidateCount = 64`
+      - `subgroupStableManifestCount = 64`
+      - `subgroupDiverseManifestCount = 8`
+      - `subgroupBundleManifestCount = 8`
+    - `subgroupStageReasonByFamily.low_gap_top_continuation = null`
+    - `subgroupBreadthFloorPruneCount = 1`
+    - `exploredStates = 0`
+    - the active blocker is no longer subgroup discovery/stability/diversity survival
+    - the new blocker is exact-refinement entry from stable subgroup manifests
+  - current v21 patch direction is:
+    - subgroup manifests must no longer be passed into exact search as `tokens=[]` root scopes
+    - each stable/diverse subgroup manifest must be materialized into an exact entry state:
+      - `entrySeedTokens`
+      - `entryPositiveRowIndexes`
+      - `entryNegativeRowIndexes`
+      - `entryEffectiveMinHitCount`
+      - `entryBreadthFloor`
+    - exact-entry telemetry must persist:
+      - `subgroupExactEntryCandidateCount`
+      - `subgroupExactEntryAcceptedCount`
+      - `subgroupExactEntryRejectedCount`
+      - `subgroupExactEntryRejectReasonCounts`
+      - `subgroupExactEntryRejectReasonByFamily`
+      - `subgroupExactEntrySeedPreviewByFamily`
+    - stable/diverse subgroup bundle seeds must be collected as first exact candidates before child expansion
+    - staged zero-result summaries must distinguish:
+      - `no_exact_entry`
+      - `no_exact_refinements`
+    - the next successful generalized probe must first prove:
+      - `subgroupExactEntryAcceptedCount > 0`
+      - `exploredStates > 0`
+  - current v21 probe outcome is now pinned:
+    - run `perfect_proto_low_gap_top_exact_entry_bridge_v21_probe200k_20260326` opened the exact-entry bridge
+    - observed staged counts:
+      - `subgroupBundleManifestCount = 8`
+      - `subgroupExactEntryCandidateCount = 8`
+      - `subgroupExactEntryAcceptedCount = 7`
+      - `subgroupExactEntryRejectedCount = 1`
+      - `subgroupExactEntryRejectReasonCounts.breadth_floor_conflict = 1`
+      - `exploredStates = 9`
+    - zero-rule summary resolved to `reason = no_exact_refinements`
+    - `searchBelowMinHitCount = 0`
+    - the `exploredStates = 0` / `no_exact_entry` blocker is now closed
+    - the active blocker is post-entry exact refinement: accepted subgroup entry states still collapse before producing any train-exact rule
+  - current v22 patch direction is:
+    - `low_gap_top_continuation` keeps the staged subgroup pipeline, but the canonical post-entry exact refinement path changes
+    - accepted subgroup exact-entry states must no longer be handed to the generic child-expansion search loop
+    - instead, each accepted subgroup manifest must be solved locally as an exact-completion problem:
+      - materialize positive cover `P`
+      - materialize negative cover `N`
+      - build a manifest-local candidate token pool
+      - solve for a bounded token set that removes all remaining negatives while preserving subgroup breadth
+    - exact completion telemetry must persist:
+      - `exactCompletionManifestCount`
+      - `exactCompletionSolvedCount`
+      - `exactCompletionUnsatCount`
+      - `exactCompletionCollectedRuleCount`
+      - `exactCompletionUnsatReasonCounts`
+      - `exactCompletionCandidatePoolSizeByManifest`
+      - `exactCompletionNegativeFrontierSizeByManifest`
+    - staged zero-rule summaries must now distinguish:
+      - `no_exact_completion_solutions`
+      - `no_exact_completion_train_rules`
+      - `no_oos_perfect_rules`
+    - success for the next probe means:
+      - `subgroupExactEntryAcceptedCount > 0`
+      - `exactCompletionSolvedCount > 0`
+      - `trainRuleCount > 0`
+  - current v22 probe outcome is now pinned:
+    - run `perfect_proto_low_gap_top_counterexample_exact_completion_v22_probe200k_20260326` completed the exact-completion transition without the old wrapper / stage-transition fatals
+    - observed staged counts:
+      - `subgroupBundleManifestCount = 8`
+      - `subgroupExactEntryAcceptedCount = 7`
+      - `subgroupExactEntryRejectedCount = 1`
+      - `subgroupExactEntryRejectReasonCounts.breadth_floor_conflict = 1`
+      - `exactCompletionManifestCount = 7`
+      - `exactCompletionSolvedCount = 0`
+      - `exactCompletionUnsatCount = 7`
+      - `exactCompletionCollectedRuleCount = 0`
+      - `exactCompletionUnsatReasonCounts.unsat_breadth_retention = 7`
+      - `exploredStates = 175`
+    - zero-rule summary resolved to `reason = no_exact_completion_solutions`
+    - `searchBelowMinHitCount = 0`
+    - wrapper provenance, exact-entry bridge, and staged no-rule reporting are now closed blockers
+    - the active blocker is exact-completion feasibility:
+      - every accepted subgroup manifest is currently UNSAT under the present breadth-retention contract
+      - the next root-cause patch must target breadth-retention feasibility inside the manifest-local exact-completion solver, not subgroup discovery or exact entry
+  - current v23 patch direction is:
+    - `low_gap_top_continuation` keeps the staged subgroup pipeline and exact-entry bridge, but exact completion no longer assumes `one manifest -> one exact rule`
+    - each accepted subgroup manifest must first be decomposed into a small frontier of exactable cores
+    - each exactable core gets its own exact-stage breadth floor derived from exact-stage family minima, not the original broad subgroup breadth contract
+    - the canonical refinement path becomes:
+      - subgroup manifest
+      - exactable core decomposition
+      - core frontier solve
+      - train rule collection
+      - OOS validation
+    - exact-core telemetry must persist:
+      - `exactCoreCandidateCount`
+      - `exactCoreQualifiedCount`
+      - `exactCoreSolvedCount`
+      - `exactCoreUnsatCount`
+      - `exactCoreUnsatReasonCounts`
+      - `exactCoreFrontierBestRetainedDateCount`
+      - `exactCoreFrontierBestRetainedMonthCount`
+      - `exactCoreFrontierBestRetainedFoldCount`
+    - staged zero-rule summaries must now distinguish:
+      - `no_exactable_cores`
+      - `no_core_frontier_solutions`
+      - `no_exact_completion_train_rules`
+      - `no_oos_perfect_rules`
+    - success for the next probe means:
+      - `subgroupExactEntryAcceptedCount > 0`
+      - `exactCoreQualifiedCount > 0`
+      - `exactCoreSolvedCount > 0`
+      - `trainRuleCount > 0`
+  - current v23 probe outcome is now pinned:
+    - run: `perfect_proto_low_gap_top_exact_core_frontier_v23_probe200k_20260327`
+    - frozen catalog: `artifacts/curated/frozen/perfect_proto_low_gap_top_exact_core_frontier_v23_probe200k_20260327_train_mine/79a00d3c5b15b71e/catalog.json`
+    - subgroup stages survived:
+      - `subgroupBundleManifestCount = 8`
+      - `subgroupExactEntryAcceptedCount = 7`
+    - exact completion is no longer the active blocker at entry:
+      - `exactCompletionManifestCount = 7`
+      - `exactCompletionSolvedCount = 5`
+      - `exactCoreCandidateCount = 168`
+      - `exactCoreQualifiedCount = 42`
+      - `exactCoreSolvedCount = 16`
+      - `exactCoreUnsatCount = 26`
+    - train exact survivors now exist:
+      - `trainRuleCount = 4`
+      - best survivor `trainMatchedDateCount = 18`, `trainMatchedMonthCount = 16`, `trainMatchedFoldCount = 4`
+      - second survivor `trainMatchedDateCount = 10`, `trainMatchedMonthCount = 10`, `trainMatchedFoldCount = 4`
+    - open OOS is still weak:
+      - close28 `6 selected / 1 hit / 16.67%`
+      - `oosPerfectQualified = false` for all surviving rules
+      - `haesungSupport = false` for all surviving rules
+    - the active blocker after `v23` is no longer subgroup discovery, exact entry, or manifest-local UNSAT:
+      - the active blocker is post-solve generalization
+      - surviving exact-core rules must now be improved for OOS quality and haesung coverage rather than search reachability
+  - `v24` crossfit hard-negative refinement is now implemented and measured:
+    - train mine summary:
+      - `exactCompletionSolvedCount = 4`
+      - `exactCoreSolvedCount = 15`
+      - `exactCompletionCollectedRuleCount = 2`
+      - `hardNegativeAddedCount = 9`
+      - `hardNegativeRefinedRuleCount = 0`
+      - `crossfitWindowCount = 252`
+      - `crossfitNegativeWindowCount = 5`
+      - `crossfitFalsePositiveRowCount = 9`
+    - surviving `v24` rules:
+      - champion breadth `trainMatchedDateCount = 18`, `trainMatchedMonthCount = 16`, `trainMatchedFoldCount = 4`
+      - second breadth `trainMatchedDateCount = 9`, `postRefineTrainMatchedDateCount = 10`
+    - open OOS regressed to empty:
+      - close28 `0 selected / 0 hits`
+      - `openOosMatchCount = 0` for all surviving rules
+      - `haesungSupport = false` for all surviving rules
+    - historical replay is also negative:
+      - `076610 / 2026-03-18` replay produced `0 matches`
+    - the active blocker after `v24` is no longer search reachability or hard-negative collection:
+      - the blocker is that crossfit-refined survivors do not transfer to OOS or Haesung coverage
+      - next work must target rule acceptance / OOS selection semantics rather than more subgroup plumbing
+  - `v26` is the locked root-cause direction after `v24`:
+    - staged `subgroup -> exact -> hard-negative -> replay` refinement is no longer considered sufficient for `low_gap_top_continuation`
+    - the canonical post-subgroup path must become:
+      - exact-core frontier candidate generation
+      - joint feasibility solve enforcing, in one acceptance contract:
+        - `train precision = 1.0`
+        - `trainMatchedDateCount >= 10`
+        - `trainMatchedMonthCount >= 6`
+        - `trainMatchedFoldCount >= 4`
+        - zero crossfit negative windows
+        - retained crossfit positive recurrence
+        - historical support match for `076610:2026-03-18`
+      - only after that, open-OOS validation
+    - expected decisive outcomes:
+      - either at least one rule satisfies train breadth + crossfit recurrence + Haesung historical support together
+      - or the solver emits an explicit UNSAT certificate that the current feature space cannot satisfy the joint contract
+    - `supportCases` remain forbidden as hidden search fallbacks; under `v26` they are allowed only as an explicit historical-support feasibility contract
+  - `v26` implementation/probe status is now explicit:
+    - server root cause before the real probe was missing support-case data, not solver logic:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/support_cases/haesung_076610_20260318_low_gap_top_v12.json` was absent on server
+      - fixed by exporting support cases from historical replay pack:
+        - input: `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_haesung_076610_20260318_low20m_historical_replay_v1_20260326/step-perfect-prototype-open-live-pack/daily_pack.jsonl`
+        - catalog: `/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_haesung_low_gap_top_support_pruned_search_v12_probe200k_20260326_train_mine/95f72f31a8d68467/catalog.json`
+    - real `v26` probe then completed and failed decisively at the joint feasibility layer:
+      - `subgroupBundleManifestCount = 1`
+      - `subgroupExactEntryAcceptedCount = 1`
+      - `jointFeasibilitySolvedCount = 0`
+      - `jointFeasibilityUnsatCount = 1`
+      - `exactCompletionUnsatReasonCounts = { "unsat_historical_support": 1 }`
+      - `jointHistoricalSupportMatchedCount = 0`
+      - run terminated with `reason = no_core_frontier_solutions`
+    - active blocker after `v26` is no longer staged acceptance fragmentation:
+      - the blocker is that the current `v6` low-gap-top candidate pool cannot produce even one joint-feasible train rule that also matches the required Haesung historical-support contract
+      - next work must target historical-support feasibility / feature-space expressivity rather than more pipeline plumbing
+  - `v27` is the locked root-cause direction after `v26`:
+    - `v26` proved the remaining blocker is the current atomic token space itself:
+      - the surviving manifest reached joint feasibility solve
+      - the solver failed specifically with `unsat_historical_support`
+    - canonical next work is not more staged refinement:
+      - keep the `v26` joint feasibility contract
+      - expand the candidate atom space to support-compatible atoms:
+        - interval atoms over low-gap-top numeric axes
+        - macro/composite atoms over gap/retention/volume/trend/xsec patterns
+        - support-anchor atoms that encode general support-compatible motifs without symbol/date leakage
+    - support-case export must be able to regenerate `076610:2026-03-18` using the expanded atom flags so the historical-support contract and train mining share the same token surface
+    - decisive outcome expectation:
+      - either at least one rule becomes jointly feasible and historical-support matched under the expanded atom space
+      - or the expanded atom space still yields `unsat_historical_support`, which is much stronger evidence that the present low-gap-top feature family cannot express the target rule
+    - `v27` probe is now completed:
+      - run `perfect_proto_low_gap_top_support_compatible_atom_space_v27_probe200k_20260327`
+      - expanded atom-space plumbing is closed:
+        - interval/macro/support-anchor atoms emitted in tokenizer/export
+        - joint candidate pool and leaderboard telemetry propagate atom-type counts
+        - support-atoms wrapper is accepted by the Step-B base wrapper and server verify passes
+      - observed result:
+        - `subgroupBundleManifestCount = 1`
+        - `subgroupExactEntryAcceptedCount = 1`
+        - `exactCoreCandidateCount = 24`
+        - `exactCoreQualifiedCount = 6`
+        - `exactCompletionSolvedCount = 0`
+        - `exactCompletionUnsatCount = 1`
+        - `exactCompletionUnsatReasonCounts = { "unsat_historical_support": 1 }`
+        - `jointHistoricalSupportMatchedCount = 0`
+        - run terminated with `reason = no_core_frontier_solutions`
+      - active blocker after `v27` is stronger than `v26`:
+        - even after adding support-compatible interval/macro/support-anchor atoms, the current low-gap-top feature family still cannot express a joint-feasible Haesung-supporting train rule
+        - next work must treat this as feature-family infeasibility, not candidate-pool plumbing
+  - `v29` is now the canonical representation redesign after `v27`:
+    - `v27` proved the issue is no longer atom-plumbing:
+      - the surviving manifest still reached exact-entry / exact-core qualification
+      - the run still failed with `unsat_historical_support`
+    - canonical next work keeps the `v26` joint feasibility solver but replaces the support representation:
+      - build a support-manifold dataset from Haesung support rows and support-compatible cohort seeds
+      - emit support-manifold signature features (`sig:*`) instead of depending on raw `B01~B05` / interval / macro atoms alone
+      - emit adaptive support-threshold atoms derived from that signature space
+      - prioritize support-signature atoms inside the joint-feasibility candidate pool
+    - support-case export must now preserve raw support row information:
+      - `numericFeatureMap`
+      - `categoricalTokens`
+      - support-signature config seed fields
+    - `v29` probe outcome is now pinned:
+      - run `perfect_proto_low_gap_top_support_manifold_distillation_v29_probe200k_20260327`
+      - observed staged counts:
+        - `subgroupCandidateCount = 2`
+        - `subgroupQualifiedCandidateCount = 2`
+        - `subgroupBundleManifestCount = 1`
+        - `subgroupExactEntryAcceptedCount = 1`
+        - `exactCompletionManifestCount = 1`
+        - `exactCompletionSolvedCount = 0`
+        - `exactCompletionUnsatCount = 1`
+        - `exactCompletionUnsatReasonCounts = { "unsat_historical_support": 1 }`
+        - `exactCoreCandidateCount = 24`
+        - `exactCoreQualifiedCount = 6`
+        - `jointHistoricalSupportMatchedCount = 0`
+      - zero-rule summary resolved to `reason = no_core_frontier_solutions`
+      - active blocker after `v29` is stronger than `v27`:
+        - even after adding support-manifold signature features and adaptive support-threshold atoms, the current `v6 low_gap_top` feature family still cannot express a jointly feasible Haesung-supporting train rule
+        - next work must treat this as feature-family infeasibility, not token expansion or wrapper plumbing
+  - `v30` is now the canonical post-`v29` redesign:
+    - `v29` strongly suggests that the blocker is no longer the candidate pool or token family alone:
+      - the surviving manifest still reached exact-entry / exact-core qualification
+      - the run still failed with `unsat_historical_support`
+    - canonical next work changes the target artifact itself:
+      - stop requiring a single exact conjunction as the final low-gap-top artifact
+      - build a deterministic support-aware metric over support-positive vs hard-negative rows
+      - extract a stability-filtered clause bank from that metric feature family
+      - solve a bounded tiny decision set (`<= 3` clauses) under global constraints
+    - hard constraints for the new solve must include:
+      - must-cover `076610:2026-03-18`
+      - `train precision = 1.0`
+      - `trainMatchedDateCount >= 10`
+      - `trainMatchedMonthCount >= 6`
+      - `trainMatchedFoldCount = 4`
+      - `crossfitNegativeWindowCount = 0`
+      - `crossfitRetainedPositiveWindowCount >= 2`
+    - decisive outcome expectation:
+      - either a small decision set becomes jointly feasible, historical-support matched, and later OOS-perfect
+      - or bounded clause budgets `1/2/3` all resolve to explicit UNSAT reasons, which is strong evidence that the present low-gap-top framing itself is infeasible
+  - `v30` row-level decision-set execution was completed on `2026-03-27` with run `perfect_proto_low_gap_top_support_metric_decision_set_v30_probe200k_r3_20260327`:
+    - server verify passed after the row-level clause-bank rewrite
+    - the wrapper progressed through the new decision-set stage and failed explicitly at:
+      - `artifacts/runs/perfect_proto_low_gap_top_support_metric_decision_set_v30_probe200k_r3_20260327/step-perfect-prototype-decision-set/no_decision_set_summary.json`
+      - `reason = unsat_no_feasible_decision_set`
+      - `stableClauseCandidateCount = 0`
+    - this is materially different from the pre-rewrite failure mode:
+      - the old issue was a fake rule-filter bank that never solved over direct row coverage
+      - the new issue is that the row-level stable clause bank itself is empty under the current support-metric clause filters
+    - the upstream train-mine stage still emitted one low-gap-top survivor:
+      - `PP_d57fd9233a09`
+      - `trainMatchedDateCount = 9`
+      - `trainMatchedMonthCount = 9`
+      - `trainMatchedFoldCount = 4`
+      - `openOosMatchCount = 0`
+      - `haesungSupport = false`
+    - active blocker after `v30 r3` is now sharper:
+      - not subgroup plumbing
+      - not exact entry
+      - not joint-solver plumbing
+      - but the fact that **no support-metric clause survives the current clause-bank admissibility filters**
+    - next work must treat this as a clause-bank feasibility / support-metric clause-generation problem, not as another wrapper/search-budget problem
+  - `v31` is now the canonical post-`v30` redesign:
+    - `v30 r3` strongly suggests that bounded clause sets are still the wrong primitive:
+      - the decision-set stage actually ran
+      - but the row-level stable clause bank remained empty
+      - therefore the blocker is not global solve combinatorics; it is primitive clause feasibility under the current support-metric representation
+    - canonical next work changes the artifact again:
+      - keep the broad low-gap-top subgroup gate
+      - stop requiring clause-level admissibility before global composition
+      - build a deterministic support-aware prototype cohort over support-positive vs hard-negative rows
+      - emit a sparse integer support scorecard with a hard abstention threshold
+    - hard constraints for the new scorecard solve must include:
+      - must-cover `076610:2026-03-18`
+      - `train precision = 1.0`
+      - `trainMatchedDateCount >= 10`
+      - `trainMatchedMonthCount >= 6`
+      - `trainMatchedFoldCount = 4`
+      - `crossfitNegativeWindowCount = 0`
+      - `crossfitRetainedPositiveWindowCount >= 2`
+    - decisive outcome expectation:
+      - either a subgroup-gated support scorecard becomes jointly feasible, historical-support matched, and later OOS-perfect
+      - or the scorecard solver emits explicit UNSAT by role-bank emptiness / train breadth / crossfit / OOS risk, which is stronger evidence that the present low-gap-top framing itself is infeasible
+  - `v31 r3` server probe closed the first real scorecard execution path:
+    - run: `perfect_proto_low_gap_top_support_scorecard_router_v31_probe200k_r3_20260327`
+    - server verify passed on the patched gated-domain scorecard path before the run
+    - baseline low-gap-top mining completed and emitted a frozen catalog with one upstream rule:
+      - `PP_0833e2a41b90`
+      - train breadth `5 dates / 4 months / 4 folds`
+      - `openOosMatchCount = 0`
+      - `haesungSupport = false`
+    - scorecard stage itself then failed fast with:
+      - `reason = unsat_no_feasible_support_scorecard`
+      - `scorecardSolvedCount = 0`
+      - `scorecardHistoricalSupportMatchedCount = 0`
+      - `scorecardTermCandidateCount = 166`
+      - `scorecardTermQualifiedCount = 140`
+      - `scorecardUnsatReasonCounts.unsat_no_breadth_extender_terms = 1`
+    - prototype cohort and role-bank diagnostics show the scorecard path is wired correctly:
+      - prototype cohort: `592` support-positive rows / `1352` hard-negative rows / gated-train `188 rows, 162 dates, 48 months, 4 folds`
+      - term bank: `8` support-anchor terms, `8` risk-killer terms, but `0` breadth-extender terms
+    - current blocker is now exact:
+      - not search budget
+      - not scorecard wrapper plumbing
+      - not historical-support wiring
+      - but the absence of any positive breadth-extender term under the current support-metric representation
+    - next work must treat this as a `support-positive breadth extension` / representation problem, not as another solver or orchestration patch
+  - current `v32` patch direction is:
+    - keep the broad `low_gap_top` subgroup gate and prototype cohort path from `v31`
+    - retire the support-scorecard term bank from the canonical runtime path for `low_gap_top_continuation`
+    - replace it with a deterministic subgroup-gated `support-prototype router`
+    - router artifact fields must include:
+      - `familyId`
+      - `surfaceName`
+      - `gateTokens`
+      - `supportCaseIds`
+      - `supportSignatureConfig`
+      - `monotoneThresholds`
+      - `hardNegativeVeto`
+      - `abstainThreshold`
+      - `fitDiagnostics`
+    - router calibration must solve threshold feasibility directly, not via role-bank composition
+    - canonical router constraints are:
+      - must cover `076610:2026-03-18`
+      - `train precision = 1.0`
+      - `trainMatchedDateCount >= 10`
+      - `trainMatchedMonthCount >= 6`
+      - `trainMatchedFoldCount = 4`
+      - `crossfitNegativeWindowCount = 0`
+      - `crossfitRetainedPositiveWindowCount >= 2`
+    - router staged telemetry must persist:
+      - `routerCandidateCount`
+      - `routerSolvedCount`
+      - `routerHistoricalSupportMatchedCount`
+      - `routerUnsatReasonCounts`
+      - `routerTrainMatchedDateCount`
+      - `routerTrainMatchedMonthCount`
+      - `routerTrainMatchedFoldCount`
+    - router zero-result summaries must distinguish:
+      - `unsat_no_gate`
+      - `unsat_historical_support`
+      - `unsat_train_breadth`
+      - `unsat_crossfit_negatives`
+      - `unsat_no_monotone_threshold_router`
+    - first successful `v32` milestone is no longer scorecard breadth-extension:
+      - `routerSolvedCount > 0`
+      - `routerHistoricalSupportMatchedCount > 0`
+      - at least one router survives with `trainMatchedDateCount >= 10`
+  - current `v32 r2` probe outcome is now pinned:
+    - run: `perfect_proto_low_gap_top_support_prototype_router_v32_probe200k_r2_20260327`
+    - the router performance blocker is closed:
+      - calibration no longer re-evaluates the full ungated `22k` train rowset for every threshold vector
+      - the server run completed and emitted an explicit router UNSAT summary instead of hanging inside calibration
+    - prototype cohort stayed broad enough for a feasible router search:
+      - gate tokens:
+        - `tag:lowGapTop.gapContinuationRegime:GAP_FADE`
+        - `tag:xsec.gapRank:HIGH`
+      - gated-train:
+        - `188 rows`
+        - `162 dates`
+        - `48 months`
+        - `4 folds`
+      - support-positive cohort:
+        - `592 rows`
+        - `377 dates`
+        - `49 months`
+        - `4 folds`
+      - hard-negative cohort:
+        - `1352 rows`
+        - `646 dates`
+        - `50 months`
+        - `4 folds`
+    - router candidate space was non-empty and fully explored:
+      - `routerCandidateCount = 24`
+      - `routerFeatureCandidateCount = 6`
+      - `routerThresholdCandidateCount = 24`
+      - `triedCandidateCount = 19704`
+    - the decisive router blocker is now purity, not breadth or historical coverage wiring:
+      - `reason = unsat_no_monotone_threshold_router`
+      - `routerUnsatReasonCounts.unsat_train_precision = 19704`
+    - operational conclusion:
+      - the router is now fully wired and no longer blocked on runtime or search-space orchestration
+      - the active blocker is monotone-threshold purity feasibility under the current support-signature surface
+  - current `v33` patch direction is:
+    - keep the broad `low_gap_top` subgroup gate and prototype cohort path from `v32`
+    - retire the global monotone-threshold `support-prototype router` from the canonical runtime path for `low_gap_top_continuation`
+    - replace it with a deterministic subgroup-gated `local prototype atlas`
+    - atlas artifact fields must include:
+      - `familyId`
+      - `surfaceName`
+      - `gateTokens`
+      - `supportCaseIds`
+      - `featureKeys`
+      - `featureScales`
+      - `positivePrototypes`
+      - `negativePrototypes`
+      - `acceptanceRadiusByCell`
+      - `vetoMarginByCell`
+      - `abstainThreshold`
+      - `fitDiagnostics`
+    - atlas calibration must solve local-pocket feasibility directly, not via global threshold vectors
+    - canonical atlas constraints are:
+      - must cover `076610:2026-03-18`
+      - `train precision = 1.0`
+      - `trainMatchedDateCount >= 10`
+      - `trainMatchedMonthCount >= 6`
+      - `trainMatchedFoldCount = 4`
+      - `crossfitNegativeWindowCount = 0`
+      - `crossfitRetainedPositiveWindowCount >= 2`
+    - atlas staged telemetry must persist:
+      - `atlasCellCandidateCount`
+      - `atlasSolvedCount`
+      - `atlasHistoricalSupportMatchedCount`
+      - `atlasUnsatReasonCounts`
+      - `atlasTrainMatchedDateCount`
+      - `atlasTrainMatchedMonthCount`
+      - `atlasTrainMatchedFoldCount`
+    - atlas zero-result summaries must distinguish:
+      - `unsat_no_gate`
+      - `unsat_no_local_cells`
+      - `unsat_historical_support`
+      - `unsat_train_precision`
+      - `unsat_train_breadth`
+      - `unsat_crossfit_negatives`
+      - `unsat_no_local_prototype_atlas`
+    - first successful `v33` milestone is:
+      - `atlasSolvedCount > 0`
+      - `atlasHistoricalSupportMatchedCount > 0`
+      - at least one atlas survives with `trainMatchedDateCount >= 10`
+    - current `v33` probe outcome is now pinned:
+      - run: `perfect_proto_low_gap_top_local_prototype_atlas_v33_probe200k_20260327`
+      - local/server `npm run verify` both passed before the probe
+      - atlas candidate space was real:
+        - `atlasCellCandidateCount = 4`
+        - `atlasQualifiedCellCount = 3`
+        - `triedCandidateCount = 1368`
+      - atlas solve still failed with:
+        - `reason = unsat_no_local_prototype_atlas`
+        - `atlasUnsatReasonCounts = { "unsat_historical_support": 1368 }`
+      - the support case still sat outside every qualified local pocket:
+        - `ATLAS_CELL_01 supportCaseMarginMean = -0.07913476157876032`
+        - `ATLAS_CELL_04 supportCaseMarginMean = -0.48946091207711095`
+        - `ATLAS_CELL_03 supportCaseMarginMean = -1.577422426383034`
+      - interpretation:
+        - the atlas path is now wired and runtime-feasible
+        - but the current support-signature surface still does not place `076610:2026-03-18` inside any separable positive local pocket
+        - the next patch must change support representation / prototype construction itself, not atlas orchestration, wrapper plumbing, or threshold search budget
+  - current `v34` patch direction is:
+    - keep the `v33` subgroup-gated `local prototype atlas` as the canonical runtime artifact
+    - do not revisit `exact rule`, `decision set`, `scorecard`, or global monotone router runtime artifacts as the primary path
+    - replace only the atlas input representation with a `support-contrastive bridge subtype` family
+    - the `v34` family must build explicit cohorts:
+      - `bridgePositiveRows`
+      - `supportNearHardNegativeRows`
+      - `backgroundRows`
+      - `gatedPositiveRows`
+    - the `v34` feature family must describe contrastive local topology, not absolute support similarity:
+      - positive-vs-negative nearest-distance and top-k distance margins
+      - local neighborhood purity / date breadth / month breadth / fold breadth
+      - positive-cell vs negative-cell membership gaps
+      - groupwise residual margins across `event`, `gap`, `candle`, `volume`, `trend`, `shape`, `market`, `xsec`
+    - atlas cells must now be built from the `bridgePositiveRows`, not from the broad positive distribution
+    - negative veto cells must be built from `supportNearHardNegativeRows`, not generic broad negatives
+    - overfit red lines are fixed:
+      - no symbol/date/id direct featureization
+      - no support-case row-key featureization
+      - no acceptance of a family that cannot reach `trainMatchedDateCount >= 10`, `trainMatchedMonthCount >= 6`, `trainMatchedFoldCount = 4`
+      - no post-hoc-only `haesungSupport` acceptance
+    - first successful `v34` milestone is:
+      - at least one bridge-positive local cell has positive support margin for `076610:2026-03-18`
+      - `atlasSolvedCount > 0`
+      - `atlasHistoricalSupportMatchedCount > 0`
+      - at least one atlas survives with `trainMatchedDateCount >= 10`
+      - the same atlas reaches `openOosPrecision = 1.0`
+      - `openOosMatchCount >= 3`
+      - `openOosUniqueMatchedDates >= 3`
+      - the same atlas reaches `haesungSupport = true`
+    - fail-fast reasons must now distinguish:
+      - `unsat_no_bridge_positive_cohort`
+      - `unsat_bridge_positive_breadth`
+      - `unsat_no_support_near_hard_negative`
+      - `unsat_support_case_outside_all_bridge_cells`
+      - `unsat_train_precision`
+      - `unsat_train_breadth`
+      - `unsat_crossfit_negatives`
+      - `unsat_oos_precision`
+    - current `v34` probe outcome is now pinned:
+      - run: `perfect_proto_low_gap_top_support_contrastive_bridge_family_v34_probe200k_20260327`
+      - local/server `npm run verify` both passed before the probe
+      - the representation patch worked in the narrow sense:
+        - `bridgeReady = true`
+        - `bridgePositiveSummary = 18 rows / 18 dates / 15 months / 4 folds`
+        - `supportNearHardNegativeSummary = 32 rows / 31 dates / 25 months / 4 folds`
+        - `supportCaseBridgeBestPositiveCellMarginMean = 0.3731458321528325`
+      - the support case entered one positive atlas cell:
+        - `atlasPositiveSupportMarginCellCount = 1`
+        - `ATLAS_CELL_02 supportCaseMarginMean = 0.282872745174483`
+      - atlas solve still failed:
+        - `reason = unsat_no_local_prototype_atlas`
+        - `atlasUnsatReasonCounts = { "unsat_historical_support": 24 }`
+        - `atlasCellCandidateCount = 2`
+        - `atlasQualifiedCellCount = 1`
+        - `triedCandidateCount = 24`
+      - the surviving bridge-positive pocket remained too narrow for the operating contract:
+        - best train summary only reached `6 dates / 6 months / 3 folds`
+        - `crossfitPositiveWindowCount <= 1`
+        - `haesungSupport = false`
+        - `openOosMatchCount = 0`
+      - interpretation:
+        - `v34` closed the old `support-case outside all cells` blocker
+        - the new blocker is now bridge-cell breadth/generalization under the existing `low_gap_top` family
+        - next work must widen the bridge-positive recurring pocket without reintroducing support-near hard negatives
+  - current `v35` patch direction is:
+    - keep the `v33/v34` subgroup-gated `local prototype atlas` as the canonical runtime artifact
+    - do not revisit `exact rule`, `decision set`, `scorecard`, or global threshold router runtime artifacts as the primary path
+    - keep the `v34` bridge family as the seed membership stage
+    - add a `bridge recurrence lift` stage that widens the seed bridge pocket using only companion positives that improve:
+      - `matchedDateCount`
+      - `matchedMonthCount`
+      - `matchedFoldCount`
+      - `crossfitPositiveWindowCount`
+      while staying inside a bounded hard-negative leak budget
+    - replace the `single positivePrototype / single negativePrototype` atlas cell model with a `multi-anchor local cover` model:
+      - `positiveAnchors[]`
+      - `negativeBorderAnchors[]`
+      - `kPositive`
+      - `minPositiveVotes`
+      - `positiveRadius`
+      - `negativeMargin`
+      - `abstainThreshold`
+    - bounded union is explicit and limited:
+      - allow at most `2` compatible cells
+      - fail fast if any union breaks `train precision = 1.0`
+    - first successful `v35` milestone is:
+      - support case enters an anchor cover (`supportCaseAnchorVoteCount > 0`)
+      - pre-threshold atlas breadth reaches `10 dates / 6 months / 4 folds`
+      - the same atlas survives calibration with:
+        - `atlasSolvedCount > 0`
+        - `atlasHistoricalSupportMatchedCount > 0`
+        - `train precision = 1.0`
+        - `crossfitNegativeWindowCount = 0`
+        - `crossfitRetainedPositiveWindowCount >= 2`
+        - `openOosPrecision = 1.0`
+        - `openOosMatchCount >= 3`
+        - `openOosUniqueMatchedDates >= 3`
+        - `haesungSupport = true`
+  - `v35` corrected short-probe outcome is now recorded:
+    - wrapper root-cause was fixed first:
+      - `server_run_stepb_dplus1_plus_lite_recent_low_gap_top_support_atlas.sh` was wrongly launching `probe200k` with `configuredMaxSearchStates = 20000000`
+      - wrapper now injects an explicit short-probe cap and the rerun used `--max-search-states=200000`
+      - server `npm run verify` passed again after the wrapper fix
+    - corrected probe run:
+      - run id: `perfect_proto_low_gap_top_recurrence_anchor_cover_atlas_v35_probe200k_r2_20260327`
+      - `train_mine.rules = 1`
+      - `train_mine.exploredStates = 200000`
+      - `support atlas reason = unsat_no_local_prototype_atlas`
+      - `atlasUnsatReasonCounts.unsat_historical_support = 192`
+    - `bridge recurrence lift` produced real breadth lift before atlas calibration:
+      - seed bridge positives: `18 rows / 18 dates / 15 months / 4 folds`
+      - companion candidates: `170`
+      - accepted companions: `6`
+      - lifted bridge positives: `24 rows / 24 dates / 18 months / 4 folds`
+      - marginal gain: `+6 dates / +3 months / +0 folds`
+    - the new blocker is now explicit:
+      - support-case membership is no longer the bottleneck
+      - most companions were rejected by `unsat_companion_lift_negative_leak = 157`
+      - surviving anchor-cover cells remained too narrow:
+        - `ATLAS_CELL_01 = 17 dates / 14 months / 4 folds`
+        - `ATLAS_CELL_02 = 7 dates / 6 months / 3 folds`
+      - final operating result stayed empty:
+        - close28 OOS selected rows: `0`
+        - top leaderboard rule `PP_0833e2a41b90` remained `5 dates / 4 months / 4 folds`
+        - `openOosMatchCount = 0`
+        - `haesungSupport = false`
+    - fail-fast reasons must now distinguish:
+      - `unsat_no_seed_bridge_family`
+      - `unsat_no_recurrence_companion_candidates`
+      - `unsat_companion_lift_no_breadth_gain`
+      - `unsat_companion_lift_negative_leak`
+      - `unsat_support_case_lost_after_lift`
+      - `unsat_no_anchor_cover`
+      - `unsat_anchor_cover_breadth`
+      - `unsat_anchor_vote_support`
+      - `unsat_cell_union_precision`
+  - current `v36` patch direction is:
+    - keep the `v33/v34/v35` deterministic `local prototype atlas` runtime one final round only
+    - treat `v36` as a proof patch for the atlas path, not another generic tuning cycle
+    - add `support leave-one-out fit`:
+      - exclude `076610:2026-03-18` from bridge fitting, prototype estimation, feature scaling, and cell seeding
+      - reintroduce the support case only at final acceptance
+    - replace the static recurrence-lift gate with a deterministic `dynamic bridge frontier`:
+      - recompute positive prototype / positive-cell margins after each accepted companion
+      - rebuild the support-near hard-negative shell after each accepted companion
+      - accept companions by marginal breadth / recurrence gain versus marginal negative-leak / purity-drop cost
+    - add an explicit `boundary-veto frontier` before atlas calibration:
+      - persist pre-threshold frontier candidates for breadth / support / precision
+      - apply deterministic support-near hard-negative vetoes before the final threshold grid
+      - fail fast if precision cannot be recovered without losing support
+    - first successful `v36` milestone is:
+      - `supportFitExcluded = true`
+      - `supportLeaveOneOutRecovered = true`
+      - pre-threshold frontier exposes at least one `10 dates / 6 months / 4 folds` candidate
+      - boundary veto recovers `train precision = 1.0` while keeping support
+      - the same candidate still satisfies:
+        - `crossfitNegativeWindowCount = 0`
+        - `crossfitRetainedPositiveWindowCount >= 2`
+        - `openOosPrecision = 1.0`
+        - `openOosMatchCount >= 3`
+        - `openOosUniqueMatchedDates >= 3`
+        - `haesungSupport = true`
+    - `v36` must fail fast with explicit proof-stage reasons:
+      - `unsat_support_leave_one_out_fit`
+      - `unsat_dynamic_bridge_frontier_empty`
+      - `unsat_dynamic_bridge_frontier_no_breadth`
+      - `unsat_dynamic_bridge_frontier_negative_leak`
+      - `unsat_boundary_veto_no_precision_recovery`
+      - `unsat_boundary_veto_support_loss`
+      - `unsat_prethreshold_frontier_empty`
+      - `unsat_prethreshold_frontier_below_breadth`
+  - actual `v36` probe outcome (`perfect_proto_low_gap_top_dynamic_bridge_boundary_frontier_v36_probe200k_r2_20260327`):
+    - wrapper root cause was real and is fixed:
+      - `tools/server_run_stepb_dplus1_plus_lite_recent_mid_low.sh` now injects `--split-policy=decision_date_only` by default
+    - the base recent-mid-low plus-lite run completed successfully and produced a frozen catalog
+    - the atlas proof patch still failed at the support stage:
+      - `supportFitExcluded = true`
+      - `supportLeaveOneOutRecovered = false`
+      - `bridgeCompanionAcceptedCount = 0 / 172`
+      - reject mix:
+        - `unsat_boundary_veto_support_loss = 157`
+        - `unsat_dynamic_bridge_frontier_negative_leak = 10`
+        - `unsat_dynamic_bridge_frontier_no_breadth = 5`
+      - best raw atlas cell before thresholding reached `12 dates / 11 months / 4 folds`
+      - pre-threshold frontier had `3` points, but every point had `supportMatched = []`
+      - final result was `unsat_historical_support`
+      - close28 OOS remained empty (`0 selected / 0 hit`)
+    - interpretation:
+      - leave-one-out removed the direct support anchor as intended
+      - dynamic bridge frontier could not recover a support-retaining companion set
+      - atlas direction is now blocked specifically on `support recovery after leave-one-out`, not on mining/runtime plumbing
+  - current `v37` patch direction is:
+    - retire `local prototype atlas` as the canonical runtime artifact
+    - keep the bridge/contrastive representation work from `v34~v36`
+    - add a new `support boundary residual` feature family:
+      - score `support-near TP` versus `support-near FP` boundaries directly
+      - score recurrence/stability pressure directly
+      - expose false-positive pressure explicitly
+    - move runtime selection to `discriminative scorer + calibrated abstention`
+    - keep `076610:2026-03-18` in acceptance-only scope:
+      - exclude it from fit / prototype / scaling / threshold calibration
+      - require `haesungSupport = true` only after non-support breadth / purity already hold
+    - first successful `v37` milestone is:
+      - `supportFitExcluded = true`
+      - `supportLeaveOneOutRecovered = true`
+      - non-support train selection reaches:
+        - `10 dates`
+        - `6 months`
+        - `4 folds`
+      - the same scorer still satisfies:
+        - `train precision = 1.0`
+        - `crossfitNegativeWindowCount = 0`
+        - `crossfitRetainedPositiveWindowCount >= 2`
+        - `openOosPrecision = 1.0`
+        - `openOosMatchCount >= 3`
+        - `openOosUniqueMatchedDates >= 3`
+        - `haesungSupport = true`
+    - `v37` must fail fast with explicit scorer-stage reasons:
+      - `unsat_support_leave_one_out_fit`
+      - `unsat_support_recovery_after_leave_one_out`
+      - `unsat_non_support_train_breadth`
+      - `unsat_non_support_crossfit_recurrence`
+      - `unsat_boundary_residual_not_separable`
+      - `unsat_scorer_train_precision`
+      - `unsat_scorer_oos_zero_match`
+      - `unsat_scorer_oos_precision`
+      - `unsat_support_acceptance_only_dependency`
+  - actual `v37` outcome (`perfect_proto_low_gap_top_boundary_residual_scorer_v37_probe200k_20260328`):
+    - local/server `npm run verify` both passed
+    - `support boundary residual` family did build:
+      - `boundaryResidualFeatureCount = 35`
+      - `boundaryResidualPositiveGroupCount = 6`
+      - `supportFitExcluded = true`
+    - final scorer solve failed:
+      - `reason = unsat_scorer_train_precision`
+      - `supportLeaveOneOutRecovered = false`
+      - `scorerCandidateCount = 6`
+      - `triedCandidateCount = 2904`
+      - `scorerQualifiedCount = 0`
+      - `scorerUnsatReasonCounts.unsat_scorer_train_precision = 2793`
+      - `scorerUnsatReasonCounts.unsat_non_support_train_breadth = 111`
+    - best train-side scorer candidate massively overgeneralized:
+      - `618 selected / 176 hit / 442 negative`
+      - `precision = 0.2848`
+      - `152 dates / 48 months / 4 folds`
+      - `crossfitPositiveWindowCount = 6`
+      - `crossfitNegativeWindowCount = 6`
+      - `haesungSupport = false`
+    - close28 OOS stayed empty:
+      - `0 selected / 0 hit`
+    - interpretation:
+      - `v37` proved the new boundary family can generate broad support-near signals
+      - but the current scorer surface is not separable enough to recover purity
+      - the active blocker moved from support membership to `boundary residual separability / purity`
+  - `v38` actual outcome is now fixed:
+    - local/server `npm run verify` both passed
+    - server short probe `perfect_proto_low_gap_top_grouped_boundary_residual_experts_v38_probe200k_20260328` completed
+    - upstream representation stack was healthy:
+      - `supportFitExcluded = true`
+      - `bridgeReady = true`
+      - `boundaryResidualReady = true`
+      - `recurrencePurityReady = true`
+      - `recurrencePurityFeatureCount = 32`
+      - `boundaryResidualFeatureCount = 35`
+      - `boundaryResidualPositiveGroupCount = 6`
+    - grouped expert runtime failed before calibration:
+      - `reason = unsat_no_local_experts`
+      - `boundaryGroupCount = 6`
+      - `boundaryGroupEligibleCount = 0`
+      - `localExpertCandidateCount = 0`
+      - `localExpertQualifiedCount = 0`
+      - `expertUnionCandidateCount = 0`
+      - `expertUnionQualifiedCount = 0`
+      - `supportLeaveOneOutRecovered = false`
+    - the concrete blocker is `boundary group eligibility collapse`:
+      - grouped dataset shrank to `30` rows
+      - `supportCaseEligibleGroups = ["candle"]`
+      - `supportCaseLocalRecoveryMarginMean = 0`
+      - no recurrence-purity group survived the existing local-core / negative-shell eligibility gates
+    - OOS and support remained empty:
+      - close28 OOS `0 selected / 0 hit`
+      - `haesungSupport = false`
+    - interpretation:
+      - `v38` proved the new recurrence-purity surface can be computed cleanly
+      - but the current group dataset construction is too brittle to produce even one eligible local expert
+      - the active blocker moved from scorer purity to `group eligibility before local expert formation`
+  - next work, if continued, must start by repairing `group eligibility` rather than tuning expert thresholds:
+    - broaden the recurrence-purity grouping contract so support-near positives can form a stable local core without leaking negatives immediately
+    - preserve `supportFitExcluded = true` and acceptance-only support semantics
+    - fail fast if:
+      - `boundaryGroupEligibleCount = 0`
+      - `localExpertCandidateCount = 0`
+      - `supportLeaveOneOutRecovered = false`
+  - `v39 perfect_proto_support_carrier_graph_local_experts_v39_probe200k_20260328` is now complete:
+    - local/server `npm run verify` both passed before probe
+    - the upstream recent-mid-low run completed and froze a train catalog successfully
+    - the new carrier family failed before any local expert calibration:
+      - `reason = unsat_support_case_not_component_reachable`
+      - `supportFitExcluded = true`
+      - `supportLeaveOneOutRecovered = false`
+      - `carrierGraphFeatureCount = 15`
+      - `carrierComponentCount = 3`
+      - `carrierEligibleComponentCount = 1`
+      - `supportCaseReachableComponentCount = 0`
+      - `boundaryGroupCount = 0`
+      - `localExpertCandidateCount = 0`
+      - `expertUnionQualifiedCount = 0`
+    - interpretation:
+      - the `carrier graph` family can be computed cleanly and it did produce one eligible non-support carrier component
+      - but support recovery collapsed exactly at the bridge-to-carrier handoff
+      - the support case only sat marginally on the bridge surface:
+        - `supportCaseBridgeBestPositiveCellMarginMean = 0.030262614771508156`
+      - once projected into carrier components, the support case no longer reached any eligible component
+      - this is now a pre-runtime representation failure, not an expert-threshold or union-tuning failure
+    - OOS remained empty:
+      - close28 OOS `0 selected / 0 hit`
+      - upstream top rule stayed `PP_0833e2a41b90`
+      - `train 5 dates / 4 months / 4 folds`
+      - `haesungSupport = false`
+  - next work, if continued, must start by repairing `bridge-to-carrier reachability` rather than tuning local experts:
+    - do not retune local expert or union thresholds while `supportCaseReachableComponentCount = 0`
+    - preserve `supportFitExcluded = true` and acceptance-only support semantics
+    - fail fast if:
+      - `carrierEligibleComponentCount = 0`
+      - `supportCaseReachableComponentCount = 0`
+      - non-support component-level breadth disappears after any reachability repair
+  - `v40 perfect_proto_low_gap_top_support_corridor_graph_propagation_v40` is now complete and closed:
+    - `r1` failure was an implementation mismatch:
+      - `unsat_no_corridor_metric_features`
+      - root cause: corridor metric learning used the tiny propagation seed set instead of the broader recurring reference cohorts
+      - fixed in the same patch; local/server `npm run verify` re-passed before re-probing
+    - final `r2` probe outcome (`perfect_proto_low_gap_top_support_corridor_graph_propagation_v40_probe200k_r2_20260328`):
+      - `reason = unsat_support_case_not_corridor_reachable`
+      - `supportFitExcluded = true`
+      - `supportLeaveOneOutRecovered = false`
+      - `graphPositiveSeedCount = 2`
+      - `graphNegativeSeedCount = 24`
+      - `corridorFeatureCount = 24`
+      - `graphNodeCount = 658`
+      - `graphEdgeCount = 2464`
+      - `supportCasePositivePotential = 0`
+      - `supportCaseNegativePotential = 1.3262364245709249e-11`
+      - `supportCaseSafeReachabilityScore = -0.25000000000994677`
+      - close28 OOS stayed `0 selected / 0 hit`
+    - interpretation:
+      - corridor graph propagation is now fully wired and no longer blocked by missing metric features
+      - the active blocker is graph-level support recovery collapse:
+        - the fitted non-support corridor does not transmit any positive potential to the support case
+      - this is no longer a threshold/calibration problem
+    - any continuation after `v40` must start from propagation reachability itself:
+      - do not retune abstention thresholds while `supportCasePositivePotential = 0`
+      - preserve `supportFitExcluded = true` and acceptance-only support semantics
+      - treat `graphPositiveSeedCount = 2` as a first-order bottleneck when designing any next propagation family
+  - `v41` is now executed and no longer hypothetical:
+    - patch key:
+      - `perfect_proto_low_gap_top_ordinal_multibasin_local_experts_v41`
+    - local verify and server `npm run verify` both passed
+    - server short probe run:
+      - `perfect_proto_low_gap_top_ordinal_multibasin_local_experts_v41_probe200k_r2_20260328`
+    - achieved milestones:
+      - `supportFitExcluded = true`
+      - `ordinalMotifFeatureCount = 49`
+      - `corridorPositiveBasinCount = 4`
+      - `corridorPositiveEligibleBasinCount = 3`
+      - `corridorPositiveSeedCount = 9`
+      - `supportCaseReachableBasinCount = 2`
+      - `boundaryGroupCount = 3`
+      - `boundaryGroupEligibleCount = 3`
+      - `localExpertCandidateCount = 29862`
+      - `localExpertQualifiedCount = 4`
+    - root-cause performance repair that was required during the patch:
+      - local expert calibration was evaluating OOS for every train-failing candidate
+      - fixed by deferring OOS evaluation until after train/crossfit feasibility
+      - this removed the v41 runtime stall without changing runtime semantics
+    - final result:
+      - `reason = unsat_expert_union_train_breadth`
+      - `expertUnionCandidateCount = 14`
+      - `expertUnionQualifiedCount = 0`
+      - `supportLeaveOneOutRecovered = false`
+      - close28 OOS remained `0 selected / 0 hit`
+    - exact blocker after `v41`:
+      - the new representation does recover corridor basins and pure local experts
+      - but every qualified expert collapses to the same pure pocket:
+        - `trainMatchedDateCount = 9`
+        - `trainMatchedMonthCount = 8`
+        - `trainMatchedFoldCount = 3`
+      - bounded unions do not add new dates/months/folds, so all `14` unions fail the same breadth contract
+      - support is still not recovered and OOS remains empty
+    - practical interpretation:
+      - `v41` disproved the specific hypothesis that ordinal-motif multibasin seeding alone would restore breadth
+      - the remaining blocker is no longer basin reachability or local-expert purity
+      - the blocker is expert diversity collapse: multiple experts exist, but they all describe the same 9-date pocket
+  - `v42` is now completed and should be read as a prove-or-kill result, not as a pending direction:
+    - patch key:
+      - `perfect_proto_low_gap_top_multibasin_simplex_complement_frontier_v42`
+    - memory root cause was repaired first:
+      - support-corridor builder now reuses one family variable stage-by-stage instead of retaining every family snapshot
+      - simplex feature stage no longer rebuilds fresh `tokenSet` clones for every row
+      - local/server `npm run verify` both passed again after the repair
+    - short probe result:
+      - run id `perfect_proto_low_gap_top_multibasin_simplex_complement_frontier_v42_probe200k_r2_20260328`
+      - final reason: `unsat_expert_union_train_breadth`
+      - source: [no_support_corridor_local_experts_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_multibasin_simplex_complement_frontier_v42_probe200k_r2_20260328/step-perfect-prototype-support-corridor-local-experts/no_support_corridor_local_experts_summary.json)
+    - what `v42` actually proved:
+      - `localExpertQualifiedCount = 2`
+      - `qualifiedExpertDistinctMatchedDateSignatureCount = 1`
+      - `coverageFrontierCandidateCount = 2`
+      - `coverageFrontierQualifiedCount = 1`
+      - `bestSingleExpertTrainMatchedDateCount = 8`
+      - `bestSingleExpertTrainMatchedMonthCount = 7`
+      - `bestSingleExpertTrainMatchedFoldCount = 3`
+      - `expertUnionDateGainOverBestSingleExpert = 0`
+      - `expertUnionMonthGainOverBestSingleExpert = 0`
+      - `expertUnionFoldGainOverBestSingleExpert = 0`
+      - `supportLeaveOneOutRecovered = false`
+      - close28 OOS remained `0 selected / 0 hit`
+    - interpretation:
+      - `sig.simplex.*` was enough to avoid the v42 OOM and to finish the run
+      - it was not enough to create a second complementary pure pocket
+      - all surviving experts still collapsed to one basin/signature:
+        - `2020-12-30`
+        - `2021-03-18`
+        - `2021-09-03`
+        - `2023-03-20`
+        - `2023-10-30`
+        - `2024-03-13`
+        - `2024-09-12`
+        - `2024-09-13`
+      - the blocker is no longer generic expert diversity collapse
+      - the blocker is now sharper:
+        - `low_gap_top` is producing exactly one pure pocket with no complementary pure expert to union against
+    - policy for any continuation inside the same family:
+      - fail fast before support/OOS if `qualifiedExpertDistinctMatchedDateSignatureCount <= 1`
+      - fail fast before support/OOS if `coverageFrontierQualifiedCount <= 1`
+      - fail fast before support/OOS if `bestSingleExpertTrainMatchedDateCount <= 8`
+      - fail fast before support/OOS if `expertUnionDateGainOverBestSingleExpert <= 0`
+      - fail fast before support/OOS if `expertUnionFoldGainOverBestSingleExpert <= 0`
+  - `v43` outcome is now pinned and the blocker moved again:
+    - patch key:
+      - `perfect_proto_support_recurrence_motif_bag_cover_v43`
+    - canonical run:
+      - `perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328`
+    - what the family reset actually proved:
+      - `low_gap_top` can be demoted to a gate / feature supplier without collapsing the bag dataset
+      - held-out `date bag` coverage is feasible:
+        - `positiveBagCount = 16`
+        - `negativeBagCount = 28`
+        - `supportBagCount = 1`
+      - motif lattice diversity exists before detector qualification:
+        - `motifBundleCount = 23`
+        - `distinctBagCoverSignatureCount = 14`
+        - `motifPrototypeCount = 6`
+        - `witnessAcceptedCount = 24`
+        - `witnessAcceptedBagCount = 16`
+    - actual final result:
+      - `reason = unsat_no_bag_local_detectors`
+      - `bagLocalDetectorCandidateCount = 480`
+      - `bagLocalDetectorQualifiedCount = 0`
+      - `bagLocalDetectorRejectReasonCounts.unsat_bag_local_detector_train_precision = 462`
+      - `bagLocalDetectorRejectReasonCounts.unsat_bag_local_detector_train_breadth = 18`
+      - best detector still leaked heavily:
+        - `49 selected / 15 positive / 34 negative`
+        - `precision = 0.3061`
+        - `trainMatchedDateCount = 14`
+        - `trainMatchedMonthCount = 11`
+        - `trainMatchedFoldCount = 3`
+        - `crossfitNegativeWindowCount = 6`
+      - `supportCaseTopBundleCount = 0`
+      - `supportLeaveOneOutRecovered = false`
+      - close28 OOS remained `0 selected / 0 hit`
+    - interpretation:
+      - the blocker is no longer bag diversity or witness/prototype induction
+      - the blocker is now sharper:
+        - bag-local detectors cannot turn the diverse motif bags into a pure detector
+        - every detector either leaks negatives or fails breadth before support/OOS is even considered
+        - the current family still does not yield a held-out support-recoverable `train100 + 10/6/4 + crossfitNegative=0` detector
+    - policy for any continuation of the bag-cover family:
+      - fail fast before support/OOS if `bagLocalDetectorQualifiedCount = 0`
+      - fail fast before support/OOS if best detector `train precision < 1.0`
+      - fail fast before support/OOS if best detector `trainMatchedFoldCount < 4`
+      - fail fast before support/OOS if `crossfitNegativeWindowCount > 0`
+  - `v44` outcome is now pinned and the blocker moved again:
+    - patch key:
+      - `perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44`
+    - canonical run:
+      - `perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44_probe200k_20260328`
+    - what the family reset actually proved:
+      - `low_gap_top` can be demoted to a gate / feature supplier without collapsing the candidate family
+      - held-out temporal-episode learning is feasible:
+        - `episodeCandidateCount = 469`
+        - `episodePositiveCount = 16`
+        - `episodeNegativeCount = 31`
+        - `episodeFeatureCount = 30`
+      - role-topology diversity exists before final scorer qualification:
+        - `roleTopologyFeatureCount = 35`
+        - `roleTopologySignatureCount = 6`
+        - `supportCaseReachableRoleSignatureCount = 1`
+      - breadth is no longer the active blocker at the best non-support surface:
+        - `trainMatchedDateCount = 11`
+        - `trainMatchedMonthCount = 11`
+        - `trainMatchedFoldCount = 4`
+    - actual final result:
+      - `reason = unsat_temporal_anchor_train_precision`
+      - `supportFitExcluded = true`
+      - `supportLeaveOneOutRecovered = false`
+      - `selectedFeaturePoolCount = 8`
+      - `candidateCount = 108`
+      - `qualifiedCandidateCount = 0`
+      - every candidate died on train purity:
+        - `unsatReasonCounts.unsat_temporal_anchor_train_precision = 108`
+      - best scorer still leaked heavily:
+        - `38 selected / 11 positive / 27 negative`
+        - `precision = 0.2895`
+        - `crossfitPositiveWindowCount = 2`
+        - `crossfitNegativeWindowCount = 6`
+      - close28 OOS remained `0 selected / 0 hit`
+    - interpretation:
+      - the blocker is no longer episode reachability or breadth floors
+      - the blocker is now sharper:
+        - temporal role-topology features can create enough breadth, but they still cannot separate positives from hard negatives cleanly enough to support a frozen anchored scorer
+        - the current family still fails before support or OOS because every viable-breadth candidate collapses on train purity
+    - policy for any continuation of the temporal-episode family:
+      - fail fast before support/OOS if `qualifiedCandidateCount = 0`
+      - fail fast before support/OOS if best candidate `train precision < 1.0`
+      - fail fast before support/OOS if `crossfitNegativeWindowCount > 0`
+      - fail fast before support/OOS if `supportLeaveOneOutRecovered = false`
+  - `v45 perfect_proto_low_gap_top_counterfactual_outranking_residual_v45` has now been implemented and probed as the canonical selection-family reset:
+    - run:
+      - `perfect_proto_low_gap_top_counterfactual_outranking_residual_v45_probe200k_r2_20260328`
+    - implementation result:
+      - the top1-query reframing completed end to end after an in-place augmentation fix removed the first server OOM
+      - local `npm run verify` passed
+      - server `npm run verify` passed
+    - final artifact:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_counterfactual_outranking_residual_v45_probe200k_r2_20260328/step-perfect-prototype-support-top1-query/no_support_top1_query_summary.json`
+    - final outcome:
+      - `reason = unsat_top1_query_train_precision`
+      - `supportFitExcluded = true`
+      - `supportLeaveOneOutRecovered = false`
+      - `selectedFeaturePoolCount = 8`
+      - `candidateCount = 1552`
+      - `qualifiedCandidateCount = 0`
+    - best non-support candidate:
+      - `269 selected / 131 positive / 138 negative / precision 0.48698884758364314`
+      - `trainMatchedDateCount = 131`
+      - `trainMatchedMonthCount = 48`
+      - `trainMatchedFoldCount = 4`
+      - `crossfitPositiveWindowCount = 6`
+      - `crossfitNegativeWindowCount = 6`
+      - `haesungSupport = false`
+    - highest-ranked surviving feature pair still collapsed onto an absolute residual surface:
+      - `sig.ctrlResidual.regimeResidualRank`
+      - `sig.ctrlResidual.temporalEpisode_episodePositiveCarry`
+    - interpretation:
+      - the selection-family reset solved the earlier breadth bottleneck decisively
+      - the blocker moved to purity collapse inside same-date top1 selection
+      - current peer-outranking + matched-control residual features still cannot separate positives from same-date hard negatives cleanly enough to support `train100`, support recovery, or any OOS carry
+    - frozen upstream state remains unchanged:
+      - leaderboard top rule is still `PP_0833e2a41b90`
+      - `train 5/5`
+      - `openOosMatchCount = 0`
+      - `haesungSupport = false`
+    - close28 OOS remained empty:
+      - `0 selected / 0 hit`
+    - policy for any continuation of the top1-query family:
+      - fail fast before support/OOS if best candidate `train precision < 1.0`
+      - fail fast before support/OOS if best candidate `crossfitNegativeWindowCount > 0`
+      - fail fast before support/OOS if `supportLeaveOneOutRecovered = false`
+      - fail fast before support/OOS if close28 OOS stays `0 selected`
+  - `v46 perfect_proto_low_gap_top_support_separability_audit_v46` has now completed and it closed the current family-level question:
+    - run:
+      - `perfect_proto_low_gap_top_support_separability_audit_v46_probe200k_20260328`
+    - outcome path:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_support_separability_audit_v46_probe200k_20260328/step-perfect-prototype-support-separability-audit/no_support_separability_summary.json`
+    - canonical result:
+      - `reason = unsat_pairwise_win_rate`
+      - `supportFitExcluded = true`
+      - `supportLeaveOneOutRecovered = false`
+      - `supplierFeatureCount = 240`
+      - `selectedFeaturePoolCount = 12`
+      - `pairwiseCandidateCount = 781`
+      - `pairwiseQualifiedCandidateCount = 0`
+      - `queryCandidateCount = 0`
+      - `queryQualifiedCandidateCount = 0`
+    - best pairwise subset still failed the separability contract:
+      - `pairwiseWinRate = 0.9534883720930233`
+      - `minFoldPairwiseWinRate = 0.75`
+      - `sameDateRunnerUpBeatRate = 0.8181818181818182`
+      - `hardNegativeLeakCount = 11`
+      - `distinctPositiveSignatureCount = 10`
+      - `supportProjectionScore = -0.6934119069706872`
+      - `supportProjectionPositive = false`
+      - `failureReason = unsat_fold_pairwise_win_rate`
+    - audit dataset did prove that v46 was not starved by trivial sample counts:
+      - `separabilityPositiveSummary = 16 rows / 16 dates / 14 months / 4 folds`
+      - `separabilityNegativeSummary = 45 rows / 35 dates / 28 months / 4 folds`
+      - `separabilityPairCount = 59`
+      - `separabilitySameDatePairCount = 17`
+      - `separabilityMatchedControlPairCount = 42`
+    - interpretation:
+      - current `low_gap_top` supplier family can produce broad candidate structure
+      - it cannot produce a support-excluded separable subset that is simultaneously fold-stable, runner-up-safe, leak-free, and support-positive
+      - this closes the “just find a better selector/runtime inside `low_gap_top`” path
+    - pinned policy after v46:
+      - do not continue with another in-family `low_gap_top` runtime/selector patch
+      - any next work must begin with target/family redefinition outside the current `low_gap_top_continuation` framing
+  - `v47 perfect_proto_support_counterfactual_episode_transition_admission_top1_v47` has now completed and failed at Stage A:
+    - server verify passed after the new `episode admission + admitted-date top1` family-reset wiring was added
+    - short probe run:
+      - `perfect_proto_support_counterfactual_episode_transition_admission_top1_v47_probe200k_20260328`
+    - final unsat file:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_support_counterfactual_episode_transition_admission_top1_v47_probe200k_20260328/step-perfect-prototype-support-regime-episode-admission/no_support_regime_episode_summary.json`
+    - final reason:
+      - `unsat_episode_admission_train_precision`
+    - what did work:
+      - `supportFitExcluded = true`
+      - `supportProjectionPositive = true`
+      - the reset family did harvest a broad enough positive regime seed:
+        - `bridgePositiveSummary = 16 rows / 16 dates / 14 months / 4 folds`
+        - `supportNearHardNegativeSummary = 32 rows / 31 dates / 26 months / 4 folds`
+        - `regimeEpisodeFeatureCount = 15`
+        - `episodeAdmissionFeatureCount = 7`
+    - what failed:
+      - Stage A admission never became selective
+      - `candidateCount = 18`
+      - `qualifiedCandidateCount = 0`
+      - best admission candidate still admitted almost the whole gated regime:
+        - `selectedEpisodeCount = 465`
+        - `positiveEpisodeCount = 16`
+        - `negativeEpisodeCount = 449`
+        - `precision = 0.034408602150537634`
+        - `trainMatchedDateCount = 16`
+        - `trainMatchedMonthCount = 14`
+        - `trainMatchedFoldCount = 4`
+        - `crossfitNegativeWindowCount = 6`
+        - `crossfitRetainedPositiveWindowCount = 6`
+      - `supportLeaveOneOutRecovered = false`
+    - operating outcome stayed unchanged:
+      - close28 OOS summary remained `0 selected / 0 hit`
+      - frozen upstream leaderboard stayed on `PP_0833e2a41b90`
+      - `train 5/5`, `openOosMatchCount = 0`, `haesungSupport = false`
+    - interpretation:
+      - `v47` proved the family reset can recover breadth and support-positive projection
+      - it also proved the new `episode admission` surface is still not separable enough to keep hard negatives out
+      - the new bottleneck is no longer reachability or narrowness; it is `episode admission purity collapse`
+    - pinned policy after `v47`:
+      - do not continue with another supplier/runtime patch inside the same `low_gap_top`-sourced support-regime framing
+      - any next work must change the target/family definition again rather than retuning `episode admission`, `admitted-date top1`, or another `low_gap_top`-derived selector
+  - `v48 perfect_proto_recent_mid_low_same_date_winner_query_v48` completed and failed closed:
+    - family reset that was actually tested:
+      - primary family: `recent_mid_low` same-date winner query
+      - `low_gap_top_continuation` survived only as a supplier / gate source
+      - runtime stayed `same-date top1 outranking + abstention`
+      - support remained acceptance-only with symbol `076610` excluded from fit / seed / scaling / calibration
+    - root-cause fix that landed before probing:
+      - singleton query handling had been inconsistent between the top1 runtime and winner-query suppliers
+      - peerless queries had been encoded as `runner-up gap = 0` and `consensus win-share = 0`
+      - both encodings were fixed; local smoke plus local/server `npm run verify` all passed
+    - actual server short-probe outcome:
+      - run id: `perfect_proto_recent_mid_low_same_date_winner_query_v48_20260328_231358`
+      - summary path: `step-perfect-prototype-recent-mid-low-winner-query/no_support_recent_mid_low_winner_query_summary.json`
+      - `reason = unsat_top1_query_train_precision`
+      - `supportFitExcluded = true`
+      - `supportLeaveOneOutRecovered = false`
+      - `selectedFeaturePoolCount = 3`
+      - `candidateCount = 960`
+      - `qualifiedCandidateCount = 0`
+      - best train summary:
+        - `998 selected / 299 positive / 699 negative`
+        - `precision = 0.2996`
+        - `trainMatchedDateCount = 299`
+        - `trainMatchedMonthCount = 50`
+        - `trainMatchedFoldCount = 4`
+        - `crossfitNegativeWindowCount = 6`
+      - top surviving pair:
+        - `sig.roleTopo.selfRank.temporalEpisode_episodeNegativePressure`
+        - `sig.roleTopo.selfRank.temporalEpisode_episodePositiveCarry`
+      - no feasible winner-query artifact was emitted
+      - OOS remained `0 selected / 0 hit`
+    - interpretation:
+      - `v48` closed the old narrowness bottleneck decisively; the family is broad enough
+      - it also showed the new same-date winner-query surface is still not separable enough to keep hard negatives out
+      - the new blocker is `same-date winner purity collapse`, not reachability, singleton handling, or breadth
+    - pinned hard-stop after `v48`:
+      - do not keep retuning this same `recent_mid_low` same-date winner-query family/runtime
+      - any next recovery attempt must change the target/family definition again rather than micro-adjusting this same top1-query surface
+  - `v49 perfect_proto_support_failure_regime_veto_top1_v49` completed on server short probe `perfect_proto_support_failure_regime_veto_top1_v49_20260328_234759` and closed the negative-first veto line:
+    - actual result:
+      - `reason = unsat_veto_train_breadth`
+      - `supportFitExcluded = true`
+      - `supportLeaveOneOutRecovered = false`
+      - `vetoCandidateCount = 3776`
+      - `vetoQualifiedCandidateCount = 0`
+      - `selectedClusterUniverseCount = 4`
+    - concrete failure pattern:
+      - the explored veto library was dominated by `slateArchetype_border_riskMargin`
+      - thresholds strict enough to suppress risk zeroed out everything: `0 survivors / 0 dates / 0 months / 0 folds`
+      - thresholds loose enough to preserve train breadth leaked hard negatives badly: `92 positive dates / 35 months / 4 folds` against `102 negative dates / 36 months / 4 folds`
+      - `supportProjectionPositive = false`, so survivor-top1 never even started
+      - wrapper exited with fast-fail code `42` because no feasible veto-top1 artifact existed
+    - implication:
+      - this was not another `top1 purity collapse`; it failed earlier at the veto surface itself
+      - the current `low_gap_top` / `recent_mid_low` supplier framing still cannot produce a stable zero-leak negative-regime partition for the support target
+    - pinned hard-stop after `v49`:
+      - do not keep retuning this same `failure-regime veto` surface
+      - do not attempt another in-family recovery using the same supplier stack
+      - the next line must start from a new target/family definition rather than another veto/query micro-adjustment
+  - `v50 perfect_proto_shadow_winner_slate_top1_v50` is now closed after server short probe `perfect_proto_shadow_winner_slate_top1_v50_probe200k_20260329`:
+    - actual result:
+      - `reason = unsat_pairwise_win_rate`
+      - `supportFitExcluded = true`
+      - `supportLeaveOneOutRecovered = false`
+      - `supplierFeatureCount = 103`
+      - `shadowWinnerSlateFeatureCount = 14`
+      - `pairwiseCandidateCount = 1`
+      - `pairwiseQualifiedCandidateCount = 0`
+    - dataset breadth was not the blocker:
+      - `queryEligibleTrainRowCount = 14450`
+      - `winnerPositiveDateCount = 958`
+      - `sameDateRunnerUpNegativeCount = 1910`
+      - `shadowWinnerSlateCalibrationNegativeSummary.rowCount = 1956`
+      - `shadowWinnerSlatePairCount = 5742`
+    - concrete failure pattern:
+      - the best pairwise subset used only `sig.shadowSlate.selection.rankPct` and `sig.slateArchetype.selection.rankPct`
+      - even that best subset only reached `pairwiseWinRate = 0.5951`
+      - `sameDateRunnerUpBeatRate = 0.5953`
+      - `matchedControlBeatRate = 0.5950`
+      - `failureImpostorBeatRate = 0.5950`
+      - `minFoldPairwiseWinRate = 0.5619`
+      - `hardNegativeLeakCount = 1956`
+      - `supportProjectionPositive = false`
+      - the line failed before canonical top1 runtime because the required winner-slate separability audit never qualified
+    - implication:
+      - this was not another runtime-calibration miss
+      - the current supplier framing still cannot separate canonical winner-slate positives from same-date runner-up and hard-impostor negatives
+      - `low_gap_top` / `recent_mid_low` supplier reuse is now exhausted for this support target
+    - pinned hard-stop after `v50`:
+      - do not retune this same `shadow winner-slate` family/runtime
+      - do not resume `low_gap_top`, `recent_mid_low`, admission, veto, expert-union, or adjacent same-date query retuning for this target line
+      - the next line must start from another target universe / family definition rather than another selector tweak on the same supplier stack
+  - `v51 perfect_proto_prejump_predictive_hypothesis_portfolio_v51` completed as a capped microprobe on `perfect_proto_prejump_predictive_hypothesis_portfolio_v51_microprobe10k5k_r3_20260329` and the implementation-level blockers were closed:
+    - root-cause fixes landed before the successful rerun:
+      - the `feature_store` pack path now respects `limitRows`
+      - the v51 builder now streams and compacts input JSONL instead of `readFile`-loading multi-gigabyte packs
+      - failed v51 run/temp artifacts were pruned on the server to recover disk headroom (`136M -> 42G` free)
+    - canonical target universe stayed:
+      - `PREJUMP_PREDICTIVE_V1`
+      - `afree_open` decision-date candidate slates
+      - as-of-`t` features only
+    - supplier policy stayed:
+      - `low_gap_top_continuation` and `recent_mid_low` are supplier / gate inputs only
+      - neither family is allowed to act as the canonical recovery family anymore
+    - capped probe coverage was explicitly narrow:
+      - train pack respected `limitRowsApplied = 10000`
+      - OOS pack respected `limitRowsApplied = 5000` and wrote `1908` rows
+      - train decision coverage only reached `9` dates (`2020-11-27` -> `2020-12-09`)
+      - dataset winner breadth was only `9 dates / 2 months / 4 folds`
+    - research shape remained a shared-substrate portfolio campaign:
+      - one shared snapshot / split / support contract across all hypotheses
+      - only one canonical runtime after audit:
+        - `single same-date top1 query + abstention`
+      - the five mutually exclusive hypotheses were:
+        - `H1 winner-slate archetype`
+        - `H2 episode-transition`
+        - `H3 trade-vs-abstain`
+        - `H4 execution-realizable trade`
+        - `H5 latent-witness`
+    - support contract held:
+      - symbol `076610` remained fit-excluded
+      - support stayed acceptance-only
+      - the best hypotheses still reached `supportProjectionPositive = true`
+    - actual audit outcome:
+      - `pairwiseCandidateCount = 17`
+      - `pairwiseQualifiedCandidateCount = 0`
+      - best hypothesis = `H3 trade-vs-abstain`
+      - best `H3` metrics:
+        - `pairwiseWinRate = 0.9167`
+        - `sameDateRunnerUpBeatRate = 0.8333`
+        - `failureImpostorBeatRate = 1.0`
+        - `hardNegativeLeakCount = 2`
+        - `supportProjectionPositive = true`
+        - reason = `unsat_same_date_runner_up_beat_rate`
+      - strongest alternate `H2 episode-transition` got closer on pairwise/rank separation:
+        - `pairwiseWinRate = 0.9722`
+        - `sameDateRunnerUpBeatRate = 0.9444`
+        - `minFoldPairwiseWinRate = 0.9167`
+        - but `matchedControlBeatRate = 0`
+        - reason = `unsat_matched_control_beat_rate`
+    - conclusion:
+      - v51 did not fail at wrapper/runtime plumbing anymore
+      - it failed at the shared audit layer because the capped prejump snapshot still could not produce a qualified hypothesis
+      - since the probe only covered `9` positive dates / `2` months, the result is recorded as `invalid_or_inconclusive`, not as a final family kill
+    - pinned post-v51 hard-stop:
+      - do not retune the same five-hypothesis portfolio on the same capped snapshot and treat it as a new family
+      - do not return to `low_gap_top`, `recent_mid_low`, admission, veto, expert-union, or adjacent query retuning for this target
+      - the next line must either widen the prejump decision-date universe enough to test the real breadth floor or redefine the target universe again before another selector/runtime experiment
+  - `v52 perfect_proto_prejump_episode_transition_counterfactual_controls_v52` has now been executed and closed as a real prejump verdict:
+    - train substrate fix succeeded:
+      - canonical target universe stayed `PREJUMP_PREDICTIVE_V1` on `afree_open`
+      - `feature_store` pack assembly now supports deterministic `decision-date stratified` sampling plus `maxRowsPerDate`
+      - actual train pack reached `48 decision dates / 48 months / 4 folds / 6144 rows`
+      - actual OOS pack only exposed `2 decision dates / 1 month / 256 rows`, but runtime never started because audit failed earlier
+    - hypothesis scope stayed narrow:
+      - canonical family = `H2 episode-transition`
+      - `H3 trade-vs-abstain` remained diagnostic-only
+      - `H1/H4/H5` never entered the runtime path
+    - negative cohort redesign landed:
+      - matched controls were rebuilt as `counterfactual execution-feasible impostors`
+      - actual dataset contained `48` positive winners, `96` same-date runner-ups, `60` matched controls across `30` dates, and `3` failure negatives
+      - `supportFitExcluded = true`
+      - `supportProjectionPositive = true`
+    - canonical audit still failed on the corrected substrate:
+      - `reason = unsat_pairwise_win_rate`
+      - `pairwiseQualifiedCandidateCount = 0`
+      - best canonical `H2`:
+        - `pairwiseWinRate = 0.7986`
+        - `sameDateRunnerUpBeatRate = 0.6771`
+        - `matchedControlBeatRate = 0.7292`
+        - `failureImpostorBeatRate = 0.9896`
+        - `minFoldPairwiseWinRate = 0.7083`
+        - `hardNegativeLeakCount = 78`
+      - wrapper exited `42` and produced `no_support_prejump_episode_transition_counterfactual_controls_summary.json`
+    - real post-v52 hard-stop:
+      - this is no longer a breadth-sampling problem; the corrected substrate still does not separate the canonical `H2` family
+      - stop the prejump `PREJUMP_PREDICTIVE_V1` / `afree_open` episode-transition line here
+      - do not reopen the v51 five-hypothesis portfolio
+      - do not retune `H2/H3`, top1, admission, veto, or adjacent runtime wrappers on this same substrate
+      - any next attempt must redefine the target universe again instead of retuning the current prejump line
+  - `v53 perfect_proto_daily_canonical_winner_slate_contrastive_top1_v53` has now been executed and closed:
+    - target-universe / runtime reset was implemented as planned:
+      - primary family moved off `PREJUMP_PREDICTIVE_V1`
+      - canonical target universe = `same_day_plus_recent_upto_1d`
+      - canonical label unit = `decision-date canonical winner`
+      - runtime remained a single `same-date top1 outranking` path
+      - `PREJUMP_PREDICTIVE_V1` / `afree_open` survived supplier-only
+    - root-cause fixes completed before the final probe:
+      - wrapper now injects the required Step-A seed-input / lane contract for `same_day_plus_recent_upto_1d`
+      - generic `afree_open` control-pack rows now receive baseline `stepALaneId`, fixing the lane-local contextual-surface fail-fast
+      - local/server `npm run verify` both passed after those fixes
+    - final probe `perfect_proto_daily_canonical_winner_slate_contrastive_top1_v53_probe200k_r3_20260329` still failed before the query audit:
+      - reason = `unsat_no_daily_canonical_winner_rows`
+      - `normalizedTrainRowCount = 56838`
+      - `normalizedControlTrainRowCount = 200000`
+      - `normalizedOosRowCount = 29989`
+      - `normalizedControlOosRowCount = 200000`
+      - `canonicalPositiveDateCount = 489`
+      - `controlOnlyDateCount = 0`
+      - `queryEligiblePositiveSummary = 18316 rows / 489 dates / 24 months / 4 folds`
+      - `queryEligibleNegativeSummary = 0 rows / 0 dates / 0 months / 0 folds`
+    - actual blocker:
+      - this was not a same-date winner separability failure
+      - the row-capped `afree_open` control packs truncated into dates that all overlapped canonical positive dates
+      - control-only dates vanished, so matched-control / abstain negative queries never existed
+    - post-v53 hard-stop:
+      - do not retune same-date ranking/query logic on this row-capped substrate
+      - do not revisit `PREJUMP_PREDICTIVE_V1`, `v51`, or `v52`
+      - any next line must either construct control-only dates upstream before packing or redefine the target universe again
+  - current `v54` outcome is now pinned:
+    - patch key:
+      - `perfect_proto_trade_abstain_archetype_winner_bank_v54`
+    - root-cause substrate fix is closed:
+      - daily pack now supports deterministic `maxDecisionDates`
+      - daily pack now supports deterministic `maxRowsPerDate`
+      - daily pack now supports explicit `excludeDecisionDates`
+      - control-only dates are now formed upstream before dataset/ranking stages begin
+    - the corrected short probe was meaningful:
+      - `canonicalPositiveDateCount = 156`
+      - `controlOnlyDateCount = 48`
+      - query-eligible train positives reached `156 dates / 24 months / 4 folds`
+      - support stayed fit-excluded
+    - stage verdicts are now explicit:
+      - Stage A `trade vs abstain` gate passed:
+        - `tradeGatePrecision = 1.0`
+        - `controlLeakCount = 0`
+        - `tradeGateSelectedDateCount = 156`
+        - `tradeGateSupportProjectionPositive = true`
+      - Stage B `winner archetype` router passed:
+        - `winnerArchetypeCount = 2`
+        - `winnerArchetypeDistinctDateSignatureCount = 2`
+      - Stage C `archetype-local same-date top1` failed:
+        - `reason = unsat_no_archetype_rule_bank`
+        - `archetypeRuleBankCandidateCount = 2`
+        - `archetypeRuleBankQualifiedCount = 0`
+        - best candidate `A2` only reached `precision = 0.3412698412698413`
+        - best candidate still leaked `crossfitNegativeWindowCount = 6`
+        - `supportLeaveOneOutRecovered = false`
+    - interpretation:
+      - the v54 line no longer fails on substrate construction, control-only dates, or trade/abstain gating
+      - the remaining blocker is archetype-local top1 purity collapse inside the corrected `same_day_plus_recent_upto_1d` universe
+    - hard-stop:
+      - do not retune v54 Stage A or Stage B
+      - do not reopen the `same_day_plus_recent_upto_1d` trade-abstain/archetype line as if substrate were still the blocker
+      - the next attempt must redefine the target universe again rather than continue v54 internals
+  - current `v55` outcome is now pinned:
+    - patch key:
+      - `perfect_proto_daily_trade_slate_mechanism_bank_v55`
+    - the family reset itself landed:
+      - canonical prediction unit moved to `decision-date slate`
+      - canonical label stayed `ABSTAIN` or `WINNER(slot)`
+      - `same_day_plus_recent_upto_1d`, `PREJUMP_PREDICTIVE_V1`, and `afree_open` stayed supplier/control-only inputs
+      - the new target universe was materialized as `daily_trade_slate_v1`
+      - OHLCV-derived mechanism families landed:
+        - `sig.pathGeom.*`
+        - `sig.sponsor.*`
+        - `sig.stateTrans.*`
+        - `sig.phaseDiv.*`
+        - `sig.slateJoint.*`
+        - `sig.liqPath.*`
+      - implementation stayed performance-safe:
+        - immutable base daily substrate
+        - feature-bank sidecars keyed by `dateKey,rowOrdinal`
+        - streamed join assembly from base + selected sidecars
+        - no repeated raw OHLCV rescans per hypothesis
+    - the corrected short probe was breadth-valid:
+      - train pack reached `48 decision dates / 24 months / 4 folds / 5551 rows`
+      - `canonicalPositiveDateCount = 156`
+      - `controlOnlyDateCount = 48`
+      - `queryEligiblePositiveSummary = 1799 rows / 156 dates / 24 months / 4 folds`
+      - `queryEligibleNegativeSummary = 6183 rows / 58 dates / 24 months / 4 folds`
+    - stage verdicts are now explicit:
+      - Stage A `trade vs abstain` gate passed:
+        - `tradeGateQualifiedCandidateCount = 56`
+        - `tradeGatePrecision = 1.0`
+        - `tradeGateControlLeakCount = 0`
+        - `tradeGateSelectedDateCount = 156`
+        - `tradeGateSupportProjectionPositive = true`
+      - Stage B mechanism archetype router passed:
+        - `winnerArchetypeCount = 2`
+        - `winnerArchetypeDistinctDateSignatureCount = 2`
+        - `A1` absorbed `150` dates
+        - `A2` isolated a `6`-date pocket
+      - Stage C mechanism-local exact rule bank failed:
+        - `reason = unsat_top1_query_train_breadth`
+        - `mechanismHypothesisQualifiedCount = 0`
+        - `archetypeRuleBankCandidateCount = 6`
+        - `archetypeRuleBankQualifiedCount = 0`
+        - `H1 pathGeom + sponsor` produced `0` top1 candidates
+        - `H2 stateTrans + phaseDiv` produced `0` top1 candidates
+        - best `H3 slateJoint + liqPath / A2` candidate only reached `54 selected / 7 positive / 47 negative / precision 0.12962962962962962`
+        - best candidate only covered `7 dates / 5 months / 4 folds`
+        - `crossfitNegativeWindowCount = 3`
+        - `supportLeaveOneOutRecovered = false`
+    - interpretation:
+      - v55 no longer fails on substrate breadth, control-only dates, trade/abstain gating, or archetype diversity
+      - the remaining blocker is archetype-local exact winner purity plus breadth collapse even after the OHLCV mechanism-bank expansion
+      - within the current daily-OHLCV-only setting, the `daily_trade_slate_v1` mechanism-bank line is exhausted
+    - hard-stop:
+      - do not retune v55 trade gate or archetype router as if Stage A/B were still open blockers
+      - do not retune the `H1/H2/H3` mechanism-bank families on the same daily-OHLCV-only substrate
+      - do not reopen v44~v54 after v55
+  - `v56` actual result:
+    - patch key:
+      - `perfect_proto_daily_trade_slate_symbolic_microcard_bank_v56`
+    - local/server verify:
+      - local `npm run verify` passed after renaming the symbolic family from `sponsorFlow` to `sponsorCoupling` to satisfy strict-mode disabled-family guards
+      - server `npm run verify` passed end-to-end
+    - run:
+      - `perfect_proto_daily_trade_slate_symbolic_microcard_bank_v56_probe200k_20260329`
+    - outcome:
+      - [no_support_daily_trade_slate_symbolic_microcard_bank_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_daily_trade_slate_symbolic_microcard_bank_v56_probe200k_20260329/step-perfect-prototype-daily-trade-slate-symbolic-microcard-bank/no_support_daily_trade_slate_symbolic_microcard_bank_summary.json)
+      - `reason = unsat_symbolic_microcard_router`
+      - `supportFitExcluded = true`
+    - what still worked:
+      - substrate remained breadth-valid:
+        - `normalizedTrainRowCount = 5551`
+        - `normalizedControlTrainRowCount = 6144`
+        - `canonicalPositiveDateCount = 156`
+        - `controlOnlyDateCount = 48`
+      - Stage A remained solved:
+        - `tradeGatePrecision = 1.0`
+        - `tradeGateControlLeakCount = 0`
+        - `tradeGateSupportProjectionPositive = true`
+      - symbolic token families did materialize:
+        - `sig.microCard.dayGlyph.*`
+        - `sig.microCard.kgram.*`
+        - `sig.phaseGrammar.transition.*`
+        - `sig.auctionControl.pattern.*`
+        - `sig.sponsorCoupling.pattern.*`
+        - `sig.anchorPath.extrema.*`
+        - `sig.slateSymbolicContrast.*`
+    - actual blocker:
+      - witness selection did not fail on count:
+        - `witnessQualifiedCount = 293`
+        - `witnessPositiveDateCount = 156`
+        - `witnessNegativeDateCount = 196`
+      - it failed on diversity:
+        - `witnessDistinctSignatureCount = 1`
+        - nearly all witnesses collapsed into the same weak signature family
+      - router output:
+        - `microCardCount = 3`
+        - `microCardDistinctDateSignatureCount = 3`
+        - `maxMicroCardShare = 0.8846153846153846`
+        - dominant card `MC1` alone covered `138` dates, violating the `<= 0.8` giant-card guard
+      - because routing failed, the symbolic exact-bank stage never became eligible and no feasible bank summary artifact was emitted
+    - interpretation:
+      - symbolic tokenization by itself did not create new witness diversity; it mostly re-encoded the same weak loser-like signature
+      - the daily-OHLCV-only line is now exhausted one stage earlier than `v55`: not at exact-bank purity, but at witness-to-micro-card diversity collapse
+    - hard-stop:
+      - do not retune symbolic thresholds, token-count bounds, or micro-card share bounds on the same daily-OHLCV-only substrate
+      - do not reopen scalar winner-bank variants after `v56`
+      - unless the target or data universe changes materially, treat the daily-OHLCV-only recovery line as closed
+  - `v57` actual result:
+    - patch key:
+      - `perfect_proto_daily_trade_slate_sequence_shapelet_witness_bank_v57`
+    - run id:
+      - `perfect_proto_daily_trade_slate_sequence_shapelet_witness_bank_v57_probe200k_20260329`
+    - primary summary:
+      - [no_support_daily_trade_slate_sequence_shapelet_witness_bank_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_daily_trade_slate_sequence_shapelet_witness_bank_v57_probe200k_20260329/step-perfect-prototype-daily-trade-slate-sequence-shapelet-witness-bank/no_support_daily_trade_slate_sequence_shapelet_witness_bank_summary.json)
+    - what held:
+      - breadth-valid `daily_trade_slate_v1` substrate from `v55/v56`
+      - Stage A `trade vs abstain` gate contract from `v55/v56`
+      - multiscale sequence-shapelet feature bank landed with zero missing rows:
+        - `sequenceShapeletRowCount = 15441`
+        - `sequenceShapeletMissingRowCount = 0`
+      - bag-level witness selection repaired diversity:
+        - `witnessQualifiedCount = 293`
+        - `witnessDistinctSignatureCount = 293`
+      - prototype routing repaired the `v56` giant-card collapse:
+        - `prototypeCount = 5`
+        - `prototypeDistinctDateSignatureCount = 5`
+        - `maxPrototypeShare = 0.03205128205128205`
+    - exact failure point:
+      - `reason = unsat_top1_query_train_breadth`
+      - `shapeletHypothesisCount = 3`
+      - `shapeletHypothesisQualifiedCount = 0`
+      - `shapeletRuleBankCandidateCount = 142`
+      - `qualifiedRuleCount = 0`
+      - best candidate was `H2 / PC5`
+      - best candidate stayed perfectly clean only in a tiny pocket:
+        - `2 selected / 2 positive / 0 negative / precision = 1.0`
+        - `trainMatchedDateCount = 2`
+        - `trainMatchedMonthCount = 2`
+        - `trainMatchedFoldCount = 2`
+        - `crossfitNegativeWindowCount = 0`
+      - support and OOS still failed:
+        - `supportLeaveOneOutRecovered = false`
+        - `openOosSelectedRowCount = 0`
+        - `openOosMatchCount = 0`
+    - interpretation:
+      - `v57` fixed the `v56` witness-diversity collapse
+      - the new blocker is the opposite failure mode: prototype cards became too fine-grained, so exact rules remain clean only in tiny pockets and never reach `10 dates / 6 months / 4 folds`
+      - this closes the daily-OHLCV-only exact-one-pick line after breadth-valid substrate, solved trade gate, solved witness diversity, and solved prototype diversity
+    - hard-stop:
+      - do not reopen `v55`, `v56`, or `v57` on the same daily-OHLCV-only substrate
+      - do not retune prototype axes, token bins, witness caps, or prototype share bounds as if Stage B/C were still open blockers
+      - future work must either add new data axes or downgrade the objective away from daily exact-one-pick `100%`
+  - `v58` actual result:
+    - patch key:
+      - `perfect_proto_support_like_surge_episode_bank_v58`
+    - run id:
+      - `perfect_proto_support_like_surge_episode_bank_v58_probe200k_20260329`
+    - final summary:
+      - [no_support_support_like_surge_episode_bank_summary.json](/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_support_like_surge_episode_bank_v58_probe200k_20260329/step-perfect-prototype-support-like-surge-episode-bank/no_support_support_like_surge_episode_bank_summary.json)
+    - breadth-valid detector substrate and frozen Stage A still held:
+      - `supportFitExcluded = true`
+      - `canonicalPositiveDateCount = 156`
+      - `controlOnlyDateCount = 48`
+      - `queryEligiblePositiveSummary = 1799 rows / 156 dates / 24 months / 4 folds`
+      - `queryEligibleNegativeSummary = 6183 rows / 58 dates / 24 months / 4 folds`
+      - `tradeGatePrecision = 1.0`
+      - `tradeGateControlLeakCount = 0`
+      - `tradeGateSelectedDateCount = 156`
+      - `tradeGateSupportProjectionPositive = true`
+    - detector supervision also formed as intended:
+      - `detectorPositiveSummary = 293 rows / 156 dates / 24 months / 4 folds`
+      - `detectorSameDateNegativeSummary = 291 rows / 148 dates / 24 months / 4 folds`
+      - `detectorHardNegativeSummary = 58 rows / 58 dates / 24 months / 4 folds`
+      - `detectorNegativeSummary = 349 rows / 206 dates / 24 months / 4 folds`
+    - final blocker:
+      - `reason = unsat_support_like_archetype_router`
+      - `supportLikeArchetypeCount = 3`
+      - `supportLikeDistinctDateSignatureCount = 3`
+      - `supportLikeMaxArchetypeShare = 0.9358974358974359`
+      - dominant `SA1` collapsed to `sig.seqShapelet.combo.f3__f3__f3` and consumed `146 / 156` positive dates
+      - `support_like_exact_detector_bank` never ran because the giant-archetype guard tripped first
+    - interpretation:
+      - moving from exact one-pick to exact detector supervision did not rescue daily-OHLCV-only recovery
+      - once winner identity is removed, the support-like detector surface collapses into one dominant `combo` archetype rather than opening a broader exact detector bank
+      - this exhausts the daily-OHLCV-only `support-like surge detector` line after breadth-valid substrate, solved trade gate, and breadth-valid detector dataset
+    - hard-stop:
+      - do not reopen `v55~v58` on the same daily-OHLCV-only substrate
+      - do not retune `combo` bins, archetype counts, or max-share guards as if router tuning were still a plausible rescue
+      - next recovery must add a new data axis or downgrade the objective away from daily-OHLCV-only exact support-like detection
+- current metrics caveat:
+    - the canonical recent-only `v6` probe produced line-level OOS `21 selected / 8 hits`
+    - an older append-only registry row still records `oosHitCount=0`
+    - metric/reporting patches must preserve canonical line-level hit accounting and append a correction entry instead of rewriting history
+- Primary predictive path:
+  - `tools/run_prejump_curated_perfect_prototypes_after_close.sh --date=YYYY-MM-DD`
+- Predictive train-discovered rules must now be treated as frozen artifacts:
+  - freeze one source train catalog at a time
+  - use immutable run-specific curated output paths
+  - store catalog/rule-set hashes in catalog metadata and manifest
+  - require expected catalog hash + expected rule-id hash in OOS/live consumers
+  - do not rely on shared mutable curated catalog paths for OOS/live reproducibility
+  - curated rebuild now requires the source catalog itself to already be frozen
+- Predictive curated catalog must exist first:
+  - `tools/rebuild_prejump_curated_perfect_prototype_catalog.sh --source-catalog=/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/<predictive_run>/step-perfect-prototype/catalog.json`
+  - preferred frozen output root: `artifacts/curated/prejump_frozen/<train_run_id>/<selection_id>/`
+  - generic frozen output root for parent / Step-B curated catalogs: `artifacts/curated/frozen/<train_run_id>/<selection_id>/`
+  - frozen outputs are now no-clobber:
+    - identical rebuild reuses the existing artifact
+    - different content at the same path fails fast
+  - live wrappers must receive expected catalog hashes explicitly; do not use the sibling manifest as the runtime trust anchor
+- Predictive mining is parquet-first and indexed:
+  - `tools/build_perfect_prototype_prejump_pack.mjs`
+  - `tools/build_perfect_prototype_prejump_feature_store.mjs`
+  - `tools/build_perfect_prototype_token_index.mjs`
+  - `tools/build_perfect_prototype_partitioned_token_index.mjs`
+  - `tools/mine_perfect_prototypes_indexed.mjs`
+  - `tools/mine_perfect_prototypes_parallel_indexed.mjs`
+  - one-shot server wrapper: `tools/run_prejump_predictive_indexed_mining.sh --start=YYYY-MM-DD --end=YYYY-MM-DD --run-prefix=<name>`
+  - one-shot wrapper primary path now covers `feature_store -> partitioned exact index merge -> mining`
+  - OOS and curated rebuild remain explicit follow-up steps
+  - predictive feature store root: `artifacts/feature-store/prejump_v5`
+  - predictive pack can now assemble from feature store via `--source-mode=feature_store --feature-store-dir=...`
+  - one-shot wrapper defaults to `PREJUMP_PACK_SOURCE_MODE=feature_store`
+  - one-shot wrapper supports explicit feature-store rebuild via `PREJUMP_BUILD_FEATURE_STORE=true`
+  - one-shot wrapper heavy-process guard now blocks concurrent feature-store build, partitioned index build/merge, and mining stages
+  - partitioned exact indexing now builds shard-local indexes with one global tokenizer spec and exact-merges them via:
+    - `src/lib/perfect_prototype_token_index_merge.mjs`
+    - `tools/merge_perfect_prototype_token_index_partitions.mjs`
+  - shard-local token-index builds now read feature-store partitions directly and no longer materialize intermediate shard packs
+  - partitioned exact indexing now caches tokenizer specs per feature-store contract/range/options under:
+    - `artifacts/feature-store/prejump_v5/.tokenizer-spec-cache/*.json`
+  - tokenizer-spec cache invalidation now includes feature-store partition file state so overwrite/rebuild paths cannot silently reuse stale tokenizer boundaries
+  - feature-store append now updates manifest contract metadata incrementally on append-only paths and only falls back to full-store rescans on explicit overwrite/rebuild paths
+  - predictive index/miner progress payloads now include throughput/ETA fields where applicable:
+    - `rowsPerSec`
+    - `tokensPerSec`
+    - `exploredStatesPerSec`
+    - `etaSeconds`
+  - predictive OOS/apply consume `prejump_pack.parquet`
+  - predictive pack build now uses predictive-only source slicing and emits `progress.json`
+  - predictive parquet wrappers are typed; `rowJson` is no longer required on the predictive path
+  - predictive pack/index parquet sinks now batch writes to lower syscall overhead
+  - predictive DuckDB parquet sinks now run with spill-enabled temp DB/session temp_directory so large pack builds do not stop at in-memory parquet sink OOM
+  - predictive DuckDB row streaming now waits for complete row consumption before resolving, which fixes compressed-postings and other downstream stream consumers
+  - predictive token index now emits exact compressed postings artifacts:
+    - `token_postings.bin`
+    - `token_dictionary.parquet`
+    - `token_dictionary.json` summary metadata only
+  - indexed predictive mining now loads exact compressed postings from `token_postings.bin` / `token_dictionary.parquet`, uses lazy seed-postings cache, and no longer depends on giant JSON dictionary entries
+  - `token_postings.parquet` is now debug-only on the predictive primary path and is emitted only when `PREJUMP_EMIT_TOKEN_POSTINGS_PARQUET=true` or `--emit-token-postings-parquet=true`
+  - same-signature rule winners are now canonicalized by explicit comparator instead of discovery order
+  - deterministic parallel indexed mining is available and server-validated:
+    - root seed partitions search independently
+    - exact merge preserves champion/rule set/matches/coverage on the synthetic equivalence fixture
+    - parallel exact mining now fails fast if aggregate explored states would violate the global `maxSearchStates` invariant
+    - server smoke tool: `tools/smoke_prejump_parallel_indexed_equivalence.mjs`
+  - one-shot predictive mining is guarded by a server lock and fail-fast memory/disk preflight
+  - one-shot predictive mining also fails fast if another predictive heavy process is already running, applies explicit Node heap / DuckDB memory caps, and uses a worker-aware memory floor for parallel mining
+  - indexed predictive mining now keeps compact row-meta arrays through search and final coverage emit, deriving dataset stats without rebuilding full `datasetRows`
+  - predictive `apply`/OOS now precompile catalog rules by anchor token before exact rule matching
+  - predictive `apply`/OOS anchor-token precompile is now token-id based internally, which keeps exact match semantics but reduces repeated string-token candidate lookups
+  - predictive `apply` can now use exact `recommendation_close_ret` sidecar parquet for single-pass `+28%` recommendation-date close-return filtering
+  - recommendation close-return sidecar build command:
+    - `node tools/build_recommendation_close_ret_sidecar.mjs --candle-path=data/candle_daily.jsonl --overwrite=true`
+  - recommendation close-return sidecar is now v4 directory-backed:
+    - `artifacts/sidecar/recommendation_close_ret/date=YYYY-MM-DD/*.parquet`
+  - filtered predictive `apply` now validates sidecar freshness against the source candle file path, global file fingerprint, and per-date partition freshness metadata stored in the sidecar manifest
+    - if `data/candle_daily.jsonl` changes after sidecar generation, rebuild the sidecar before running filtered predictive `apply`
+    - safe incremental rebuilds are limited to `--append-latest=true` or explicit `--rebuild-from=YYYY-MM-DD`
+  - partitioned predictive index now requires exact tokenizer sidecars in every feature-store date partition and fails fast with an explicit rebuild message if older partitions are missing:
+    - `feature_stats.parquet`
+    - `feature_values.bin`
+    - `feature_values_index.parquet`
+  - one-time repair for older feature-store partitions:
+    - `node tools/build_perfect_prototype_prejump_feature_store.mjs --config=config/lab.config.server.lite.prejump.json --start=... --end=... --feature-store-dir=artifacts/feature-store/prejump_v5 --overwrite-existing=true`
+  - canonical structured parquet readers now require one explicit query contract:
+    - normalize structured columns to canonical JSON text inside the DuckDB `SELECT` before delimited streaming
+    - older typed struct/list/map partitions are supported only through that canonical normalization expression
+    - hidden alternate parsing paths are forbidden
+  - feature-store append-only manifest reuse now invalidates itself if any carried-forward partition is missing:
+    - main partition parquet
+    - `feature_stats.parquet`
+    - `feature_values.bin`
+    - `feature_values_index.parquet`
+  - overwrite-range feature-store repair may now reuse the previous manifest exactly when the rewritten contract still matches:
+    - `strategyModes`
+    - `contextSurfaces`
+    - `numericFeatureKeys`
+  - if overwrite changes that contract, the canonical path must still rebuild exact metadata instead of silently carrying stale manifest state
+  - parallel exact miner no longer merges same-signature worker rules via `join(",")`; worker merge now uses hash buckets plus exact row-index equality checks
+  - parallel worker partial rule exchange now uses `partial_rules.parquet` instead of `partial_rules.json`
+  - indexed/parallel miners now select seeds by streaming `token_stats.parquet` instead of materializing the full token-stat table in memory first
+  - predictive pack build prunes inactive symbols/universe keys after candidate indexing and releases each symbol series/cache immediately after its last seed is emitted
+  - active local exact-mining acceleration bundle `perfect_proto_exact_mining_acceleration_v1` is in progress:
+    - count-first rowset intersections on exact-safe reject gates
+    - top-K hit bound on full-output indexed mining and disjoint-root partial workers
+    - dominance memo only for strictly smaller dominated states
+    - dominance memo is now byte-bounded to protect server RSS; evictions are memo-only and exact-safe
+    - local child ordering with unchanged canonical uniqueness
+    - exact sparse/dense hybrid rowset mode in the indexed miner hot loop
+    - dense postings now decode directly to exact bitset rowsets
+  - exact-mining acceleration progress fields now include:
+    - `boundPruneCount`
+    - `memoHitCount`
+    - `memoLookupMs`
+    - `stateDominancePruneCount`
+    - `kthHitFloor`
+    - `childOrderingMs`
+    - `orderingNegativeLoads`
+    - `rowsetModeStats`
+    - `memoCacheBytes`
+    - `memoEvictedBucketCount`
+    - `memoOversizeSkipCount`
+    - `partialMergePeakBucketCount`
+    - `partialMergePeakLiveRuleCount`
+    - `partialMergeEvictedByHitFloorCount`
+    - `partialMergeKthHitFloor`
+    - `observedRuleCount`
+    - `liveCanonicalRuleCount`
+    - `finalSelectedRuleCount`
+    - `orderingHeadWindow`
+    - `orderingHeadExactLoads`
+    - `orderingHeadRerankMs`
+    - `partialMergeTieBandRuleCount`
+    - `partialMergeTieBandBucketCount`
+    - `partialMergePeakTieBandRuleCount`
+  - latest hardening pass also closed:
+    - zero-negative recursion guard in the indexed DFS loop
+    - lazy negative rowset loads for root and zero-negative states
+    - cheap rowset fingerprinting for memo buckets
+    - dense sparse/bitset direct-result path without intermediate sparse materialization
+    - dense bitset/bitset sparse intersections now materialize directly without an intermediate dense buffer
+    - parent parallel merge now tracks a live exact-safe hit floor and evicts only `< floor` rules while preserving observed canonical rule counts
+  - canonical exact mining target is the restored full-range train window:
+    - `2020-11-27 .. 2024-12-31`
+    - fixed semantics:
+      - `decisionDate=D`
+      - `entry=D+1 open`
+      - `3-day / +8% / -4%`
+    - primary exact catalog objective:
+      - `precision=1.0`
+      - `trainMatchCount>=6`
+    - follow-up exact catalog objective on the same full-range index:
+      - `precision>=0.8`
+      - `trainMatchCount>=6`
+  - latest valid partitioned predictive index for mining-only reprobe remains:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_reprobe_walltime_baseline_v1_20260316_3/step-perfect-prototype-index`
+    - this 3-month index is validation-only for throughput/control-plane checks
+    - it is not the canonical production target for the restored full-range search
+  - latest live mining reprobe with that rebuilt index still showed:
+    - root states may begin as `bitset`
+    - actual search states remained overwhelmingly `sparse`
+    - sparse path remains the first bottleneck, but sparse CPU v4 and memo skyline v6 are now complete
+  - latest exact-safe hardening bundle completed:
+    - `perfect_proto_sparse_bitmap_universe_contract_guard_v1`
+    - dense sparse/bitset and dense bitset/bitset now fail fast on smaller explicit `universeSize`
+    - dense bitset builders now require exact word length `ceil(universeSize / 32)`
+    - dense bitset builders now reject out-of-universe last-word bits
+  - latest memo throughput bundle completed:
+    - `perfect_proto_stepchange_memo_skyline_v6_v1`
+    - exact memo lookup/prune CPU reduction is now on the primary path
+  - latest memo integrity hardening bundle completed:
+    - `perfect_proto_memo_budget_compaction_integrity_v1`
+    - `memoCacheBytes` now must equal live resident bytes, not stale bucket-only accounting
+    - bucket eviction must subtract both bucket base bytes and frontier entry bytes
+    - insertion-path frontier compaction must increment `memoFrontierCompactionCount`
+    - short mining-only reprobe throughput readings taken before this fix are not canonical
+  - latest exact-safe throughput bundle completed:
+    - `perfect_proto_floor_bootstrap_ordering_v1`
+    - bootstrap ordering now raises the first global floor earlier without changing exact final selection semantics
+  - latest exact-safe budget orchestration bundle completed:
+    - `perfect_proto_parallel_live_budget_topup_v1`
+    - ready-queue chunk budgets now bind by `chunkIndex`, not ready-queue position
+    - active chunks may receive deterministic external lease increases via chunk-local `live_budget.json`
+  - latest explicit budget request/ack bundle completed:
+    - `perfect_proto_parallel_budget_request_ack_v1`
+    - workers now emit chunk-local `budget_request.json` before failing at a lease edge
+    - parent now replies with atomic `budget_decision.json` plus `live_budget.json` grants/denials
+  - latest commit-on-ack budget bundle completed:
+    - `perfect_proto_parallel_topup_commit_on_ack_v1`
+    - workers now request additional budget only at true lease exhaustion on the canonical runtime path
+    - parent grants request-scoped allowances first and records committed top-ups only after worker `budget_commit.json` ack
+    - manifest/progress top-up telemetry now reflects applied commits instead of speculative pre-use reservations
+  - current production-run blocker is:
+    - no fresh exact-safe blocker is open in the current parallel budget control-plane path
+    - the active blocker is no longer shard contract repair
+    - restored merged full-range exact index:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_fullrange_exact_target_restore_20260317_073337/step-perfect-prototype-index`
+    - restored merged effective trading coverage currently resolves to:
+      - `2020-11-27 .. 2024-12-30`
+    - canonical exact target remains:
+      - `2020-11-27 .. 2024-12-31`
+    - current exact runtime signal on that index:
+      - 180-second probe run `perfect_proto_timeprobe_fullrange_dictionary_v2_20260317_073456`
+      - top-level live `precision=1.0` / `trainMatchCount>=6` candidates observed before first chunk completion: `8`
+      - `parallelChunkPlannerImbalanceRatio=119.2007`
+      - `parallelFirstChunkCompletionElapsedMs=null`
+    - server source audit now shows:
+      - `data/candle_daily.jsonl` has `count(dateKey=2024-12-31) = 0`
+      - feature-store partitions currently stop at `date=2024-12-30`
+      - `2024-12-31` is a KRX holiday, so this now reads as a coverage-contract issue rather than a confirmed source-loss issue
+    - the 3-month validation index remains validation-only and must not replace the full-range target
+    - canonical server `npm run verify` now executes positive persistent-slot traffic plus request/ack, reclaim/ack, live-topup, and guardband smokes
+  - latest exact-safe target-restoration bundle completed:
+    - `perfect_proto_fullrange_shard_dictionary_v2_upgrade_v1`
+    - legacy shard tokenizer fingerprint metadata, direct input provenance, and dictionary schema repair are all closed
+    - the merged full-range exact index is restored and probeable
+  - latest exact-safe full-range coverage/chunk bundle completed:
+    - `perfect_proto_fullrange_target_coverage_chunk_rebalance_v1`
+    - full-range chunk planning no longer collapses into an all-bootstrap head-only plan in canonical verify
+  - latest exact-safe runtime bundle completed:
+    - `perfect_proto_fullrange_effective_trading_coverage_contract_v1`
+    - requested calendar target range and effective trading coverage are now separated on the canonical full-range path
+    - local/server `npm run verify` now pass with the holiday-aware effective-trading coverage smoke
+  - latest exact-safe runtime bundle completed:
+    - `perfect_proto_fullrange_chunk_cost_calibration_v1`
+    - planner cost now consumes token-dictionary byte/span metadata
+    - bootstrap-head ordering now uses `bootstrapDispatchScore`
+    - full-range worker-slot ready timeout now tolerates 30s+ cold starts
+    - commit-pending allowances are no longer re-granted from the same `budget_request.json`
+    - local/server `npm run verify` now pass with the cost-calibration smoke and repaired low-budget request/commit contract
+    - fresh 180-second full-range probe `perfect_proto_timeprobe_fullrange_chunk_cost_calibration_v4_20260317_091243` observed:
+      - top-level live `precision=1.0` / `trainMatchCount>=6` candidates before first chunk completion: `8`
+      - `parallelChunkPlannerImbalanceRatio=9.5184`
+      - `parallelFirstChunkCompletionElapsedMs=null`
+      - `worker_000.exploredStatesPerSec=2.218`
+      - `worker_001.exploredStatesPerSec=20.556`
+  - current exact-safe runtime blocker is:
+    - full-range first-wave dispatch still misranks head chunks on the restored 4-year exact index
+    - first chunk completion still does not occur inside the canonical 180-second probe
+  - next exact-safe runtime patch is:
+    - `perfect_proto_fullrange_head_microprobe_dispatch_v1`
+    - remove the hard bootstrap-head prefix from the ready queue and replace it with a bootstrap-head launch quota
+    - add deterministic first-wave head microprobe scoring/splitting before the next longer probe
+    - split pathological first-wave head chunks deterministically when microprobe cost is materially above the first-wave median
+  - latest exact-safe runtime bundle completed:
+    - `perfect_proto_fullrange_head_microprobe_dispatch_v1`
+    - hard bootstrap-head queue prefix is removed; first-wave ordering now uses a quota-aware global dispatch queue plus deterministic microprobe scoring
+    - fresh 180-second full-range probe `perfect_proto_timeprobe_fullrange_head_microprobe_dispatch_20260317_093737` still observed:
+      - `parallelFirstChunkCompletionElapsedMs=null`
+      - `parallelCompletedChunkCount=0`
+      - `wave_000_chunk_022` ran at `336.543 states/s`
+      - `wave_000_chunk_010` ran at `12.513 states/s`
+      - top-level live `precision=1.0` / `trainMatchCount>=6` candidates before first chunk completion: `2`
+  - current exact-safe runtime blocker is now:
+    - the root-seed microshard patch is now complete
+    - fresh 180-second probe `perfect_proto_timeprobe_fullrange_multi_root_completion_ranking_20260317_172733` still showed:
+      - `parallelCompletedChunkCount=0`
+      - `parallelFirstChunkCompletionElapsedMs=null`
+      - `parallelBudgetTopupCount=4`
+      - `parallelFirstWaveSingletonRootChunkCount=2`
+      - `parallelFirstWaveMultiRootChunkCount=0`
+    - slot command inspection on that probe showed the first launch pair reverted to singleton roots:
+      - `rootSeedStartIndex=962`, `rootSeedEndIndexExclusive=963`
+      - `rootSeedStartIndex=89`, `rootSeedEndIndexExclusive=90`
+    - worker progress on that probe still split badly:
+      - one worker at `151.287 states/s`
+      - one worker at `6.325 states/s`
+    - latest exact-safe runtime bundle completed:
+      - `perfect_proto_fullrange_first_wave_forced_singleton_microshard_v1`
+      - canonical verify now includes `smoke_prejump_parallel_fullrange_forced_singleton_microshard.mjs`
+      - fresh 180-second probe `perfect_proto_timeprobe_fullrange_forced_singleton_microshard_20260317_175750` observed:
+        - `parallelFirstWaveForcedSingletonMicroshardCount=4`
+        - `parallelFirstWaveSingletonRootChunkCount=2`
+        - `parallelFirstWaveMultiRootChunkCount=0`
+        - first launch pair:
+          - `rootSeedStartIndex=949`, `rootSeedEndIndexExclusive=950`
+          - `rootSeedStartIndex=88`, `rootSeedEndIndexExclusive=89`
+        - `parallelCompletedChunkCount=0`
+        - `parallelFirstChunkCompletionElapsedMs=null`
+        - `worker_000.exploredStatesPerSec=103.392`, `etaSeconds=57.4`
+        - `worker_001.exploredStatesPerSec=7.078`, `etaSeconds=1827.2`
+    - the active blocker is now singleton-root exact completion ranking on the bound first-wave path:
+      - launch binding is now live and the first launch pair stays on completion-target singleton descendants
+      - fresh probes:
+        - `perfect_proto_timeprobe_fullrange_completion_target_launch_binding_20260317_192101`
+        - `perfect_proto_midprobe_fullrange_completion_target_launch_binding_20260317_192439`
+      - the 20-minute probe still ended with:
+        - `parallelCompletedChunkCount=0`
+        - `parallelFirstChunkCompletionElapsedMs=null`
+        - `parallelFirstWaveCompletionTargetLaunchCount=2`
+        - `parallelFirstWaveSingletonRootChunkCount=2`
+        - `parallelFirstWaveMultiRootChunkCount=0`
+        - `parallelBudgetTopupCount=23`
+    - full production run remains blocked until a fresh probe shows non-null `parallelFirstChunkCompletionElapsedMs`
+  - latest exact-safe runtime bundle completed:
+    - `perfect_proto_fullrange_singleton_root_exact_completion_microprobe_v1`
+    - deterministic exact completion-oriented microprobes now cover the full bound singleton-root first-wave candidate pool and the live path fails fast if a bound singleton candidate is missing a probe
+    - fresh 180-second probe `perfect_proto_timeprobe_fullrange_singleton_exact_completion_microprobe_20260317_215330` still observed:
+      - `parallelFirstWaveExactCompletionProbeCount=17`
+      - `parallelFirstWaveExactCompletionProbeSingletonCandidateCount=17`
+      - `parallelCompletedChunkCount=0`
+      - `parallelFirstChunkCompletionElapsedMs=null`
+      - worker search did not materially advance inside the 180-second window
+    - fresh 20-minute probe `perfect_proto_midprobe_fullrange_singleton_exact_completion_microprobe_20260317_215701` then confirmed the exact-probe path is live:
+      - `parallelFirstWaveExactCompletionProbeCount=17`
+      - `parallelFirstWaveExactCompletionProbeReachedTerminalCount=0`
+      - `parallelCompletedChunkCount=0`
+      - `parallelFirstChunkCompletionElapsedMs=null`
+      - `parallelBudgetTopupCount=19`
+      - `parallelWorkerSlotReuseCount=0`
+      - `worker_000` explored `166302` states with `rulesCollected=0`
+      - `worker_001` explored `12960` states with `rulesCollected=18`
+    - therefore the active blocker is now that the current shallow exact probe never reaches terminal on the bound singleton pool and still misranks a heavy singleton root as an early completion target
+  - next exact-safe runtime patch is now:
+    - `perfect_proto_fullrange_singleton_root_adaptive_exact_completion_probe_v1`
+    - keep full-pool exact probing for bound singleton roots
+    - add a deterministic second-stage adaptive exact completion probe for finalist singleton candidates so the first launch pair is ranked by a higher-fidelity completion signal than the current shallow non-terminal probe
+    - require stage-1 full-pool probing plus stage-2 finalist probing; do not permit heuristic-only fallback on either path
+  - latest exact-safe runtime bundle completed:
+    - `perfect_proto_fullrange_first_wave_root_seed_microshard_v1`
+    - canonical verify now includes `smoke_prejump_parallel_fullrange_root_seed_microshard.mjs`
+      - `parallelBudgetTopupCount=17`
+      - `parallelWorkerSlotReuseCount=0`
+  - after that patch:
+    - rerun a `180-second` full-range probe on `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_fullrange_exact_target_restore_20260317_073337/step-perfect-prototype-index`
+    - latest rerun after the pre-control-plane progress-gate bundle:
+      - `perfect_proto_timeprobe_fullrange_precontrol_plane_progress_gate_20260318_134900`
+      - top-level `progress.json` now appears during startup, so the blind timeout is closed
+      - latest observed parent phase before timeout:
+        - `singleton_exact_probe_stage1`
+      - observed startup planning telemetry:
+        - `parallelFirstTopLevelProgressElapsedMs=10`
+        - `parallelPlanningValidateIndexProvenanceMs=120`
+        - `parallelPlanningSeedSelectionMs=81`
+        - `parallelPlanningSeedDictionaryPlanningMs=107`
+        - `parallelPlanningHeadMicroprobePass1Ms=73`
+        - `parallelPlanningHeadMicroprobePass2Ms=51`
+      - the run still timed out at `180s` before:
+        - `singleton_exact_probe_stage2`
+        - `ready_queue_built`
+        - `spawn_worker_slots`
+        - top-level `parallel_manifest.json`
+        - top-level `summary.json`
+        - top-level `live_floor.json`
+      - so the next runtime blocker is no longer missing control-plane artifacts; it is pre-launch probe/planning wall time inside stage-1 singleton exact probing
+    - only if first chunk completion appears should the `15~20 minute` probe and then the first exact full production mining run start
+  - current objective is one exact production mining run on the restored full-range index, not another 3-month measurement-only reprobe
+  - canonical full-range exact production mining inputs are:
+    - feature store root: `/home/moltook/apps/stockdesk-lab-lite/artifacts/feature-store/prejump_v5`
+    - contextual surface: `v5_prejump_contextual`
+    - restored merged exact index: `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_fullrange_exact_target_restore_20260317_073337/step-perfect-prototype-index`
+  - canonical full-range exact production mining command, once the blocker is closed, is:
+    - `node tools/mine_perfect_prototypes_parallel_indexed.mjs --index-dir=/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_fullrange_exact_target_restore_20260317_073337/step-perfect-prototype-index --out-dir=/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/<RUN_ID>/step-perfect-prototype --train-start=2020-11-27 --train-end=2024-12-31 --min-hit-count=6 --max-gap=100000 --max-rule-size=6 --max-seed-tokens=4000 --max-rules=4000 --max-search-states=20000000 --workers=2 --ordering-head-window=8 --search-state-cache-max-bytes=134217728`
+  - full production run remains blocked until a fresh canonical probe shows:
+    - `parallelFirstChunkCompletionElapsedMs != null`
+    - `parallelCompletedChunkCount > 0`
+  - latest exact-safe runtime bundle completed:
+    - `perfect_proto_fullrange_stage1_exact_probe_collapse_v1`
+    - switch the stage-1 singleton probe to native rowset/count primitives
+    - preserve the stage-1 live heartbeat telemetry
+    - preserve exact semantics and deterministic first-wave planning contracts
+    - re-assert `_slot` directory existence before worker-slot command writes
+    - local `npm run verify`: passed
+    - server `npm run verify`: passed
+  - latest rerun after the stage-1 exact-probe collapse bundle:
+    - `perfect_proto_timeprobe_fullrange_stage1_exact_probe_collapse_20260318_143730`
+    - `EXIT_STATUS=124`
+    - top-level parent phase before timeout:
+      - `search_ready_queue`
+    - observed planning telemetry:
+      - `parallelPlanningExactProbeStage1ElapsedMs=8141`
+      - `parallelPlanningExactProbeStage1ChunksCompleted=24`
+      - `parallelPlanningExactProbeStage1ChunkCount=24`
+      - `parallelPlanningExactProbeStage2Ms=334`
+      - `parallelPlanningReadyQueueMs=5`
+      - `parallelDispatchCount=2`
+      - `parallelActiveChunkCount=2`
+      - `parallelReadyQueueDepth=55`
+    - the run still timed out with:
+      - `parallelCompletedChunkCount=0`
+      - `parallelFirstChunkCompletionElapsedMs=null`
+      - `parallelWorkerSlotReuseCount=0`
+      - `exploredStates=12076`
+      - `mergedObservedRuleCount=0`
+    - top-level `parallel_manifest.json` and `summary.json` still did not land before timeout
+    - top-level `live_floor.json` was emitted after worker-slot spawn
+    - launched worker-local chunks before timeout:
+      - `worker_000 / chunk_003 / rootSeed[38,39) / maxSearchStates=9925 / exploredStates=9031 / rulesCollected=0`
+      - `worker_001 / chunk_021 / rootSeed[56,57) / maxSearchStates=14227 / exploredStates=3045 / rulesCollected=0`
+    - so the active runtime blocker moved from startup planning to the first launched exact-search pair
+  - next exact-safe runtime patch is now:
+    - `perfect_proto_fullrange_first_chunk_exact_search_collapse_v1`
+    - hold this to one hypothesis only:
+      - do not re-open ranking, launch-shape, or candidate-pool changes in the same bundle
+      - only collapse steady-state parent control-plane churn and make the launched pair's exact-search wall parent-visible
+    - target the worker-side exact-search wall after `search_ready_queue` without shrinking the candidate pool
+    - surface launched chunk identity and per-chunk search telemetry clearly at the parent level
+    - pre-patch control comparison:
+      - `perfect_proto_singlechunk_probe_chunk003_20260318_144923`
+      - `rootSeed[38,39)` with `allocatedMaxSearchStates=9925` completed directly in `31.60s`
+      - the same logical chunk only reached `exploredStates=9031` inside the canonical parallel `180s` probe
+    - first hypothesis is now steady-state control-plane churn on the primary parallel path:
+      - no-request budget fastpath polling
+      - worker-slot completion polling
+      - missing parent-visible `parallelActiveChunkSnapshots` / chunk search telemetry while the first pair is running
+    - confirm or clear that hypothesis with parent-visible active chunk telemetry plus `parallelBudgetFastpathTickCount` / `parallelBudgetFastpathServiceMs`
+    - immediate patch scope before any deeper algorithmic work:
+      - idle fastpath ticks must not call budget service unless request/commit activity is actually pending
+      - worker-slot completion polling must become progress-aware instead of unconditional fixed-rate polling
+      - surface `parallelBudgetFastpathIdleSkipCount`
+      - split worker-slot completion polling into `parallelWorkerSlotCompletionHotPollCount` and `parallelWorkerSlotCompletionSteadyPollCount`
+      - keep `tools/smoke_prejump_parallel_active_chunk_telemetry.mjs` and `tools/smoke_prejump_search_state_cache_incremental_range_summary.mjs` in the verify gate for this bundle
+    - current status:
+      - local `npm run verify` passed with the control-plane churn patch in place
+      - targeted server smokes for `indexed_acceleration_adversarial`, `parallel_active_chunk_telemetry`, and `parallel_slot_request_grant_integrated` passed in isolation
+      - the next fresh canonical `180s` probe is still blocked on getting one clean full server `npm run verify` sweep because unrelated DuckDB/index smoke flakes are still surfacing inside the shared verify loop
+    - add worker-side live exact-search counters before retrying any deeper algorithmic collapse:
+      - `currentSearchDepth`
+      - `maxSearchDepth`
+      - `candidateDescriptorCount`
+      - `acceptedCandidateCount`
+      - worker `updatedAt`
+      - parent-observed `progressAgeMs`
+      - cumulative rowset runtime counters during active search
+    - keep launched-pair budget context in the same active chunk artifact:
+      - `baseAllocatedMaxSearchStates`
+      - `guardBandAllocatedSearchStates`
+      - `allocatedMaxSearchStates`
+      - `effectiveAllocatedMaxSearchStates`
+      - `remainingGlobalSearchBudgetAtLaunch`
+    - keep the new rowset-native stage-1 path intact
+    - do not re-open previously failed ranking-only patch lines
+    - next canonical `180s` probe is only a `Go` for the following bundle if:
+      - parent `progress.json` surfaces non-stale `parallelActiveChunks` detail for the launched pair
+      - at least one launched chunk emits the new worker-side counters while still active
+      - `parallelBudgetFastpathIdleSkipCount > 0` when the canonical pair never requests extra budget
+      - `parallelWorkerSlotCompletionSteadyPollCount > 0` while active exact search remains in flight
+      - the remaining wall, if any, is directly attributable from parent-visible telemetry instead of inferred from missing worker detail
+  - `perfect_proto_fullrange_worker_exact_search_wall_v1` is now completed:
+    - local `npm run verify` passed
+    - server `npm run verify` passed
+    - fresh canonical rerun after the worker exact-search wall bundle is:
+      - `perfect_proto_timeprobe_fullrange_worker_exact_search_wall_20260319_053613`
+      - `EXIT_STATUS=124`
+      - top-level parent state before timeout:
+        - `phase=search_ready_queue`
+        - `parallelDispatchCount=2`
+        - `parallelActiveChunkCount=2`
+        - `parallelReadyQueueDepth=55`
+        - `parallelCompletedChunkCount=0`
+        - `parallelFirstChunkCompletionElapsedMs=null`
+        - `parallelWorkerSlotReuseCount=0`
+        - `exploredStates=126897`
+        - `mergedObservedRuleCount=0`
+      - top-level live control-plane counters before timeout:
+        - `parallelBudgetFastpathIdleSkipCount=564`
+        - `parallelWorkerSlotCompletionHotPollCount=181`
+        - `parallelWorkerSlotCompletionSteadyPollCount=236`
+      - launched pair telemetry before timeout:
+        - worker `chunkIndex=17`:
+          - `seedPostingLoadMs=122108`
+          - `candidateDescriptorBuildMs=55503`
+          - `negativeCountResolutionMs=66299`
+          - `childRowsetMaterializeMs=2149`
+          - `rowsetIntersectionMs=3916.203`
+          - `seedCacheHitRate=0.73533`
+        - worker `chunkIndex=23`:
+          - `seedPostingLoadMs=132350`
+          - `candidateDescriptorBuildMs=44744`
+          - `negativeCountResolutionMs=87587`
+          - `childRowsetMaterializeMs=1215`
+          - `rowsetIntersectionMs=1849.407`
+          - `seedCacheHitRate=0.114714`
+      - conclusion:
+        - the remaining blocker is the worker-side seed posting load / negative-count resolution wall inside the exact-search loop after `search_ready_queue`
+        - `materializeChildRowsets` / rowset intersection is no longer the primary wall on the canonical path
+  - `perfect_proto_fullrange_worker_seed_posting_load_collapse_v1` is now completed:
+    - local `npm run verify` passed
+    - server `npm run verify` passed
+    - fresh clean canonical rerun after removing the stale competing probe is:
+      - `perfect_proto_timeprobe_fullrange_worker_seed_posting_load_collapse_20260319_055500`
+      - `EXIT_STATUS=124`
+      - top-level parent state before timeout:
+        - `phase=search_ready_queue`
+        - `parallelDispatchCount=2`
+        - `parallelActiveChunkCount=2`
+        - `parallelReadyQueueDepth=55`
+        - `parallelCompletedChunkCount=0`
+        - `parallelFirstChunkCompletionElapsedMs=null`
+        - `parallelWorkerSlotReuseCount=0`
+        - `exploredStates=1164288`
+        - `mergedObservedRuleCount=0`
+      - parent-visible launched pair before timeout:
+        - worker `chunkIndex=17`:
+          - `seedPostingCacheEntryLimit=1496`
+          - `seedCacheHitRate=0.999353`
+          - `seedPostingLoadMs=3426`
+          - `negativeCountResolutionMs=6290`
+          - `candidateDescriptorBuildMs=20269`
+          - `childRowsetMaterializeMs=12127`
+          - `rowsetIntersectionMs=28349.389`
+          - `memoLookupMs=20561.056`
+          - `orderingNegativeLoads=661072`
+        - worker `chunkIndex=23`:
+          - `seedPostingCacheEntryLimit=1496`
+          - `seedCacheHitRate=0.998922`
+          - `seedPostingLoadMs=4444`
+          - `negativeCountResolutionMs=10586`
+          - `candidateDescriptorBuildMs=15999`
+          - `childRowsetMaterializeMs=15472`
+          - `rowsetIntersectionMs=31897.987`
+          - `memoLookupMs=28404.305`
+          - `orderingNegativeLoads=576652`
+      - deeper worker-local `progress.json` snapshots show the next hidden wall directly:
+        - worker `chunkIndex=17`: `memoRangeSummaryRebuildCount=461`
+        - worker `chunkIndex=23`: `memoRangeSummaryRebuildCount=272`
+      - conclusion:
+        - the seed posting cache bundle worked:
+          - `seedPostingLoadMs` collapsed from `122108/132350` to `3426/4444`
+          - `negativeCountResolutionMs` collapsed from `66299/87587` to `6290/10586`
+          - live `seedCacheHitRate` rose to `~0.999`
+          - `exploredStates` increased from `126897` to `1164288`
+        - the old claim that the memo range-summary rebuild wall was gone is not valid on the deeper live path reached after this fix
+        - no first completion still means the next blocker remains inside the worker exact-search loop after `search_ready_queue`
+        - the newly exposed next wall is:
+          - live `memoRangeSummaryRebuildCount` / `memoLookupMs`
+          - with `rowsetIntersectionMs` / `childRowsetMaterializeMs` now co-dominant but reserved for a later one-hypothesis bundle
+  - next exact-safe runtime patch is now:
+    - `perfect_proto_fullrange_worker_memo_range_summary_rebuild_collapse_v1`
+    - keep it one-hypothesis-only:
+      - no ranking retune
+      - no launch-shape rewrite
+      - no candidate-pool shrink
+      - no rowset-algorithm rewrite in the same bundle
+    - preserve:
+      - the rowset-native stage-1 path
+      - the improved worker seed posting cache path
+      - the parent-visible launched-pair worker telemetry
+      - the parent-visible fastpath / poll counters
+      - launched-pair `baseAllocatedMaxSearchStates`
+      - launched-pair `guardBandAllocatedSearchStates`
+      - launched-pair `remainingGlobalSearchBudgetAtLaunch`
+    - target:
+      - collapse live `memoRangeSummaryRebuildCount` / `memoLookupMs` on the deeper worker exact-search path reached after the seed posting cache fix
+      - keep exact search semantics and final rule identity unchanged
+    - next canonical `180s` probe is only a `Go` for any rowset-focused follow-up if:
+      - launched workers materially reduce `memoRangeSummaryRebuildCount`
+      - `memoLookupMs` is no longer one of the dominant active-worker counters
+      - the remaining wall is still attributable without reopening ranking or launch-shape hypotheses
+    - once that `Go` gate is met:
+      - `perfect_proto_fullrange_worker_rowset_fused_count_fill_v1` is now complete
+      - local `npm run verify` passed
+      - server `npm run verify` passed
+      - fresh canonical `180s` probe `perfect_proto_timeprobe_fullrange_worker_rowset_fused_count_fill_20260319_064709` observed:
+        - top-level still blocked:
+          - `parallelCompletedChunkCount=0`
+          - `parallelFirstChunkCompletionElapsedMs=null`
+          - `mergedObservedRuleCount=0`
+        - launched-pair worker `chunkIndex=17`:
+          - `memoRangeSummaryRebuildCount=0`
+          - `memoLookupMs=21300.576`
+          - `rowsetIntersectionMs=28301.895`
+          - `childRowsetMaterializeMs=8829`
+          - `acceptedCandidateCount=609131`
+        - launched-pair worker `chunkIndex=23`:
+          - `memoRangeSummaryRebuildCount=0`
+          - `memoLookupMs=29338.8`
+          - `rowsetIntersectionMs=30208.49`
+          - `childRowsetMaterializeMs=10893`
+          - `acceptedCandidateCount=569915`
+        - versus the prior seed-posting bundle probe:
+          - `childRowsetMaterializeMs` dropped from `12127/15472` to `8829/10893`
+          - `rowsetIntersectionMs` dropped from `28349.389/31897.987` to `28301.895/30208.49`
+          - `acceptedCandidateCount` increased slightly from `604011/562747` to `609131/569915`
+      - interpretation:
+        - fused count/fill removed a real child-rowset duplication cost
+        - the remaining wall is still deeper exact-search efficiency, not a parent merge correctness issue
+      - keep feature pruning / row pruning blocked until a later contribution-diagnostics bundle proves that any low-yield feature or row class is semantically disposable
+      - keep first-wave exact-yield diagnostics behind the contribution-diagnostics bundle so launch-shape and rule-density questions are not mixed with hot-loop runtime fixes
+  - `perfect_proto_fullrange_feature_row_contribution_diagnostics_v1` is now complete:
+    - local `npm run verify` passed
+    - server `npm run verify` passed
+    - fresh canonical `180s` probe `perfect_proto_timeprobe_fullrange_feature_row_first_wave_diagnostics_20260318_221626` observed:
+      - top-level still blocked:
+        - `parallelCompletedChunkCount=0`
+        - `parallelFirstChunkCompletionElapsedMs=null`
+        - `mergedObservedRuleCount=0`
+      - launched `chunkIndex=17` tracked `386` live features; its selection/cost concentration was led by:
+        - `feature.pattern.closeClusterTightness3`
+        - `feature.pattern.closeClusterTightness5`
+        - `feature.shape.sidewaysScore3`
+        - `feature.trend.closeOverMa5`
+        - `feature.trend.closeNearMa5Pct`
+      - launched `chunkIndex=23` tracked `385` live features; its selection/cost concentration was led by:
+        - `feature.trend.closeNearMa60Pct`
+        - `feature.trend.highNearMa60Pct`
+        - `feature.trend.closeNearMa10Pct`
+        - `feature.trend.highNearMa20Pct`
+        - `feature.trend.highNearMa120Pct`
+      - both launched workers still had no exact/live-partial yield:
+        - `exactRuleCount=0`
+        - `livePartialSnapshotRuleCount=0`
+        - `rowContributionTopExactSymbols=[]`
+        - `rowContributionTopExactDates=[]`
+      - row diagnostics showed:
+        - `duplicateSourceIdRowCount=0`
+        - `duplicateSymbolDateRowCount=0`
+        - no contract-safe duplicate-row pruning proof exists yet
+    - conclusion:
+      - contribution diagnostics are now available on the canonical path
+      - feature pruning remains blocked
+      - row pruning remains blocked
+  - `perfect_proto_fullrange_first_wave_exact_yield_diagnostics_v1` is now complete:
+    - local `npm run verify` passed
+    - server `npm run verify` passed
+    - the same fresh canonical `180s` probe observed:
+      - launched `chunkIndex=17`:
+        - `candidateDescriptorCount=322418`
+        - `acceptedCandidateCount=317069`
+        - `yieldCandidateAcceptanceRate=0.98341`
+        - `yieldRulesPerAcceptedCandidate=0`
+      - launched `chunkIndex=23`:
+        - `candidateDescriptorCount=308323`
+        - `acceptedCandidateCount=301205`
+        - `yieldCandidateAcceptanceRate=0.976914`
+        - `yieldRulesPerAcceptedCandidate=0`
+      - ready-queue head telemetry stayed consistent with the current launch policy:
+        - queued `chunkIndex=24` had `firstWaveDispatchScore=0.019356`
+        - launched pair were already at `0.019801/0.019695`
+        - queued multi-root heads were much lower at `0.000145/0.000125/0.000123`
+    - conclusion:
+      - there is no fresh evidence for an immediate launch-policy retune
+      - the remaining blocker is still deeper worker exact-search efficiency or low rule density on the current exact line
+  - `perfect_proto_fullrange_worker_memo_lookup_fastpath_v1` is now complete:
+    - checklist/live-ops/handoff were updated first, then the bundle was implemented and verified
+    - local `npm run verify`: passed
+    - server `npm run verify`: passed
+    - fresh canonical `180s` probe:
+      - run id: `perfect_proto_timeprobe_fullrange_worker_memo_lookup_fastpath_20260319_000001`
+      - exit status: `124`
+      - top-level remained `phase=search_ready_queue`
+      - `parallelCompletedChunkCount=0`
+      - `parallelFirstChunkCompletionElapsedMs=null`
+      - `mergedObservedRuleCount=0`
+    - launched-pair worker telemetry on the fresh probe showed:
+      - worker `chunkIndex=17`
+        - `memoLookupMs=9956.397`
+        - `memoLookupFingerprintMs=917.961`
+        - `memoLookupExactFingerprintScanMs=239.022`
+        - `memoLookupRangeSummaryPrepMs=73.44`
+        - `memoLookupPrefixScanMs=127.449`
+        - `memoLookupSuffixScanMs=115.693`
+        - `memoLookupEntryScanCount=1061`
+        - `memoLookupFingerprintMissCount=307206`
+        - `memoLookupRangeCandidateBucketCount=284`
+        - `rulesCollected=0`
+        - `livePartialRuleCount=0`
+      - worker `chunkIndex=23`
+        - `memoLookupMs=13689.376`
+        - `memoLookupFingerprintMs=1025.02`
+        - `memoLookupExactFingerprintScanMs=152.848`
+        - `memoLookupRangeSummaryPrepMs=88`
+        - `memoLookupPrefixScanMs=95.456`
+        - `memoLookupSuffixScanMs=82.193`
+        - `memoLookupEntryScanCount=906`
+        - `memoLookupFingerprintMissCount=295946`
+        - `memoLookupRangeCandidateBucketCount=274`
+        - `rulesCollected=0`
+        - `livePartialRuleCount=0`
+    - interpretation:
+      - the bundle succeeded in exposing the missing lookup sub-metrics without changing exact semantics
+      - it did **not** deliver the required launched-pair `memoLookupMs` reduction
+      - the newly instrumented fingerprint/range/prefix/suffix timings account for only a minority of total `memoLookupMs`, so the next blocker is now the larger memo miss-path outside those scans
+      - the remaining likely wall is `getOrCreatePositiveBucket` and non-dominated frontier insertion work, not launch policy, pruning, or row/feature trimming
+    - do not advance to the `15~20 minute` probe or full run from this result
+  - next exact-safe runtime patch is now:
+    - `perfect_proto_fullrange_worker_memo_miss_path_breakdown_v1`
+    - preserve launch policy, candidate pool, rowset semantics, and exact semantics
+    - instrument and then reduce the uncovered memo miss-path:
+      - positive-bucket fingerprint/equality lookup
+      - positive collision-bucket scan
+      - negative-rowset clone/estimate path
+      - frontier insertion/index maintenance path
+    - keep forbidden:
+      - feature pruning
+      - row pruning
+      - launch retune
+      - ranking retune
+      - candidate-pool shrink
+      - rowset algorithm rewrite
+  - keep deferred:
+    - `perfect_proto_fullrange_singleton_probe_resume_v1`
+    - adaptive stage-2 must resume the stage-1 frontier instead of replaying the root probe
+  - persistent worker slot bundle must also expose:
+    - `parallelWorkerSpawnCount`
+    - `parallelWorkerSlotReuseCount`
+    - `parallelWorkerWarmLaunchCount`
+    - `parallelWorkerColdStartMs`
+    - `parallelWorkerWarmLaunchMs`
+  - persistent worker slots must preserve:
+    - exact final rule set / champion / matches / coverage
+    - existing chunk-local `progress.json`, `summary.json`, `live_budget.json`, `budget_request.json`, `budget_decision.json`, and `live_partial_rules.json` contracts
+    - existing request/ack and reclaim-fastpath semantics on the canonical runtime path
+  - ready-queue live-floor bundle invariants:
+    - exact search semantics unchanged
+    - exact final rule set / champion / matches / coverage unchanged
+    - final rule ranking / champion selection must remain deterministic regardless of worker completion timing
+    - external floor seeding may prune only when `candidatePositiveCount < effectiveKthHitFloor`
+    - `candidatePositiveCount === effectiveKthHitFloor` must continue
+  - ready-queue parent progress / manifest must expose:
+    - `parallelChunkCount`
+    - `parallelWaveCount`
+    - `parallelCompletedChunkCount`
+    - `parallelCompletedWaveCount`
+    - `parallelGlobalKthHitFloor`
+    - `parallelFloorSeededChunkCount`
+    - `parallelWaveMergeMs`
+    - `parallelChunkPlannerImbalanceRatio`
+  - ready-queue miner must also:
+    - lease the remaining global `maxSearchStates` budget before every chunk launch
+    - record `allocatedMaxSearchStates` per chunk run
+    - record:
+      - `baseAllocatedMaxSearchStates`
+      - `guardBandAllocatedSearchStates`
+      - `effectiveAllocatedMaxSearchStates`
+    - record `remainingGlobalSearchBudgetAtLaunch` per chunk run
+    - stop launching later chunks once any chunk truncates at its leased budget
+    - never allow a worker to report `exploredStates` above `effectiveAllocatedMaxSearchStates`
+  - ready-queue telemetry must also expose:
+    - `parallelReadyQueueDepth`
+    - `parallelDispatchCount`
+    - `parallelImmediateRefillCount`
+    - `parallelLiveFloorUpdateCount`
+    - `parallelLiveFloorRevision`
+    - `parallelFirstGlobalFloorElapsedMs`
+    - `parallelActiveAllocatedSearchBudget`
+    - `parallelSlotIdleMs`
+  - top-level ready-queue progress must keep updating during active search and expose:
+    - `parallelActiveChunkCount`
+    - `parallelActiveWaveExploredStates`
+    - `parallelActiveWaveRulesCollected`
+    - `parallelActiveWaveMemoLookupMs`
+    - `parallelActiveWaveEtaSeconds`
+    - `parallelRemainingSearchBudget`
+    - `parallelRemainingGrantableSearchBudget`
+    - `parallelOutstandingAllowanceSearchStates`
+    - `parallelOutstandingAllowanceChunkCount`
+    - `parallelAllowanceToCommitLagMs`
+  - running worker progress / summary must also expose:
+    - `externalKthHitFloor`
+    - `externalKthHitFloorRevision`
+    - `externalKthHitFloorPollCount`
+    - `externalKthHitFloorAppliedCount`
+    - `effectiveKthHitFloor`
+    - `livePartialRuleRevision`
+    - `livePartialRuleCount`
+    - `livePartialRuleCheckpointCount`
+    - `livePartialRuleWriteMs`
+    - `livePartialLocalKthHitFloor`
+  - live partial-rule floor bundle must also expose:
+    - parent:
+      - `parallelLivePartialRuleRevisionCount`
+      - `parallelLivePartialRuleMergeMs`
+      - `parallelLivePartialFloorUpdateCount`
+      - `parallelFirstLivePartialFloorElapsedMs`
+      - `parallelActiveLiveRuleCount`
+    - bootstrap floor-ordering bundle must also expose:
+      - parent:
+        - `parallelBootstrapChunkCount`
+        - `parallelFirstChunkCompletionElapsedMs`
+        - `parallelFirstBootstrapFloorElapsedMs`
+        - `parallelBootstrapFloorSeededLaunchCount`
+      - worker:
+        - `livePartialBootstrapSnapshotCount`
+        - `livePartialBootstrapRuleCount`
+        - `livePartialBootstrapModeActive`
+  - next exact-safe hardening bundle is:
+    - `perfect_proto_parallel_atomic_control_plane_v1`
+    - worker `progress.json` / `summary.json`, parent `progress.json`, `parallel_manifest.json`, and `live_floor.json` must be written atomically
+    - parent active progress polling must fail fast on malformed control-plane JSON once the file exists
+    - worker external live-floor polling must fail fast on malformed or unreadable `live_floor.json`
+    - bootstrap `ENOENT` before the first parent floor write is the only allowed missing-file case
+  - live partial-rule floor bundle must preserve:
+    - exact final rule set / champion / matches / coverage
+    - exact `< kthHitFloor` pruning only
+    - no duplicate counting of active worker snapshot revisions in the parent live-floor aggregate
+    - per-chunk live snapshots must include at least the local canonical top `maxRules` and may extend through the local snapshot tie band
+    - the live partial-rule aggregate may only strengthen the current floor; it must never lower a previously published floor
+    - bootstrap live partial-rule overscan remains control-plane only and must not alter exact final selection semantics
+  - do not reduce `maxSeedTokens`, `maxRules`, or `maxSearchStates` to make the run complete earlier
+  - do not solve chunk-budget overruns by shrinking search-space knobs; fix worker stop semantics and chunk leasing instead
+  - next exact-safe hardening round targets:
+    - split `collectedRuleCount` into observed/live/final diagnostics
+    - add bounded ordering head rerank metrics
+    - instrument non-evictable tie-band size at the partial-merge hit floor
+  - integrated native exact-mining step-change bundle is now the next large target:
+    - required Node-API native exact rowset kernel
+    - required native delta postings decode
+    - native exact sparse/plain-bitset backend
+    - no JS fallback / degraded runtime path
+    - stale native binary must fail verify instead of reusing an old `.node`
+    - real compressed bitmap 2-container backend, rowset pool/ownership refactor, diffset, and full roaring-style container expansion stay explicitly out of scope for this bundle
+  - native integrated bundle must preserve these fixed semantics:
+    - `decisionDate=D`
+    - `entry=D+1 open`
+    - `3-day / +8% / -4%`
+    - `v5_prejump_contextual`
+    - `maxGapTradingDays=100000`
+    - `maxRuleSize=6`
+    - `maxSeedTokens=4000`
+    - `maxRules=4000`
+    - `maxSearchStates=20000000`
+    - `ruleId`, `matches`, `coverage`, ranking/tie-break
+    - exact search + fail-fast
+  - native bundle execution order:
+    - update docs/checklist/handoff
+    - add native build/load infra + build manifest with the direct `scripts/build_native_rowset_kernel.sh` path as the only canonical build contract
+    - integrate native rowset kernel
+    - integrate native postings delta decode
+    - align runtime contract with the actual sparse/plain-bitset backend
+    - keep memo/merge/runtime hardening exact-safe
+    - add native/adversarial equivalence coverage and require it from `npm run verify`
+  - do not sync local code into the shared server checkout until the active historical feature-store bootstrap completes; run server verify/smoke only after bootstrap is finished
+  - current remaining predictive bottlenecks are raw candle/universe load scale and large posting/materialization phases, not legacy JSONL full-load mining
+  - current index-stage bottleneck is now `merge_postings` in `src/lib/perfect_prototype_token_index_merge.mjs`, not mining DFS
+  - index probe showed the old `merge_postings` ETA was inflated because it used shard token-count sums instead of actual distinct merged token count
+  - next index acceleration bundle scope is intentionally narrowed to:
+    - distinct-token progress / ETA fix
+    - canonical global dictionary stream instead of per-shard DuckDB FIFO fanout
+    - required native shifted-delta postings merge on the primary `token_postings.bin` path
+    - index merge exact equivalence smoke folded into verify
+  - current index hardening follow-up closes the remaining runtime gaps:
+    - merge completion must fail fast unless `mergedTokenCount == expectedDistinctTokens`
+    - merge completion must fail fast unless `dictionaryCursorRows == expectedDictionaryRefRows`
+    - shard token-dictionary schema version/required columns must be preflighted before merge
+    - canonical global dictionary stream now orders by `token, shardIndex`
+    - merged-dictionary stats are now emitted in the same canonical materialization stage instead of a later shard-union rescan
+    - canonical merged-dictionary temp artifacts are now emitted as ordered JSONL and consumed directly instead of a second DuckDB/parquet order pass
+    - duplicate `(token, shardIndex)` refs now fail fast during merge streaming
+    - primary path now uses native file-backed shifted-delta postings merge; bounded-concurrency JS posting reads remain debug-only
+  - remaining exact-acceleration bundle now targets:
+    - required native file-backed shifted-delta postings merge on the primary `token_postings.bin` path
+    - incremental tie-band accounting in parent partial merge
+    - ordered memo frontier / skyline-style early-stop before native subset checks
+    - incremental memo frontier insertion/update instead of full frontier sort/reindex on every insert
+    - incremental hit-floor pruning instead of full-scanning every live merge bucket when the parent partial-merge floor rises
+  - completed step-change bundle after that covered:
+    - rowset pool / ownership refactor on the indexed-mining primary path
+    - native postings splice merge on the primary `token_postings.bin` merge path
+    - borrowed-rowset ownership + splice metadata exactness folded into local/server verify
+  - rowset/splice bundle invariants:
+    - pooled scratch rowsets are allowed only inside one local expansion scope
+    - memo/cache structures must store owned rowsets only
+    - borrowed-rowset escape is fail-fast
+    - primary postings merge must not materialize merged JS buffers on the canonical path
+    - native splice merge must validate first/last-row metadata and shifted monotonicity
+  - explicitly out of scope for this bundle:
+    - real compressed bitmap 2-container backend
+    - SIMD native rowset kernel rewrite
+    - diffset negative-state engine
+  - new local validation for this bundle:
+    - `node tools/smoke_prejump_indexed_equivalence.mjs`
+    - `node tools/smoke_prejump_indexed_acceleration_adversarial.mjs`
+    - `bash scripts/build_native_rowset_kernel.sh`
+    - `bash scripts/verify_native_rowset_kernel.sh`
+    - `node tools/smoke_prejump_index_merge_equivalence.mjs`
+  - server completion gate after bootstrap:
+    - `bash scripts/build_native_rowset_kernel.sh`
+    - `bash scripts/verify_native_rowset_kernel.sh`
+    - `npm run verify`
+    - `node tools/smoke_prejump_parallel_indexed_equivalence.mjs`
+  - compressed bitmap 2-container backend is no longer the immediate next step-change target:
+    - the current predictive row universe and dense threshold make it unlikely to deliver the next real speed step
+    - the next correct step-change is the existing dense backend with a required SIMD exact bitset kernel
+  - next step-change bundle is now:
+    - `perfect_proto_stepchange_simd_bitset_v1`
+    - AVX2/POPCNT-required native exact bitset kernel on the current dense backend
+    - dense/dense count / words-fill / values-fill / equality / subset / materialize hot loops first
+    - no compressed bitmap backend change in this round
+  - SIMD bitset bundle invariants:
+    - public rowset modes remain `sparse` / `bitset`
+    - dense backend remains the current exact plain-bitset contract
+    - x86_64 + AVX2 + POPCNT are required on the canonical runtime path
+    - build/verify/runtime must fail fast if the SIMD contract is unavailable
+    - hidden scalar degraded fallback is forbidden
+    - scalar tails are allowed only as an internal exact tail-handling detail
+  - explicitly out of scope for the SIMD bitset bundle:
+    - compressed bitmap backend
+    - run-container / roaring-style container expansion
+    - diffset negative-state engine
+  - next step-change bundle after SIMD is now:
+    - `perfect_proto_stepchange_structured_sink_completion_v1`
+    - remove remaining predictive primary-path JSONL parquet sinks for:
+      - feature-store wrapper partitions
+      - feature-store feature-stats parquet
+      - feature-values sidecar index parquet
+      - predictive pack parquet
+      - `partial_rules.parquet`
+    - introduce explicit fixed-schema structured sinks for object/array columns
+    - structured columns should be stored as deterministic JSON text under explicit schemas and parsed explicitly on read
+    - `read_json_auto()` parquet sinks become forbidden on the predictive primary path once this bundle lands
+    - update local/server verify to include a structured-sink equivalence smoke
+  - next exact-speed bundle after structured sinks is now:
+    - `perfect_proto_stepchange_sparse_kernel_merge_stream_v1`
+    - replace merged-dictionary temp JSONL materialization/parsing with a fixed-schema delimited stream on the canonical partitioned-index merge path
+    - accelerate sparse/sparse and sparse/bitset exact native rowset kernels while keeping the public `sparse|bitset` rowset contract unchanged
+    - move bitset first/last edge-summary lookup onto the native exact runtime path
+    - keep compressed bitmap backend deferred
+  - next exact-speed bundle after sparse-kernel/merge-stream is now:
+    - `perfect_proto_stepchange_query_stream_completion_v1`
+    - remove DuckDB `FORMAT JSON` fifo bridging from predictive primary parquet reader paths
+    - introduce fixed-schema delimited/structured query streams for:
+      - indexed row-meta loads
+      - token-stats seed scans
+      - typed wrapper parquet iteration
+      - partial-rule parquet iteration
+      - feature-values sidecar parquet iteration
+      - recommendation close-return sidecar parquet lookup
+      - partitioned index shard row-meta merge
+      - ordered token-index wrapper streams
+    - keep logical wrapper/rule contracts unchanged and fail fast on schema/type/structured-json drift
+  - next exact-speed bundle after query-stream completion is now:
+    - `perfect_proto_stepchange_table_stream_completion_v1`
+    - replace the remaining primary `token_postings` table readback JSON bridge with a fixed-schema delimited table stream
+    - require explicit schema/select contracts for canonical DuckDB table-sink `streamRows()` calls
+    - keep `token, rowIdx` deterministic ordering and exact postings/dictionary output unchanged
+    - fail fast if the canonical table-stream mode is not `delimited`
+  - next exact-speed bundle after table-stream completion is now:
+    - `perfect_proto_stepchange_sparse_cpu_v3_v1`
+    - strengthen sparse/sparse and sparse/bitset exact native kernels on the canonical indexed-mining path
+    - expose sparse runtime counters for near-size merge, galloping, and sparse/bitset word-run behavior
+    - keep public `sparse|bitset` rowset modes and all exact mining semantics unchanged
+    - fail fast if the canonical sparse-kernel contract is disabled
+  - latest server re-probe conclusion:
+    - current patch stack completed index-only re-probe successfully
+    - mining live probe showed sparse-state dominance on the canonical search path
+    - sparse CPU is the next canonical step-change; memo skyline is the follow-up bundle
+  - completed exact-speed bundle after sparse CPU v3:
+    - `perfect_proto_stepchange_memo_skyline_v5_v1`
+    - canonical memo skyline frontier buckets now carry impossible-bucket skip metadata and explicit tombstone compaction
+    - mining summaries now expose `memoFrontierSkippedBucketCount` and `memoFrontierCompactionCount`
+    - keep `PREJUMP_MEMO_SKYLINE_V3=true` as the required runtime gate even though the implementation bundle is skyline v5
+    - keep exact dominance semantics unchanged
+  - native server sync contract repair:
+    - `scripts/sync_to_server.sh` must exclude `native/perfect_prototype_rowset_kernel/build/`
+    - server code sync must never overwrite the server-built native `.node`
+    - canonical server verify/smoke must load a server-built native rowset kernel binary
+  - next hardening bundle after memo skyline v5:
+    - `perfect_proto_native_runtime_guard_parallel_telemetry_v1`
+    - native addon load must fail fast before `require()` when the build manifest or source/binary hashes are stale
+    - parallel rejection summaries must aggregate all rowset/sparse/bitmap runtime counters
+    - `parallel_manifest.json` must retain the same runtime counters needed for reprobe analysis
+    - server parallel smoke must validate merged counter equality against worker summaries, not just finite presence
+  - current follow-up hardening scope after that bundle:
+    - `scripts/build_native_rowset_kernel.sh` must self-heal stale/corrupt binaries instead of trusting `buildInputsHash` alone
+    - `rowsetModeStats` numeric fields must merge by explicit worker-sum contract
+    - `rowsetModeStats.rootPositiveMode` and `rootNegativeMode` must match across workers or fail fast
+    - runtime-guard verify must cover `sourceSha256`, `outputSha256`, missing-manifest, malformed-manifest, `platform`, and `nodeApiVersion` branches
+  - current cleanup follow-up after runtime/telemetry hardening:
+    - recommendation close-return sidecar fingerprint scans must leave the DuckDB JSON row bridge and use explicit delimited query streams
+    - `rowsetModeStats` schema should live in one shared helper instead of duplicated miner/smoke key lists
+    - unreadable/corrupt existing native `.node` files should force rebuild instead of failing before rebuild
+  - current index-contract/provenance hardening bundle now also requires:
+    - `row_meta.parquet` mining readers to fail fast on duplicate / missing / out-of-order `rowIdx`
+    - `row_meta.parquet` mining readers to fail fast on blank `sourceType`, `sourceId`, `dateKey`, or `symbol`
+    - `row_meta.parquet` row-level `sourceType` / `strategyMode` must exactly match the dataset-level contract
+    - predictive indexed manifests and summaries must persist canonical `sourceType=perfect_prototype_prejump_pack`
+    - `token_stats.parquet` seed scans to fail fast on duplicate/out-of-order tokens and streamed-count mismatch vs manifest `tokenCount`
+    - `token_dictionary.parquet` selected-entry loads to fail fast on duplicate/out-of-order tokens and requested-count mismatches
+    - partitioned index artifacts to persist canonical feature-store provenance:
+      - selected coverage
+      - selected partition count
+      - feature-store contract hash
+      - selected partition-state hash
+      - tokenizer-spec cache key + cache inputs
+    - indexed and parallel mining to validate current feature-store provenance against the recorded index provenance before search begins
+    - non-partitioned direct-built indexes to persist explicit input provenance and fail fast on stale input reuse
+    - direct partitioned-index merge to emit provenance-complete `manifest.json`, `summary.json`, and `partition_manifest.json`
+    - canonical server wrapper to reject raw pack/direct-index mode and stay partitioned-only
+    - stale feature-store / index reuse to fail fast with explicit feature-store rebuild + index rebuild remediation
+    - the current server reprobe partitioned index artifact predates this provenance-complete contract and must be rebuilt before mining-only reprobe
+    - direct partitioned-index merge now requires exact source-set integrity:
+      - unique source index dirs only
+      - non-partitioned shard-local source indexes only
+      - exact equality between source `inputProvenance.inputPaths` union and the selected feature-store partition parquet set
+      - every source shard index must persist `tokenizerSpecHash`
+      - every source shard `tokenizer_spec.json` must match its recorded fingerprint
+      - direct merge must fail fast unless the source shard `tokenizerSpecHash` values match the canonical tokenizer spec implied by the current feature-store provenance
+    - canonical partitioned predictive tokenizer options are fixed and explicit:
+      - `surfaceName=v5_prejump_contextual`
+      - `binCount=5`
+      - `includeSymbolToken=false`
+      - `includeMissingTokens=false`
+      - `includeCategoricalTokens=true`
+    - canonical server wrapper must pass those tokenizer options explicitly into the partitioned build tool
+    - tokenizer-spec cache files under `.tokenizer-spec-cache/` must use an explicit envelope contract, not a bare tokenizer JSON payload
+    - invalid, legacy, or metadata-mismatched tokenizer cache files must be rebuilt from current feature-store sidecars before canonical partitioned build/merge continues
+    - low-level direct build / merge tools must fail fast on dirty output dirs and stale canonical artifact leftovers
+    - predictive direct/merged index manifests now require tokenizer-spec fingerprint fields:
+      - `tokenizerSpecHash`
+      - `tokenizerSpecFingerprintVersion`
+      - tokenizer-spec fingerprint v2 excludes volatile `generatedAt`
+    - the current server reprobe partitioned index artifact also predates tokenizer-spec fingerprint persistence and still needs a rebuild before mining-only reprobe
+  - next follow-up after that hardening bundle:
+    - rebuild the canonical partitioned index first
+    - then run the mining-only reprobe before starting any further cleanup bundle
+- Predictive strategy semantics:
+  - decision date = today close
+  - features observable by today close only
+  - entry = next trading day open
+  - curated catalog surface must be `v5_prejump_contextual`
+  - current predictive mining defaults:
+    - `maxGapTradingDays = 100000` (effectively disabled)
+    - `maxRuleSize = 6`
+    - `maxSeedTokens = 4000`
+    - `maxRules = 4000`
+    - `maxSearchStates = 20000000`
+- Legacy comparison paths remain available:
+  - parent path: `rule2` via `daily_pack`
+  - Step-B path: `171-rule shortlist` via `Step-A -> Step-B -> apply`
+  - Step-B D+1 baseline line is now the preferred legacy high-rule-count reference path for fast exact catalog generation:
+    - `Step-A -> Step-B -> legacy no-gap miner`
+    - fixed semantics:
+      - `decisionDate=D`
+      - `asOfDate=D-1`
+      - `entry=D+1 open`
+      - `3-day / +8% / -4%`
+    - required wrapper split policy:
+      - `decision_date_only`
+      - `strict_label_boundary`
+    - v1 baseline remains exact-only:
+      - current legacy miner still rejects `negativeMatchCount > 0`
+      - do not mix relaxed-precision catalog collection into baseline v1
+    - required readouts:
+      - frozen catalog hash + rule-id hash
+      - train reapply summary
+      - train/OOS leaderboard
+      - date concentration
+      - symbol concentration
+      - OOS collapse
+      - raw vs `close28` delta
+    - report/apply contract:
+      - legacy Step-B reapply/apply must recompute contextual vectors from input rows
+      - do not trust rounded `templates_lite.jsonl` contextual numeric vectors as canonical reapply features
+      - baseline manifest must carry `baselineExactnessClaimable` plus train exactness drift counts
+    - current immediate hardening bundle before long baseline runs:
+      - completed via:
+        - `perfect_proto_stepb_dplus1_contract_self_contained_v1`
+        - `perfect_proto_stepb_dplus1_nogap_contract_lock_v1`
+        - `perfect_proto_stepb_dplus1_selection_integrity_v1`
+        - `perfect_proto_stepb_dplus1_boundary_provenance_symmetry_v1`
+        - `perfect_proto_stepb_dplus1_leaderboard_semantic_cleanup_v1`
+        - `perfect_proto_stepb_dplus1_wrapper_e2e_smoke_v1`
+    - current status after hardening:
+      - `baselineExactnessClaimable=true` now requires zero train drift for counts, gap semantics, and first/last-hit date semantics
+      - the historical comparison line remains `no-gap`, so the D+1 wrapper must pass `maxGapTradingDays=100000`
+      - server speed sanity `perfect_proto_stepb_dplus1_speed_sanity_20260319_013000` cleared the old ~3k-rule cadence gate with `89781` Step-B rows, `4000` exact rules, `20000140` explored states, and `1266.8s` total wrapper time
+      - OOS guardrail on that sanity run stayed broad enough to avoid the old “2 dates only” failure mode: `uniqueMatchedDates=245`, `uniqueMatchedSymbols=417`, `oosZeroNegativeRules=741`, `oosHit2ZeroNegativeRules=334`
+      - the next gate is full baseline interpretation, not emergency Phase 6 speed recovery
+    - interpretation hardening status:
+      - baseline config is now self-contained for `featureAsOf=t-1` and `exactCollectionMode=train_precision_1_only`
+      - `stepb_dplus1_baseline` is now locked to `maxGapTradingDays=100000`
+      - `selectionMode` integrity is now fail-fast across report/apply/leaderboard artifacts
+      - `decision_date_only` provenance is now symmetric with `strict_label_boundary`
+      - leaderboard aliases now separate train/OOS and raw/dedup semantics explicitly
+      - wrapper helper path now has a dedicated end-to-end smoke
+    - immediate closure before the long reference run is completed:
+      - the real server wrapper now sources the shared helper library, so wrapper/helper logic cannot drift
+      - direct Step-B baseline runs now fail fast on invalid `contractVersion`, invalid `strategyMode`, and top-level `template/backtest` values that disagree with the explicit baseline contract
+      - the recovered `perfect_proto_stepb_dplus1_speed_sanity_20260319_013000` cadence stayed unchanged through the closure bundle and server verify
+    - long reference run `perfect_proto_stepb_dplus1_long_reference_20260319_142559` is completed:
+      - train mining reproduced the recovered no-gap cadence on the full baseline window: `89781` Step-B rows, `4000` exact rules, `20000140` explored states
+      - `baselineExactnessClaimable=true`, `baselineArtifactIntegrityClaimable=true`, `trainExactnessDriftRuleCount=0`
+      - OOS headline: `3412` matched rules, `741` zero-negative rules, `334` hit>=2 zero-negative rules, `116` hit>=3 zero-negative rules
+      - concentration guardrail stayed broad enough to avoid the prior collapse pattern: `245` unique matched dates, `417` unique matched symbols, `top1DateShare=0.00881`, `top10SymbolShare=0.08664`
+      - `close28` exclusion remained meaningful: `rawMatchDelta=198`, `zeroNegativeRuleDelta=40`, `dedupedPositiveCoverageRateDelta=0.015868477483917086`
+    - public data-fill integrity note:
+      - `2026-03-18` was not a partial candle/universe append failure; row counts and symbol coverage were complete
+      - the real issue was recurring upstream placeholder candles (`open=high=low=0`, `close>0`, `volume=0`) across multiple dates
+      - `tools/fill_public_kr_daily.py` now fails fast on those rows and writes an audit under `artifacts/data_quality/` before any rewrite
+      - verify includes a synthetic invalid-candle smoke so this does not regress silently
+      - follow-up tooling now exists for already-ingested history:
+        - `tools/audit_public_kr_invalid_candles.py` scans `data/candle_daily.jsonl` and writes a historical audit under `artifacts/data_quality/`
+        - `tools/scrub_public_kr_invalid_candles.py` is explicit dry-run by default and only rewrites `candle_daily.jsonl` / matching `universe_daily.jsonl` rows when `--apply` is passed
+        - scrub creates backups under `artifacts/backups/` and should be followed by sidecar rebuilds before filtered apply
+      - server scrub apply is now completed:
+        - removed `2588` invalid candle rows and `2131` matching universe rows
+        - post-scrub historical audit confirmed `0` remaining invalid rows
+        - recommendation close-return sidecar was rebuilt immediately after scrub
+      - post-scrub Step-B D+1 long reference `perfect_proto_stepb_dplus1_long_reference_post_scrub_20260319_ko` is completed:
+        - train cadence remained intact: `89768` Step-B rows, `4000` exact rules, `trainExactnessDriftRuleCount=0`
+        - OOS exact survivorship improved versus the pre-scrub reference:
+          - `oosMatchedRules`: `3412 -> 3402`
+          - `oosZeroNegativeRules`: `741 -> 768`
+          - `oosHit2ZeroNegativeRules`: `334 -> 351`
+          - `oosHit3ZeroNegativeRules`: `116 -> 127`
+        - concentration stayed broad enough: `244` unique matched dates, `414` unique matched symbols
+    - next legacy baseline steps:
+      - only if needed after that:
+        - `perfect_proto_stepb_v3_contextual_plus_lite_surface_v1`
+        - `perfect_proto_stepb_legacy_adaptive_intersection_fastpath_v1`
+        - `perfect_proto_stepb_relaxed_precision_catalog_v1`
+      - immediate expression-comparison gate:
+        - keep the clean baseline line intact and compare at fixed budget first
+        - baseline compare run: `v3_contextual`, `maxRules=10000`, `maxSearchStates=20000000`
+        - plus-lite compare run: `v3_contextual_plus_lite`, `maxRules=10000`, `maxSearchStates=20000000`
+        - keep the later `30000 / 120000000` budget sweep closed until this fixed-budget expression comparison is implemented and read
+        - the first legacy `plus_lite` surface should add only:
+          - `pattern.insideBarCount3`
+          - `pattern.nr4`
+          - `pattern.nr7`
+          - `pattern.closeClusterTightness3`
+          - `pattern.closeClusterTightness5`
+          - `shape.sidewaysScore3`
+          - `shape.sidewaysScore5`
+          - `shape.sidewaysScore10`
+          - `volume.lowVolumeCount3`
+          - `volume.lowVolumeCount5`
+          - `volume.volumeVsRecentPeak`
+          - `level.closeNearHigh20`
+          - `level.closeNearHigh60`
+          - `level.touchRecentHighCount10`
+          - `level.rejectionFromRecentHighCount10`
+        - do not add `anchor.*`, `chain.*`, or `score.*` in the first legacy expression run
+        - because the surface changes, rerun Step-B from the existing Step-A events before mining
+        - fixed-budget compare is now completed:
+          - baseline `perfect_proto_stepb_dplus1_budget10k_20m_20260319`
+            - `5000` exact rules, `20000065` explored states
+            - OOS: `4192` matched rules, `996` zero-negative rules, `429` hit>=2 zero-negative rules, `150` hit>=3 zero-negative rules
+            - coverage: `246` unique matched dates, `430` unique matched symbols
+          - plus-lite `perfect_proto_stepb_dplus1_plus_lite_budget10k_20m_heap8g_rerun_20260319`
+            - `5000` exact rules, `20000221` explored states
+            - OOS: `4274` matched rules, `999` zero-negative rules, `435` hit>=2 zero-negative rules, `175` hit>=3 zero-negative rules
+            - coverage: `241` unique matched dates, `367` unique matched symbols
+          - interpretation:
+            - plus-lite increases stronger exact survivorship
+            - plus-lite reduces surfaced breadth and worsens concentration
+            - plus-lite requires explicit `NODE_OPTIONS=--max-old-space-size=8192` during mining
+            - keep `v3_contextual` as the primary Step-B baseline; do not promote plus-lite as the default surface yet
+          - Step-B after-close live apply is now surface-locked:
+            - baseline frozen catalogs must be applied with `v3_contextual`
+            - plus-lite frozen catalogs must be applied with `v3_contextual_plus_lite`
+            - the generic Step-B after-close wrapper now fail-fast checks frozen `manifest.surface` against the generated `step-b/summary.json`
+        - plus-lite also surfaced and closed a real apply-side contract bug:
+          - post-scrub candle rows are valid but no longer guaranteed to remain chronological per symbol
+          - `tools/apply_perfect_prototypes.mjs` previously assumed chronological candle order when building the recommendation-date close-return lookup
+          - the lookup is now order-independent and verify includes an unsorted-candle regression smoke
+        - next line contract is now fixed and should be implemented in this order:
+          - discovery:
+            - `Step-A + Step-B + v3_contextual_plus_lite`
+            - keep exact-only discovery; do not reopen relaxed precision here
+            - widen Step-A only for this plus-lite discovery line:
+              - keep `same_day_high8`
+              - also admit `recent_impulse_1d`, `recent_impulse_2d`, and `recent_impulse_3d`
+              - interpretation: if `D-1`, `D-2`, or `D-3` had a `HIGH8` impulse, the current decision day `D` becomes discovery-eligible even when `D` itself is not `HIGH8`
+            - this widened `1~3일` line is now the semantic anchor for the generalized `same_day_plus_recent_upto_Nd` family
+            - baseline `stepb_dplus1_baseline` remains same-day `HIGH8` only for continuity
+          - evaluation:
+            - replay the frozen plus-lite discovery catalog on `Step-A`-free open-market train/OOS packs
+            - keep the same `D+1 open / 3-day / +8% / -4%` semantics
+            - the open-eval pack must share row-construction semantics with Step-B so features/outcomes cannot drift
+          - selection:
+            - choose rules from the open-eval leaderboard
+            - `open-OOS` is the primary truth, `open-train` is supporting sanity only
+          - deploy:
+            - dedupe surfaced recommendations by `symbol + decision date`
+            - keep `matchedRuleIds` / `supportingRuleIds` instead of deleting research rules
+        - operational reading rule:
+          - `plus-lite discovery rule count != open-market eval count != selection rule count != deploy deduped symbol count`
+          - never compare those raw numbers without the contract label
+        - widened plus-lite discovery provenance must now survive into Step-A/Step-B artifacts:
+          - `stepALaneId`
+          - `impulseSourceDateKey`
+          - `impulseLookbackDays`
+          - `impulseJumpPct`
+          - `impulseJumpPctFromPrevClose`
+          - `impulseJumpPctFromOpen`
+        - plus-lite discovery wrappers must fail fast unless `event.recentImpulseDiscovery.enabled=true` with `lookbackTradingDays=3`
+        - current widened-discovery blocker is legacy miner memory pressure, not widened line semantics:
+          - same-day-only train Step-B templates: `89768`
+          - widened `1~3일` train Step-B templates: `171756`
+          - these two row counts are the canonical regression anchors for future generalized widened-family smokes
+          - widened `200k / 4GB` probe baseline: `700` exact rules, `200180` explored states, `533.92s`, `4294704 KB`
+          - widened `20M / 4GB` currently OOMs
+        - immediate rescue scope:
+          - reduce prepare-pipeline copies before search
+          - compact tokenized mining rows to row-meta plus tokens only
+          - compact token postings into typed numeric containers
+          - replace same-signature string keys with hash buckets plus exact equality checks
+          - add an exact-safe intersection fastpath
+        - bounded-heap seed selection is not retained in the final rescue bundle because the diversified ranked-list merge needs full seed-ranking depth for exact-equivalent state-limited behavior
+        - keep widened `1~3일` discovery enabled during the rescue bundle; do not shrink to `1~2일` yet
+        - keep child-ordering search reordering deferred until the exact-safe memory rescue bundle is validated
+        - final exact-safe rescue benchmark:
+          - widened `200k / 4GB` post-fix probe: `700` exact rules, `200180` explored states, `504.69s`, `3992324 KB`
+          - improvement vs baseline: `-29.23s`, `-302380 KB`
+        - root cause of the temporary `701 / 200083` drift during intermediate rescue probes:
+          - the first galloping intersection fastpath skipped a valid match when the larger-array start cursor already satisfied the target
+          - fixing that start-index bug restored canonical exactness without reverting the retained compaction bundle
+        - next widened-line optimization bundle must stay exact-safe and use the current widened `200k / 4GB` probe as the before/after benchmark:
+          - `700` exact rules
+          - `200180` explored states
+          - `504.69s`
+          - `3992324 KB`
+        - next exact-safe search-cost targets:
+          - lazy rule materialization: keep `ruleCore` during search and materialize full rules only after final top-K selection
+          - shared calendar gap cache so gap evaluation does not rebuild `calendarDateKey -> index` per collected rule
+          - exact-equivalent seed index-array rankings instead of repeated `slice().sort()` object copies
+          - positive-count fastpath so `minHitCount` failing branches do not allocate full positive intersections
+        - this search-cost bundle is now implemented and remeasured on the canonical widened probe:
+          - widened `200k / 4GB` post-bundle probe: `700` exact rules, `200180` explored states, `495.70s`, `3986780 KB`
+          - improvement vs the previous canonical widened probe: `-8.99s`, `-5544 KB`
+          - exactness/integrity remained claimable
+        - a widened `1M / 4GB` follow-up probe was started and then explicitly cancelled by the user; local and server processes were terminated, so do not treat that run as a completed benchmark
+        - still defer for a later bundle:
+          - bounded-heap seed selection
+          - child-ordering search reordering
+          - token-id internalization
+          - DuckDB/bitset miner rewrites
+        - first full `speed50` candidate bundle has now been benchmarked once on the canonical widened probe:
+          - implementation scope:
+            - deterministic token-id internalization inside the legacy miner
+            - exact-safe hybrid sparse/dense rowset kernel
+            - mutable search-state/token stack
+            - deterministic emit bridge plus equivalence smokes
+          - exactness result:
+            - `700` exact rules preserved
+            - `200180` explored states preserved
+            - identical `ruleIdsSha256`
+            - identical rule payload hash: `f6fb38dbdc58355f30caacd05928bfad487e3f337caed9c1c9eda5de676cb512`
+          - performance result:
+            - wall time regressed to `500.35s` from canonical `495.70s`
+            - max RSS regressed to `4323096 KB` from canonical `3986780 KB`
+          - verdict:
+            - exactness passed, but the candidate is **not** accepted as the new widened performance baseline
+            - keep `v6` as the active canonical widened `200k / 4GB` benchmark until a later bundle beats it
+        - runtime rollback decision is now fixed:
+          - the `speed50` token-id / hybrid-rowset hot path is rolled back from the active legacy miner line
+          - keep the failed bundle in experiment history only; do not continue optimization work from that runtime path
+          - active widened runtime path is back on the `v6` array-based miner with retained exact-safe compaction wins
+          - rollback closure is now reconfirmed on server:
+            - server `npm run verify` passed after targeted rollback sync
+            - widened `200k / 4GB` rollback-confirm probe preserved `700` exact rules and `200180` explored states
+            - rollback-confirm rule-id hash and full rule payload hash matched the prior `v6` canonical run exactly
+        - explicit `selection_first_exact_v1` search-mode split has now been tested and rejected:
+          - it was evaluated on the widened `1~3일 / 200k / 4GB` mining-only canonical benchmark against an apples-to-apples legacy rerun
+          - exact output was unchanged:
+            - `700` exact rules
+            - `200180` explored states
+            - identical rule-id hash
+            - identical full rule payload hash
+            - identical top100 hit-quality summary
+          - performance was not better:
+            - legacy mining-only rerun: `88.67s`, `3991956 KB`
+            - `selection_first_exact_v1`: `93.22s`, `3931124 KB`
+          - because the mode did not improve top-rule quality and regressed elapsed time, it is rolled back and kept in experiment history only
+        - active widened search path now defaults to:
+          - `exact_indexed_kernel_v1`
+          - keep `legacy_exact_catalog_v6` only as an explicit compatibility override
+        - the next performance attempt is restricted to an explicit exact-indexed kernel promotion bundle:
+          - candidate mode: `exact_indexed_kernel_v1`
+          - widened `1~3일` discovery semantics must remain unchanged
+          - do not retry token-id wrapper / partial rowset shim work on top of the legacy JS miner
+          - promote the Step-B exact miner onto the existing indexed/native exact rowset kernel or fail
+          - heavy validation is limited to one server-only canonical benchmark:
+            - widened `1~3일`
+            - `200k / 4GB`
+          - success requires:
+            - `700` exact rules preserved
+            - `200180` explored states preserved
+            - identical rule-id hash
+            - identical full rule payload hash
+            - elapsed `< 495.70s`
+            - max RSS `< 3986780 KB`
+          - `1M`, `5M`, and `20M` remain forbidden for this bundle until the canonical `200k / 4GB` gate passes
+        - result:
+          - server mining-only apples-to-apples benchmark completed on the widened `1~3일` `200k / 4GB` Step-B input
+          - exactness held:
+            - `700` exact rules
+            - `200180` explored states
+            - rule-id hash identical
+            - payload hash identical
+          - performance vs legacy apples baseline:
+            - legacy: `88.67s`, `3991956 KB`
+            - exact indexed kernel: `75.19s`, `3994760 KB`
+            - delta: `-13.48s` (`-15.2%`) elapsed, `+2804 KB` RSS
+          - decision:
+            - promote `exact_indexed_kernel_v1` to the active widened Step-B exact mining default
+            - keep `legacy_exact_catalog_v6` only as an explicit compatibility override
+            - accept the small `+2804 KB` RSS delta because exactness is byte-for-byte identical and mining-only elapsed improved by `15.2%`
+        - next throughput-reduction chain is fixed on top of the promoted indexed exact path:
+          - `perfect_proto_stepb_exact_phase_timing_v1`
+          - `perfect_proto_stepb_exact_postings_cache_v1`
+          - `perfect_proto_stepb_exact_compiled_input_v1`
+          - `perfect_proto_stepb_exact_parallel_frontier_v1`
+        - widened discovery semantics must remain unchanged:
+          - recent-impulse `1~3일`
+        - heavy validation policy for this chain:
+          - server-only
+          - `200k / 4GB` only
+          - no `1M`, `5M`, or `20M` probes until the full chain completes
+        - common exactness gate for every bundle:
+          - `700` exact rules preserved
+          - `200180` explored states preserved
+          - identical rule-id hash
+          - identical full rule payload hash
+        - active indexed mining-only apples baseline for the chain:
+          - `75.19s`, `3994760 KB`
+        - numeric success gates:
+          - `perfect_proto_stepb_exact_phase_timing_v1`
+            - `elapsed <= 75.19s`
+            - `summary.json.phaseTimings` present
+          - `perfect_proto_stepb_exact_postings_cache_v1`
+            - warm `200k / 4GB` run `<= 60s`
+          - `perfect_proto_stepb_exact_compiled_input_v1`
+            - cold `200k / 4GB` run `<= 56s`
+          - `perfect_proto_stepb_exact_parallel_frontier_v1`
+            - `200k / 4GB` run `<= 45s`
+        - implementation contract:
+          - do not return to legacy JS-array tuning
+          - do not retry token-id wrapper shims
+          - compiled input must be explicit via `--index-dir`
+          - parallel frontier must remain deterministic and fail fast on any exactness drift
+        - Bundle 2 result:
+          - `perfect_proto_stepb_exact_postings_cache_v1`
+          - exactness held on cold and warm `200k / 4GB` runs:
+            - `700` exact rules
+            - `200180` explored states
+            - identical rule-id hash: `b8721e05bbd68e6c1371d88c95b500d4fdad2cf4f5bbb2b521fef7440088f3a7`
+            - identical payload hash: `dd2e55171f6b085a78274d4bfb82514d5aae0c94032f9d21e52b38599e723037`
+          - cold run failed the throughput gate:
+            - `133.52s`, `5327852 KB`
+            - phase/root-cause split:
+              - `hashInputSec=14.12s`
+              - `cacheWriteSec=39.87s`
+          - warm run succeeded strongly:
+            - `29.98s`, `3667572 KB`
+            - `cacheHit=true`
+          - decision:
+            - do not promote Bundle 2 as the primary cold path
+            - retain it as an exact rerun helper only
+            - proceed directly to `perfect_proto_stepb_exact_compiled_input_v1`
+        - Bundle 3 result:
+          - `perfect_proto_stepb_exact_compiled_input_v1`
+          - exactness held on the server `200k / 4GB` cold benchmark:
+            - `700` exact rules
+            - `200180` explored states
+            - identical rule-id hash: `b8721e05bbd68e6c1371d88c95b500d4fdad2cf4f5bbb2b521fef7440088f3a7`
+            - identical payload hash: `dd2e55171f6b085a78274d4bfb82514d5aae0c94032f9d21e52b38599e723037`
+          - explicit compiled-index build step:
+            - `97.01s`, `5298772 KB`
+            - one-time build only; not part of the mining-only apples gate
+          - compiled-input cold mining-only run:
+            - `10.80s` wall, `10.336s` summary elapsed
+            - `3666824 KB`
+          - comparison vs active direct indexed baseline:
+            - direct indexed baseline: `61.73s`, `3994760 KB`
+            - compiled input cold mining: `10.336s`, `3666824 KB`
+            - delta: `-51.39s` (`-83.3%`) elapsed, `-327936 KB` RSS
+          - decision:
+            - compiled indexed input is now the primary throughput path for heavy Step-B exact experiments
+            - promote the Step-B plus-lite heavy wrapper so train mining builds a compiled exact index first and then mines via `--index-dir`
+            - keep `--index-dir` explicit and fail fast on contract mismatch
+            - proceed directly to `perfect_proto_stepb_exact_parallel_frontier_v1`
+        - Bundle 4 result:
+          - `perfect_proto_stepb_exact_parallel_frontier_v1`
+          - verify and exact equivalence smokes passed on the compiled input artifact
+          - server `200k / 4GB` heavy benchmark failed before exact completion:
+            - `global_budget_exhausted`
+            - no final exact catalog emitted
+            - wall `37.37s`, `1349088 KB`
+          - failure progress snapshot:
+            - `parallelCompletedChunkReclaimSearchStates=101262`
+            - `parallelActiveWaveExploredStates=98304`
+            - aggregate observed states at failure `=199566`
+            - `parallelRemainingSearchBudget=434`
+            - `parallelRemainingGrantableSearchBudget=0`
+          - follow-up exact-safe fix:
+            - `perfect_proto_stepb_exact_parallel_frontier_initial_lease_fix_v1`
+            - capped initial leases to request-headroom/tranche windows
+            - local/server verify stayed green
+            - heavy benchmark outcome did not change because the unresolved blocker is active-sibling lease reclaim inside the live budget control plane
+          - decision:
+            - do not promote `exact_parallel_frontier_v1`
+            - keep compiled-input direct mining as the primary throughput path
+        - A-free open-train discovery follow-up:
+          - the market-wide open-train pack remains reusable
+          - direct Step-B compiled build failed before mining on the `1081567`-row A-free pack:
+            - default heap OOM
+            - `4GB` OOM
+            - `6GB` OOM
+          - root cause:
+            - `build_stepb_exact_index.mjs` still performs whole-file JSONL load + full snapshot materialization
+            - A-free discovery therefore needs a different build contract before any `200k` probe is meaningful
+          - next root-cause fix:
+            - add a streamed Step-B exact indexed builder that emits indexed artifacts only
+            - require explicit tokenizer-spec reuse
+            - run A-free exact mining through `tools/mine_perfect_prototypes_indexed.mjs`
+        - still out of scope for this bundle:
+          - `90%+ relaxed precision`
+          - predictive-path changes
+          - `anchor.*`, `chain.*`, or `score.*` backports
+  - combined union path for legacy comparison only
+- Live operation excludes matched rows whose recommendation-date close return is `>= +28%` before dedupe on predictive and legacy paths.
+- Predictive apply now enforces the `>= +28%` recommendation-date close-return exclusion with a date-partitioned exact sidecar lookup on the predictive primary path, so candle full scans are no longer part of filtered predictive apply.
+- Active exact-sidecar hardening bundle (`perfect_proto_exact_sidecar_hardening_v1`) is completed:
+  - binary reader short-read fail-fast for `feature_values.bin` / `token_postings.bin`
+  - exact quantile sidecar v3 cursor merge with bounded FD usage
+  - `feature_stats.parquet` de-dup so exact values live only in `feature_values.bin + feature_values_index.parquet`
+  - partitioned token-index dictionary streaming merge without full shard dictionary materialization
+  - recommendation close-return sidecar v4 freshness contract with guarded incremental rebuild support
+- Active feature-store bootstrap OOM fix (`perfect_proto_feature_store_split_duckdb_oom_v1`) is completed:
+  - predictive pack parquet is now written with DuckDB insertion-order preservation enabled
+  - feature-store split now streams source pack rows without DuckDB sort and fail-fast checks physical `dateKey,rowOrdinal` monotonicity
+  - feature-store partition parquet and feature-store-assembled pack parquet are also emitted with insertion-order preservation enabled
+- Server data is the source of truth. `tools/run_server_command.sh` must not sync local `data/*.jsonl` runtime files to server.
+- To refresh local canonical runtime data from the server source of truth, run `bash scripts/sync_data_from_server.sh`.
+- Local `artifacts/curated/` sync is non-destructive so server-built curated catalogs survive future code sync.
+- Local `artifacts/feature-store/` sync is also non-destructive so server-built predictive feature-store partitions survive future code sync.
+- Main live ops reference:
+  - `docs/perfect_prototype_live_ops.md`
+- Indexed predictive optimization checklist:
+  - `docs/perfect_prototype_predictive_indexed_checklist.md`
+- New frozen catalog hardening bundle target:
+  - `perfect_proto_catalog_freeze_contract_v1`
+  - goal: train-discovered predictive rules must stay byte-for-byte identifiable across OOS/apply/live and fail fast on path/content drift
+- Primary-path stale temp cleanup:
+  - `find artifacts/runs \( -name '.tmp_token_postings.parquet' -o -name '.tmp_feature_store_batch_*.jsonl' -o -name '.tmp_pack_batch_*.jsonl' \) -type f -delete`
+- Main final candidate file from predictive runs:
+  - `artifacts/runs/<RUN_ID>/step-perfect-prototype-apply/deduped_symbols.jsonl`
+- Main legacy comparison file from combined runs:
+  - `artifacts/runs/<RUN_ID>/step-perfect-prototype-combined/combined_deduped_symbols.jsonl`
+- Do not merge parent and Step-B rules into one catalog.
+- Keep predictive catalogs separate from legacy Step-B continuation catalogs.
+- Keep predictive primary artifacts separate from the new Step-B D+1 baseline line:
+  - no shared mutable catalogs
+  - no shared leaderboard outputs
+  - no predictive guard removal in `tools/mine_perfect_prototypes.mjs`
+
+## Current Goal
+- Run `TARGET_FIRST_V2` only.
+- Rebase on Step C first, not on downstream D/E micro-gates.
+- Keep only good common patterns and keep removing bad ones until a line reaches:
+  - `Step D >= 40%`, `Step E >= 40%` to stay alive
+  - `Step D >= 50%`, `Step E >= 55%` to become a new parent candidate
+
+## Fixed Semantics
+- `positionSemantics = OVERLAP_DAILY_ONE_PICK_V2`
+- `singlePosition = false`
+- `maxNewEntriesPerDay = 1`
+- `TIMEOUT+` is not equal to `TARGET`
+- `winRate`, `avgNetRet`, `cumulativeReturn` are not primary metrics
+
+## Current Reference Line
+- Reference only, not a parent:
+  - `probe38`
+  - run: `tf2_c120c109rej_onlive_probe38_20260309`
+  - Step D `targetHitRateEval = 16.28%`
+  - Step D `executedTargetHitRateEval = 15.38%`
+  - Step E `targetHitRate = 28.57%`
+- Balanced fallback:
+  - `C047 MIDVOL/VOL_MID_LIQ_HIGH` narrowed with `minFalsePositiveModelRisk >= 0.955`
+  - Lower Step E but better Step D executed quality
+
+## Probe Roles
+- `probe38`: smoke/reference
+- `probe42`: donor cross-check
+- `probe12`: side-effect check
+- `probe59`: benchmark only until source Step C artifacts are restored
+
+## Current Mode
+- `commonState.enabled = true`
+- `dOnlySprint.enabled = false`
+- `pattern.c0.enabled = true`
+- `pattern.c1.enabled = true`
+- Step C is moving to adaptive frontier mode
+- C-first candidate mode must be exactly one of:
+  - `boost_only`
+  - `penalty_only`
+  - `boost_penalty`
+
+## Step C0
+- `Step C0 = common pattern family miner`
+- Current C0 shortlist policy:
+  - `minFamilySupport = 6`
+  - `shortlistFamilyCount = 18`
+  - `familyBackfillFloor = 10`
+  - `familyBackfillMax = 8`
+- C0 must prefer:
+  - repeated family support
+  - shape/feature cohesion
+  - era coverage
+  - regime coverage
+- C0 must penalize:
+  - negative contamination
+  - single-era concentration
+  - dominant family over-share
+- C0 fallback rule:
+  - if shortlisted families/templates are too small, allow near-threshold families back in
+  - do not hard-stop the pipeline only because C0 over-pruned
+
+## Step C1
+- `Step C1 = D-first family qualifier`
+- Current C1 probe policy:
+  - `maxProbeFamilies = 10`
+  - `minFamilySupport = 6`
+  - `maxFamilyRepresentatives = 24`
+  - `probeProfile = C1_FAMILY_PROBE`
+  - `probeScope = update`
+- C1 must pass:
+  - `targetHitRateEval >= 10%`
+  - `executedTargetHitRateEval >= 8%`
+  - `selectionHitAt1Eval >= 8%`
+  - `pickedDaysEval >= 4`
+  - `targetsPer20EvalDays >= 0.8`
+  - `executionCoverageEval >= 0.2`
+- C1 must reject:
+  - high `stopRateEval`
+  - high `timeoutNegativeRateEval`
+  - low normalized family coverage
+- C1 fallback rule:
+  - if no family passes, use near-threshold family backfill
+  - if still too small, fall back to the full C0 shortlist
+  - do not hard-stop the pipeline only because C1 over-pruned
+- C1 must use frozen Step D probe only:
+  - same-cycle Step E is forbidden
+  - C1 narrows the candidate universe only
+  - final line quality still belongs to full Step D / Step E
+
+## Current Active Candidate
+- Mode: `boost_only`
+- Single major change:
+  - keep reference `C120/C109 + REJECT + MIDVOL/VOL_MID_LIQ_HIGH`
+  - keep Step C cluster-family propagation for live `coreBoost`/`hard-retired`
+  - tighten adaptive frontier around live core:
+    - `minPrototypeFloor: 64 -> 48`
+    - `qualityAcceptThreshold: 0.56 -> 0.60`
+    - `qualityNearThreshold: 0.50 -> 0.55`
+    - `maxPrototypeCeil: 120 -> 96`
+    - `salvageBoostBias: 0.08 -> 0.14`
+- Why this line:
+  - stays inside one-major-change discipline
+  - current false-positive edge-override blocking reduces executed leakage but leaves Step D `pickHitRate` flat at `8.70%`
+  - `i008` first epoch still opened at `8.70%` with `runtimePrototypes = 89`, so family propagation alone is not yet strong enough to alter live frontier composition
+  - live salvage/core pool is no longer empty, so the next useful change is to let Step C rebuild candidate families around repeated winners rather than keep adding downstream blocks
+  - current live core boost families are `C050`, `C065`, `C047`, `C062`
+  - current live hard-retired family is `C063`
+
+## Line Gates
+- If `Step D < 40%`: discard line immediately, do not run Step E
+- If `Step D >= 40%`: run Step E
+- If `Step E < 40%`: discard line
+- If `Step D >= 50%` and `Step E >= 55%`: promote as new parent candidate
+
+## Pattern Salvage Rule
+- Line discard does not mean pattern discard
+- Salvage repeated good pattern fragments into:
+  - `meta/salvaged_pattern_pool.json`
+- Put uncertain fragments into:
+  - `meta/pattern_quarantine_pool.json`
+- Every discarded line may contribute salvage/quarantine entries
+- `prototype_classification.json` from all evaluated rounds should feed these pools, not best-round only
+- Do not hard-drop a whole cluster early
+
+## Allowed Step C Candidate Types
+1. `boost-only`
+2. `penalty-only`
+3. `boost+penalty`
+
+Only one major change per line.
+
+## Gate Split
+- `C gate`:
+  - structural fit only
+  - era coverage
+  - max single-era share
+  - regime consistency
+  - stop/timeout-negative bias
+  - oracle coverage is auxiliary only
+- `D gate`:
+  - `targetHitRateEval`
+  - `selectionHitAt1Eval`
+  - `executedTargetHitRateEval`
+  - `stopRateEval`
+  - `timeoutNegativeRateEval`
+- `E gate`:
+  - final holdout validator only
+  - same-cycle E must not shape Step C
+
+## Current Salvage Pool
+- Salvage pool:
+  - `meta/salvaged_pattern_pool.json`
+- Quarantine pool:
+  - `meta/pattern_quarantine_pool.json`
+- Candidate manifest:
+  - `meta/candidate_mode_manifest.json`
+- Current core boost patterns:
+  - `C050`
+  - `C065`
+  - `C047`
+  - `C062`
+- Current core penalty patterns:
+  - none
+- Current hard-retired patterns:
+  - `C063`
+- Current C0 shortlist:
+  - not fixed manually
+  - must be read from `step-c0/c0_family_index.json`
+- Current dominant C0 families:
+  - runtime-dependent
+  - inspect `shortlisted=true` families by `supportRatio`
+- Current retired C0 families:
+  - none yet
+- Current C0 -> C retained ratio:
+  - runtime-dependent
+  - inspect `step-c/step_c_summary.json`
+  - compare `templatesBeforeC0`, `c0AcceptedTemplateCount`, `prototypes`
+- Current C1 probed families:
+  - runtime-dependent
+  - inspect `step-c1/c1_summary.json`
+- Current C1 passed families:
+  - runtime-dependent
+  - inspect `step-c1/c1_family_probe_index.json`
+- Current C0 -> C1 -> C retained ratio:
+  - runtime-dependent
+  - inspect `step-c0/c0_family_index.json`, `step-c1/c1_summary.json`, `step-c/step_c_summary.json`
+- Current C2 representative families:
+  - runtime-dependent
+  - inspect `step-c2/c2_dedup_index.json`
+- Current C2 shadow families:
+  - runtime-dependent
+  - inspect `step-c2/c2_dedup_groups.jsonl`
+- Current C1 -> C2 -> C retained ratio:
+  - runtime-dependent
+  - inspect `step-c1/c1_summary.json`, `step-c2/c2_summary.json`, `step-c/step_c_summary.json`
+- All-line salvage is enabled:
+  - good fragments survive line discard
+  - repeated salvage promotes to core
+  - repeated quarantine moves to hard retirement
+
+## Fixed Research Gates
+- `40/40 discard`
+  - `Step D < 40%` => discard, no Step E
+  - `Step E < 40%` => discard
+- `50/55 promote`
+  - `Step D >= 50%`
+  - `Step E >= 55%`
+- Parent candidate is research-only first:
+  - operating baseline and research parent candidate are tracked separately
+
+## Label Boundary
+- Step C shaping must use:
+  - Step D update/eval repetition
+  - donor/current deltas
+  - multi-era repetition
+- Previous accepted/candidate run Step E is allowed only as a weak secondary assist
+- Do not use same-cycle lockbox Step E results directly as Step C shaping labels
+- Do not use same-cycle lockbox Step E results directly as Step C1 family qualification labels
+
+## Speed Rules
+- Smoke probes only:
+  - `probe38`
+  - `probe42`
+  - `probe12`
+- Do not run full feature-pack for exploratory/confirm
+- Artifact tiering:
+  - exploratory: summary + minimal audit
+  - confirm: summary + core audit
+  - promotion/final: full artifact
+- Do not run Step E when Step D is below the 40% discard gate
+
+## Hard Do-Not-Do
+- Do not treat the current 16% D line as a parent
+- Do not use broad FP threshold changes
+- Do not use broad agreement rescue
+- Do not do broad cluster drop
+- Do not compare target-first overlap runs to legacy single-position PnL runs
+
+## A-Free Step-B Note
+- The streamed A-free open-train exact index is valid and reusable:
+  - `rowCount=1081567`
+  - `tokenCount=623`
+- The prior `0 rules / 0 exploredStates` A-free rerun was not an index problem.
+- Root cause was direct indexed CLI parsing in `tools/mine_perfect_prototypes_indexed.mjs`:
+  - omitted `--root-end` and `--worker-chunk-index` flags were coerced from empty string to `0`
+  - DFS then launched with an empty `0..0` root range despite `623` selected seed tokens
+- After fixing optional numeric parsing so blank values stay `null`, the same A-free indexed artifact produced:
+  - `53` exact rules
+  - `200000` explored states
+  - `allocated_budget_exhausted`
+- Current implication:
+  - A-free indexed discovery is unblocked
+  - the next A-free question is search budget / rule quality, not whether the streamed index contract works
+- Current A-free direct indexed throughput baseline:
+  - canonical server `200k / 4GB` rerun:
+    - `53` exact rules
+    - `200000` explored states
+    - `105.16s`
+    - `1362276 KB`
+    - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+- Current A-free hotspot breakdown:
+  - `candidateDescriptorBuildMs=26193`
+  - `rowsetIntersectionMs=10463.194`
+  - `memoLookupMs=7917.739`
+  - `orderingHeadRerankMs=2967`
+  - `negativeCountResolutionMs=2373`
+- Current A-free optimization direction:
+  - do not revisit token-id wrappers or naive full-bitset work on this line
+  - first-pass states/sec work should reduce:
+    - repeated seed posting access
+    - JS candidate descriptor churn
+    - early token-array cloning in the direct indexed DFS loop
+  - exactness gate remains:
+    - `53` rules
+    - `200000` explored states
+    - identical rule-id hash
+- Current implemented partial bundle status:
+  - `perfect_proto_stepb_afree_seed_posting_pin_v1`
+  - `perfect_proto_stepb_afree_streaming_candidate_head_v1`
+  - server verify passed after the patch and a latent `candidateTokenIndex` negative-posting reference bug fix
+  - canonical A-free `200k / 4GB` rerun:
+    - `97.99s`
+    - `1331668 KB`
+    - `53` exact rules
+    - `200000` explored states
+    - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+  - hotspot movement versus the old `105.16s` baseline:
+    - `candidateDescriptorBuildMs=22983` from `26193`
+    - `orderingHeadRerankMs=1075` from `2967`
+    - `negativeCountResolutionMs=2281` from `2373`
+    - `rowsetIntersectionMs=10291.749` from `10463.194`
+    - `memoLookupMs=7869.223` from `7917.739`
+  - interpretation:
+    - first-pass A-free states/sec work is helping, but only at the `~6.8%` level so far
+    - the next serious jump still requires reducing candidate-universe size, not another seed-cache-only patch
+ - Next queued exact-safe A-free throughput bundle:
+   - `perfect_proto_stepb_afree_memo_full_rowset_hash_v1`
+   - intent:
+     - lower `memoLookupEntryScanCount` and `memoLookupMs` by replacing coarse memo bucket keys with full rowset hashes
+     - keep exact rowset equality/subset checks in place so discovery semantics and final rule hashes stay fixed
+   - gate:
+     - same reusable A-free index
+     - same server-only `200k / 4GB`
+     - same exactness hash
+- Memo full-rowset-hash follow-up status:
+  - exactness stayed locked, but canonical A-free `200k / 4GB` throughput regressed and the patch was rolled back:
+    - `97.99s -> 102.75s`
+    - `1331668 KB -> 1341416 KB`
+    - `memoLookupEntryScanCount` stayed flat at `3591167`
+  - interpretation:
+    - memo bucket collisions are not the next dominant cost on the direct A-free line
+    - the next serious attempt should reduce candidate-universe size rather than promote memo keys
+ - Next queued exact-safe A-free throughput bundle:
+   - `perfect_proto_stepb_afree_row_projected_candidate_generation_v1`
+   - intent:
+     - add row-to-token adjacency artifacts to the reusable streamed A-free index
+ - Row-projected candidate-generation follow-up status:
+   - `perfect_proto_stepb_afree_row_projected_candidate_generation_v1`
+   - root cause fixed:
+     - streamed exact A-free index builder now assigns row-token token ids in the same order that the token dictionary is written
+     - indexed miner now fail-fast validates token dictionary monotonicity/uniqueness before rebuilding `tokenId -> selectedSeedIndex`
+   - rebuilt reusable streamed A-free index:
+     - `perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_stream_index_build_v3_20260321`
+     - `1081567` rows
+     - `623` tokens
+     - `150337813` token postings
+   - canonical direct A-free `200k / 4GB` rerun with `--row-projected-candidate-threshold=128`:
+     - `53` exact rules
+     - `200000` explored states
+     - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+     - `87.29s`
+     - `1614868 KB`
+   - hotspot movement:
+     - `candidateDescriptorBuildMs=2817`
+     - `rowProjectedCandidateBuildMs=2361`
+     - `rowsetIntersectionMs=1203.339`
+     - `orderingHeadRerankMs=1289`
+     - `negativeCountResolutionMs=2777`
+     - `memoLookupMs=7858.745`
+   - interpretation:
+     - row-projected candidate generation is now exact-safe on the A-free direct line
+     - wall time improved by about `10.9%` versus the accepted `97.99s` baseline
+     - RSS rose to about `1.61 GB`, so future large-state promotion should watch memory while chasing more states/sec
+ - Next queued exact-safe A-free throughput bundle:
+   - `perfect_proto_stepb_afree_native_batch_threshold_scoring_v1`
+   - intent:
+     - move threshold scoring / candidate scan churn out of JS loops and into native batched rowset APIs while preserving exact candidate ordering and rule hashes
+     - keep direct indexed rule ordering semantics fixed
+     - when `currentPositiveCount` is small, build the local candidate universe from tokens that actually appear in the current positive rows instead of scanning the full remaining seed range
+   - gate:
+     - same reusable A-free index lineage
+     - same server-only `200k / 4GB`
+     - same exactness hash:
+       - `53` rules
+       - `200000` explored states
+       - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+ - Native batch threshold-scoring follow-up status:
+   - `perfect_proto_stepb_afree_native_batch_threshold_scoring_v1`
+   - root cause fixed:
+     - the native rowset kernel now exposes exact batch count APIs for sparse/sparse, sparse/bitmap, bitmap/sparse, and bitmap/bitmap comparisons
+     - the direct A-free indexed miner batch-scores candidate positive counts and exact negative counts before the final candidate loop
+     - negative rowsets are no longer materialized eagerly for every surviving candidate; they are materialized only when a candidate is accepted or sampled
+   - canonical direct A-free `200k / 4GB` rerun on the reusable streamed v3 index:
+     - `53` exact rules
+     - `200000` explored states
+     - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+     - rules payload identical after normalizing away catalog-envelope metadata
+     - `84.31s`
+     - `1664284 KB`
+   - hotspot movement versus the accepted row-projected baseline:
+     - `candidateDescriptorBuildMs=2572`
+     - `rowProjectedCandidateBuildMs=2393`
+     - `rowsetIntersectionMs=1374.616`
+     - `memoLookupMs=7770.871`
+     - `orderingHeadRerankMs=620`
+     - `negativeCountResolutionMs=1276`
+   - interpretation:
+     - exactness remained locked
+     - wall time improved by about `3.4%` versus the accepted `87.29s` row-projected baseline
+     - RSS rose by about `3.1%`, still within the current operating budget
+     - memo/control-plane overhead is now the clearest remaining hotspot on the single-thread direct A-free line
+   - default contract update:
+     - direct indexed Step-B discovery now defaults `rowProjectedCandidateThreshold=128`; manual sweeps should treat `0` as an explicit override, not the baseline contract
+ - Next queued exact-safe A-free throughput bundle:
+   - `perfect_proto_stepb_afree_parallel_live_budget_reclaim_v1`
+   - intent:
+     - finish the remaining parallel bundle with a root-cause fix instead of more tranche tuning
+     - implement deterministic donor reclaim through downward live-budget revision
+     - allow worker-side external budget refresh to accept higher revisions even when `allocatedMaxSearchStates` decreases
+     - keep exactness locked to the reusable A-free `200k / 4GB` baseline before any `20M+` A-free promotion
+   - note:
+     - `perfect_proto_stepb_afree_parallel_reclaim_v2` microtranche/slack-cap attempts are inconclusive and should not be promoted as fixes
+ - Parallel live-budget reclaim follow-up status:
+   - `perfect_proto_stepb_afree_parallel_live_budget_reclaim_v1`
+   - root cause fixed:
+     - worker-side external budget refresh now accepts deterministic downward live-budget revisions as long as the updated lease stays above the guard-band floor
+     - parent reclaim logic now performs real donor reclaim commits instead of only measuring reclaimable sibling budget
+     - `tools/smoke_prejump_parallel_live_budget_regression_acceptance.mjs` was added to verify so downward live-budget application is regression-locked
+   - server verify status:
+     - `npm run verify` passed with the new regression-acceptance smoke
+   - server heavy benchmark result:
+     - run id:
+       - `perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_parallel_live_budget_reclaim_200k_v1_20260321`
+     - outcome:
+       - failed with `global_budget_exhausted`
+     - wall / RSS:
+       - `81.33s`
+       - `1166088 KB`
+     - observed budget state at stop:
+       - `parallelCompletedChunkReclaimSearchStates=45057`
+       - `parallelActiveWaveExploredStates=154624`
+       - observed total completed+in-flight states: `199681`
+       - `parallelRemainingSearchBudget=319`
+       - `parallelRemainingGrantableSearchBudget=0`
+       - `parallelActiveReclaimAttemptCount=39`
+       - `parallelActiveReclaimCommitCount=11`
+       - `parallelActiveReclaimSearchStates=53268`
+   - interpretation:
+     - live-budget reclaim is now real and verified, but the parallel control-plane still cannot complete under the same nominal `200k` contract
+     - keep the accepted direct A-free line active:
+       - `53` exact rules
+       - `200000` explored states
+       - `84.31s`
+       - `1664284 KB`
+     - the next parallel patch has to shrink simultaneous frontier overcommit and align direct vs parallel completion semantics before any `20M+` promotion
+ - Parallel microchunk semantics-align follow-up status:
+   - `perfect_proto_stepb_afree_parallel_microchunk_semantics_align_v1`
+   - root cause partially fixed:
+     - `tools/mine_perfect_prototypes.mjs` now applies the same indexed no-gap defaults to `--index-dir` parallel runs as the accepted direct A-free line
+     - corrected server rerun restored `selectedSeedCount=623`, so the old `192`-seed mismatch is no longer the blocker
+   - decisive server rerun:
+     - run id:
+       - `perfect_proto_stepb_plus_lite_recent_impulse_3d_afree_train_parallel_microchunk_semantics_align_200k_v3_20260321`
+     - `1639` exact rules
+     - `199683` observed explored states at truncation
+     - `ruleIdsSha256=aa7c6558883921697c806dd67173f5008ecbcf305a10cfd9e1ff1a1db49fcdc6`
+     - `96.92s`
+     - `1114660 KB`
+   - manifest evidence:
+     - `parallelAcceptedGlobalBudgetTruncation=true`
+     - `parallelDispatchCount=4`
+     - `parallelCompletedChunkCount=1`
+     - `parallelObservedTotalExploredStatesAtTruncation=199683`
+   - interpretation:
+     - capped parallel discovery still spends the nominal `200k` budget across multiple live frontier chunks and therefore returns a materially different catalog than the accepted direct A-free baseline
+     - the corrected rerun is also slower than the direct accepted line:
+       - `53` exact rules
+       - `200000` explored states
+       - `84.31s`
+       - `1664284 KB`
+     - do not repeat this capped-`200k` semantics-align bundle
+     - any future multi-worker attempt must be one of:
+       - strict direct-order root serialization under the same capped semantics
+       - an explicit large-state throughput mode with a different quality contract
+ - A-free 53-rule open-OOS replay status:
+   - `perfect_proto_stepb_afree_53rule_open_oos_eval_v1`
+   - reused the accepted A-free direct catalog:
+     - `53` exact rules
+     - `ruleIdsSha256=5bffcdbc8b25129f5632a104114f8e1897d05ebaa9459d7332b8e76dd41e2abf`
+   - built the market-wide OOS open pack for `2025-01-01 .. 2026-01-31` under `strict_label_boundary`
+   - report contract note:
+     - default-heap `report_perfect_prototypes_oos.mjs` OOMed on the OOS pack
+     - the exact replay completed unchanged with `NODE_OPTIONS=--max-old-space-size=6144`
+   - OOS result:
+     - `sourceRows=253743`
+     - `dedupedMatches=24`
+     - `dedupedHits=7`
+     - `dedupedPrecision=29.17%`
+     - `uniqueMatchedSymbols=24`
+     - `uniqueMatchedDates=2`
+     - `matchedRuleCount=22`
+     - `zeroNegativeRuleCount=3`
+     - `hit2ZeroNegativeRuleCount=0`
+   - precision-ranked OOS leaders:
+     - `PP_00d5b9b7b2d2`: `1/1`
+     - `PP_010af475ec31`: `1/1`
+     - `PP_cacd580ca02d`: `1/1`
+     - `PP_351a2579cb93`: `1/2`
+     - `PP_376c3cabdb16`: `1/2`
+     - `PP_a94a85f7e6bf`: `1/2`
+   - interpretation:
+     - A-free discovery does produce real open-market OOS survivors, but they are still low-coverage rules
+     - the current 53-rule `200k` catalog is not broad enough yet to claim robust market-wide generalization
+ - A-free `minHitCount=10` 33-rule open-OOS replay status:
+   - `perfect_proto_stepb_afree_33rule_minhit10_open_oos_eval_v1`
+   - reused the stricter A-free train catalog:
+     - `33` exact rules
+     - `ruleIdsSha256=14ababf24199d0fcad5b319665ec4566a3aeb13324684de91c23e937250b8cac`
+   - reused the same market-wide OOS open pack:
+     - `2025-01-01 .. 2026-01-31`
+     - `253743` source rows
+   - report contract note:
+     - exact replay completed with `NODE_OPTIONS=--max-old-space-size=6144`
+   - OOS result:
+     - `dedupedMatches=0`
+     - `dedupedHits=0`
+     - `matchedRuleCount=0`
+   - interpretation:
+     - the stricter `minHitCount=10` A-free train catalog improved train-side hit floor but became too selective for the current open OOS window
+     - keep the reusable report for comparison, but do not assume higher train hit floors improve open-market OOS coverage
+ - Reusable A-free artifact pin:
+   - canonical manifest:
+     - [meta/afree_reusable_artifacts.json](/home/saida/code/stockdesk-lab-lite/meta/afree_reusable_artifacts.json)
+   - next session rule:
+     - reuse the pinned A-free exact index, accepted 53-rule catalog, and open-OOS pack/report from that manifest first
+     - do not rebuild them unless period, surface, tokenizer spec, split policy, or discovery contract changes
+ - Wrapper default promotion:
+   - `perfect_proto_stepb_afree_wrapper_promote_v1`
+   - primary heavy wrapper [tools/server_run_stepb_dplus1_plus_lite.sh](/home/saida/code/stockdesk-lab-lite/tools/server_run_stepb_dplus1_plus_lite.sh) now defaults to A-free open-pack discovery/eval
+   - new runtime order:
+     - build train open pack
+     - build exact index from `daily_pack.jsonl`
+     - mine direct exact catalog
+     - freeze catalog
+     - replay on open train/OOS packs and emit open-eval leaderboard
+   - important implication:
+     - A+B Step-A/Step-B `templates_lite.jsonl` discovery is no longer the primary wrapper path
+     - reproduce the historical A+B discovery line only through explicit lower-level/manual commands
+   - reliability contract:
+     - open-pack report/apply/leaderboard stages now run with explicit `NODE_OPTIONS=--max-old-space-size=6144`
+     - this is the root-cause fix for the known default-heap open-pack OOM, not a fallback mode
+ - Day-capped top-2 contract completed:
+   - umbrella patch key:
+     - `perfect_proto_stepb_daycap2_v1`
+   - contract name:
+     - `day_capped_top2_v1`
+   - design intent:
+     - remove the current bias where one-day multi-symbol spikes dominate discovery hit counts
+     - force discovery and apply/OOS to share the same per-date cap semantics
+   - implemented semantics:
+     - discovery hit mode:
+       - `day_capped_symbol_count`
+     - discovery day symbol cap:
+       - `2`
+     - apply/OOS selection mode:
+       - `top2_per_day_union`
+   - canonical server validation completed on pinned reusable artifacts:
+     - A-free `200k / 4GB` discovery:
+       - `9` rules
+       - `200000` explored states
+       - `ruleIdsSha256=e0c391269da6fa5f350d71f8fe7a1ff257f6d3a3477eae0ebbbb17423e0b74a1`
+     - open OOS replay:
+       - `31` selected rows
+       - `8` hits
+       - selected precision:
+         - `25.81%`
+   - calibration shortlist completed on the same reusable A-free exact index:
+     - `minHitCount=4`
+       - `78` rules
+       - `137` selected OOS rows
+       - `52` OOS hits
+       - `37.96%` selected precision
+     - `minHitCount=6`
+       - `9` rules
+       - `25.81%` selected precision
+     - `minHitCount=8`
+       - `1` rule
+       - `2` selected OOS rows
+       - `0` hits
+     - `minHitCount=10`
+       - `0` rules
+   - current operating recommendation:
+     - keep the reusable A-free exact index pinned
+     - use `day_capped_top2_v1`
+     - start from:
+       - `minHitCount=4`
+   - hard rules remain:
+     - no eval-only cap while discovery remains raw-row based
+     - no silent contract switch from legacy raw-row catalogs
+     - heavy discovery/report/apply jobs stay server-only
+ - max-rules unclamp root-cause fix completed:
+   - patch key:
+     - `perfect_proto_stepb_max_rules_unclamp_v1`
+   - fixed behavior:
+     - `normalizeMinerOptions()` no longer silently clamps `maxRules` to `5000`
+     - exact compiled-input smoke now asserts the requested `100000` survives normalization and lands in catalog metadata
+   - server verify:
+     - passed after the patch
+   - successful unclamped rerun:
+     - run id:
+       - `perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321`
+     - contract:
+       - A-free reusable exact index
+       - `day_capped_top2_v1`
+       - `minHitCount=2`
+       - `maxRules=100000`
+       - `maxSearchStates=20000000`
+       - `rowProjectedCandidateThreshold=128`
+       - `NODE_OPTIONS=--max-old-space-size=6144`
+     - result:
+       - `68226` saved rules
+       - `20000000` explored states
+       - `ruleIdsSha256=a3305d82f74cc480460a0be3894ec67ca140e836ac6addd847679b83c283b84d`
+       - `catalogContentSha256=7564458bd465a57916b566259045c3cb741d739a6032a68ba563ffbc8aaf4fba`
+       - wall:
+         - `1:59:38`
+       - max RSS:
+         - `6026936 KB`
+   - implication:
+     - the previous `5000`-rule truncation was a true save-path bug, not an unavoidable limit
+     - future large-cap A-free discovery can reuse this `68226`-rule catalog directly without rerunning if the contract stays the same
+2. `2026-03-21` 68,226-rule A-free OOS replay pinned
+   - patch key:
+     - `perfect_proto_stepb_afree_daycap2_68226_open_oos_eval_v1`
+   - reused inputs:
+     - frozen catalog:
+       - `perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321`
+     - reusable OOS open pack:
+       - `perfect_proto_stepb_afree_53rule_open_oos_eval_v1_20260321`
+   - contract:
+     - `day_capped_top2_v1`
+     - `selectionMode=top2_per_day_union`
+     - OOS period:
+       - `2025-01-01 ~ 2026-01-31`
+     - `NODE_OPTIONS=--max-old-space-size=6144`
+   - result:
+     - `47496` matched rules
+     - `512` final selected rows
+     - `202` selected hits
+     - selected precision:
+       - `39.453125%`
+     - `260` matched dates
+     - `316` matched symbols
+     - `9604` rule-level `100%` OOS rules
+   - reuse:
+     - reusable report pointer stored in `meta/afree_reusable_artifacts.json` under `dayCappedTop2Unclamped20MOpenOosReport`
+3. `2026-03-22` 7-rule A-free operating Step-B catalog pinned
+   - patch key:
+     - `perfect_proto_stepb_afree_operating_catalog_add_pp935d6457f10a_v1`
+   - base operating subset:
+     - the prior pinned `6`-rule operating catalog from `perfect_proto_stepb_afree_operating_catalog_6rule_v1`
+   - added rule source catalog:
+     - `perfect_proto_stepb_afree_daycap2_train_precision90_maxhit15_20m_v1_20260322`
+   - selection rule:
+     - keep the existing `6`-rule operating subset unchanged
+     - manually add `PP_935d6457f10a` from the relaxed `trainPrecision>=0.90` `68,726`-rule catalog
+     - rationale:
+       - raw open OOS:
+         - `9/10`
+       - future replay through `2026-03-18`:
+         - `1/2`
+       - this was a user-directed operating promotion, not a future-perfect survivor
+   - frozen operating catalog:
+     - `/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_precision90_maxhit15_20m_v1_20260322/operating_7rule_plus_pp935d6457f10a_v1/catalog.json`
+   - hashes:
+     - `catalogContentSha256=d94a55a33f4ad1fe3a0185d26154408c57a967ebfcc69bdb9a591f40584bea39`
+     - `ruleIdsSha256=65619b5bcdc57dbd894709a3dd17a5d03edb734e5734941c7d06e639898a40c1`
+   - rule ids:
+     - `PP_0c87a6a77f60`
+     - `PP_25820a1eaeaf`
+     - `PP_332c954c7516`
+     - `PP_471c80cbdd29`
+     - `PP_4e55c09a1d6a`
+     - `PP_935d6457f10a`
+     - `PP_cefa17c34587`
+   - operating wrapper:
+     - `tools/run_stepb_afree_operating_5rule_after_close.sh`
+   - live replay check:
+     - run id:
+       - `perfect_proto_stepb_afree_operating_7rule_live0320_check_v1_20260322_hardcoded`
+     - `2026-03-20` result stayed exactly one recommendation:
+       - `다보링크(340360)`
+       - primary rule:
+         - `PP_332c954c7516`
+   - interpretation:
+     - this is the explicit current `afree_primary` line-level operating subset
+     - live application for this subset must use the A-free open live-pack path only
+     - do not send this `7`-rule catalog through the gated `Step-A -> Step-B` after-close wrapper path
+     - the broader `68,226` exact catalog remains the research baseline parent pool; the added `PP_935d6457f10a` came from the separate relaxed `68,726` trainPrecision>=0.90 line
+   - operating selection mode update:
+     - live A-free after-close output is now pinned at `union_all`
+     - semantics:
+       - emit all recommended symbols after symbol-day dedupe
+       - do not emit one row per raw rule match
+       - same-day same-symbol overlaps still merge into one recommendation row
+4. `2026-03-24` canonical live priority operating stack pinned
+   - patch key:
+     - `perfect_proto_live_priority_daily_ops_stack_v1`
+   - canonical runtime path:
+     - `tools/run_daily_ops_once.sh`
+     - `tools/server_run_live_priority_stack.sh`
+     - `tools/systemd/stockdesk-lab-lite-daily-ops.service`
+     - `tools/systemd/stockdesk-lab-lite-daily-ops.timer`
+   - canonical documentation:
+     - `meta/live_priority_ops_contract.md`
+     - `meta/live_priority_reusable_artifacts.json`
+   - machine source of truth:
+     - `config/ops/live_priority_registry.server.json`
+     - `targetDateMode=latest_common_data_date`
+     - `finalUnionPolicy=priority_first_symbol_dedup`
+   - enabled line roster:
+     - priority `1`
+       - `afree_primary`
+       - `1d_primary`
+       - `7d_primary`
+       - `8d_primary`
+     - priority `2`
+       - `1d_secondary`
+       - `7d_secondary`
+       - `8d_secondary`
+   - operating semantics:
+     - `0` picks is valid success
+     - if `latest_common_data_date` equals the last successful target date, the stack must exit with `noop_already_processed`
+     - user-facing reports must show `priority`, `lineId`, `sourceCatalogLabel`, `primaryRuleId`, and `supportingLines`
+   - verified replay reference:
+     - target date:
+       - `2026-03-24`
+     - final union:
+       - `078590 휴림에이텍`
+       - `priority=2`
+       - `lineId=8d_secondary`
+       - `primaryRuleId=PP_74ec7833d3e3`
+     - excluded-by-close28 verification:
+       - `076610 해성옵틱스`
+       - `recommendationDateCloseRetPct=29.96633`
+   - interpretation:
+     - the current canonical live operating path is the registry-driven daily ops stack
+     - the pinned A-free `7`-rule artifact remains active, but only as the `afree_primary` line-level subset inside that stack
+5. `2026-03-24` `1d` recent-only continuation-family redesign pinned
+   - patch key:
+     - `perfect_proto_stepb_1d_mid_low_recent_only_cohort_exact_family_v3`
+   - root-cause statement:
+     - `1d` misses like `076610 / 2026-03-18` are not candidate-admission failures
+     - `1d` widened live pack already admitted that symbol through `recent_impulse_1d`
+     - the failure point is downstream exact-rule monoculture around `tag:xsec.closeRank:TOP`
+     - `TOP` discovery works in the existing combined `same_day_plus_recent_upto_1d` line
+     - `MID/LOW` discovery fails when mined inside that combined line
+   - semantic statement:
+     - existing `1d_primary` / `1d_secondary` remain pinned to:
+       - `same_day_plus_recent_upto_1d`
+     - new `MID/LOW` continuation work must move to:
+       - `recent_impulse_upto_1d`
+     - do not mine `MID/LOW` inside combined `same_day_plus_recent_upto_1d` again
+   - new surface requirement:
+     - add a new plus-lite contextual surface:
+       - `v6_contextual_plus_lite_recent_only_lane_local_pool8`
+     - do not mutate `v5_contextual_plus_lite_lane_local_pool8` in place
+     - old `v5` combined-line pack/index/catalog artifacts must not be reused on the new recent-only surface
+   - lane-local rank contract:
+     - keep:
+       - `xsecLane.closeRankPct`
+       - `xsecLane.jumpRankPct`
+       - `laneEventCount`
+       - `tag:xsecLane.closeRank:*`
+       - `tag:xsecLane.jumpRank:*`
+     - lane-local reference pool is:
+       - same `dateKey`
+       - same `stepALaneId`
+       - pre-apply pack rows
+     - train/live semantics must match exactly
+     - missing `stepALaneId` or missing lane reference is a hard error on the new surface
+   - thin-pool rule:
+     - if lane-local pool is too small, emit `THIN_POOL`
+     - thin-pool threshold is pinned in the surface name:
+       - `pool8`
+     - do not auto-promote tiny pools to `TOP`
+   - family split:
+     - keep existing operating `TOP` lines unchanged
+     - new recent-only shadow families:
+       - `mid_close_continuation`
+       - `low_close_continuation`
+     - `MID` and `LOW` must stay separate families
+   - family definition rule:
+     - `MID/LOW` continuation families are row cohorts, not token-bucket shortcuts
+     - `mid_close_continuation` cohort:
+       - `stepALaneId=recent_impulse_1d`
+       - global `xsec.closeRank=MID`
+       - `THIN_POOL` excluded
+     - `low_close_continuation` cohort:
+       - `stepALaneId=recent_impulse_1d`
+       - global `xsec.closeRank=LOW`
+       - `THIN_POOL` excluded
+   - family purity rule:
+     - `mid_close_continuation` and `low_close_continuation` must reject `tag:xsec.closeRank:TOP`
+     - `mid_close_continuation` additionally requires matched-row:
+       - `MID share >= 0.6`
+       - `TOP share = 0`
+       - `recent_impulse_1d share >= 0.8`
+     - `low_close_continuation` additionally requires matched-row:
+       - `LOW share >= 0.6`
+       - `TOP share = 0`
+       - `recent_impulse_1d share >= 0.8`
+     - the point is to add non-`TOP` exact support, not to rename existing `TOP` rules
+   - mining rule:
+     - family-scoped seed mining is required
+     - `MID/LOW` seed entry must be row-cohort based, not `tag:xsec.closeRank:MID|LOW` token-only buckets
+     - recent-only root ranking must prioritize cohort concentration / cohort coverage before generic precision
+     - required cohort tokens may constrain the family rowset, but must not be injected into the learned rule token list as synthetic root tokens
+     - recent-only family scopes must enter indexed search as constrained roots so root candidate rowsets still intersect against the cohort rowset
+     - `MID/LOW` root vocabulary must exclude generic same-day anchors
+     - continuation-specific volume roots remain allowed:
+       - `num:feature.volume.exhaustionProxy:*`
+       - `num:feature.volume.ratio5Over20:*`
+     - `MID/LOW` root search must be coarse-first, with fine numeric bins delayed to child expansion
+     - `LOW` family must start with stronger breadth guards than `MID`
+     - recent-only wrapper defaults must pin:
+       - `--discovery-universe-id=recent_impulse_upto_1d`
+       - `--recent-impulse-lookback-days=1`
+       - `--enable-family-scoped-mining=true`
+       - default seed budget if caller does not override `--max-seed-tokens`
+   - curated outputs:
+     - `1d_mid_recent_shadow_v1`
+     - `1d_low_recent_shadow_v1`
+   - curated freeze contract:
+     - recent-only shadow freeze must forbid explicit `--rule-ids` / `--rule-ids-file`
+     - recent-only shadow freeze must require family-only selection and reject out-of-family survivors
+     - shadow freeze must verify source catalog hash vs leaderboard hash
+     - shadow freeze must verify selection surface / line / train-oos windows
+     - recent-only report must reject catalogs whose rule families are outside `mid_close_continuation` / `low_close_continuation`
+     - promotion thresholds must use `close28/day-dedup` survivor stats, not raw open OOS only
+   - promotion rule:
+     - do not touch `1d_primary` / `1d_secondary`
+     - validate shadow-only first:
+       - `1d_mid_recent_shadow`
+       - `1d_low_recent_shadow`
+     - recommended shadow priority:
+       - `3`
+     - `priority=3` shadow lines must appear in live-priority summary/report/state outputs
+   - benchmark governance:
+     - do not compare new exact-only `MID/LOW` shadow families directly to the current operating `afree_primary`
+     - current `afree_primary` contains the manually promoted relaxed rule:
+       - `PP_935d6457f10a`
+     - exact-only benchmarks and operating benchmarks must stay separate in docs and interpretation
+   - validation suite:
+     - missed-case recovery:
+       - `076610 / 2026-03-18`
+     - positive control:
+       - `331920 / 2026-03-23`
+     - add recent missed-case suite and recent 20~40 trading-day shadow replay before any promotion
+6. `2026-03-22` session resume for next chat
+   - compressed context:
+     - current research parent pool is still the frozen `68,226`-rule A-free catalog:
+       - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321/step-perfect-prototype/catalog.json`
+       - `ruleIdsSha256=a3305d82f74cc480460a0be3894ec67ca140e836ac6addd847679b83c283b84d`
+       - `catalogContentSha256=7564458bd465a57916b566259045c3cb741d739a6032a68ba563ffbc8aaf4fba`
+     - separate relaxed trainPrecision>=0.90 parent catalog also exists:
+       - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_daycap2_train_precision90_maxhit15_20m_v1_20260322/step-perfect-prototype/catalog.json`
+       - `ruleCount=68726`
+       - `catalogContentSha256=6c8e3250234b47281096f6662bcc79821a80fc6b6a56082666972b4635ee69a1`
+       - relative to the exact baseline, this added a `500`-rule relaxed tail
+    - historical note before the runtime-enforcement patch:
+      - A-free live/apply discussions at that point were on:
+        - `surface=v3_contextual_plus_lite`
+        - `selectionMode=union_all`
+        - no `+28%` recommendation-date close-return filter
+     - important semantics:
+       - raw rule-level OOS/future stats and final top2 portfolio stats are different layers
+       - when the user asked for `4/4` rules, that referred to the future replay window `2026-02-01 ~ 2026-03-18`, not the pinned 1-year OOS window
+6. `2026-03-22` recent impulse multiline expansion contract pinned
+   - umbrella patch key:
+     - `perfect_proto_stepb_recent_impulse_multiline_stack_v1`
+   - target universes:
+     - keep `afree_open` as the primary discovery universe
+     - keep the recent-only seeded universes:
+       - `recent_impulse_upto_1d`
+       - `recent_impulse_upto_2d`
+       - `recent_impulse_upto_3d`
+       - `recent_impulse_upto_4d`
+       - `recent_impulse_upto_5d`
+       - `recent_impulse_upto_6d`
+       - `recent_impulse_upto_7d`
+       - `recent_impulse_upto_8d`
+     - add the widened plus-lite universes:
+       - `same_day_plus_recent_upto_1d`
+       - `same_day_plus_recent_upto_2d`
+       - `same_day_plus_recent_upto_3d`
+       - `same_day_plus_recent_upto_4d`
+       - `same_day_plus_recent_upto_5d`
+       - `same_day_plus_recent_upto_6d`
+       - `same_day_plus_recent_upto_7d`
+       - `same_day_plus_recent_upto_8d`
+   - semantics:
+     - `recent_impulse_1d ~ 8d` are Step-A event-lane ids
+     - `recent_impulse_upto_Nd` is the recent-only cumulative discovery-universe id
+     - `same_day_plus_recent_upto_Nd` is the widened `same_day_high8 + recent_impulse_1d..Nd` discovery-universe id
+     - do not conflate the two
+   - root-cause requirement:
+     - Step-A `1..8` expansion alone is insufficient
+     - open Step-B perfect-prototype pack generation must become recent-impulse-aware at the seed path
+     - the widened family must preserve the historical row-growth semantics:
+       - same-day-only Step-B train rows: `89,768`
+       - widened `1~3일` Step-B train rows: `171,756`
+       - widened `171,756` means `92,555` accepted event-side rows plus `79,201` legacy synthetic negative templates; restoring only the event-side rows is insufficient
+     - current generic candidate-index pack path is not sufficient for the recent-only family, and the current recent-only seed path is not sufficient for the widened family
+     - current widened `2d/3d` diagnosis:
+       - the `20M` exact-only runs are overfitting to a few train-date clusters
+       - the OOS apply path itself is not the failure point
+     - upcoming widened-line breadth gates:
+       - `trainMatchedDateCount >= 10`
+       - `top1DateHitShare <= 0.3`
+       - `top3DateHitShare <= 0.6`
+       - `maxRulesPerMatchedDateSignature = 3`
+       - implementation split:
+         - `trainMatchedDateCount >= 10` is the only safe search-time pruning target because child rules cannot add new matched dates
+         - `top1DateHitShare <= 0.3` and `top3DateHitShare <= 0.6` stay final rule gates because specialization can improve concentration ratios
+         - `maxRulesPerMatchedDateSignature = 3` stays post-collection because it depends on cross-rule comparison inside the same matched-date bucket
+         - plus-lite widened should use explicit `enableTrainMatchedDatePrune`; A-free stays unchanged until a separate experiment says otherwise
+     - report cleanup:
+       - fix the OOS matched-date count metric so it uses actual matched dates rather than `hitDates.length`
+     - next-stage diverse exact-rule-set patch:
+       - broaden the breadth model from dates only to dates + months + quarters
+       - add `matchedMonthCount`, `matchedQuarterCount`, `matchedMonthSignatureHash`, and `matchedQuarterSignatureHash`
+       - promote `minTrainMatchedMonths` / `minTrainMatchedQuarters` to safe search-time pruning, alongside `minTrainMatchedDates`
+       - keep `top1DateHitShare <= 0.3` and `top3DateHitShare <= 0.6` as final rule gates only
+       - extend signature post-caps to matched month / matched quarter signatures as well as matched dates
+       - add diverse candidate ordering inside the existing indexed DFS miner so the frontier does not over-focus on one month/quarter/regime/anchor family
+       - add a frozen-catalog diverse selector that scores candidate rule sets by quality + novelty - overlap
+       - add a KRIMP / MDL-style experimental selector branch so compression-based rule-set selection can be compared directly against the greedy diverse selector
+       - first validation target is widened plus-lite `3d`, reusing the fixed direct index and existing server pack at `200k`
+     - A-free remains unchanged for now:
+       - do not alter the frozen A-free reusable artifacts or the operating subset until a separate A-free breadth-gate experiment is scheduled
+   - provenance requirement:
+     - each pack/index/catalog/apply input must carry:
+       - `discoveryUniverseId`
+       - `requestedLookbackTradingDays`
+       - `enabledRecentImpulseLanes`
+     - each pack row should also preserve lane provenance where available:
+       - `stepALaneId`
+       - `impulseSourceDateKey`
+       - `impulseLookbackDays`
+   - apply/replay rule:
+     - a frozen catalog must only apply on the matching universe pack
+     - universe/lookback mismatch must fail fast in live apply and OOS replay
+   - `2026-03-23` widened plus-lite `3d` root-cause update:
+     - staged selector validation confirmed that the current blocker is candidate generation, not catalog freeze:
+       - temporal breadth pruning alone did not move `3d` beyond roughly `17` train matched dates
+       - diverse beam ordering, diverse selector, and MDL selector all compressed rule sets but left `OOS rawMatchedRows=0`
+     - therefore the next patch family must target upstream exact-search semantics:
+       - add chronological fold-stability metrics and pruning
+       - add fold-share final gates
+       - run widened plus-lite probes with explicit `day_capped_symbol_count` support semantics
+       - materialize Step-A lane provenance into the direct exact index and interleave root-seed exploration by lane
+     - selector and MDL branches stay in the stack, but only as final compression/merge tools after a healthier candidate pool exists
+     - first validation target remains widened plus-lite `same_day_plus_recent_upto_3d`
+     - train/OOS pack reuse remains preferred; exact index rebuild is acceptable when lane provenance must be added to the indexed artifact
+   - execution family:
+     - each universe runs independently through:
+       - pack
+       - exact index
+       - mining
+       - open train replay
+       - open OOS replay
+     - final selection should union the per-universe apply outputs only after those independent runs complete
+   - pinned 1-year OOS result for the full `68,226` catalog:
+     - run id:
+       - `perfect_proto_stepb_afree_daycap2_68226_open_oos_eval_v1_20260321`
+     - raw rule-level `100%` rules:
+       - `9604`
+     - final top2 portfolio:
+       - `512` selected rows
+       - `202` hits
+       - `39.453125%` selected precision
+   - `1-year raw 100% -> future through 2026-03-18` survivor reduction:
+     - frozen survivor catalog:
+       - `/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_discovery_20m_minhit2_maxrules100k_unclamped_v1_20260321/oos100_1y_future0318_100pct_772_v1/catalog.json`
+     - survivor count:
+       - `772`
+     - among those survivors:
+       - raw future `hit>=5` and still `100%`:
+         - `2`
+       - raw future `hit>=3` and still `100%`:
+         - `20`
+       - raw future exactly `4/4`:
+         - `3`
+           - `PP_070ff70d4aa1`
+           - `PP_33dcda1d7db2`
+           - `PP_a190a8bc329d`
+       - raw future exactly `3/3`:
+         - `15`
+   - future `4/4` hit rows, useful for continuation:
+     - `PP_070ff70d4aa1`:
+       - `누리플렉스(040160)`, `TS인베스트먼트(246690)`, `아이엘(307180)`, `큐라클(365270)`
+       - all from `recommendationDate=2026-02-13`, `signalDate=2026-02-19`, `entryDate=2026-02-20`
+     - `PP_33dcda1d7db2`:
+       - `엘케이켐(489500)` twice:
+         - `2026-02-05 / 2026-02-06 / 2026-02-09`
+         - `2026-02-06 / 2026-02-09 / 2026-02-10`
+       - `에이치엠넥스(036170)`, `대성에너지(117580)`:
+         - `2026-03-09 / 2026-03-10 / 2026-03-11`
+     - `PP_a190a8bc329d`:
+       - same four rows as `PP_070ff70d4aa1`
+   - live replays already checked and should not be recomputed unless the user asks:
+     - `772`-rule survivor catalog on `2026-03-19`:
+       - run id:
+         - `perfect_proto_stepb_afree_daycap2_oos100_future0318_survivor772_live0319_eval_v1_20260322`
+       - raw candidates:
+         - `엠케이전자(033160)`, `오르비텍(046120)`, `대창솔루션(096350)`, `지아이에스(306620)`
+       - final top2:
+         - `엠케이전자(033160)`
+         - `지아이에스(306620)`
+     - `772`-rule survivor catalog on `2026-03-20`:
+       - run id:
+         - `perfect_proto_stepb_afree_daycap2_oos100_future0318_survivor772_live0320_eval_v1_20260321`
+       - raw candidates:
+         - `15`
+       - final top2:
+         - `핌스(347770)`
+         - `디케이티(290550)`
+     - `4/4` frozen subset on `2026-03-20`:
+       - run id:
+         - `perfect_proto_stepb_afree_future0318_4of4_live0320_eval_v1_20260322`
+       - raw/final result:
+         - only `다보링크(340360)`
+         - rule:
+           - `PP_070ff70d4aa1`
+     - `3/3` frozen subset on live:
+       - `2026-03-19`:
+         - no raw matches
+       - `2026-03-20`:
+         - raw:
+           - `오르비텍(046120)`, `빛과전자(069540)`, `해성옵틱스(076610)`, `다보링크(340360)`
+         - final top2:
+           - `오르비텍(046120)`
+           - `해성옵틱스(076610)`
+   - operating subset status:
+     - current explicit `afree_primary` line subset is the frozen `7`-rule catalog:
+       - `/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_afree_daycap2_train_precision90_maxhit15_20m_v1_20260322/operating_7rule_plus_pp935d6457f10a_v1/catalog.json`
+     - wrapper:
+       - `tools/run_stepb_afree_operating_5rule_after_close.sh`
+     - despite the filename, it is now the A-free-only `7`-rule wrapper
+     - `2026-03-20` A-free live result for this operating subset:
+       - only `다보링크(340360)`
+       - primary rule:
+         - `PP_332c954c7516`
+   - direct next-step hint for a fresh session:
+     - if the user asks for continuation from this point, start from:
+       - `meta/active_research_handoff.md`
+       - `meta/live_priority_ops_contract.md`
+       - `meta/live_priority_reusable_artifacts.json`
+       - `meta/afree_reusable_artifacts.json`
+       - the frozen `772` catalog and its `4/4` / `3/3` subsets above
+     - do not route the operating subset through gated `Step-A -> Step-B` after-close flow; keep it on the A-free open live-pack path only
+
+## 2026-03-26 Recent LOW Gap-Top Status
+- `low-only 20M` is successful as a discovery run:
+  - run id:
+    - `perfect_proto_stepb_dplus1_plus_lite_recent_low_only_full20m_v10_20260325`
+  - exact LOW rules:
+    - `534`
+  - historical support:
+    - `2026-03-18` 해성옵틱스 was matched by exact train rules
+- the current blocker moved from LOW discovery to Haesung-targeted OOS-perfect search:
+  - historical support rules:
+    - `PP_09a91b9e2b01`
+    - `PP_53190e37955a`
+  - both support `2026-03-18` 해성옵틱스 but neither is individually OOS-strong
+- mis-scoped targeted run:
+  - run id:
+    - `perfect_proto_haesung_low_gap_top_oos100_targeted_v11_20260326_full20m`
+  - status:
+    - stopped intentionally
+  - reason:
+    - support-case mode only changed root ordering and still selected `664` seed tokens
+    - it behaved like broad LOW search rather than true support-pruned search
+- next patch family:
+  - `perfect_proto_haesung_low_gap_top_support_pruned_search_v12`
+  - requirements:
+    - `low_gap_top_continuation` only
+    - support-case constrained root token set
+    - hard root cap and fail-fast on failed compression
+    - early prefix overlap pruning for the first `2~3` tokens
+    - probe-first (`200k` / `2M`) before any full `20M` targeted rerun
+
+## 2026-03-29 v59a Pilot Outcome
+- patch key:
+  - `perfect_proto_1d_top_mid_low_failure_bank_oos_report_v59a`
+- purpose:
+  - stop mixing broad `same_day_plus_recent` recovery work with the original regime-specific objective
+  - validate whether `failure bank` / `veto bank` artifacts can be layered on regime-local `1D` cells after train-breadth root-cause fixes
+- executed cells:
+  - `TOP x 1D`
+  - `MID x 1D`
+  - `LOW x 1D`
+- support / acceptance policy:
+  - `076610` is ignored for fit and acceptance during this pilot
+  - this is a structure-validation report, not a Haesung recovery attempt
+- latest verified run:
+  - `perfect_proto_1d_top_mid_low_failure_bank_oos_report_v59a_probe200k_r3_20260329`
+- verification:
+  - local `npm run verify` passed on `2026-03-29`
+  - server `npm run verify` passed on `2026-03-29`
+- achieved:
+  - the ingest / fold root cause is fixed; all train cells now report `trainMatchedFoldCount = 4`
+  - train dataset breadth is valid at the cell level:
+    - `TOP`: `651 rows / 171 dates / 24 months / 4 folds`
+    - `MID`: `478 rows / 133 dates / 24 months / 4 folds`
+    - `LOW`: `935 rows / 131 dates / 24 months / 4 folds`
+  - `failure bank` and `veto bank` mining succeeded in every cell
+- blocker:
+  - `positiveQualifiedCellCount = 0`
+  - all cells remain `unsat_positive_bank_train_breadth`
+  - best positive candidates were still too small:
+    - `TOP`: `2 dates / 2 months / 2 folds`
+    - `MID`: `5 dates / 5 months / 4 folds`
+    - `LOW`: `3 dates / 3 months / 2 folds`
+- failure / veto bank counts:
+  - `TOP`: failure `8`, veto `4`
+  - `MID`: failure `8`, veto `6`
+  - `LOW`: failure `8`, veto `5`
+- OOS comparative report:
+  - `positive only`, `positive + failure`, and `positive + failure + veto` were emitted
+  - but every stage selected `0` rows because the positive-bank union was empty
+  - therefore `failure/veto` precision lift could not be meaningfully evaluated in this pilot
+- interpretation:
+  - the architecture and telemetry are now in place
+  - the unresolved problem is no longer folds/ingest but positive-bank breadth on regime-local `1D` cells
+  - repeating the exact `v59a` configuration is blocked; the next move must widen the pilot cell scope or change the positive-bank discovery surface before OOS lift testing can become non-degenerate
+- do-not-repeat after `v59a`:
+  - do not reopen `v55`, `v56`, `v57`, or `v58`
+- do not mix Haesung support acceptance back into this pilot
+- do not rerun the exact `1D TOP/MID/LOW` `v59a` configuration unchanged
+
+## 2026-03-30 v60a LOW recent episode exact screening
+- patch keys:
+  - `perfect_proto_low_1d_recent_significant_episode_exact_bank_v60a_low_gap_top_200k_20260330`
+  - `perfect_proto_low_1d_recent_significant_episode_exact_bank_v60a_low_gap_high_200k_20260330`
+  - `perfect_proto_low_1d_recent_significant_episode_exact_bank_v60a_low_jump_below_200k_20260330`
+- purpose:
+  - test the new `LOW recent-only family-local episode exact` surface before any `2M` or `20M` escalation
+  - keep mining family-local and ask whether any family can produce a significant and stable exact bank at `200K`
+- executed families:
+  - `low_gap_top_continuation`
+  - `low_gap_high_continuation`
+  - `low_jump_below_continuation`
+- verification:
+  - local `npm run verify` passed on `2026-03-30` before the runs
+  - server wrapper runs completed on `2026-03-30`
+- achieved:
+  - all three family-local runs completed end-to-end and emitted the new `episode_dataset_summary`, `rule_stability_summary`, `rule_significance_summary`, and `union_selection_summary` artifacts
+  - every family produced exactly `7` candidate rules at `200K`
+- failed:
+  - `low_gap_top_continuation`: `finalStatus = no_significant_episode_rules`
+  - `low_gap_high_continuation`: `finalStatus = no_significant_episode_rules`
+  - `low_jump_below_continuation`: `finalStatus = no_stable_episode_rules`
+  - all three families had:
+    - `qualifiedRuleCount = 0`
+    - `selectedUnionRuleCount = 0`
+    - `unionTrainDates = 0`
+    - `unionTrainMonths = 0`
+    - `unionTrainFolds = 0`
+- interpretation:
+  - the new `episode` surface did change the failure mode compared with `v59a`, but it still did not produce a promotable positive bank at `200K`
+  - there is no justified `2M` escalation candidate from this first family-local screen
+  - current conclusion is narrower than “episode discovery is dead”; the precise statement is:
+    - `LOW recent-only episode exact discovery` is unsatisfied at `200K`
+    - `top/high` fail on significance
+    - `jump_below` reaches some significance but fails stability
+
+## 2026-03-30 v60b live-line overlay diagnostic outcome
+- patch keys:
+  - initial sampled diagnostic:
+    - `perfect_proto_live_line_failure_veto_overlay_report_v60b_20260330`
+  - widened rerun stopped after root-cause discovery:
+    - `perfect_proto_live_line_failure_veto_overlay_report_v60b_full_dates_20260330`
+  - fixed full-date rerun:
+    - `perfect_proto_live_line_failure_veto_overlay_report_v60b_fixed_full_dates_20260330`
+- purpose:
+  - validate `failure/veto` overlay lift on frozen live registry lines without claiming any new positive-bank discovery
+- initial sampled result:
+  - `train=48 dates / oos=16 dates` sampling produced `operatingBaselineRows = 0` in all six plus-lite live lines, so the first diagnostic was `invalid_or_inconclusive`
+- root cause discovered during widened rerun:
+  - the failure was not the frozen catalogs
+  - the failure was the `v60b` build script compacting daily-pack rows before replay
+  - compacting removed required replay fields such as:
+    - `featureVec`
+    - `globalFeatureVec`
+    - `eventFeatureVec`
+    - `marketContextVec`
+    - `xsecEventVec`
+    - `seq40`
+    - `seq150`
+    - `stepALaneId`
+    - `surfaceName`
+  - replay/tokenization then lost anchor-token overlap and collapsed to `ruleCandidateChecks = 0`
+- fix:
+  - preserve full daily-pack rows when loading scope packs for `v60b` replay
+  - do not compact row shape before `enrich -> normalize -> tokenize -> replay`
+- final fixed rerun:
+  - run id:
+    - `perfect_proto_live_line_failure_veto_overlay_report_v60b_fixed_full_dates_20260330`
+  - coverage:
+    - `trainMaxDecisionDates = 512`
+    - `oosMaxDecisionDates = 320`
+  - all six plus-lite live lines now produced non-zero baselines:
+    - `1d_primary`: `30`
+    - `7d_primary`: `8`
+    - `8d_primary`: `24`
+    - `1d_secondary`: `88`
+    - `7d_secondary`: `63`
+    - `8d_secondary`: `82`
+  - final diagnostic outcome:
+    - `1d_primary`: `positive_only_best`
+    - `7d_primary`: `positive_only_best`
+    - `8d_primary`: `veto_bank_lift`
+    - `1d_secondary`: `positive_only_best`
+    - `7d_secondary`: `positive_only_best`
+    - `8d_secondary`: `veto_bank_lift`
+  - notable lift details:
+    - `8d_primary`: precision `0.8333 -> 0.8667` after failure+veto overlay
+    - `8d_secondary`: precision `0.8902 -> 1.0000` after failure+veto overlay, but coverage collapses from `82` rows to `4`
+- interpretation:
+  - the overlay diagnostic architecture is now technically valid on live frozen lines
+  - current evidence for real overlay lift exists only on the `8d` lines, and even there the trade-off is asymmetric:
+    - `8d_primary` shows modest lift with moderate retention loss
+    - `8d_secondary` shows strong precision lift but extreme coverage loss
+  - `1d` and `7d` lines currently argue against automatic overlay promotion because baseline `positive_only` remains best
+
+## 2026-03-30 1D TP12 condition-language A/B at 200K
+- patch key:
+  - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_condition_ab_probe200k_v1`
+- purpose:
+  - test a clean `1D / recent_impulse_upto_1d / strict_label_boundary / D+1 open / 3 trading days / TP 12% / SL 4% / 200K` probe
+  - isolate `condition language` impact by comparing:
+    - baseline exact token conjunction
+    - enhanced `interval + macro` atom-space
+  - confirm both:
+    - rule-quality delta
+    - speed delta
+- root-cause patch validated before run:
+  - `build_stepb_exact_index.mjs` had been ignoring wrapper-level atom-space flags in the compiled tokenizer spec
+  - patched so `enableIntervalAtoms` and `enableMacroAtoms` reach the exact index used by indexed mining
+  - follow-up report bug also fixed:
+    - atom-space usage must be detected from `catalog.json` rule tokens
+    - actual live prefixes are `ival:` and `macro:`
+- experiment contract:
+  - discovery universe:
+    - `recent_impulse_upto_1d`
+  - split policy:
+    - `strict_label_boundary`
+  - backtest contract:
+    - `NEXT_DAY_OPEN`
+    - `holdDays = 3`
+    - `targetPct = 0.12`
+    - `stopLossPct = 0.04`
+  - search budget:
+    - `200000`
+  - train breadth floors:
+    - `minHitCount = 4`
+    - `trainMatchedDates >= 4`
+    - `trainMatchedMonths >= 4`
+    - `trainMatchedFolds >= 3`
+    - `foldScheme = chronological_4`
+- verification:
+  - local `npm run verify` passed before the run
+  - server `npm run verify` passed before the run
+  - after fixing the A/B report detector, server `npm run verify` passed again and the parent report was regenerated
+- baseline outcome:
+  - run id:
+    - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_condition_ab_probe200k_v1_fixlineid_baseline`
+  - mined rules:
+    - `373`
+  - breadth-qualified rules (`>=4 dates / >=4 months / >=3 folds`):
+    - `373`
+  - OOS zero-negative rules:
+    - `26`
+  - OOS perfect rules with `>=3` matched dates:
+    - `0`
+  - close28 line result:
+    - `89 selected`
+    - `23 hits`
+    - `25.84%`
+  - unique matched OOS dates:
+    - `25`
+  - speed:
+    - wrapper wall `427s`
+    - exact index elapsed `12.62s`
+    - max RSS `754024 KB`
+- enhanced interval+macro outcome:
+  - run id:
+    - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_condition_ab_probe200k_v1_fixlineid_interval_macro`
+  - tokenizer spec confirmed:
+    - `enableIntervalAtoms = true`
+    - `enableMacroAtoms = true`
+  - mined rules:
+    - `175`
+  - breadth-qualified rules (`>=4 dates / >=4 months / >=3 folds`):
+    - `175`
+  - OOS zero-negative rules:
+    - `10`
+  - OOS perfect rules with `>=3` matched dates:
+    - `0`
+  - close28 line result:
+    - `6 selected`
+    - `1 hit`
+    - `16.67%`
+  - unique matched OOS dates:
+    - `6`
+  - speed:
+    - wrapper wall `516s`
+    - exact index elapsed `28.98s`
+    - max RSS `1639812 KB`
+  - actual atom-space survivor usage:
+    - `166` rules used at least one `ival:` or `macro:` token
+    - `166` rules used `ival:`
+    - `4` rules used `macro:`
+- delta:
+  - enhanced vs baseline:
+    - mined rules: `-198`
+    - breadth-qualified rules: `-198`
+    - OOS zero-negative rules: `-16`
+    - close28 selected rows: `-83`
+    - close28 hits: `-22`
+    - line hit rate: `-9.18pp`
+    - wrapper wall: `+89s`
+    - exact index elapsed: `+16.36s`
+    - max RSS: `+885788 KB`
+- interpretation:
+  - the condition language was not merely “configured”; it was genuinely active and produced many surviving `ival:`/`macro:` rules
+  - despite that, on this exact `1D TP12/H3/SL4 recent_impulse_upto_1d` probe, atom-space made results worse:
+    - fewer rules
+    - weaker OOS clean-bank counts
+    - much smaller close28 line coverage
+    - worse line hit rate
+    - slower runtime
+  - current conclusion is:
+    - keep the root-cause fix that lets the exact index honor atom-space flags
+    - do not promote `interval+macro` as the default language for this `1D TP12 200K` path
+    - use baseline token conjunction as the current control
+    - if atom-space is revisited, it should be on a narrower family-local or support-scoped surface instead of this broad `recent_impulse_upto_1d` probe
+
+## 2026-03-30 1D TP12 atom-space max-rule-size 4/5/6 sweep at 200K
+- patch key:
+  - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_atomspace_rulesize456_probe200k_v1`
+- purpose:
+  - hold the exact same `1D / recent_impulse_upto_1d / strict_label_boundary / D+1 open / 3 trading days / TP 12% / SL 4% / 200K` contract
+  - keep `interval + macro` enabled
+  - isolate only the `max-rule-size` choice:
+    - `4`
+    - `5`
+    - `6`
+  - answer two questions at once:
+    - whether a smaller atom-space rule cap recovers OOS rule quality
+    - whether a smaller cap improves runtime/memory enough to matter
+- run set:
+  - `size4`:
+    - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_atomspace_rulesize4_probe200k_v1`
+  - `size5`:
+    - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_atomspace_rulesize5_probe200k_v1`
+  - `size6`:
+    - reused the already completed atom-space child run:
+      - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_condition_ab_probe200k_v1_fixlineid_interval_macro`
+- results:
+  - `size4`:
+    - mined rules:
+      - `180`
+    - breadth-qualified rules (`>=4 dates / >=4 months / >=3 folds`):
+      - `180`
+    - OOS zero-negative rules:
+      - `17`
+    - OOS perfect rules with `>=3` matched dates:
+      - `0`
+    - close28 line result:
+      - `12 selected`
+      - `3 hits`
+      - `25.00%`
+    - unique matched OOS dates:
+      - `11`
+    - atom-space survivor usage:
+      - `159` rules used at least one `ival:` or `macro:` token
+      - `158` rules used `ival:`
+      - `4` rules used `macro:`
+    - speed:
+      - wrapper wall `319s`
+      - exact index elapsed `28.68s`
+      - max RSS `1620916 KB`
+  - `size5`:
+    - mined rules:
+      - `154`
+    - breadth-qualified rules (`>=4 dates / >=4 months / >=3 folds`):
+      - `154`
+    - OOS zero-negative rules:
+      - `15`
+    - OOS perfect rules with `>=3` matched dates:
+      - `0`
+    - close28 line result:
+      - `6 selected`
+      - `1 hit`
+      - `16.67%`
+    - unique matched OOS dates:
+      - `6`
+    - atom-space survivor usage:
+      - `149` rules used at least one `ival:` or `macro:` token
+      - `148` rules used `ival:`
+      - `6` rules used `macro:`
+    - speed:
+      - wrapper wall `353s`
+      - exact index elapsed `28.88s`
+      - max RSS `1666964 KB`
+  - `size6`:
+    - mined rules:
+      - `175`
+    - breadth-qualified rules (`>=4 dates / >=4 months / >=3 folds`):
+      - `175`
+    - OOS zero-negative rules:
+      - `10`
+    - OOS perfect rules with `>=3` matched dates:
+      - `0`
+    - close28 line result:
+      - `6 selected`
+      - `1 hit`
+      - `16.67%`
+    - unique matched OOS dates:
+      - `6`
+    - atom-space survivor usage:
+      - `166` rules used at least one `ival:` or `macro:` token
+      - `166` rules used `ival:`
+      - `4` rules used `macro:`
+    - speed:
+      - wrapper wall `516s`
+      - exact index elapsed `28.98s`
+      - max RSS `1639812 KB`
+- interpretation:
+  - `max-rule-size = 4` is the best atom-space cap on this broad `1D TP12/H3/SL4` surface
+  - `size4` beat `size5` and `size6` on every practical axis that mattered here:
+    - more OOS zero-negative rules
+    - more unique matched OOS dates
+    - better close28 line result
+    - faster wrapper wall time
+  - none of `4/5/6` produced any OOS perfect rule with `>=3` matched dates
+  - compared with the baseline conjunction control from the paired A/B:
+    - `size4` recovered to near-baseline line hit rate (`25.00%` vs baseline `25.84%`)
+    - but it still did so with far smaller close28 coverage (`12` vs baseline `89`)
+  - current conclusion is:
+    - if atom-space is revisited on this same broad probe, cap it at `4`
+    - do not use `5` or `6` here
+    - baseline conjunction remains the current default control for `1D TP12 200K`
+
+## 2026-03-30 1D TP12 atom-space max-rule-size 2/3 extension at 200K
+- patch key:
+  - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_atomspace_rulesize23_probe200k_v1`
+- purpose:
+  - extend the same broad `1D / recent_impulse_upto_1d / strict_label_boundary / D+1 open / 3 trading days / TP 12% / SL 4% / 200K` atom-space sweep downward
+  - answer whether `2` or `3` rule tokens are better than the already-tested `4/5/6`
+- run set:
+  - `size2`:
+    - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_atomspace_rulesize2_probe200k_v1`
+  - `size3`:
+    - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_atomspace_rulesize3_probe200k_v1`
+- results:
+  - `size2`:
+    - wall:
+      - `331.79s`
+    - exit status:
+      - `42`
+    - outcome:
+      - `train_mine_produced_zero_rules`
+    - mined rules:
+      - `0`
+    - explored states:
+      - `200000`
+    - search-below-min-hit-count:
+      - `3921`
+  - `size3`:
+    - wall:
+      - `293.22s`
+    - exit status:
+      - `0`
+    - mined rules:
+      - `61`
+    - breadth-qualified rules (`>=4 dates / >=4 months / >=3 folds`):
+      - `0`
+    - OOS zero-negative rules:
+      - `0`
+    - OOS perfect rules with `>=3` matched dates:
+      - `0`
+    - close28 line result:
+      - `22 selected`
+      - `7 hits`
+      - `31.82%`
+    - unique matched OOS dates:
+      - `19`
+    - atom-space survivor usage:
+      - `39` rules used at least one `ival:` or `macro:` token
+      - `39` rules used `ival:`
+      - `0` rules used `macro:`
+- interpretation:
+  - `size2` is too strict for this broad surface:
+    - it exhausts the full `200K` budget and still yields zero train rules
+  - `size3` is a real tradeoff:
+    - line-level close28 hit rate improves above both baseline and `size4`
+    - coverage also exceeds `size4` (`22` rows over `19` dates vs `12` rows over `11` dates)
+    - but exact-bank quality collapses:
+      - zero `4/4/3` breadth-qualified rules
+      - zero OOS zero-negative rules
+      - zero OOS perfect `>=3-date` rules
+- current conclusion is:
+  - `size3` is only a brittle line-level tradeoff, not a promotable rule-quality winner
+  - `size4` remains the best atom-space cap when the objective is promotable exact-rule quality rather than raw line hit rate
+  - `size2` is not viable on this broad `recent_impulse_upto_1d` surface
+
+## 2026-03-31 1D TP12 baseline max-rule-size 4 at 200K
+- patch key:
+  - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_baseline_rulesize4_probe200k_v1`
+- purpose:
+  - hold the same broad `1D / recent_impulse_upto_1d / strict_label_boundary / D+1 open / 3 trading days / TP 12% / SL 4% / 200K` contract
+  - keep the original baseline token-conjunction language
+  - isolate whether reducing the baseline cap from `6` to `4` explains the small line-level gain, independent of atom-space
+- run:
+  - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_baseline_rulesize4_probe200k_v1`
+- results:
+  - wall:
+    - `282.23s`
+  - exit status:
+    - `0`
+  - mined rules:
+    - `544`
+  - breadth-qualified rules (`>=4 dates / >=4 months / >=3 folds`):
+    - `0`
+  - OOS zero-negative rules:
+    - `0`
+  - OOS perfect rules with `>=3` matched dates:
+    - `0`
+  - close28 line result:
+    - `107 selected`
+    - `28 hits`
+    - `26.17%`
+  - unique matched OOS dates:
+    - `21`
+- interpretation:
+  - baseline `max-rule-size = 4` improved the raw close28 line result slightly over baseline `6`:
+    - baseline `4`: `28 / 107 = 26.17%`
+    - baseline `6`: `23 / 89 = 25.84%`
+  - however, the improvement came with a complete collapse of promotable exact-bank quality:
+    - `0` breadth-qualified `4/4/3` rules
+    - `0` OOS zero-negative rules
+    - `0` OOS perfect rules with `>=3` matched dates
+  - this makes baseline `4` the same kind of brittle line-level tradeoff that atom-space `3` showed earlier:
+    - the line metric can tick up
+    - but the exact-rule bank becomes unusable for promotion
+  - current conclusion is:
+    - baseline `6` remains the promotable baseline control
+    - atom-space `4` remains the best cap inside atom-space
+    - “smaller cap is better” is not a universal rule here
+    - if the objective is exact-bank quality, baseline `4` should not replace baseline `6`
+
+## 2026-04-02 TP12 surface-v1 patch landed with full verify
+- patch scope:
+  - add a TP12-specific contextual surface sibling:
+    - `v7_contextual_plus_lite_tp12`
+    - `config/lab.config.server.lite.stepb_dplus1_plus_lite_target12_surface_v1.json`
+  - widen TP12 surface exposure without changing:
+    - language
+    - search ordering
+    - pruning
+    - live runtime paths
+  - add shared TP12 probe metrics:
+    - `src/lib/perfect_prototype_tp12_probe_metrics.mjs`
+  - refactor the condition-language A/B report onto the shared metrics lib
+  - add TP12 surface A/B report, wrapper, and smoke:
+    - `tools/build_stepb_1d_tp12_surface_ab_report.mjs`
+    - `tools/server_run_stepb_1d_tp12_surface_ab_200k.sh`
+    - `tools/smoke_stepb_1d_tp12_surface_ab_report.mjs`
+- root-cause fix:
+  - the existing plus-lite extended snapshot builder returned before `anchor.*`, `chain.*`, and `score.*` terms were materialized
+  - TP12 surface v1 now has an explicit `selectionMode="tp12"` path so those TP12-relevant features are actually exposed to the tokenizer while the original plus-lite control remains unchanged
+- checklist / verification status:
+  - `checklist.md` Phase `0E` is completed
+  - local `bash scripts/verify.sh` passed
+  - server `npm run verify` passed after sync on `2026-04-02`
+- important boundary:
+  - no TP12 surface A/B experiment has been run yet in this patch turn
+  - next step is a server-only `200K` control-vs-surface_v1 A/B run under the frozen `1D / recent_impulse_upto_1d / strict_label_boundary / D+1 open / 3 trading days / TP12 / SL4 / max-rule-size=6` contract
+
+## 2026-04-02 1D TP12 surface-v1 A/B at 200K
+- patch key:
+  - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_surface_v1_probe200k_v1`
+- purpose:
+  - hold the exact broad `1D / recent_impulse_upto_1d / strict_label_boundary / D+1 open / 3 trading days / TP12 / SL4 / 200K / max-rule-size=6` contract constant
+  - compare the current TP12 control surface `v3_contextual_plus_lite` against the widened TP12 sibling surface `v7_contextual_plus_lite_tp12`
+  - test whether exposing wick/support/dry-up/anchor/chain/score features improves promotable TP12 rule extraction instead of only moving line-level hit rate
+- runs:
+  - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_surface_v1_probe200k_v1`
+  - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_surface_v1_probe200k_v1_control`
+  - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_surface_v1_probe200k_v1_surface_v1`
+- results:
+  - control `v3_contextual_plus_lite`
+    - wall: `415s`
+    - index: `12.58s`
+    - maxRSS: `808128 KB`
+    - mined rules: `373`
+    - breadth-qualified `4/4/3`: `373`
+    - OOS zero-negative rules: `26`
+    - OOS perfect `>=3 matched dates`: `0`
+    - close28 line: `89 selected / 23 hits = 25.84%`
+  - variant `v7_contextual_plus_lite_tp12`
+    - wall: `426s`
+    - index: `14.21s`
+    - maxRSS: `952136 KB`
+    - mined rules: `177`
+    - breadth-qualified `4/4/3`: `177`
+    - OOS zero-negative rules: `20`
+    - OOS perfect `>=3 matched dates`: `0`
+    - close28 line: `25 selected / 8 hits = 32.00%`
+- interpretation:
+  - the widened TP12 surface activated correctly:
+    - tokenizer surface = `v7_contextual_plus_lite_tp12`
+    - selection line = `stepb_dplus1_plus_lite_target12_surface_v1`
+  - line-level hit rate improved:
+    - `25.84% -> 32.00%`
+  - but rule-quality deteriorated on every promotable exact-bank axis that currently matters:
+    - mined rules `373 -> 177`
+    - breadth-qualified `4/4/3` rules `373 -> 177`
+    - OOS zero-negative rules `26 -> 20`
+    - OOS perfect `>=3-date` rules stayed `0`
+  - speed also worsened modestly:
+    - wall `+11s`
+    - index `+1.63s`
+    - RSS `+144008 KB`
+  - this makes TP12 surface v1 a `line-level tradeoff`, not a promotable control replacement
+- current conclusion:
+  - keep `baseline-6 + v3_contextual_plus_lite` as the broad `1D TP12` control
+  - do not promote `surface_v1` as the default broad surface
+  - if the widened TP12 feature surface is revisited, do it on narrower `TOP/MID/LOW` or family-local probes where line-level selectivity may matter more than broad-bank breadth
+
+## 2026-04-02 1D TP12 regime-cell probes at 200K
+- patch family:
+  - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_regime_cells_probe200k_v1_20260402`
+  - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_regime_cells_probe200k_v2_rowcontract_20260402`
+  - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_regime_cells_probe200k_v3_coveragefix_20260402`
+- purpose:
+  - keep the exact broad TP12 control contract frozen:
+    - `1D / recent_impulse_upto_1d / strict_label_boundary / D+1 open / 3 trading days / TP12 / SL4 / 200K / baseline conjunction / v3_contextual_plus_lite / max-rule-size=6`
+  - stop broad mixing and test whether `TOP / MID / LOW` individually contain OOS `100%` TP12 rules with at least `3` matched dates
+  - reuse the already-built broad control train/oos packs instead of rebuilding daily packs
+- root-cause repairs before the valid verdict:
+  - `v1` was invalid:
+    - regime-cell filter expected family root tokens that do not exist on broad open-eval packs
+    - fix: add explicit `rowContract=open_eval_recent_impulse_1d` matching on contextual rank tokens
+  - `v2` was invalid:
+    - filtered packs wrote `filter_summary.json` only, so OOS report could not verify requested coverage period
+    - fix: filtered packs now write compat `summary.json` and `manifest.json` with requestedPeriod/outputCoverage/datasetContract
+  - both fixes passed local `bash scripts/verify.sh` and server `npm run verify` before the final rerun
+- final valid run:
+  - parent:
+    - `perfect_proto_stepb_1d_recent_impulse_upto_1d_t12_h3_s4_regime_cells_probe200k_v3_coveragefix_20260402`
+  - child runs:
+    - `..._top_1d`
+    - `..._mid_1d`
+    - `..._low_1d`
+- results:
+  - `TOP x 1D`
+    - train filter: `2784 rows / 1003 dates / 50 months`
+    - oos filter: `629 rows / 262 dates / 13 months`
+    - quality: `546` rules, breadth `4/4/3 = 546`, promotable breadth `10/6/4 = 0`, OOS zero-neg `19`, OOS perfect `>=3 dates = 0`
+    - close28 line: `45 selected / 7 hits = 15.56%`
+    - family mix: `top_close_recent` only on this recent-impulse substrate
+  - `MID x 1D`
+    - train filter: `7391 rows / 1003 dates / 50 months`
+    - oos filter: `1591 rows / 262 dates / 13 months`
+    - quality: `115` rules, breadth `4/4/3 = 115`, promotable breadth `10/6/4 = 0`, OOS zero-neg `3`, OOS perfect `>=3 dates = 0`
+    - close28 line: `26 selected / 2 hits = 7.69%`
+  - `LOW x 1D`
+    - train filter: `7065 rows / 1003 dates / 50 months`
+    - oos filter: `1506 rows / 262 dates / 13 months`
+    - quality: `409` rules, breadth `4/4/3 = 409`, promotable breadth `10/6/4 = 0`, OOS zero-neg `16`, OOS perfect `>=3 dates = 0`
+    - close28 line: `41 selected / 8 hits = 19.51%`
+    - family mix: `low_close_continuation 2874`, `low_gap_high_continuation 1958`, `low_gap_top_continuation 951`, `low_jump_below_continuation 1282`
+- interpretation:
+  - all three cells contain tiny OOS `100%` TP12 rules (`zero-negative > 0`)
+  - none contains an OOS `100%` TP12 rule that repeats over `>=3` matched dates
+  - none contains train-promotable breadth at `10 dates / 6 months / 4 folds`
+  - this means the broad TP12 failure is not caused by TOP/MID/LOW mixing alone; each cell still collapses to tiny perfect pockets
+  - `TOP` is the strongest next cell only because it has the most OOS zero-negative rules (`19`), not because it has a promotable bank
+- current conclusion:
+  - keep `baseline-6 + v3_contextual_plus_lite` as the broad TP12 control
+  - do not escalate any TP12 regime cell to `2M` yet
+  - the next useful narrowing is inside `TOP` itself, not another broad or cell-level rerun
+
+## 2026-03-29 session resume for next chat
+- saved resume file:
+  - `/home/saida/code/stockdesk-lab-lite/meta/session_resume_20260329_v60.md`
+- if the next chat asks for continuation:
+  - read the resume file first
+  - then re-read:
+    - `meta/active_research_contract.json`
+    - `meta/active_research_handoff.md`
+    - `meta/live_priority_ops_contract.md`
+    - `meta/experiment_patch_memory.json`
+  - next recommended patch order:
+    - `perfect_proto_low_1d_recent_significant_episode_exact_bank_v60a`
+    - `perfect_proto_live_line_failure_veto_overlay_report_v60b`
+
+<!-- C0_RUNTIME_SNAPSHOT_START -->
+## Runtime C0 Snapshot
+- not generated yet
+<!-- C0_RUNTIME_SNAPSHOT_END -->
+
+<!-- C1_RUNTIME_SNAPSHOT_START -->
+## Runtime C1 Snapshot
+- not generated yet
+<!-- C1_RUNTIME_SNAPSHOT_END -->
+
+## 2026-04-03 LOW_GAP_TOP touch OOS-rule recent replay
+- patch key:
+  - `perfect_proto_stepb_1d_tp12_low_gap_top_touch_oos_rules_recent0201_0402_replay_20260403`
+- purpose:
+  - keep the original `LOW_GAP_TOP` touch-discovery OOS rules fixed
+  - replay them unchanged on a fresh recent window to measure whether the original OOS rule bank still carries hit-rate in `2026-02-01 ~ 2026-04-02`
+- contract:
+  - scope: `LOW_GAP_TOP`
+  - row contract: `recent_impulse_upto_1d / D+1 open / 3 trading days / 12% touch`
+  - source bank A: all `47` touch OOS `zero-negative` rules from `perfect_proto_stepb_1d_tp12_low_gap_top_touch_contract_200k_20260403`
+  - source bank B: the `3` touch OOS `perfect >=3 matched dates` rules from the same run
+- replay window:
+  - requested recent range: `2026-02-01 ~ 2026-04-02`
+  - actual strict-boundary decision-date coverage after pack build: `2026-02-02 ~ 2026-04-01`
+  - recent touch pack stats: `51` rows, `21` touch-positive rows, `29` decision dates
+- results:
+  - bank A (`47` zero-negative rules):
+    - `4 selected / 1 hit = 25.00%`
+    - `4` unique matched dates
+    - selected rows:
+      - `2026-02-11` `비엘팜텍` `HIT`
+      - `2026-03-06` `극동유화` `MISS`
+      - `2026-03-20` `에이비프로바이오` `MISS`
+      - `2026-03-27` `세우글로벌` `MISS`
+  - bank B (`3` repeated OOS-perfect rules):
+    - `0 selected / 0 hit`
+- interpretation:
+  - the original OOS touch-good rule bank does not carry forward cleanly into the `2026-02-02 ~ 2026-04-01` recent window
+  - the broader `47`-rule bank still fires occasionally but degrades to `25%`
+  - the tighter repeated OOS-perfect `3`-rule subset does not fire at all
+  - this reinforces the current conclusion that `LOW_GAP_TOP` has a real signal family, but the exact OOS-perfect rule pockets are not stable enough to reuse unchanged as a recent operating bank
+
+## 2026-04-03 LOW_GAP_TOP touch donor execution menu
+- patch key:
+  - `perfect_proto_stepb_1d_tp12_low_gap_top_execution_menu_recent0201_0402_20260403`
+- purpose:
+  - keep the `LOW_GAP_TOP` touch donor cohort fixed
+  - evaluate whether a small execution-contract menu can recover donor hit-rate versus the clean `TP12 / SL4 / stop-first` baseline on both original OOS and the fresh recent replay window
+- contract:
+  - donor cohort: `recent_impulse_upto_1d / D+1 open / 3 trading days / 12% touch / no stop gate`
+  - source scope run: `perfect_proto_stepb_1d_tp12_low_subscopes_control_200k_20260403_gap_top`
+  - recent requested range: `2026-02-01 ~ 2026-04-02`
+  - actual strict-boundary decision-date coverage: `2026-02-02 ~ 2026-04-01`
+  - recent scope pack stats: `51` rows, `29` decision dates
+- donor cohort diagnostics:
+  - OOS touch line: `76/206 = 36.89%`
+  - recent touch line: `21/51 = 41.18%`
+  - donor OOS stop-before-touch share: `28/76 = 36.84%`
+  - donor recent stop-before-touch share: `11/21 = 52.38%`
+- compared execution outcomes on the fixed donor cohort:
+  - baseline clean stop-first `3d / TP12 / SL4`:
+    - OOS `48/206 = 23.30%`, avgNetRet `+0.23%`
+    - recent `10/51 = 19.61%`, avgNetRet `-0.68%`
+  - best overall hit-rate ceiling `touch_anchor_tp12_no_stop_3d`:
+    - OOS `76/206 = 36.89%`, avgNetRet `+0.64%`
+    - recent `21/51 = 41.18%`, avgNetRet `-1.35%`
+  - best stop-aware recovery `tp12_sl4_stop_delay1_4d`:
+    - OOS `61/206 = 29.61%`, avgNetRet `+1.32%`
+    - recent `19/51 = 37.25%`, avgNetRet `+2.11%`
+  - report verdict:
+    - `stop_recovery_policy_found`
+- interpretation:
+  - the execution contract is a major part of the signal loss; the donor cohort itself still carries substantial TP12 touch information
+  - no-stop preserves the hit-rate ceiling but fails the practical recent net-return test
+  - a delayed-stop plus slightly longer hold (`SL4 stop delay1 / 4d`) materially recovers hit-rate and net-return versus the clean baseline on both OOS and recent windows
+  - the next branch should stay inside execution-contract redesign around delayed-stop / hold-horizon variants, not reopen exact TP12/SL4 search tuning
+## 2026-04-04 Kiwoom Side-Daily Bundle 3
+- implemented Kiwoom side-daily stage/QC/merge for the currently proven datasets only:
+  - `investor_daily`
+  - `program_daily`
+  - `trade_strength_daily`
+- new files:
+  - `tools/kiwoom_side_daily_common.py`
+  - `tools/backfill_kiwoom_side_daily.py`
+  - `tools/qc_kiwoom_side_daily_stage.py`
+  - `tools/merge_kiwoom_side_daily_stage.py`
+  - `tools/smoke_kiwoom_side_daily_stage_tools.py`
+  - `tools/run_kiwoom_side_daily_backfill.sh`
+  - `tools/server_run_kiwoom_side_daily_backfill.sh`
+- contract:
+  - canonical side-daily files are currently `.jsonl`, not `.jsonl.zst`
+  - row shape is `dataset/apiId/source/symbol/dateKey/rawRow`
+  - stage is manifest-driven and fail-fast on missing `(symbol,dateKey)` coverage
+- verify:
+  - add `smoke_kiwoom_side_daily_stage_tools.py`
+  - add wrapper syntax checks for both local/server side-daily wrappers
+- not implemented yet:
+  - `shorting_daily`
+  - `loan_daily`
+  - `credit_daily`
+  - `sector_daily`
+  - 1-minute symbol-first reverse-continuation collector
+
+## 2026-04-04 Kiwoom Intraday 1M Bundle 4
+- implemented minute collector bundle:
+  - `tools/kiwoom_intraday_1m_common.py`
+  - `tools/backfill_kiwoom_intraday_1m.py`
+  - `tools/qc_kiwoom_intraday_1m_stage.py`
+  - `tools/merge_kiwoom_intraday_stage.py`
+  - `tools/smoke_kiwoom_intraday_stage_tools.py`
+  - `tools/run_kiwoom_intraday_1m_backfill.sh`
+  - `tools/server_run_kiwoom_intraday_1m_backfill.sh`
+- contract:
+  - crawl model is `symbol-first reverse continuation`
+  - crawl anchor defaults to latest canonical daily candle date unless explicitly overridden
+  - stage writes only requested `D-1..D+4` dates from the Step A manifest
+  - canonical minute raw currently uses:
+    - `data/intraday_1m/date=YYYY-MM-DD/part-000.jsonl`
+    - `data/intraday_1m_presence_daily.jsonl`
+- QC:
+  - duplicate `(symbol, tsKst)`
+  - monotonic ts order
+  - OHLC integrity
+  - `tradingDateKey == tsKst[:10]`
+  - presence coverage
+  - intraday aggregated OHLCV matches daily candles
+- telemetry:
+  - per-symbol checkpoint JSON under `stage_root/checkpoints/`
+  - includes `pagesFetched`, `rowsWritten`, `oldestFetchedTs`, `completedFloorDate`, `rateLimitHitCount`
+- not implemented yet:
+  - runtime integration
+  - `shorting/loan/credit/sector` side-daily bundles
+
+## 2026-04-04 Kiwoom Intraday Bundle 5/6
+- implemented config / contract / feature-dataset bundle:
+  - `src/lib/config.mjs`
+  - `src/lib/tp12_intraday_feature_builder.mjs`
+  - `tools/build_tp12_intraday_feature_dataset.mjs`
+  - `tools/smoke_tp12_intraday_feature_dataset.mjs`
+  - `tools/run_tp12_intraday_feature_dataset.sh`
+  - `tools/server_run_tp12_intraday_feature_dataset.sh`
+- contract additions:
+  - explicit `dataPaths` for:
+    - `intraday1mRoot`
+    - `intraday1mPresenceJsonl`
+    - `intradaySideInvestorDailyJsonl`
+    - `intradaySideProgramDailyJsonl`
+    - `intradaySideTradeStrengthDailyJsonl`
+    - future reserved `shorting/lending/credit/sector` paths
+  - feature artifact contract:
+    - `artifacts/tp12_intraday/features/run=<id>/feature_rows.jsonl`
+- current feature bundle:
+  - gate rows:
+    - `d0_close`
+    - `d1_0905`
+    - `d1_0915`
+    - `d1_0930`
+  - leak-safe rule:
+    - `D0` gate uses only `D-1..D0`
+    - `D+1` gates use bars only up to each cutoff
+    - later bars remain label-only
+  - current flow families are limited to the proven side-daily datasets:
+    - `investor_daily`
+    - `program_daily`
+    - `trade_strength_daily`
+- labels now emitted per gate row:
+  - `tp12Hit`, `sl4Hit`, `firstBarrierOutcome`
+  - `minutesToTp12`, `minutesToSl4`
+  - `day1MFE`, `day1MAE`
+  - `stop_first_net_ret`, `delay1_4d_net_ret`, `touch_anchor_net_ret`
+  - `bestPolicyChoice`, `bestPolicyNetRet`
+- verify additions:
+  - `smoke_tp12_intraday_feature_dataset.mjs`
+- still deferred:
+  - direct runtime wiring with explicit config/cache signatures
+  - `shorting/loan/credit/sector` side-daily bundles
+
+## 2026-04-05 Kiwoom Intraday Bundle 7
+- implemented experiment bridge before raw-minute runtime integration:
+  - `src/lib/tp12_intraday_feature_bridge.mjs`
+  - `tools/build_tp12_intraday_feature_pack_bridge.mjs`
+  - `tools/smoke_tp12_intraday_feature_bridge.mjs`
+  - `tools/run_tp12_intraday_feature_pack_bridge.sh`
+  - `tools/server_run_tp12_intraday_feature_pack_bridge.sh`
+- bridge contract:
+  - join key `(symbol, decisionDateKey)`
+  - gate-specific output only
+  - full coverage required
+  - merge `features` only
+  - `labels` never copied into Step-D feature pack rows
+- output target:
+  - `artifacts/tp12_intraday/bridged_feature_pack/run=<id>/decision_candidates_feature_pack_intraday_<gateId>.jsonl`
+
+## 2026-04-05 Kiwoom Intraday Bundle 8
+- implemented strict orchestration wrappers:
+  - `tools/run_kiwoom_tp12_inputs.sh`
+  - `tools/run_kiwoom_tp12_backfill.sh`
+  - `tools/run_kiwoom_tp12_pipeline.sh`
+  - `tools/server_run_kiwoom_tp12_pipeline.sh`
+- wrapper contract:
+  - explicit `--skip-verify` on lower-level wrappers for orchestration use only
+  - end-to-end pipeline runs one final `npm run verify`
+  - manifest source is explicit: either Step-A sources or an explicit prebuilt manifest
+  - pipeline summary:
+    - `artifacts/tp12_intraday/pipeline/run=<id>/pipeline_summary.json`
+
+## 2026-04-05 Kiwoom Intraday Bundle 9
+- implemented explicit downstream allowlist narrowing:
+  - `tools/build_tp12_intraday_allowlist_from_pack.mjs`
+  - `tools/run_tp12_intraday_allowlist_from_pack.sh`
+  - `tools/server_run_tp12_intraday_allowlist_from_pack.sh`
+- updated broad Step A manifest builder:
+  - `tools/build_tp12_stepa_intraday_manifest.mjs --allowlist-path=...`
+  - unmatched allowlist rows are fatal
+- updated orchestration:
+  - `tools/run_kiwoom_tp12_inputs.sh`
+  - `tools/run_kiwoom_tp12_pipeline.sh`
+- smoke coverage now proves:
+  - downstream `daily_pack` can narrow the broad Step A manifest deterministically
+  - unmatched allowlist rows fail fast
+
+## 2026-04-05 Kiwoom Intraday Bundle 10
+- closed the minute timestamp/session contract:
+  - `tools/kiwoom_intraday_1m_common.py`
+  - `tools/qc_kiwoom_intraday_1m_stage.py`
+  - `tools/probe_kiwoom_rest_contract.py`
+  - `tools/probe_kiwoom_rest_depth.py`
+  - `tools/smoke_kiwoom_intraday_stage_tools.py`
+  - `tools/smoke_kiwoom_rest_probes.py`
+- root-cause fix:
+  - Kiwoom minute `cntr_tm` is now treated as already `KST` local
+  - removed the incorrect `UTC -> KST` conversion that could shift bars by `+9h`
+- hard-stop contract:
+  - minute bars must remain inside the KR regular session
+  - collector normalization and stage QC now fail on out-of-session timestamps
+- probe contract:
+  - minute contract probe now records raw and normalized minute bounds
+  - depth probe now records normalized oldest/newest minute timestamps plus `sessionInvalidRowCount`
+- verify state:
+  - local `bash scripts/verify.sh` passed after the Bundle 10 patch
+  - server `bash scripts/verify.sh` passed after sync
+- next step:
+  - `Bundle 11` real narrow server pilot from the fresh LOW_GAP_TOP manifest
+
+## 2026-04-05 Kiwoom Intraday Bundle 11 Pilot Result
+- real `20-symbol` narrowed pilot was started from:
+  - `artifacts/tp12_intraday/request_manifest/run=perfect_proto_low_gap_top_support_scorecard_router_v31_oos_fresh_pilot20/requests.jsonl`
+- side-daily result:
+  - `investor_daily`, `program_daily`, `trade_strength_daily` all completed and merged cleanly on the first pilot run
+- minute collector hard root-cause fixes landed:
+  - `scripts/sync_to_server.sh` now preserves `artifacts/tp12_intraday/` on server
+  - wrappers now source `tools/load_kiwoom_rest_env.sh`
+  - minute normalization now treats signed Kiwoom prices correctly
+  - placeholder rows and after-hours rows are explicitly classified
+  - symbol checkpoints now persist page-by-page progress and symbol-level oldest/newest fetched timestamps
+  - minute failures now distinguish:
+    - `history depth exhausted before requested floor`
+    - `zero usable first page`
+    - `missing requested dates within reached history`
+- current real blocker:
+  - `000520` failed with:
+    - `observedOldestTs=2025-04-01T09:00:00+09:00`
+    - `requestedFloorTs=2024-12-30T09:00:00+09:00`
+    - failure class = `history depth exhausted before requested floor`
+  - `002410` failed with:
+    - failure class = `zero usable first page`
+    - raw first page was a blank placeholder row only
+  - `002630` was still crawling, but early progress also pointed to shallow history rather than a collector deadlock
+- interpretation:
+  - the Kiwoom minute collector is now observable and fail-fast
+  - the current blocker is source depth / source completeness, not runtime liveness
+  - do not widen minute collection beyond the narrow pilot until the source floor question is closed
+- `2026-04-05`: daily+side-daily TP12 core path is now frozen separately from the blocked minute branch:
+  - primary checklist:
+    - `docs/tp12_side_daily_patch_checklist.md`
+  - primary plan:
+    - `docs/tp12_side_daily_patch_plan.md`
+
+## 2026-04-05 TP12 Daily + Side-Daily Bundle 3/4/5
+- implemented the first signal-stage daily + side-daily experiment inputs:
+  - `src/lib/tp12_no_stop_target_contract.mjs`
+  - `src/lib/tp12_side_daily_feature_builder.mjs`
+  - `src/lib/tp12_side_daily_feature_bridge.mjs`
+  - `tools/build_tp12_side_daily_feature_dataset.mjs`
+  - `tools/build_tp12_side_daily_feature_pack_bridge.mjs`
+  - `tools/run_kiwoom_tp12_side_daily_pipeline.sh`
+- freeze retained:
+  - start again from the `2016` daily floor
+  - first target is `no-stop TP12`
+  - execution / stop-policy learning stays downstream-only
+- current side-daily builder contract:
+  - gate:
+    - `d0_close`
+  - labels:
+    - `tp12_no_stop_hit_3d`
+    - `tp12_no_stop_hit_4d`
+  - no execution labels inside this artifact
+  - bridge prefixes only `side.*`
+- smoke coverage now includes:
+  - side-daily feature dataset smoke
+  - side-daily feature bridge smoke
+  - side-daily pipeline wrapper syntax
+- next required action:
+  - rerun server `bash scripts/verify.sh`
+  - then freeze the exact `2016` train/OOS split and record the first daily-only no-stop control before family comparisons
+  - interpretation:
+    - keep minute planning as an optional branch
+    - move immediate TP12 lift work to `daily Step A / Step D baseline + side-daily additive lift`
+    - side-daily families must prove value only via `common-support` and `deployment` comparisons against the same daily control
+    - research order is now fixed as:
+      - `2016` train-floor daily discovery
+      - `no-stop TP12 target first`
+      - `side-daily additive lift second`
+      - `buy/sell/stop learning later`
+
+## 2026-04-05 TP12 Daily + Side-Daily Bundle 3/4/5 follow-up
+- strict-mode blocker resolved:
+  - renamed the side-daily cross-family feature keys in `src/lib/tp12_side_daily_feature_builder.mjs`
+  - old forbidden `flow_*` keys were replaced with explicit `side_alignment_*` / `side_pressure_*` / `side_strength_*` keys
+- docs/checklist were tightened so later sequential patches cannot skip the scientific order:
+  - first freeze the exact `2016` split/control contract
+  - then rerun the daily-only no-stop control
+  - then compare:
+    - `daily only`
+    - `daily + investor`
+    - `daily + program`
+    - `daily + investor + program`
+  - only after that open buy/sell/stop deep-learning or execution-policy learning
+- local `bash scripts/verify.sh` is green again after the rename/doc refresh
+- server `bash scripts/verify.sh` is also green again after sync
+
+## 2026-04-05 TP12 Side-Daily Control Artifact Builder
+- implemented the first machine-readable daily-only no-stop control builder:
+  - `src/lib/tp12_side_daily_control_builder.mjs`
+  - `src/lib/tp12_side_daily_contract.mjs`
+  - `tools/build_tp12_side_daily_control.mjs`
+  - `tools/run_tp12_side_daily_control.sh`
+  - `tools/server_run_tp12_side_daily_control.sh`
+  - `tools/smoke_tp12_side_daily_control.mjs`
+  - `tools/smoke_tp12_side_daily_contract.mjs`
+- froze the first machine-readable side-daily research contract:
+  - `meta/tp12_side_daily_research_contract.json`
+  - `contractId = tp12_side_daily_low_gap_top_no_stop_effective_floor_20160812_v3`
+  - `decisionWindow = 2016-08-12 ~ 2026-03-30`
+  - `train = 2016-08-12 ~ 2024-12-31`
+  - `oos = 2025-01-02 ~ 2026-03-30`
+  - `scopeId = LOW_GAP_TOP`
+  - `stepALaneSet = [recent_impulse_1d]`
+  - `targetLabelIds = [tp12_no_stop_hit_3d, tp12_no_stop_hit_4d]`
+  - `allowlistPolicy = required_low_gap_top_allowlist_exact_pair_v1`
+  - `commonSupportPolicy = pair_exact_intersection_v1`
+- control builder contract:
+  - input:
+    - exact manifest slice
+    - Step-D feature pack
+    - daily candle canonical
+  - output:
+    - `decision_candidates_feature_pack_control.jsonl`
+    - `no_stop_label_rows.jsonl`
+    - `control_summary.json`
+  - fail-fast on:
+    - duplicate manifest `(symbol, decisionDateKey)` pairs
+    - missing feature-pack coverage
+    - rows outside frozen train/OOS ranges
+    - `stepALaneSet` mismatch
+    - unsupported target label ids
+- keep target labels out of the control feature pack rows:
+  - labels live only in `no_stop_label_rows.jsonl`
+- docs/checklist updated:
+  - `docs/data_contracts.md`
+  - `docs/tp12_side_daily_patch_checklist.md`
+  - `docs/tp12_side_daily_patch_plan.md`
+- verify:
+  - local `bash scripts/verify.sh` green after adding control smoke
+  - next concrete step is to write the first real server control artifact with the frozen `2016` split / lane set from `meta/tp12_side_daily_research_contract.json`
+
+## 2026-04-05 TP12 Side-Daily Effective-Floor Control Input: green, next blocker exposed
+- run:
+  - `bash tools/server_run_tp12_side_daily_control_inputs.sh --contract-path=meta/tp12_side_daily_research_contract.json --run-id=tp12_side_daily_control_inputs_low_gap_top_effective_floor_20160812_v1 --split-policy=strict_label_boundary --discovery-universe-id=recent_impulse_upto_1d --recent-impulse-lookback-days=1`
+- result:
+  - `artifacts/runs/tp12_side_daily_control_inputs_low_gap_top_effective_floor_20160812_v1/step-perfect-prototype-open-control-input-pack/control_input_summary.json`
+  - `status = ok`
+  - `rowCount = 40624`
+  - `trainRowCount = 34756`
+  - `oosRowCount = 5868`
+  - `decisionDateFrom = 2016-08-12`
+  - `decisionDateTo = 2026-03-27`
+- new root cause found while moving to the first control artifact:
+  - the side-daily research contract had been using downstream scope `LOW_GAP_TOP` as if it were a raw Step A lane id
+  - real broad Step A / allowlist / request-manifest rows use `stepALaneId = recent_impulse_1d`
+  - fix:
+    - keep `scopeId = LOW_GAP_TOP`
+    - keep `control.stepALaneSet = [recent_impulse_1d]`
+- remaining blocker:
+  - there is still no full-period downstream `LOW_GAP_TOP` daily pack / exact allowlist covering `2016-08-12 ~ 2026-03-30`
+  - existing downstream `LOW_GAP_TOP` packs on server still begin at `2020-11-27`
+  - do not run the first scientific `daily-only no-stop` control artifact until that full-period downstream allowlist exists
+- follow-up helper now implemented for the blocker:
+  - `src/lib/tp12_side_daily_downstream_full_period_pack.mjs`
+  - `tools/build_tp12_side_daily_downstream_full_period_pack.mjs`
+  - `tools/run_tp12_side_daily_downstream_full_period_pack.sh`
+  - `tools/server_run_tp12_side_daily_downstream_full_period_pack.sh`
+  - `tools/smoke_tp12_side_daily_downstream_full_period_pack.mjs`
+  - `tools/run_tp12_side_daily_full_period_allowlist.sh`
+  - `tools/server_run_tp12_side_daily_full_period_allowlist.sh`
+  - `tools/build_tp12_side_daily_full_period_manifest.mjs`
+  - `tools/run_tp12_side_daily_full_period_manifest.sh`
+  - `tools/server_run_tp12_side_daily_full_period_manifest.sh`
+  - `tools/smoke_tp12_side_daily_full_period_manifest.mjs`
+  - `src/lib/tp12_side_daily_scientific_comparison.mjs`
+  - `tools/build_tp12_side_daily_scientific_comparison_report.mjs`
+  - `tools/run_tp12_side_daily_scientific_comparison_report.sh`
+  - `tools/server_run_tp12_side_daily_scientific_comparison_report.sh`
+  - `tools/smoke_tp12_side_daily_scientific_comparison_report.mjs`
+- intended post-rerun order:
+  1. merge downstream train/oos packs into one exact full-period pack
+  2. build the narrowed full-period exact allowlist from that merged pack
+  3. build the full-period narrowed Step A manifest from the broad train/oos Step A sources
+  4. run the frozen scientific-control pipeline:
+    - `daily_only_no_stop`
+    - `daily_plus_investor`
+    - `daily_plus_program`
+    - `daily_plus_investor_program`
+  5. bind those frozen variants to one exact `selection_manifest.json`
+  6. score that exact frozen bundle as the first scientific comparison
+
+## 2026-04-05 TP12 Side-Daily Scientific-Control Pipeline Wrapper
+- added:
+  - `src/lib/tp12_side_daily_family_variants.mjs`
+  - `tools/smoke_tp12_side_daily_family_variants.mjs`
+  - `tools/run_tp12_side_daily_scientific_control_pipeline.sh`
+  - `tools/server_run_tp12_side_daily_scientific_control_pipeline.sh`
+  - `tools/run_tp12_side_daily_scientific_post_rerun.sh`
+  - `tools/server_run_tp12_side_daily_scientific_post_rerun.sh`
+- role:
+  - take one green downstream full-period `LOW_GAP_TOP` rerun
+  - build full-period allowlist
+  - build full-period narrowed Step A manifest
+  - write the frozen control artifacts for:
+    - `daily_only_no_stop`
+    - `daily_plus_investor`
+    - `daily_plus_program`
+    - `daily_plus_investor_program`
+  - emit `artifacts/tp12_side_daily/scientific_control/run=<id>/pipeline_summary.json`
+- note:
+  - this wrapper freezes comparison inputs only
+  - scoring remains downstream so input freezing and scoring stay separate
+  - new convenience wrapper:
+    - `bash tools/server_run_tp12_side_daily_scientific_post_rerun.sh --downstream-run-dir=... --train-run-dir=... --oos-run-dir=... --feature-pack-path=...`
+    - later add `--variant-selection-map=...` to continue through report generation
+
+## 2026-04-05 TP12 Side-Daily Scientific Comparison Report Bundle
+- added:
+  - `src/lib/tp12_side_daily_scientific_comparison.mjs`
+  - `tools/build_tp12_side_daily_scientific_comparison_report.mjs`
+  - `tools/run_tp12_side_daily_scientific_comparison_report.sh`
+  - `tools/server_run_tp12_side_daily_scientific_comparison_report.sh`
+  - `tools/smoke_tp12_side_daily_scientific_comparison_report.mjs`
+- role:
+  - read one frozen scientific-control pipeline summary
+  - read one exact `selection_manifest.json` that binds each variant to its selected-row artifact
+  - emit one deterministic comparison report with:
+    - `deployment view`
+    - `common-support view`
+    - per-target deltas versus `daily_only_no_stop`
+- note:
+  - common-support is defined on frozen candidate/date coverage intersection, not selected-row intersection
+  - this keeps the comparison meaningful when side-daily coverage is narrower than baseline coverage
+
+## 2026-04-05 TP12 Side-Daily Control-Input Pack / 2016 Floor Proof
+- implemented:
+  - `src/lib/tp12_side_daily_control_input_pack.mjs`
+  - `tools/build_tp12_side_daily_control_input_pack.mjs`
+  - `tools/smoke_tp12_side_daily_control_input_pack.mjs`
+  - `tools/run_tp12_side_daily_control_inputs.sh`
+  - `tools/server_run_tp12_side_daily_control_inputs.sh`
+- role:
+  - build fresh train/oos open daily packs
+  - merge them into one exact base input pack for the first `daily-only no-stop` control rerun
+  - fail-fast if coverage does not actually reach the frozen effective train floor
+- current blocker already proven from existing broad open packs:
+  - train coverage only reaches `2020-11-27 ~ 2024-12-27`
+  - oos coverage only reaches `2025-01-02 ~ 2026-01-29`
+  - so current artifacts do not satisfy the frozen `2016` floor
+- interpretation:
+  - the next real server run is a floor-proof run for the current `v3_contextual_plus_lite` open-pack surface
+  - if the wrapper fails with `control input pack does not reach requested train floor`, record that as the canonical root-cause blocker
+- verify wiring needed:
+  - add the control-input smoke to `scripts/verify.sh`
+  - rerun local/server verify
+  - then run the first real `2016`-floor control-input build on the server
+
+## 2026-04-05 TP12 Side-Daily Control-Input Pack / First Real Server Result
+- run:
+  - `bash tools/server_run_tp12_side_daily_control_inputs.sh --contract-path=meta/tp12_side_daily_research_contract.json --run-id=tp12_side_daily_control_inputs_low_gap_top_2016_floor_v1 --split-policy=strict_label_boundary --discovery-universe-id=recent_impulse_upto_1d --recent-impulse-lookback-days=1`
+- server verify:
+  - rerun before the real run
+  - server `npm run verify` reached `==> verify complete`
+- train Step A:
+  - period `2016-01-05 ~ 2024-12-31`
+  - raw candidates `333676`
+  - passed events `121361`
+  - accepted rows after lane/lookback filtering `34781`
+- train pack summary:
+  - path: `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_side_daily_control_inputs_low_gap_top_2016_floor_v1/step-perfect-prototype-open-train-pack/summary.json`
+  - `selectedDecisionCoverage.from = 2016-08-12`
+  - `datasetContract.minDateKey = 2016-08-12`
+  - `rowsWritten = 34756`
+- merged control-input result:
+  - path: `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_side_daily_control_inputs_low_gap_top_2016_floor_v1/step-perfect-prototype-open-control-input-pack/control_input_summary.json`
+  - transient merged pack stats before floor assertion:
+    - `rowCount = 40624`
+    - `decisionDateFrom = 2016-08-12`
+    - `decisionDateTo = 2026-03-27`
+- canonical failure:
+  - `control input pack does not reach requested train floor: requested=2016-01-05 actual=2016-08-12`
+- interpretation:
+  - wrapper/server orchestration bug is closed
+  - the blocker is real, but it is the strict daily feature warmup contract rather than the lane surface itself
+  - `localWindow=40`, `globalWindow=150`, `featureAsOf=t-1` imply the first reachable train decision date is `2016-08-12`
+- next action:
+  - do not rerun the same control-input patch unchanged
+  - freeze the effective train floor at `2016-08-12` first
+  - rerun the floor-proof control-input build only after that contract change is explicit
+
+## 2026-04-07 TP12 Side-Daily First Scientific Comparison Verdict
+- scientific-control root:
+  - `/home/moltook/apps/stockdesk-lab-lite/artifacts/tp12_side_daily/scientific_control/run=tp12_side_daily_scientific_post_rerun_full_period_low_gap_top_v1_20260406_effective_tail_fix`
+- completed artifacts:
+  - `pipeline_summary.json`
+  - `selection_manifest.json`
+  - `scientific_comparison_report.json`
+  - `baseline_selection_filtered_to_effective.jsonl`
+  - `selection_rows/daily_only_no_stop_selected_rows.jsonl`
+  - `selection_rows/daily_plus_investor_selected_rows.jsonl`
+  - `selection_rows/daily_plus_program_selected_rows.jsonl`
+  - `selection_rows/daily_plus_investor_program_selected_rows.jsonl`
+- supporting scoring runs:
+  - `artifacts/runs/tp12_side_daily_scientific_score_daily_plus_investor_v1_20260407`
+  - `artifacts/runs/tp12_side_daily_scientific_score_daily_plus_program_v1_20260407`
+  - `artifacts/runs/tp12_side_daily_scientific_score_daily_plus_investor_program_v1_20260407`
+- binding note:
+  - baseline selected rows had to be filtered to the frozen scientific effective decision ceiling `2026-03-27` before comparison binding because the downstream baseline run still contained later OOS rows outside frozen label coverage
+- scientific verdict:
+  - baseline `daily_only_no_stop` froze `604` selected rows for binding and `161` selected OOS rows over the full OOS deployment view
+  - all three additive variants froze only `163` OOS common-support pairs and selected `3` OOS rows each
+  - on the frozen OOS common-support subset, baseline selected `2` rows and hit both `3d` and `4d` targets for `hitRate=1.0`
+  - each additive variant selected `3` rows but hit only `1`, so `3d` and `4d` hitRate both closed at `0.3333333333333333`
+  - common-support delta versus baseline is `-0.6666666666666667` hit-rate for both `3d` and `4d` across `daily_plus_investor`, `daily_plus_program`, and `daily_plus_investor_program`
+  - conclusion: no first-wave additive side-daily variant is promotable under the current `LOW_GAP_TOP` no-stop scientific contract; keep `daily_only_no_stop` as the mandatory baseline
+- next action:
+  - do not rerun the same investor/program/investor+program additive family unchanged
+  - if downstream donor export or execution-policy learning starts, use the frozen `daily_only_no_stop` line first
+  - any future additive side-daily retry must introduce a materially different side-feature contract or selection rule before a new scientific comparison
+
+## 2026-04-07 TP12 Side-Daily Execution-Learning Baseline Bundle
+- root-cause fix:
+  - `src/lib/tp12_side_daily_scientific_selection_manifest.mjs` now trims selected rows outside the frozen scientific effective coverage window while materializing `selection_rows/*.jsonl`
+  - this closes the baseline binding bug where downstream baseline selection still carried `2026-03-30` even though scientific label coverage stopped at `2026-03-27`
+- server recovery path:
+  - rebuilt the missing server-side scientific-control root from:
+    - downstream baseline run `artifacts/runs/tp12_side_daily_full_period_low_gap_top_allowlist_effective_floor_20160812_v1_r2`
+    - broad Step A sources `artifacts/runs/tp12_side_daily_control_inputs_low_gap_top_effective_floor_20160812_v1_train_stepa` and `artifacts/runs/tp12_side_daily_control_inputs_low_gap_top_effective_floor_20160812_v1_oos_stepa`
+    - control feature pack `artifacts/runs/tp12_side_daily_control_inputs_low_gap_top_effective_floor_20160812_v1/step-perfect-prototype-open-control-input-pack/daily_pack.jsonl`
+    - additive scoring runs:
+      - `artifacts/runs/tp12_side_daily_scientific_score_daily_plus_investor_v1_20260407`
+      - `artifacts/runs/tp12_side_daily_scientific_score_daily_plus_program_v1_20260407`
+      - `artifacts/runs/tp12_side_daily_scientific_score_daily_plus_investor_program_v1_20260407`
+- recovered scientific artifacts:
+  - `/home/moltook/apps/stockdesk-lab-lite/artifacts/tp12_side_daily/scientific_control/run=tp12_side_daily_scientific_post_rerun_full_period_low_gap_top_v1_20260406_effective_tail_fix/pipeline_summary.json`
+  - `/home/moltook/apps/stockdesk-lab-lite/artifacts/tp12_side_daily/scientific_control/run=tp12_side_daily_scientific_post_rerun_full_period_low_gap_top_v1_20260406_effective_tail_fix/selection_manifest.json`
+  - `/home/moltook/apps/stockdesk-lab-lite/artifacts/tp12_side_daily/scientific_control/run=tp12_side_daily_scientific_post_rerun_full_period_low_gap_top_v1_20260406_effective_tail_fix/scientific_comparison_report.json`
+- recovered binding facts:
+  - baseline `daily_only_no_stop` selection summary now records `requestedRowCount = 605`, `rowCount = 604`, `trimmedByEffectiveCoverage = 1`
+  - the late baseline OOS pair on `2026-03-30` is removed from the frozen scientific selection rows
+  - regenerated scientific comparison report keeps the same verdict:
+    - baseline common-support OOS selected rows `2`, `3d/4d hitRate = 1.0`
+    - each additive side variant common-support OOS selected rows `3`, `3d/4d hitRate = 0.3333333333333333`
+    - hit-rate delta versus baseline stays `-0.6666666666666667`
+- execution-learning bundle:
+  - output root:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/tp12_side_daily/scientific_control/run=tp12_side_daily_scientific_post_rerun_full_period_low_gap_top_v1_20260406_effective_tail_fix/execution_learning_baseline`
+  - emitted files:
+    - `donor_rows.jsonl`
+    - `execution_label_rows.jsonl`
+    - `execution_learning_summary.json`
+  - summary:
+    - donor rows `604`
+    - scientific split counts:
+      - `train = 443`
+      - `oos = 161`
+    - learning split counts:
+      - `train = 443`
+      - `validation = 118`
+      - `recent_replay = 43`
+    - replay decision-date split:
+      - validation decision dates `90` over `2025-01-07 ~ 2026-01-06`
+      - recent replay decision dates `30` over `2026-01-07 ~ 2026-03-26`
+    - best core policy counts:
+      - `delay1_4d = 322`
+      - `abstain = 260`
+      - `stop_first = 22`
+- verification:
+  - local targeted smokes passed for:
+    - `smoke_tp12_side_daily_scientific_selection_manifest`
+    - `smoke_tp12_side_daily_scientific_comparison_report`
+    - `smoke_tp12_side_daily_execution_learning_bundle`
+  - server `npm run verify` passed again after the selection-binding fix
+- next action:
+  - use this execution-learning baseline bundle as the only donor/label source for the first TP12 side-daily execution-policy learner
+  - do not reopen the rejected investor/program additive family unchanged
+
+## 2026-04-07 TP12 no-stop rolling selection branch scaffold
+- status:
+  - sibling `12% no-stop selection` branch is now scaffolded without mutating the frozen scientific-control root
+- contract/config:
+  - new rolling contract:
+    - `/home/saida/code/stockdesk-lab-lite/meta/tp12_no_stop_rolling_research_contract.json`
+  - new no-stop config:
+    - `/home/saida/code/stockdesk-lab-lite/config/lab.config.server.lite.stepb_dplus1_plus_lite_target12_no_stop.json`
+  - frozen windows:
+    - screen `w1..w6 = 3y train + next 1y OOS`
+    - final confirm `2016-08-12 ~ 2024-12-27` train, `2025-01-02 ~ 2026-03-27` OOS
+- tooling:
+  - source-pack wrapper:
+    - `tools/run_tp12_no_stop_rolling_source_pack.sh`
+  - one-window mining wrapper:
+    - `tools/run_stepb_1d_tp12_no_stop_low_gap_top_window.sh`
+  - per-window report builder:
+    - `tools/build_stepb_1d_tp12_no_stop_window_report.mjs`
+  - rolling orchestrator:
+    - `tools/run_stepb_1d_tp12_no_stop_low_gap_top_rolling.sh`
+  - rolling summary builder:
+    - `tools/build_tp12_no_stop_rolling_summary.mjs`
+- verification:
+  - local targeted smokes passed:
+    - `smoke_tp12_no_stop_rolling_contract`
+    - `smoke_tp12_no_stop_rolling_summary`
+    - `smoke_stepb_1d_tp12_no_stop_window_report`
+  - local `npm run verify` passed
+  - server `npm run verify` passed after sync
+- important invariants:
+  - this branch uses `tp12_no_stop_hit_3d` as primary and `tp12_no_stop_hit_4d` as secondary
+  - `HIGH8/close28` may still be emitted as auxiliary artifacts by reused tooling, but must not be used as the promotion metric for this branch
+  - missing selected-row artifacts or missing D+4 candle coverage are now fail-fast in the window report builder
+- next action:
+  - run the new rolling screen first:
+    - `bash tools/server_run_stepb_1d_tp12_no_stop_low_gap_top_rolling.sh --run-id=<run_id> --window-group=screen`
+  - only if screen survival is acceptable, run final confirm:
+    - `bash tools/server_run_stepb_1d_tp12_no_stop_low_gap_top_rolling.sh --run-id=<run_id> --window-group=final`
+
+## 2026-04-07 Deferred future branch: TP12 no-stop lookback ladder
+- status:
+  - saved as deferred follow-up work only
+  - not active until the current `recent_impulse_1d` rolling branch is fully judged
+- reason:
+  - wider lookback likely needs to be tested eventually
+  - but opening `1d~Nd x TOP/MID/LOW` all at once would mix too many axes and overfit the result
+  - current infra ceiling is still `8d`, not `12d`
+- saved plan:
+  - `/home/saida/code/stockdesk-lab-lite/docs/tp12_side_daily_no_stop_lookback_ladder_future_plan.md`
+- required phase order:
+  1. keep `scopeId = LOW_GAP_TOP` fixed
+  2. run sparse lookback ladder only:
+     - `1d`
+     - `2d`
+     - `3d`
+     - `5d`
+     - `8d`
+  3. fill `4d/6d/7d` only if sparse ladder is green
+  4. send only the winning lookback to untouched full confirm
+  5. only after winner confirm is green, widen scope to `LOW`, then `MID`, then `TOP`
+  6. only after `1d..8d` evidence is strong, consider separate infra expansion to `9d~12d`
+- hard stops:
+  - do not start before Bundle 7.5 final confirm is closed
+  - do not use `HIGH8`, `close28`, or stop-first metrics as the promotion reason
+  - do not widen scope before a winning lookback is confirmed
+  - do not touch `9d~12d` until the current `8d` ceiling proves useful
+
+## 2026-04-07 TP12 no-stop lookback ladder scaffold
+- status:
+  - deferred lookback ladder is now executable as a scaffold
+  - no mining run has been launched yet
+- contract:
+  - `/home/saida/code/stockdesk-lab-lite/meta/tp12_no_stop_lookback_ladder_contract.json`
+  - sparse ladder candidates:
+    - `lb1`
+    - `lb2`
+    - `lb3`
+    - `lb5`
+    - `lb8`
+  - dense-fill candidates:
+    - `lb4`
+    - `lb6`
+    - `lb7`
+- tooling:
+  - derived candidate rolling-contract builder:
+    - `tools/build_tp12_no_stop_lookback_ladder_candidate_contract.mjs`
+  - ladder orchestrator:
+    - `tools/run_stepb_tp12_no_stop_lookback_ladder.sh`
+  - ladder server wrapper:
+    - `tools/server_run_stepb_tp12_no_stop_lookback_ladder.sh`
+
+## 2026-04-07 server disk cleanup: delete-first wave completed
+- reason:
+  - sparse lookback ladder server run hit `ENOSPC` during `lb2 / w2`
+  - only clearly stale `delete-first` run families were eligible for removal
+- delete scope:
+  - exact path list:
+    - `/home/saida/code/stockdesk-lab-lite/meta/server_disk_cleanup_delete_first_paths_20260407.txt`
+  - deleted families only:
+    - `perfect_proto_stepb_plus_lite_widened_legacy_*`
+    - `perfect_proto_stepb_plus_lite_recent_impulse_3d_*`
+    - `perfect_proto_daily_canonical_winner_slate_contrastive_top1_v53_*`
+    - `perfect_proto_stepb_plus_lite_widened_close28_hitge4_future0318_eval_v1_*`
+    - `perfect_proto_stepb_1d_mid_low_continuation_exact_family_v2_*`
+    - `perfect_proto_stepb_recent_impulse_matrix_probe200k_v1c_20260322_recent_impulse_upto_*`
+- delete result:
+  - deleted `183` run directories
+  - missing `0`
+  - delete-first remaining matches `0`
+- disk result:
+  - before: `/dev/vda2` `240G` used, `44G` available
+  - after: `/dev/vda2` `177G` used, `107G` available
+  - `artifacts/runs`: `169G -> 106G`
+- explicit keep recheck:
+  - `artifacts/runs/tp12_*` preserved
+  - `artifacts/runs/*scientific*` preserved
+  - `artifacts/runs/tp12_no_stop_low_gap_top_lookback_ladder_sparse_screen_v1_20260407*` preserved
+- logs:
+  - candidate memo:
+    - `/home/saida/code/stockdesk-lab-lite/meta/server_disk_cleanup_candidates_20260407.md`
+  - pre/post footprint:
+    - `/home/saida/code/stockdesk-lab-lite/meta/server_disk_cleanup_pre_state_20260407.txt`
+    - `/home/saida/code/stockdesk-lab-lite/meta/server_disk_cleanup_post_state_20260407.txt`
+  - delete result:
+    - `/home/saida/code/stockdesk-lab-lite/meta/server_disk_cleanup_delete_first_result_20260407.txt`
+- next action:
+  - rerun or resume `tp12_no_stop_low_gap_top_lookback_ladder_sparse_screen_v1_20260407`
+  - do not touch `review-before-delete` families until the current ladder run is safely completed
+  - ladder summary builder:
+    - `tools/build_tp12_no_stop_lookback_ladder_summary.mjs`
+  - ladder summary wrapper:
+    - `tools/run_tp12_no_stop_lookback_ladder_summary.sh`
+  - ladder smokes:
+    - `smoke_tp12_no_stop_lookback_ladder_contract`
+    - `smoke_tp12_no_stop_lookback_ladder_summary`
+- execution rule:
+  - the ladder reuses the existing `run_stepb_1d_tp12_no_stop_low_gap_top_rolling.sh` per candidate by first generating a candidate-specific rolling contract
+  - this keeps the base `1d` rolling path unchanged while making wider lookbacks resumable later
+- next action when reopened:
+  - sparse screen only:
+    - `bash tools/server_run_stepb_tp12_no_stop_lookback_ladder.sh --run-id=<run_id> --candidate-group=sparse --window-group=screen`
+  - only after sparse verdict is written:
+    - consider dense fill or untouched final confirm for the winner
+
+## 2026-04-07 TP12 no-stop lookback ladder sparse screen: completed
+- run:
+  - server run id:
+    - `tp12_no_stop_low_gap_top_lookback_ladder_sparse_screen_v1_20260407_r2`
+  - summary:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_no_stop_low_gap_top_lookback_ladder_sparse_screen_v1_20260407_r2/step-perfect-prototype-tp12-no-stop-lookback-ladder/lookback_ladder_summary.json`
+- scope:
+  - `LOW_GAP_TOP` fixed
+  - candidates:
+    - `lb1`
+    - `lb2`
+    - `lb3`
+    - `lb5`
+    - `lb8`
+  - rolling contract:
+    - `3y train + next 1y OOS`
+    - OOS windows:
+      - `2019-01-02 ~ 2019-12-31`
+      - `2020-01-02 ~ 2020-12-31`
+      - `2021-01-04 ~ 2021-12-30`
+      - `2022-01-03 ~ 2022-12-29`
+      - `2023-01-02 ~ 2023-12-28`
+      - `2024-01-02 ~ 2024-12-27`
+- sparse ranking:
+  - `lb5`: primary `115/370 = 31.08%`, secondary `132/370 = 35.68%`, max `top1DateShare=9.52%`
+  - `lb3`: primary `163/545 = 29.91%`, secondary `194/545 = 35.60%`
+  - `lb1`: primary `126/431 = 29.23%`, secondary `149/431 = 34.57%`
+  - `lb2`: primary `131/454 = 28.85%`, secondary `149/454 = 32.82%`
+  - `lb8`: primary `96/368 = 26.09%`, secondary `116/368 = 31.52%`
+- verdict:
+  - sparse winner is `lb5`
+  - all five candidates stayed usable for all `6/6` screen windows
+  - no early-stop was triggered
+- next action:
+  - if following the planned path, run dense-fill `lb4/lb6/lb7` before any canonical final confirm
+  - keep `2025-01-02 ~ 2026-03-27` untouched for canonical winner confirm
+
+## 2026-04-07 TP12 no-stop lb5 OOS-100 donor-bank replay on final holdout
+- reason:
+  - user requested a one-off replay that uses only `lb5` rules which were `OOS-perfect` inside the `6` rolling screen windows
+  - this is not the planned canonical `lb5` full-retrain final confirm
+- source:
+  - sparse winner run:
+    - `tp12_no_stop_low_gap_top_lookback_ladder_sparse_screen_v1_20260407_r2_lb5`
+  - final holdout source pack:
+    - `tp12_no_stop_lb5_screen_oos100_union_final_holdout_v1_20260407_source`
+  - replay run:
+    - `tp12_no_stop_lb5_screen_oos100_union_final_holdout_v1_20260407`
+  - replay summary:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_no_stop_lb5_screen_oos100_union_final_holdout_v1_20260407/union_final_holdout_summary.json`
+- assumption:
+  - union of `lb5` rolling-window rules with `oosNegativeCount = 0` and `oosMatchCount > 0`
+  - final holdout window:
+    - `2025-01-02 ~ 2026-03-27`
+- result:
+  - unique union rules:
+    - `485`
+  - final selected rows:
+    - `5295`
+  - final hit rows:
+    - `1391`
+  - final hit rate:
+    - `26.27%`
+  - unique matched dates:
+    - `298`
+  - consensus buckets:
+    - `1:2054`
+    - `2:1787`
+    - `3:694`
+    - `4:522`
+    - `5:211`
+    - `6:27`
+- per-window donor contribution on final holdout:
+  - `w1`: `33` perfect rules, `824/3066 = 26.88%`
+  - `w2`: `122` perfect rules, `783/2698 = 29.02%`
+  - `w3`: `52` perfect rules, `348/1376 = 25.29%`
+  - `w4`: `52` perfect rules, `135/463 = 29.16%`
+  - `w5`: `65` perfect rules, `460/1863 = 24.69%`
+  - `w6`: `162` perfect rules, `388/1549 = 25.05%`
+- interpretation:
+  - this replay widens breadth far beyond the sparse screen aggregate and is not directly comparable to the canonical `lb5` rolling summary
+  - it should be treated as a donor-bank stress replay only
+  - canonical `lb5` final confirm is still not run
+
+## 2026-04-08 TP12 no-stop lb5 canonical final confirm: maxRules 300000 rerun
+- reason:
+  - the first canonical `lb5` final-confirm launch was started under the default `maxRules=4000`
+  - that would have truncated the final rule bank too aggressively for the full `20M` train discovery
+  - the window/rolling wrappers now accept an explicit `--max-rules` override and persist it in the runtime/manifest artifacts
+- patch:
+  - local files:
+    - `tools/run_stepb_1d_tp12_no_stop_low_gap_top_window.sh`
+    - `tools/run_stepb_1d_tp12_no_stop_low_gap_top_rolling.sh`
+    - `tools/server_run_stepb_1d_tp12_no_stop_low_gap_top_window.sh`
+    - `tools/server_run_stepb_1d_tp12_no_stop_low_gap_top_rolling.sh`
+  - server `npm run verify`:
+    - passed on `2026-04-08`
+- superseded run:
+  - old run family:
+    - `tp12_no_stop_lb5_full_retrain_final_confirm_v1_20260407`
+  - old mining command was confirmed to run with:
+    - `--max-rules=4000`
+  - old run was explicitly terminated before completion on `2026-04-08`
+- active rerun:
+  - rolling parent run:
+    - `tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408`
+  - source run:
+    - `tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408_final_confirm_source`
+  - scope run:
+    - `tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408_final_confirm_scope`
+  - effective override:
+    - `--max-rules=300000`
+  - launch log:
+    - `/tmp/tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408.log`
+  - current command path:
+    - `bash tools/run_stepb_1d_tp12_no_stop_low_gap_top_rolling.sh --contract-path=/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_no_stop_lb5_full_retrain_final_confirm_v1_20260407/step-perfect-prototype-tp12-no-stop-lookback-ladder/candidate_contracts/lb5.json --run-id=tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408 --window-group=final --max-rules=300000`
+- next action:
+  - track `..._final_confirm_source/step-perfect-prototype-open-control-input-pack/control_input_summary.json`
+  - then track `..._final_confirm_scope/step-perfect-prototype-train/progress.json`
+  - final verdict must be taken only from the rerun above, not from the terminated `4000`-cap attempt
+
+## 2026-04-08 TP12 no-stop lb5 canonical final confirm: completed result
+- status:
+  - the `maxRules=300000` canonical final-confirm rerun is now complete end-to-end
+  - parent run:
+    - `tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408`
+  - source run:
+    - `tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408_final_confirm_source`
+  - scope run:
+    - `tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408_final_confirm_scope`
+- final train discovery:
+  - train window:
+    - `2016-08-12 ~ 2024-12-27`
+  - OOS window:
+    - `2025-01-02 ~ 2026-03-27`
+  - search budget:
+    - `20,000,000`
+  - explored states:
+    - `20,000,000`
+  - curated frozen rules:
+    - `29,182`
+  - frozen catalog:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408_final_confirm_scope/a1610fb160153e78/catalog.json`
+- final confirm metrics:
+  - primary label:
+    - `tp12_no_stop_hit_3d`
+  - train selected rows:
+    - `183`
+  - train hit rows:
+    - `183`
+  - train hit rate:
+    - `100%`
+  - OOS selected rows:
+    - `105`
+  - OOS hit rows:
+    - `30`
+  - OOS hit rate:
+    - `28.57%`
+  - secondary `tp12_no_stop_hit_4d`:
+    - `32 / 105 = 30.48%`
+  - unique matched OOS dates:
+    - `87`
+  - unique matched OOS symbols:
+    - `98`
+  - OOS top1 date share:
+    - `3.81%`
+- comparison note:
+  - the untouched final-confirm primary hit rate `28.57%` is lower than the earlier sparse-screen aggregate `31.08%` for `lb5`
+  - this closes the canonical `lb5` full-retrain confirm but does not by itself justify promotion over the existing frozen supplier stack
+- next action:
+  - if the branch still wants live realism, add a day-by-day live-like OOS replay audit using the same frozen catalog and verify that it matches the batch OOS selected row set
+  - if the branch wants lookback promotion, compare this completed `lb5` final-confirm result against any future candidate confirms on the same untouched window before promoting
+
+## 2026-04-11 TP12 no-stop lb5 strict year2x7 audit/replay: invalid
+- status:
+  - strict `year2x7` audit/replay completed against the canonical `lb5` bank
+  - run:
+    - `tp12_no_stop_lb5_year2x7_audit_replay_v1_20260411_r2`
+  - contract:
+    - `meta/tp12_no_stop_lb5_year2x7_research_contract.json`
+  - base bank:
+    - `tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408_final_confirm_scope`
+- strict gate:
+  - core years:
+    - `2017 ~ 2023`
+  - requirement:
+    - minimum `2` train hits in every core year
+  - boundary years excluded from the gate only:
+    - `2016`
+    - `2024`
+- result:
+  - base rule count:
+    - `29,182`
+  - survivor rule count:
+    - `0`
+  - survivor share:
+    - `0%`
+  - replay status:
+    - `no_rules`
+  - replay OOS selected rows:
+    - `0`
+  - replay OOS hit rows:
+    - `0`
+- stronger failure note:
+  - no rule covered all seven core years with even `>=1` hit
+  - `anyAllCoreYearsAtLeast1 = 0`
+  - maximum number of core years satisfying the stricter `>=2` threshold was only:
+    - `3 / 7`
+  - distribution of `coreYearsSatisfiedCount` at the `>=2` threshold:
+    - `0 years = 14,006 rules`
+    - `1 year = 13,317 rules`
+    - `2 years = 1,803 rules`
+    - `3 years = 56 rules`
+- interpretation:
+  - the canonical `lb5` bank is too sparse across calendar years for this strict year-stability gate
+  - do not open the same strict `year2x7` search-v2 unchanged
+  - if the branch wants year-stability next, it must first relax the year gate or widen the upstream supplier/scope before reopening search
+
+## 2026-04-11 TP12 no-stop lb5 relaxed year-coverage replay matrix: still below baseline
+- status:
+  - relaxed subset replays completed on the same canonical `lb5` bank without reopening mining
+  - output root:
+    - `artifacts/runs/tp12_no_stop_lb5_year_coverage_relaxed_replay_v1_20260411`
+  - matrix summary:
+    - `artifacts/runs/tp12_no_stop_lb5_year_coverage_relaxed_replay_v1_20260411/matrix_summary.json`
+- baseline for comparison:
+  - canonical `lb5` untouched OOS:
+    - `30 / 105 = 28.57%`
+- tested relaxed filters:
+  - `ge1_in_6of7`
+    - survivor rules:
+      - `27`
+    - OOS:
+      - `1 / 11 = 9.09%`
+  - `ge1_in_5of7`
+    - survivor rules:
+      - `604`
+    - OOS:
+      - `22 / 84 = 26.19%`
+  - `ge2_in_3of7_no_gap2`
+    - survivor rules:
+      - `32`
+    - OOS:
+      - `8 / 30 = 26.67%`
+- verdict:
+  - none of the relaxed year-coverage subset replays beat the canonical `lb5` baseline
+  - do not open the same relaxed year-coverage search-v2 filters unchanged
+- next action:
+  - if the branch still wants time-stability, it must change the upstream hypothesis rather than keep tightening or lightly relaxing the same `lb5 + LOW_GAP_TOP` year gate family
+  - the two clean next branches are:
+    - day-by-day live-like OOS replay audit for the canonical `lb5` frozen catalog
+    - scope-family expansion (`LOW_GAP_TOP` winner held fixed, then widen source family) rather than more year-gating on the same bank
+
+## 2026-04-11 TP12 no-stop lb5 live-like OOS replay audit: equivalent to batch apply
+- status:
+  - canonical `lb5` live-like OOS replay audit completed
+  - run:
+    - `tp12_no_stop_lb5_live_like_oos_replay_v1_20260411`
+  - contract:
+    - `meta/tp12_no_stop_lb5_live_like_oos_replay_contract.json`
+  - base scope run:
+    - `tp12_no_stop_lb5_full_retrain_final_confirm_maxrules300k_v1_20260408_final_confirm_scope`
+- replay setup:
+  - untouched OOS window:
+    - `2025-01-02 ~ 2026-03-27`
+  - requested OOS dates with at least one supplier candidate row:
+    - `244`
+  - replay mode:
+    - apply the same frozen `lb5` catalog to the same OOS pack one requested date at a time
+  - wall clock:
+    - `851 sec`
+- equivalence verdict:
+  - status:
+    - `equivalent`
+  - raw match set equality:
+    - `true`
+  - deduped selection set equality:
+    - `true`
+  - raw count-by-date equality:
+    - `true`
+  - deduped count-by-date equality:
+    - `true`
+- matched OOS metrics:
+  - batch OOS:
+    - `30 / 105 = 28.57%`
+  - live-like replay OOS:
+    - `30 / 105 = 28.57%`
+  - unique matched dates:
+    - `87`
+  - unique matched symbols:
+    - `98`
+  - top1 date share:
+    - `3.81%`
+- interpretation:
+  - the canonical batch OOS apply for `lb5` is already live-like faithful under the current frozen catalog and `union_all` selection mode
+  - there is no hidden row-set drift between batch apply and day-by-day replay on the untouched holdout
+  - treat the canonical final-confirm result `30 / 105 = 28.57%` as the authoritative live-like OOS verdict for this branch
+- next action:
+  - do not reopen replay-semantics doubts on the same canonical `lb5` run unchanged
+  - if the branch wants improvement, compare future candidate confirms against this completed canonical `lb5` result on the same untouched window
+  - if the branch wants a new hypothesis, move to scope-family expansion rather than more year-gating or replay-format retesting on the same bank
+
+## 2026-04-11 TP12 no-gap addon 200k matrix on lb5: closed negative
+- status:
+  - all ten `200k` screen candidates completed on the same `lb5` rolling contract
+  - patch key:
+    - `tp12_no_gap_addon_screen_v1`
+  - canonical comparison baseline:
+    - `LOW_GAP_TOP + lb5 = 115 / 370 = 31.08%`
+- ranked primary `tp12_no_stop_hit_3d` screen results:
+  - `NG_CLOSE_BASE`
+    - `187 / 793 = 23.58%`
+  - `NG_CLOSE_COMPRESSION_V1`
+    - `169 / 737 = 22.93%`
+  - `NG_CLOSE_REVTURN_V1`
+    - `181 / 792 = 22.85%`
+  - `NG_CLOSE_LIQVOL_V1`
+    - `155 / 700 = 22.14%`
+  - `NG_CLOSE_SEQRECENT_V1`
+    - `150 / 682 = 21.99%`
+  - `NG_CLOSE_RETENTION_V1`
+    - `158 / 720 = 21.94%`
+  - `NG_JUMP_BASE`
+    - `201 / 919 = 21.87%`
+  - `NG_JUMP_REVTURN_V1`
+    - `205 / 938 = 21.86%`
+  - `NG_JUMP_LIQVOL_V1`
+    - `183 / 866 = 21.13%`
+  - `NG_JUMP_RETENTION_V1`
+    - `210 / 1017 = 20.65%`
+- common result shape:
+  - every candidate stayed usable for all `6/6` rolling windows
+  - none beat the gapless base `NG_CLOSE_BASE`
+  - none approached the canonical `LOW_GAP_TOP + lb5` screen baseline `31.08%`
+  - the best secondary `tp12_no_stop_hit_4d` result was still only:
+    - `NG_CLOSE_BASE = 230 / 793 = 29.00%`
+- interpretation:
+  - removing the gap-top family and trying to recover quality with single-axis addons did not work on this branch
+  - the negative result is broad:
+    - `close-only` base lost too much signal
+    - `compression`, `revturn`, `liqvol`, `seqrecent`, `retention` could not recover the lost edge
+    - `jump` family variants also stayed well below the canonical baseline
+- next action:
+  - do not reopen the same `tp12_no_gap_addon_screen_v1` matrix unchanged
+  - keep treating canonical `LOW_GAP_TOP + lb5` as the supplier screen benchmark to beat
+  - if the branch wants a new hypothesis, keep the gap-top family and add signal axes there rather than deleting gap first
+
+## 2026-04-11 Year2x8 bank-discovery patch implemented; LOW_GAP_TOP x lb5 dry run closed negative
+- status:
+  - `Bundle 11.0~11.3` code patch is implemented
+  - local `bash scripts/verify.sh` passed
+  - server `npm run verify` passed after fixing the matrix wrapper contract-path root cause
+  - dry-run patch key:
+    - `tp12_year2x8_bank_discovery_low_gap_top_lb5_dryrun_v1`
+  - dry-run run id:
+    - `tp12_year2x8_bank_discovery_200k_v1_20260411_dryrun_r2`
+- implementation result:
+  - year2x8 core-year prune is now opt-in and wired through the rolling/scope miners
+  - core years:
+    - `2017~2024`
+  - excluded boundary years:
+    - `2016`
+  - minimum train hits per core year:
+    - `2`
+  - new wrappers/builders/smokes for:
+    - year2x8 bank discovery matrix
+    - top-cell final confirm
+    - live-like replay summary
+- root-cause fix closed in this turn:
+  - the first dry run failed because derived candidate contracts were written to a shared global path instead of the run-local artifact root
+  - fixed by moving candidate contracts under each run's own artifact directory
+  - no fallback path was added
+- dry-run verdict on canonical narrow cell:
+  - tested only:
+    - `LOW_GAP_TOP x lb5`
+  - matrix summary:
+    - `cellCount = 1`
+    - `ruleCount = 0`
+    - `year2x8CandidateRuleCount = 0`
+    - `usableWindowCount = 0`
+    - `oosSelectedRows = 0`
+    - `oosHitRows = 0`
+    - `oosHitRate = 0`
+    - `passScreen = false`
+  - rolling summary:
+    - `usableScreenWindows = 0`
+    - `primary hit rate = 0 / 0`
+    - `earlyStopTriggered = true`
+- per-window train-mine outcome:
+  - every screen window died at seed stage before any rule search opened
+  - all six windows had:
+    - `seedTokensSelected = 0`
+    - `rulesCollected = 0`
+  - seed year-prune counts:
+    - `w1 = 613`
+    - `w2 = 618`
+    - `w3 = 633`
+    - `w4 = 645`
+    - `w5 = 646`
+    - `w6 = 644`
+- representative rejected-rule samples prove the prune is carrying year metadata correctly:
+  - reason:
+    - `SEED_YEAR_HIT_UPPER_BOUND_BELOW_CORE_MIN`
+  - fields present:
+    - `coreYearSatisfiedCount`
+    - `minCoreYearHitCount`
+    - `violatingYears`
+    - `coreYearHitCounts`
+- interpretation:
+  - strict year2x8 is too hard for the already-narrow canonical `LOW_GAP_TOP + lb5` bank
+  - this is now a valid negative result on the narrow baseline cell, not a contract bug
+  - do not rerun the same `LOW_GAP_TOP x lb5` year2x8 dry run unchanged
+- next action:
+  - keep the patch and telemetry
+  - do not abandon the year2x8 branch yet
+  - move to the broader `TOP/MID/LOW/LOW_GAP_TOP x lb1/lb3/lb5/lb8` discovery matrix and use the new prune there
+  - if broader cells also die with `year2x8CandidateRuleCount = 0`, close the daily exact-rule year2x8 branch and move to the next architecture
+
+## 2026-04-11 Year2x8 16-cell bank-discovery matrix: closed negative
+- status:
+  - the broader `TOP/MID/LOW/LOW_GAP_TOP x lb1/lb3/lb5/lb8` year2x8 matrix is now finished
+  - final verdict combines:
+    - initial full run:
+      - `tp12_year2x8_bank_discovery_200k_v1_20260411_full`
+    - resumed low-gap-top lb8 run after server disk pressure:
+      - `tp12_year2x8_bank_discovery_200k_v1_20260411_resume_low_gap_top_lb8`
+    - resumed mid/top run:
+      - `tp12_year2x8_bank_discovery_200k_v1_20260411_resume_mid_top`
+- final matrix verdict:
+  - all `16/16` cells ended with:
+    - `usableWindowCount = 0`
+    - `ruleCount = 0`
+    - `year2x8CandidateRuleCount = 0`
+    - `oosSelectedRows = 0`
+    - `oosHitRows = 0`
+    - `oosHitRate = 0`
+    - `passScreen = false`
+  - dead low cells:
+    - `LOW x lb1`
+    - `LOW x lb3`
+    - `LOW x lb5`
+    - `LOW x lb8`
+  - dead low-gap-top cells:
+    - `LOW_GAP_TOP x lb1`
+    - `LOW_GAP_TOP x lb3`
+    - `LOW_GAP_TOP x lb5`
+    - `LOW_GAP_TOP x lb8`
+  - dead mid cells:
+    - `MID x lb1`
+    - `MID x lb3`
+    - `MID x lb5`
+    - `MID x lb8`
+  - dead top cells:
+    - `TOP x lb1`
+    - `TOP x lb3`
+    - `TOP x lb5`
+    - `TOP x lb8`
+- interpretation:
+  - the `2017~2024 >= 2 train hits per core year` exact-rule constraint is too strict for the current daily-only supplier universe, even after broadening scope and sparse lookback
+  - this is now a valid negative result on the full discovery matrix, not a miner or wrapper bug
+  - because no screen cell survived, there is no promotable top cell and no justified `20M` final-confirm candidate
+- next action:
+  - close the exact daily-only year2x8 branch as `invalid_or_inconclusive`
+  - do not rerun the same 16-cell year2x8 matrix unchanged
+  - keep the year2x8 prune telemetry for future broader architectures
+  - move to the next architecture rather than forcing another exact-rule rerun on the same daily-only family
+
+## 2026-04-12 Technique grammar/event recurrence scaffolding: T0~T2.5 implemented
+- status:
+  - the next architecture is now wired as `shape/structure grammar -> candidate template generation -> event-only recurrence screen`
+  - this patch does **not** open a new heavy experiment yet
+  - this patch intentionally stops before `T3 bank discovery 200k`
+  - verification gate is now closed for the scaffolding patch:
+    - local `bash scripts/verify.sh` passed
+    - server `npm run verify` passed
+- code added:
+  - machine-readable technique contract + seed template catalog:
+    - `meta/technique_grammar_contract.json`
+    - `meta/technique_seed_templates.json`
+  - reusable grammar/event/recurrence libs:
+    - `src/lib/technique_common.mjs`
+    - `src/lib/technique_grammar_contract.mjs`
+    - `src/lib/technique_feature_derivation.mjs`
+    - `src/lib/technique_clause_library.mjs`
+    - `src/lib/technique_template_generator.mjs`
+    - `src/lib/technique_event_row_builder.mjs`
+    - `src/lib/technique_recurrence_scorer.mjs`
+  - local builders/smokes:
+    - `tools/build_technique_event_rows.mjs`
+    - `tools/build_technique_recurrence_report.mjs`
+    - `tools/smoke_technique_template_generator.mjs`
+    - `tools/smoke_technique_event_rows.mjs`
+    - `tools/smoke_technique_recurrence_scorer.mjs`
+- design decisions:
+  - do not restart `year2x7/year2x8` exact-rule discovery as the primary search path
+  - do not require `train precision=1.0` before bank-level recurrence exists
+  - discovery gate is softer than promotion:
+    - discovery:
+      - `5/8 years with >=2 hits`
+      - or `7/8 years with >=1 hit`
+    - promotion:
+      - `7/8 years with >=2 hits`
+  - event-only recurrence is now the mandatory prefilter before any future exact miner call
+- next action:
+  - run seed-template dry runs through `build_technique_event_rows.mjs` and `build_technique_recurrence_report.mjs`
+  - only if seed dry runs produce non-empty event rows and recurrence summaries:
+    - open `T3 bank discovery 200k`
+
+## 2026-04-12 Technique seed dry-run: recurrence denominator fix + positive r3
+- status:
+  - the first seed dry-run `r2` proved the scaffolding was alive (`56,189` event rows, `153` matched templates), but the recurrence report still had a root-cause bug:
+    - source-row opportunity days were not inheriting `--default-scope-id` / `--default-lookback-candidate-id`
+    - template-level `signalsPer20TradingDays` could collapse to `0`, while bank-level summaries fell back to event-day counts
+  - the bug is now fixed in:
+    - `src/lib/technique_recurrence_scorer.mjs`
+    - `tools/build_technique_recurrence_report.mjs`
+    - `tools/smoke_technique_recurrence_scorer.mjs`
+  - local `bash scripts/verify.sh` passed after the fix
+  - synced server `npm run verify` passed after the fix
+- authoritative rerun:
+  - run id:
+    - `tp12_technique_seed_dryrun_v1_20260412_r3`
+  - seed ids:
+    - `ma_retest_seed`
+    - `breakout_base_seed`
+    - `liquidity_sponsor_seed`
+  - fixed defaults:
+    - `scope = LOW_GAP_TOP`
+    - `lookback = lb5`
+  - outputs:
+    - `event_summary.json`
+    - `recurrence_report.json`
+- r3 results:
+  - event rows:
+    - `56,189`
+  - matched templates:
+    - `153`
+  - recurrence discovery-pass templates:
+    - `35`
+  - recurrence promotion-pass templates:
+    - `35`
+  - discovery-pass bank ids:
+    - `3`
+  - promotion-pass bank ids:
+    - `3`
+- top template shape:
+  - strongest recurrent templates came from `MA_RETEST`
+  - in this seed set, all `35` promotion-pass templates came from `MA_RETEST`
+  - `BREAKOUT_BASE` and `LIQUIDITY_SPONSOR` still generated events and broad bank summaries, but did not contribute promotion-pass template survivors in the authoritative `r3`
+  - top examples:
+    - `anchor-ma120-break + confirm-close-near-high + confirm-sponsor-quality + invalidate-failed-breakout-count20`
+    - `anchor-ma120-break + compression-compaction20 + confirm-sponsor-quality + invalidate-failed-breakout-count20`
+  - representative template stats:
+    - hit-rate roughly `33% ~ 35%`
+    - `signalsPer20TradingDays` roughly `5 ~ 12`
+    - `coveredYears = 8`
+    - `yearsWithHitGe2 = 8`
+- interpretation:
+  - T0~T2.5 is now genuinely alive, not just syntactically wired
+  - the recurrence screen can surface non-empty, recurring template candidates from train data
+  - raw bank summaries are still broad mechanism aggregates, so their signal volume is too large to treat as a tradable output directly
+  - this is expected at this stage; exact mining still belongs in `T5 in-bank exact refinement`
+- next action:
+  - register `tp12_technique_seed_dryrun_v1` as completed with the positive `r3` result
+  - open `T3 bank discovery` only after converting the `35` template survivors into a concrete shortlist / bank selection artifact
+  - keep `year2x7/year2x8 exact-rule` branches closed
+
+## 2026-04-12 Technique bank shortlist: shortlist artifact narrowed the broad recurrence output
+- status:
+  - `T2.7` shortlist stage is now implemented and verified
+  - shortlist-specific files:
+    - `src/lib/technique_bank_builder.mjs`
+    - `tools/build_technique_bank_shortlist.mjs`
+    - `tools/smoke_technique_bank_builder.mjs`
+  - root-cause fix included:
+    - shortlist clause groups must read `template.clauseSet.*` for generated templates rather than relying only on legacy top-level clause id fields
+  - local `bash scripts/verify.sh` passed after the shortlist patch
+  - synced server `npm run verify` passed after the shortlist patch
+- authoritative shortlist build:
+  - source run:
+    - `tp12_technique_seed_dryrun_v1_20260412_r3`
+  - source artifacts:
+    - `artifacts/runs/tp12_technique_seed_dryrun_v1_20260412_r3/events.jsonl`
+    - `artifacts/runs/tp12_technique_seed_dryrun_v1_20260412_r3/recurrence_report.json`
+  - shortlist artifact:
+    - `artifacts/runs/tp12_technique_seed_dryrun_v1_20260412_r3/bank_shortlist.json`
+- shortlist results:
+  - `eligibleTemplateCount = 18`
+  - `dedupedTemplateCount = 12`
+  - `shortlistedTemplateCount = 6`
+  - `shortlistedBankCount = 1`
+  - shortlist mechanism composition:
+    - `MA_RETEST = 6`
+  - shortlisted bank:
+    - `MA_RETEST__LOW_GAP_TOP__lb5`
+- representative shortlisted template:
+  - id:
+    - `ma_retest_seed__anchor-ma120-break--confirm-close-near-high--confirm-sponsor-quality--invalidate-failed-breakout-count20`
+  - `observedHitRate = 34.69%`
+  - `signalsPer20TradingDays = 6.10`
+  - `yearsWithHitGe2 = 8`
+  - clause groups now materialize correctly:
+    - `anchorClauseIds = [anchor_ma120_break]`
+    - `confirmClauseIds = [confirm_close_near_high, confirm_sponsor_quality]`
+    - `invalidateClauseIds = [invalidate_failed_breakout_count20]`
+- interpretation:
+  - the positive `r3` recurrence screen was still too broad to treat as a tradable bank directly
+  - the shortlist stage materially narrowed that output from `35` promotion-pass templates to `6` shortlisted templates and from `3` broad bank ids to `1` concrete observed bank
+  - even though the seed templates allowed broader `scopeCandidates` / `lookbackCandidateIds`, the observed shortlist collapses to:
+    - `scope = LOW_GAP_TOP`
+    - `lookback = lb5`
+  - therefore the next stage must be shortlist-driven:
+    - use `observedScopeIds` / `observedLookbackCandidateIds`
+    - do not reopen the raw seed candidate ranges as if they were already qualified
+- next action:
+  - register `tp12_technique_bank_shortlist_v1` as completed
+  - treat `MA_RETEST__LOW_GAP_TOP__lb5` as the authoritative `T3` entry bank
+  - keep `year2x7/year2x8 exact-rule` and `no-gap` branches closed
+
+## 2026-04-12 Technique T3 plan freeze: shortlist-driven bank entry is now authoritative
+- status:
+  - shortlist-driven `T3` plan helpers are implemented and verified
+  - root-cause fix applied in `tools/build_technique_bank_discovery_plan.mjs`:
+    - `loadTechniqueGrammarContract(...)` must be awaited before reading `bankDiscovery`
+  - local `bash scripts/verify.sh` passed after wiring the T3 contract/summary/runner checks
+  - synced server `npm run verify` also passed
+- authoritative server artifact:
+  - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_seed_dryrun_v1_20260412_r3/bank_discovery_plan.json`
+- plan result:
+  - `selectedBankCount = 1`
+  - `bankId = MA_RETEST__LOW_GAP_TOP__lb5`
+  - `scopeId = LOW_GAP_TOP`
+  - `lookbackCandidateId = lb5`
+  - `shortlistedTemplateCount = 6`
+  - `topTemplateId = ma_retest_seed__anchor-ma120-break--confirm-close-near-high--confirm-sponsor-quality--invalidate-failed-breakout-count20`
+  - `topTemplateObservedHitRate = 34.69%`
+  - `topTemplateSignalsPer20TradingDays = 6.10`
+  - `topTemplateYearsWithHitGe2 = 8`
+- frozen clause groups for the bank entry:
+  - `anchorClauseIds = [anchor_ma120_break]`
+  - `compressionClauseIds = [compression_compaction20]`
+  - `confirmClauseIds = [confirm_close_near_high, confirm_positive_close_retention_prevclose, confirm_sponsor_quality]`
+  - `invalidateClauseIds = [invalidate_failed_breakout_count20]`
+- interpretation:
+  - T3 should no longer consume raw recurrence aggregates directly
+  - the authoritative next entry is the concrete shortlist-driven bank `MA_RETEST__LOW_GAP_TOP__lb5`
+  - the first T3 launch should be a shortlist-driven `1-cell` rolling screen using the plan artifact
+- next action:
+  - register `tp12_technique_bank_discovery_plan_v1` as completed
+  - run target-first bootstrap and duplicate check
+  - open the first shortlist-driven T3 rolling screen for `MA_RETEST__LOW_GAP_TOP__lb5`
+
+## 2026-04-12 Technique T3 rerun after ENOSPC recovery
+- status:
+  - the first shortlist-driven T3 run (`tp12_technique_bank_discovery_rolling_v1_20260412_r1`) hit server-side `ENOSPC`
+  - root cause was disk exhaustion, not logic failure
+  - server root filesystem was `100%` full (`0G avail`)
+- disk recovery:
+  - deleted closed negative branches only:
+    - `tp12_year2x8_bank_discovery_200k_v1_20260411*`
+    - `tp12_no_gap_addon_screen_v1_20260411*`
+    - `tp12_no_stop_lb5_year2x7_audit_replay_v1_20260411*`
+    - `tp12_no_stop_lb5_year_coverage_relaxed_replay_v1_20260411*`
+  - removed directory count: `310`
+  - disk state improved to `61G avail / 79% used`
+- rerun:
+  - relaunched clean rerun as `tp12_technique_bank_discovery_rolling_v1_20260412_r2`
+  - authoritative bank remains `MA_RETEST__LOW_GAP_TOP__lb5`
+  - `w1 source` rebuilt successfully and `w1 scope` mining is active
+  - latest observed `w1 scope` progress during rerun:
+    - `exploredStates = 20480 / 200000`
+    - `rulesCollected = 174`
+    - `exploredStatesPerSec ~= 374.46`
+    - `etaSeconds ~= 479.4`
+- interpretation:
+  - no new experiment family was opened
+  - this is a clean rerun of the same shortlist-driven T3 bank discovery after root-cause disk cleanup
+- next action:
+  - continue tracking `r2` through `w1~w6`
+  - only if the rolling bank survives, open T4 year-consensus / T5 exact refinement
+
+## 2026-04-12 Technique T3 rolling result: first shortlist-driven bank passed
+- status:
+  - the clean rerun `tp12_technique_bank_discovery_rolling_v1_20260412_r2` completed
+  - shortlist-driven bank discovery summary closed with `selectedBankCount = 1`, `passBankCount = 1`
+  - authoritative passed bank remains `MA_RETEST__LOW_GAP_TOP__lb5`
+- bank-level rolling result:
+  - `oosSelectedRows = 370`
+  - `oosHitRows = 115`
+  - `oosHitRate = 31.08%`
+  - `usableWindowCount = 6`
+  - `signalsPer20TradingDays = 5.02`
+  - `yearsWithAtLeast2Hits = 6`
+  - `oosHitCountByYear = {2019:24, 2020:38, 2021:16, 2022:19, 2023:7, 2024:11}`
+  - `top1DateShare = 9.52%`
+  - `uniqueMatchedDates = 311`
+- interpretation:
+  - the technique-discovery path is now reproducing a real rolling survivor instead of only producing recurrence scaffolding
+  - this first passed bank is not a novel replacement yet; it effectively rediscovers the current strong supplier family in technique/bank form
+  - because the bank passed screen, the next correct step is `T4 year-consensus builder`, then `T5 in-bank exact refinement`
+- next action:
+  - register `tp12_technique_bank_discovery_rolling_v1` as completed
+  - open `T4` on `MA_RETEST__LOW_GAP_TOP__lb5`
+
+## 2026-04-14 Next patch focus: T4 template isolate must become real row-level filtering
+- rationale:
+  - the passed bank `MA_RETEST__LOW_GAP_TOP__lb5` confirms the bank-first path is alive
+  - but the next requirement is stricter: verify whether a single template, not the whole bank aggregate, can sustain repeated yearly hits
+  - therefore T4 must isolate shortlisted templates as concrete rolling candidates
+- required patch shape:
+  - extend `meta/technique_grammar_contract.json` with a deterministic `templateScreen` gate config
+  - add `technique_template_screen` plan/contract/summary builders
+  - add a template-filtered pack builder that applies clause-level template predicates to the train/oos scope packs before mining/reporting
+  - patch `run_stepb_1d_tp12_no_stop_scope_window.sh` so template contracts activate deterministic template filtering instead of silently reusing broad scope packs
+  - open template-only rolling from the passed bank `MA_RETEST__LOW_GAP_TOP__lb5`
+- hard stop:
+  - do not treat bank aggregate counts as if they were already single-template results
+  - do not open T5 exact refinement before at least one template survives T4 rolling as a standalone candidate
+
+
+## 2026-04-14 T4 template-only rolling infrastructure closed green
+- what changed:
+  - patched `tools/run_stepb_1d_tp12_no_stop_scope_window.sh` so `techniqueTemplateScreen` activates deterministic row-level template filtering instead of silently reusing the broad scope packs
+  - promoted `tools/build_technique_template_filtered_pack.mjs`, `tools/run_technique_template_rolling.sh`, and `tools/server_run_technique_template_rolling.sh` into the verify gate via `scripts/verify.sh`
+  - kept the T4 semantics fail-fast: template scope/lookback mismatches or zero template rows now stop the window with an explicit unsatisfied reason rather than falling back to bank-wide packs
+- verification:
+  - local `bash scripts/verify.sh`: passed
+  - synced server `npm run verify`: passed
+- authoritative source bank for T4 entry:
+  - bank id: `MA_RETEST__LOW_GAP_TOP__lb5`
+  - source T3 run: `tp12_technique_bank_discovery_rolling_v1_20260412_r2`
+  - T3 summary: `115 / 370 = 31.08%`, usable windows `6/6`, OOS years with >=2 hits `6/6`
+- next action:
+  - build the shortlist-driven T4 template screen plan from `artifacts/runs/tp12_technique_seed_dryrun_v1_20260412_r3/bank_shortlist.json`
+  - open the first template-only rolling screen on the top template attached to `MA_RETEST__LOW_GAP_TOP__lb5`
+- hard stop:
+  - do not interpret the passed bank aggregate as a single-template result
+  - do not open T5 exact refinement before at least one standalone template survives T4 rolling
+
+## 2026-04-14 T4 template-only rolling rerun: lookback root cause fixed, coverage root cause fixed, r3 alive
+- first failure observed:
+  - first T4 run `tp12_technique_template_rolling_v1_20260414_r1` stopped fail-fast with `template screen lookback mismatch: template=lb5 contract=`
+- first root cause and fix:
+  - `buildTp12NoStopLookbackCandidateRollingContract()` was not carrying `lookbackLadderContext.selectedCandidate` into derived rolling contracts
+  - patched `src/lib/tp12_no_stop_lookback_ladder_contract.mjs` to emit deterministic `lookbackLadderContext.kind=tp12_no_stop_lookback_candidate_context_v1` with the selected candidate payload
+  - extended `tools/smoke_tp12_no_stop_lookback_ladder_contract.mjs` to assert the derived candidate context exists
+- second failure observed:
+  - clean rerun `tp12_technique_template_rolling_v1_20260414_r2` reached `w1` train/freeze but template-filtered OOS apply stopped because the filtered pack only wrote `filter_summary.json`
+  - downstream OOS apply requires filtered input packs to carry compat `summary.json` / `manifest.json` with requested coverage metadata
+- second root cause and fix:
+  - patched `tools/build_technique_template_filtered_pack.mjs` to fail-fast on missing source pack metadata, then emit compat `summary.json` and `manifest.json` beside `filter_summary.json`
+  - extended `tools/smoke_technique_template_filtered_pack.mjs` to assert compat summary/manifest fields are materialized
+  - reran local `bash scripts/verify.sh`: passed
+  - reran synced server `npm run verify`: passed
+- current authoritative rerun:
+  - rebuilt T4 plan artifact: `artifacts/runs/tp12_technique_template_screen_v1_20260414/template_screen_plan.json`
+  - authoritative child template: `ma_retest_seed__anchor-ma120-break--confirm-close-near-high--confirm-sponsor-quality--invalidate-failed-breakout-count20`
+  - relaunched clean rerun as `tp12_technique_template_rolling_v1_20260414_r3`
+  - current child run: `tp12_technique_template_rolling_v1_20260414_r3_ma_retest_seed_anchor_ma120_break_confirm_close_near_high_confirm_sponsor_quality_invalidate_fai`
+  - `w1` now completes end-to-end, including raw OOS apply summary generation
+  - authoritative `w1` raw OOS summary so far: `18 / 40 = 45.00%`, unique matched dates `38`, unique matched symbols `39`
+  - runner has already advanced into `w2 source`
+- next action:
+  - keep tracking `tp12_technique_template_rolling_v1_20260414_r3` through `w1~w6`
+  - if the single template survives rolling, proceed to T4 year-consensus extraction before any T5 exact refinement
+
+## 2026-04-15 Next branch freeze: positive-first year-constrained discovery
+- rationale:
+  - template/bank rolling remains useful for validation, but it is too slow and too narrow for discovery when the actual target is `2017~2024` train patterns that already satisfy yearly recurrence
+  - the next discovery branch must search broadly across structural atoms instead of hand-picking a belief such as `strong close`, `clean breakout`, or `no upper wick`
+  - upper-wick breakouts, weak closes, pullback retests, gap-fill variants, and sponsor/liquidity variants must all remain discoverable at the same time
+- frozen branch key:
+  - `tp12_positive_first_year_constrained_discovery_v1`
+- frozen discovery semantics:
+  - discovery is train-only and must not read OOS artifacts
+  - core recurrence years are `2017~2024`
+  - `2016` stays outside the recurrence core because it is only a partial reachable year under the canonical daily-only supplier contract
+  - zero-negative verification still uses the full canonical train span `2016-08-12 ~ 2024-12-27`
+- frozen algorithm shape:
+  1. convert every row into broad structural atoms without hand-picked directional bias
+  2. build positive-only yearly indexes from successful train rows
+  3. expand candidate patterns only while every core year retains `>=2` hits
+  4. discard the entire subtree immediately when any year drops below `2`
+  5. only after yearly recurrence survives, verify zero negatives on the full train range
+- hard stops:
+  - do not relax `year>=2` silently if survivors are zero; close the branch negative and record it
+  - do not relax zero-negative silently if survivors are zero; close the branch negative and record it
+  - do not treat discovery-stage rolling validation as a replacement for the new positive-first discovery engine
+- immediate implementation scope:
+  - add `technique_pattern_discovery_contract`
+  - add structural atom builder / atomic transactions / positive-year index
+  - add smoke checks and wire them into local + synced server verify before opening any heavy discovery run
+
+## 2026-04-15 Positive-first discovery patch state
+- patch key:
+  - `tp12_positive_first_year_constrained_discovery_v1`
+- implementation state:
+  - D0~D6 scaffolding is now implemented locally and synced to the server repo
+  - local `bash scripts/verify.sh` completed with exit code `0`
+  - synced server `npm run verify` completed with exit code `0`
+  - first full-train discovery run `tp12_positive_first_discovery_v1_20260415_r1` is now open on the server using the canonical full-period TP12 side-daily train pack
+- new runtime pieces now present:
+  - `meta/technique_pattern_discovery_contract.json`
+  - `src/lib/technique_pattern_discovery_contract.mjs`
+  - `src/lib/technique_structural_atom_builder.mjs`
+  - `src/lib/technique_atomic_transaction_builder.mjs`
+  - `src/lib/technique_positive_year_index.mjs`
+  - `src/lib/technique_closed_pattern_miner.mjs`
+  - `src/lib/technique_zero_negative_verifier.mjs`
+  - `src/lib/technique_survivor_ranker.mjs`
+  - `tools/build_technique_atomic_transactions.mjs`
+  - `tools/build_technique_positive_year_index.mjs`
+  - `tools/build_technique_closed_patterns.mjs`
+  - `tools/build_technique_zero_negative_report.mjs`
+  - `tools/build_technique_pattern_discovery_summary.mjs`
+  - `tools/run_technique_positive_first_discovery.sh`
+- discovery semantics now enforced in code:
+  - rows are converted into broad structural atoms without hard-coded directional bias
+  - positive-only yearly indexes are built for `2017~2024`
+  - the closed miner prunes every subtree as soon as any core year drops below `2` positives
+  - only those survivors are passed into full-train zero-negative verification
+  - ranking happens only after zero-negative verification
+- canonical first-run source and current server facts:
+  - rows path:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_side_daily_full_period_low_gap_top_allowlist_effective_floor_20160812_v1_r2/step-perfect-prototype-open-train-pack/daily_pack.jsonl`
+  - default context:
+    - `scope=LOW_GAP_TOP`
+    - `lookbackCandidateId=lb1`
+  - D2/D3 summaries from the current run:
+    - transactions `34767`
+    - positives `10085`
+    - negatives `24682`
+    - unique atoms `84`
+    - indexed positives `9888`
+- first heavy-run failure and root-cause fix:
+  - the first D4 attempt OOMed on the server inside `tools/build_technique_closed_patterns.mjs`
+  - root cause was `src/lib/technique_closed_pattern_miner.mjs` holding every raw pattern plus large textual tidset signatures in memory
+  - fix applied in-place:
+    - incremental closed-signature aggregation replaces raw-pattern retention
+    - hashed support signatures replace large textual tidset signature strings
+  - after the fix, local `bash scripts/verify.sh` and synced server `npm run verify` both passed again
+  - reopened rerun finished successfully; miner RSS stayed below the original OOM regime and the original failure mode is closed
+- authoritative first full-train result:
+  - run id:
+    - `tp12_positive_first_discovery_v1_20260415_r1`
+  - D4 recurrent closed-mining summary:
+    - eligible atoms `83`
+    - explored nodes `18,154,153`
+    - pruned-by-year `981,613`
+    - raw recurrent patterns `18,154,153`
+    - closed recurrent patterns `257,199`
+    - max depth `6`
+  - D5 zero-negative summary:
+    - evaluated closed patterns `257,199`
+    - verified zero-negative patterns `0`
+  - D6 discovery summary:
+    - `verifiedPatternCount = 0`
+    - `topPatternCount = 0`
+  - interpretation:
+    - `year>=2` recurrent positive structure exists at scale on the canonical TP12 side-daily train pack
+    - but none of those recurrent structures survive full-train zero-negative verification unchanged
+    - this branch is therefore closed negative and should not be rerun unchanged
+- next action:
+  - treat `tp12_positive_first_year_constrained_discovery_v1` as closed negative for the canonical full-period LOW_GAP_TOP/lb1 train source
+  - the next branch, if opened, should change the verification contract itself rather than rerunning the same zero-negative discovery unchanged
+  - do not revert to discovery-stage rolling/template-first search for this branch
+  - do not silently relax this branch in place; open a new patch key if the next step weakens zero-negative or restructures the atom space
+
+## 2026-04-15 Next branch freeze: partitioned signature preverify v2
+- rationale:
+  - the first positive-first branch proved that recurrent `year>=2` positive structure exists at scale, but `positive closed pattern -> final zero-negative verification` collapses too much generator detail before negatives are examined
+  - the next branch must keep the hard yearly recurrence gate, but change the discovery contract itself: partition discovery by `scope/lookback`, preserve generator identity under the same positive signature, and add negative preverify before the final exact verifier
+  - the atom space must also become more symmetric so weak closes, upper-wick breakouts, lower-wick reversals, and gap-fail shapes remain as discoverable as strong-close breakout shapes
+- frozen branch key:
+  - `tp12_positive_first_partitioned_signature_preverify_v2`
+- frozen discovery semantics:
+  - discovery remains train-only and must not read OOS artifacts
+  - core recurrence years remain `2017~2024`
+  - zero-negative verification still uses the full canonical train span `2016-08-12 ~ 2024-12-27`
+  - `scope/lookback` become partition keys for discovery and should not be embedded as primary pattern atoms in phase-1 mining
+- frozen algorithm shape:
+  1. expand the structural atom set with mirrored candle/gap/pullback/breakout-context atoms and family caps
+  2. build partitioned positive-year indexes and negative atom indexes from the same train-only transaction universe
+  3. mine candidates inside each `scope/lookback` partition while every core year retains `>=2` positives and every extension also satisfies pair-admissibility
+  4. preserve `generatorAtomIds` separately from `closureAtomIds` for each positive support signature
+  5. rank candidates with negative preverify instead of pruning by negative count during DFS
+  6. only after shortlist freeze run the full zero-negative verifier
+- hard stops:
+  - do not reopen `tp12_positive_first_year_constrained_discovery_v1` unchanged
+  - do not use negative-count pruning inside DFS; only use negatives for preverify ordering and final exact verification
+  - do not re-enable discovery-stage rolling/template-first search for this branch
+  - if v2 still produces zero zero-negative survivors, close the branch negative instead of silently weakening the contract
+- implementation status:
+  - v2 contract semantics are now live: `scope/lookback` partitioning, generator-preserving positive signatures, pair-admissibility, family caps, and one-atom-per-base-feature exclusivity
+  - the structural atom layer now includes symmetric candle, close-location, gap-retention/fail, anchor-recency, higher-low-count, breakout-distance, and sponsor-fragility atoms without forcing directional bias
+  - partitioned positive-year index, negative atom index, negative preverify, and partition-aware zero-negative verification are patched in and exposed through the server wrapper
+  - local `bash scripts/verify.sh` passed on `2026-04-15`
+  - synced server `bash tools/run_server_command.sh npm run verify` passed on `2026-04-15`
+- final canonical result:
+  - the first canonical server-only v2 discovery rerun `tp12_positive_first_partitioned_signature_preverify_v2_20260415_r2` is now fully closed end-to-end
+  - root cause of the previous verifier failure was local implementation, not data: `tools/build_technique_zero_negative_report.mjs` bulk-loaded both `preverified_patterns.jsonl` and `atomic_transactions.jsonl`, which caused a Node heap OOM
+  - zero-negative verification was rewritten to stream pattern rows over a compact transaction atom index and to short-circuit exactly when `preverify_summary.zeroNegativeCandidateCount=0`
+  - local `bash scripts/verify.sh` passed again on `2026-04-15`
+  - synced server `bash tools/run_server_command.sh npm run verify` passed again on `2026-04-15`
+  - canonical v2 discovery summary:
+    - atomic transactions `34,767`
+    - indexed positives `9,888`
+    - unique atoms `112`
+    - explored nodes `12,128,584`
+    - positive signatures `392,553`
+    - closed patterns `1,394,335`
+    - preverify zero-negative candidates `0`
+    - final verified zero-negative patterns `0`
+  - final verdict:
+    - `tp12_positive_first_partitioned_signature_preverify_v2` is closed negative
+    - generator-preserving partitioned discovery plus negative preverify fixed the v1 collapse mechanism, but still did not surface any full-train `year>=2 + zero-negative` survivor on the canonical TP12 side-daily LOW_GAP_TOP/lb1 source
+    - do not rerun this exact v2 branch unchanged
+
+## 2026-04-15 Next branch freeze: purity partition + closure-first search v3
+- rationale:
+  - v2 proved that `scope/lookback` partitioning plus generator-preserving positive signatures are still too coarse; the branch found abundant recurrent positive structure but no negative-free geometry
+  - the next branch must reduce impurity before mining by partitioning rows into smaller structural buckets, then search for zero-negative survivors inside those smaller buckets
+  - the atom layer should prioritize negative separation, not human-preferred breakout bias; strong-close and upper-wick breakout shapes must remain equally discoverable
+  - the closed miner should only discover positive signatures and closure context; the real zero-negative search must move into a closure-first preverify stage
+- frozen branch key:
+  - `tp12_positive_first_purity_partition_closure_search_v3`
+- frozen discovery semantics:
+  - discovery remains train-only and must not read OOS artifacts
+  - core recurrence years remain `2017~2024`
+  - zero-negative verification still uses the full canonical train span `2016-08-12 ~ 2024-12-27`
+  - `scope/lookback` are no longer enough on their own; partitioning must also include purity components such as `regime`, `shape`, `liquidity`, and `anchor_age`
+- frozen algorithm shape:
+  1. derive purity partitions before building transactions
+  2. rebuild positive-year and negative-atom indexes on the finer partition key
+  3. mine positive signatures inside each purity partition while every core year retains `>=2` positives
+  4. preserve a generator frontier per positive signature rather than keeping only the shortest generators
+  5. run closure-first preverify that tries closure atoms before any support-slack extension
+  6. only after zero-negative survivors exist freeze a shortlist for any later rolling/OOS validation
+- hard stops:
+  - do not reopen `tp12_positive_first_year_constrained_discovery_v1` unchanged
+  - do not reopen `tp12_positive_first_partitioned_signature_preverify_v2` unchanged
+  - do not use OOS metrics in discovery, ranking, or shortlist freeze
+  - if v3 still produces zero zero-negative survivors, close the branch negative instead of silently relaxing the contract in place
+- next executable step:
+  - patch the contract, partition key builder, structural atoms, closed miner frontier retention, and closure-first preverify locally first
+  - wire new smokes into local/server verify
+  - only after both verifies pass open the first canonical server-only v3 discovery run
+- implementation status:
+  - v3 contract semantics are now live: purity partitioning across `scope/lookback/regime/shape/liquidity/anchor_age`, mirrored candle-gap-close atom bins, generator-frontier retention, and closure-first preverify
+  - local `bash scripts/verify.sh` passed on `2026-04-15`
+  - synced server `bash tools/run_server_command.sh npm run verify` passed on `2026-04-15`
+  - the first canonical server-only v3 discovery run is now open as `tp12_positive_first_purity_partition_closure_search_v3_20260415_r1`
+  - canonical row source is fixed to `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_side_daily_full_period_low_gap_top_allowlist_effective_floor_20160812_v1_r2/step-perfect-prototype-open-train-pack/daily_pack.jsonl`
+  - default context remains `LOW_GAP_TOP / lb1`
+  - D2/D3 have already closed on the server with transactions `34,767`, positives `10,085`, negatives `24,682`, unique atoms `129`, indexed positives `9,888`, and purity partitions `41`
+  - the live active stage is `tools/build_technique_closed_patterns.mjs`; no OOM or verifier-contract failure has appeared so far, and the remaining bottleneck is pure search time
+- final canonical result:
+  - the first canonical server-only v3 discovery run `tp12_positive_first_purity_partition_closure_search_v3_20260415_r1` is now fully closed end-to-end
+  - canonical v3 discovery summary:
+    - atomic transactions `34,767`
+    - indexed positives `9,888`
+    - purity partitions `41`
+    - unique atoms `129`
+    - eligible atoms `1,245`
+    - explored nodes `60,367,736`
+    - positive signatures `562,517`
+    - closed patterns `2,273,509`
+    - preverify zero-negative candidates `0`
+    - final verified zero-negative patterns `0`
+  - final verdict:
+    - `tp12_positive_first_purity_partition_closure_search_v3` is closed negative
+    - purity partitioning and closure-first preverify increased search breadth materially and completed without OOM or verifier-contract failure, but still surfaced no full-train `year>=2 + zero-negative` survivor on the canonical TP12 side-daily `LOW_GAP_TOP/lb1` source
+    - do not rerun this exact v3 branch unchanged
+- next canonical branch:
+  - patch key: `tp12_contrastive_core_veto_state_machine_v4`
+  - rationale:
+    - v1~v3 prove the canonical source has recurrent positive cores but no survivor under a `positive conjunction only` rule class
+    - the next branch must change the hypothesis form to `coreAtomIds AND NOT(vetoAtomIds)` instead of adding more positive atoms only
+  - required contract changes:
+    - keep discovery train-only with the hard `2017~2024 each year >= 2 positives` gate
+    - keep full-train zero-negative verification over `2016-08-12 ~ 2024-12-27`
+    - drop `anchor_age` from the purity partition key because it collapsed to `fresh` in the canonical v3 run
+    - replace contradictory MA cross-history atoms with signed MA state atoms
+    - insert a contrastive veto-search stage between preverify and final exact zero-negative verification
+  - do not do:
+    - do not rerun v1, v2, or v3 unchanged
+    - do not use OOS metrics anywhere in discovery, veto search, ranking, or shortlist freeze
+    - do not silently relax the recurrence or zero-negative contract in place if v4 also closes with zero survivors
+  - implementation status:
+    - v4 code is now landed locally and on server
+    - discovery now supports `coreAtomIds AND NOT(vetoAtomIds)` through a dedicated contrastive veto search stage before final exact zero-negative verification
+    - discovery partitioning now uses `scope__lookback__regime__shape__liquidity` and no longer carries the dead `anchor_age` axis
+    - discovery atomization now uses signed MA state atoms and keeps alias-style discovery atoms disabled
+  - verification status:
+    - local `bash scripts/verify.sh` passed after the v4 stack landed
+    - server `npm run verify` initially failed only at the server-only `parallel budget request/ack` smoke because the controller assumed the request JSON would appear within a fixed 10-second startup window
+    - root cause was fixed in `tools/smoke_prejump_parallel_budget_request_ack.mjs` by waiting against the worker lifecycle instead of a fixed startup race window
+    - server `npm run verify` then passed cleanly
+  - rerun preparation after canonical `v4 r1` OOM:
+    - canonical `v4 r1` did not fail on contract logic; it failed because `tools/build_technique_closed_patterns.mjs` materialized the full closed-pattern aggregate in memory before writing any rows
+    - root cause is now patched by splitting the miner into partition-level entrypoints and switching the closed-pattern build step to partition-by-partition streaming output
+    - local post-fix validation is already closed green:
+      - `node --check src/lib/technique_closed_pattern_miner.mjs`
+      - `node --check tools/build_technique_closed_patterns.mjs`
+      - `node tools/smoke_technique_closed_pattern_miner.mjs`
+      - `bash scripts/verify.sh`
+    - target-first bootstrap for the rerun is already re-run and closed green
+    - duplicate check for the rerun experiment key is already closed green under `tp12_ccvsm_streamed_closed_patterns_r2`
+    - next canonical run should be `tp12_contrastive_core_veto_state_machine_v4_20260415_r2`, but only after the synced server `npm run verify` re-closes green on the streaming closed-pattern patch
+
+## 2026-04-15 Detached execution hardening for v4 reruns
+  - root-cause refinement after the unresolved `v4 r2` incident:
+    - the server reboot happened later than the last emitted `r2` artifact timestamp, so `r2` was already dead before the reboot window
+    - repeated local warnings showed the unified exec session pool was over limit, so SSH-coupled long jobs were vulnerable to session pruning / transport loss
+    - the correct fix is to detach the server job from the local SSH session and persist durable phase/run status on the server
+  - code changes now live:
+    - `tools/run_technique_positive_first_discovery.sh` writes `phase_status.json` and `run_status.json` for every phase
+    - `tools/launch_technique_positive_first_discovery_detached.sh` launches the discovery under `nohup` and emits launch metadata
+    - `tools/read_technique_positive_first_discovery_status.sh` and `tools/server_read_technique_positive_first_discovery_status.sh` read launch/process/phase/run state without holding the original SSH session open
+    - `tools/server_run_technique_positive_first_discovery.sh` accepts `--detach`
+  - verification status:
+    - local `bash scripts/verify.sh` passed on `2026-04-15`
+    - synced server `npm run verify` passed on `2026-04-15`
+  - current canonical rerun state:
+    - rerun key for the detached execution patch is closed green under `tp12_ccvsm_detached_execution_r3`
+    - canonical rerun `tp12_contrastive_core_veto_state_machine_v4_20260415_r3` is now launched in detached mode against the same authoritative TP12 side-daily `LOW_GAP_TOP/lb1` source
+    - detached status confirmed:
+      - launch `pid=29349`
+      - `process.alive=true`
+      - `run.phase=closed_patterns`
+    - do not register a final experiment result until detached `r3` reaches terminal `run_status.json`
+  - detached `r3` is now terminal and it failed in the `contrastive_veto` stage, not in closed-pattern mining:
+    - the durable run status closed `failed` with `phase=contrastive_veto`
+    - server stderr showed `FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory`
+    - the hot stack terminated in `Builtin_JsonParse`, so the real root cause was full-file JSONL materialization in `tools/build_technique_contrastive_veto_report.mjs`
+  - root-cause fix after detached `r3`:
+    - `src/lib/technique_contrastive_veto_search.mjs` now exposes reusable runtime / shortlist helpers so the report tool can search vetoes partition-by-partition
+    - `tools/build_technique_contrastive_veto_report.mjs` now streams `preverified_patterns.jsonl` with `iterateJsonl()` and only keeps partition-local top-ranked core patterns in memory
+    - a new regression smoke `tools/smoke_technique_contrastive_veto_report_streaming.mjs` is wired into `scripts/verify.sh`
+  - verification state after the fix:
+    - local `bash scripts/verify.sh` re-closed green
+    - synced server `npm run verify` re-closed green
+  - next canonical rerun preparation after the veto-streaming patch:
+    - target-first bootstrap is re-run and closed green
+    - duplicate check is re-run and closed green under `tp12_ccvsm_streamed_contrastive_veto_r4`
+    - next canonical run should be `tp12_contrastive_core_veto_state_machine_v4_20260415_r4` in detached mode against the same authoritative `LOW_GAP_TOP/lb1` source
+    - keep the same hard discovery contract; if `r4` still yields zero survivors, close `v4` negative instead of relaxing the contract in place
+  - final canonical detached rerun result:
+    - canonical rerun `tp12_contrastive_core_veto_state_machine_v4_20260415_r4` completed successfully end-to-end under detached execution
+    - closed-pattern summary:
+      - explored nodes `31,758,302`
+      - positive signatures `841,910`
+      - closed patterns `3,182,187`
+    - preverify summary:
+      - evaluated `3,182,187`
+      - retained `3,182,187`
+      - zero-negative candidates `0`
+    - contrastive veto summary:
+      - evaluated core patterns `1,216`
+      - partition count `19`
+      - top patterns per partition `64`
+      - contrastive candidates `0`
+    - final zero-negative summary:
+      - evaluated patterns `0`
+      - verified patterns `0`
+  - final verdict for `tp12_contrastive_core_veto_state_machine_v4`:
+    - the streaming rewrite fixed the detached `r3` OOM root cause and proved the branch can complete without memory failure
+    - however, under the unchanged canonical TP12 side-daily `LOW_GAP_TOP/lb1` source and the same hard `2017~2024 year>=2 + full-train zero-negative` contract, even the `coreAtomIds AND NOT(vetoAtomIds)` hypothesis class produced no survivor
+    - close `v4` negative and do not rerun this exact branch unchanged
+## 2026-04-15 Immediate follow-up after v4 terminal close
+  - while inspecting the authoritative `r4` artifacts, a schema-level root-cause candidate surfaced in the preverify output itself:
+    - `preverified_patterns.jsonl` preserves `seedGeneratorAtomIds`, but the exported `generatorAtomIds` field is replaced with the closure-augmented atom set whenever `closure_augmented` wins the negative-count comparison
+    - `tools/build_technique_contrastive_veto_report.mjs` and `src/lib/technique_contrastive_veto_search.mjs` currently normalize the core from `generatorAtomIds`, so the contrastive veto search may be operating on the wrong core definition
+    - example from the canonical `r4` artifact: `atomCount=5` but exported `generatorAtomIds` already contains the full long closure-style atom set while the true 5-atom core survives only in `seedGeneratorAtomIds`
+  - consequence:
+    - the `v4` OOM root cause is still closed, but the final logical verdict may be contaminated by this generator-preservation bug
+    - next patch key is frozen as `tp12_ccvsm_core_generator_preservation_v5`
+  - mandatory fix shape:
+    - preserve the true seed-core generator in the exported `generatorAtomIds` field
+    - move the closure-augmented working set to a separate field such as `preverifyAtomIds` / `closureAugmentedAtomIds`
+    - harden contrastive normalization to prefer `seedGeneratorAtomIds` when present
+    - add a regression smoke that fails if preverify changes the generator/core identity
+
+## 2026-04-15 Generator-preservation rerun after v4 negative close
+  - root-cause patch status:
+    - `src/lib/technique_pattern_preverifier.mjs` now preserves the true seed core in `seedGeneratorAtomIds` / `generatorAtomIds` / `atomIds`
+    - closure-augmented working sets are exported separately as `closureAugmentedAtomIds` and `preverifyAtomIds`
+    - `src/lib/technique_contrastive_veto_search.mjs` now normalizes contrastive cores from `seedGeneratorAtomIds` first
+    - regression coverage now includes `tools/smoke_technique_contrastive_core_generator_preservation.mjs`
+    - `tools/smoke_technique_closure_first_preverify.mjs` was updated to assert preserved core identity instead of the old overwritten-generator behavior
+  - verification status:
+    - local `bash scripts/verify.sh` passed on `2026-04-15`
+    - synced server `npm run verify` passed on `2026-04-15`
+  - canonical rerun:
+    - run id: `tp12_contrastive_core_veto_state_machine_v4_20260415_r5`
+    - execution mode: detached server-only rerun against the same authoritative TP12 side-daily `LOW_GAP_TOP/lb1` source
+    - operational observation:
+      - preserving generator cores materially increased artifact size and runtime
+      - `closed_patterns.jsonl` grew to multi-GB and `preverified_patterns.jsonl` grew to multi-GB, but the run completed end-to-end without transport loss or OOM
+  - terminal summaries:
+    - closed patterns:
+      - explored nodes `31,758,302`
+      - positive signatures `841,910`
+      - closed patterns `3,182,187`
+    - preverify:
+      - evaluated `3,182,187`
+      - retained `3,182,187`
+      - zero-negative candidates `0`
+    - contrastive veto:
+      - evaluated core patterns `1,216`
+      - partition count `19`
+      - top patterns per partition `64`
+      - contrastive candidates `0`
+    - final zero-negative verify:
+      - evaluated `0`
+      - verified `0`
+  - interpretation:
+    - the generator/core contamination bug was real and is now closed, but fixing it did not change the canonical branch verdict
+    - under the same hard `2017~2024 year>=2 + full-train zero-negative` contract, the authoritative TP12 side-daily `LOW_GAP_TOP/lb1` source still has no survivor even when contrastive veto search starts from the true preserved seed cores
+    - therefore the next step must change the contract or hypothesis class itself; repeating this exact `v4/v5` setup is no longer defensible
+
+## 2026-04-16 Next branch after v4/v5 closure
+  - frozen next patch key:
+    - `tp12_episode_substrate_state_contract_v6`
+  - rationale:
+    - `v1~v5` exhausted row-local exact/contrastive rule classes on the canonical TP12 side-daily `LOW_GAP_TOP/lb1` source
+    - the next defensible move is to change the hypothesis class itself from single-row atom bags to short episode/substrate state sequences
+  - immediate implementation target:
+    - add an executable episode contract, symbol-local episode window builder, and episode substrate search scaffold with local/server verify coverage
+    - do not open a new canonical server run until the v6 scaffold closes green through both verify gates
+
+## 2026-04-16 Episode/substrate scaffold and canonical first run
+  - patch key:
+    - `tp12_episode_substrate_state_contract_v6`
+  - implementation status:
+    - added `meta/technique_episode_substrate_contract.json`
+    - added `src/lib/technique_episode_substrate_contract.mjs`
+    - added `src/lib/technique_episode_window_builder.mjs`
+    - added `src/lib/technique_episode_substrate_search.mjs`
+    - added `tools/build_technique_episode_windows.mjs`
+    - added `tools/build_technique_episode_substrate_report.mjs`
+    - added `tools/run_technique_episode_substrate_discovery.sh`
+    - added `tools/server_run_technique_episode_substrate_discovery.sh`
+    - added `tools/smoke_technique_episode_window_builder.mjs`
+    - added `tools/smoke_technique_episode_substrate_search.mjs`
+    - wired the new contract parse / smoke / syntax / wrapper checks into `scripts/verify.sh`
+  - verification status:
+    - local `bash scripts/verify.sh` passed on `2026-04-16`
+    - synced server `npm run verify` passed on `2026-04-16`
+  - canonical run:
+    - run id: `tp12_episode_substrate_state_contract_v6_20260416_r1`
+    - source: `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_side_daily_full_period_low_gap_top_allowlist_effective_floor_20160812_v1_r2/step-perfect-prototype-open-train-pack/daily_pack.jsonl`
+    - scope/lookback context remained `LOW_GAP_TOP / lb1`
+  - terminal summaries:
+    - episode window summary:
+      - `inputRowCount=34767`
+      - `episodeRowCount=34767`
+      - `positiveEpisodeCount=10085`
+      - `negativeEpisodeCount=24682`
+      - `symbolCount=9888`
+    - episode substrate summary:
+      - `coreCandidateCount=868`
+      - `verifiedPatternCount=0`
+      - `verified_patterns.jsonl` emitted as an empty file
+  - interpretation:
+    - changing the hypothesis class from row-local exact/contrastive rules to short symbol-local episode/substrate cores still produced no survivor on the authoritative TP12 side-daily `LOW_GAP_TOP/lb1` source under the unchanged hard contract
+    - this means the next branch must change the contract itself, the source slice, or the supervision target; repeating this exact `v6` setup is not defensible
+
+## 2026-04-16 Next branch after v6 closure
+  - frozen next patch key:
+    - `tp12_episode_partitioned_substrate_slice_v7`
+  - rationale:
+    - `v6` proved that searching all episode rows together is too coarse because the canonical `LOW_GAP_TOP/lb1` episode dataset already splits into dozens of `partitionKey` buckets with very different positive/negative mixes
+    - the next defensible move is to keep the episode hypothesis class but slice discovery by `partitionKey` so each partition is searched independently under the same hard `2017~2024 year>=2 + full-train zero-negative` contract
+  - immediate implementation target:
+    - patch the episode substrate contract/search/report stack so only eligible partitions are searched and per-partition outputs are emitted before opening the next canonical server run
+
+## 2026-04-16 Partition-aware episode/substrate search after v6 close
+  - patch key:
+    - `tp12_episode_partitioned_substrate_slice_v7`
+  - implementation status:
+    - promoted the episode substrate contract to explicit `searchMode=partitioned` with `partitionField=partitionKey`
+    - patched `src/lib/technique_episode_substrate_search.mjs` so episode substrate search now groups rows by partition, filters to partitions that independently satisfy the hard year gate, and emits per-partition summaries
+    - patched `tools/build_technique_episode_substrate_report.mjs` so the canonical summary persists `partitionCount`, `eligiblePartitionCount`, `searchedPartitionCount`, and `partitionSummaries`
+    - added partition-aware smoke coverage and reclosed both verify gates green
+  - verification status:
+    - local `bash scripts/verify.sh` passed on `2026-04-16`
+    - synced server `npm run verify` passed on `2026-04-16`
+  - canonical run:
+    - run id: `tp12_episode_partitioned_substrate_slice_v7_20260416_r1`
+    - source: `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_side_daily_full_period_low_gap_top_allowlist_effective_floor_20160812_v1_r2/step-perfect-prototype-open-train-pack/daily_pack.jsonl`
+    - scope/lookback context remained `LOW_GAP_TOP / lb1`
+  - terminal summaries:
+    - episode window summary:
+      - `episodeRowCount=34767`
+      - `positiveEpisodeCount=10085`
+      - `negativeEpisodeCount=24682`
+      - `symbolCount=1872`
+      - `uniqueEpisodeAtomCount=192`
+    - partition-aware episode substrate summary:
+      - `partitionCount=45`
+      - `eligiblePartitionCount=19`
+      - `searchedPartitionCount=19`
+      - `coreCandidateCount=9252`
+      - `verifiedPatternCount=0`
+      - the largest searched partitions all hit the per-partition `maxCoreCandidates=512` cap and still produced `verifiedPatternCount=0`
+  - interpretation:
+    - the failure mode was not simply that global episode search was too coarse; even after slicing discovery by partition and searching each eligible partition independently, the canonical TP12 side-daily `LOW_GAP_TOP/lb1` source still yielded no zero-negative survivor under the unchanged hard contract
+    - the next branch must therefore change the supervision target or the contract itself rather than only adding more row-local or partition-local search breadth
+
+## 2026-04-16 Next branch after v7 closure
+  - frozen next patch key:
+    - `tp12_episode_nearmiss_supervision_v8`
+  - rationale:
+    - `v6` and `v7` together show that the canonical TP12 side-daily `LOW_GAP_TOP/lb1` source does contain recurrent positive episode structure, but the discovery-stage `full-train zero-negative` gate is too hard to yield any executable shortlist under either global or partition-aware episode search
+    - the next defensible move is to keep the episode + partition hypothesis class but change discovery supervision from `all matched negatives` to a deterministic `near-miss negative` slice defined from current-state overlap inside each eligible partition
+    - the branch must still persist the full matched-negative residue so later confirm can reject candidates that only solve the near-miss cohort
+  - immediate implementation target:
+    - extend the episode substrate contract/search/report stack with an explicit negative-supervision mode, near-miss overlap thresholds, and summary fields for both supervised-negative and full-negative residue before opening the next canonical server run
+
+## 2026-04-16 Near-miss supervision after v7 close
+  - patch key:
+    - `tp12_episode_nearmiss_supervision_v8`
+  - implementation status:
+    - extended the episode substrate contract with explicit `negativeSupervisionMode`, near-miss consensus thresholds, and summary fields for supervised-negative versus full-negative residue
+    - patched `src/lib/technique_episode_substrate_search.mjs` so each core now builds a current-state positive consensus and searches vetoes against a deterministic near-miss negative slice instead of every matched negative
+    - added dedicated near-miss supervision smoke coverage and reclosed both verify gates green
+  - verification status:
+    - local `bash scripts/verify.sh` passed on `2026-04-16`
+    - synced server `npm run verify` passed on `2026-04-16`
+  - canonical run:
+    - run id: `tp12_episode_nearmiss_supervision_v8_20260416_r1`
+    - source: `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_side_daily_full_period_low_gap_top_allowlist_effective_floor_20160812_v1_r2/step-perfect-prototype-open-train-pack/daily_pack.jsonl`
+    - scope/lookback context remained `LOW_GAP_TOP / lb1`
+  - terminal summaries:
+    - episode window summary:
+      - `episodeRowCount=34767`
+      - `positiveEpisodeCount=10085`
+      - `negativeEpisodeCount=24682`
+      - `symbolCount=1872`
+      - `uniqueEpisodeAtomCount=192`
+    - episode substrate summary:
+      - `partitionCount=45`
+      - `eligiblePartitionCount=19`
+      - `searchedPartitionCount=19`
+      - `coreCandidateCount=9252`
+      - `supervisedCoreCandidateCount=9252`
+      - `verifiedPatternCount=0`
+      - `verifiedFullZeroNegativePatternCount=0`
+      - every searched high-mass partition still saturated the per-partition `maxCoreCandidates=512` cap
+  - interpretation:
+    - changing discovery supervision from all matched negatives to near-miss current-overlap negatives still produced no survivor on the canonical TP12 side-daily `LOW_GAP_TOP/lb1` source
+    - however, the canonical summary shows the search is still biased by early per-partition candidate truncation, because searched partitions hit the core-candidate cap before a global ranking pass
+    - the next defensible branch must therefore keep the `v8` contract but remove search-order truncation before concluding that the near-miss hypothesis class itself is exhausted
+
+## 2026-04-16 Next branch after v8 closure
+  - frozen next patch key:
+    - `tp12_episode_nearmiss_ranked_enumeration_v9`
+  - rationale:
+    - `v8` showed that near-miss supervision alone is not enough while the search still truncates core candidates during DFS in lexicographic order
+    - with `maxAtomsToConsider=48` and `maxCoreAtoms=2`, each partition's full bounded core space is still small enough to enumerate exactly, sort by objective, and only then slice to `maxCoreCandidates`
+    - the same bias exists in veto candidate selection, where supervised-negative veto atoms are truncated lexicographically before scoring
+  - immediate implementation target:
+    - patch the episode substrate search so core candidates are fully enumerated within the bounded search space, ranked, and sliced after enumeration
+    - replace lexicographic veto-atom truncation with deterministic ranking by supervised-negative coverage and positive contamination before applying `maxVetoCandidatesPerCore`
+    - reopen the canonical near-miss branch with the same source and contract family after the search-order root cause is fixed
+
+## 2026-04-16 Ranked enumeration after v8 close
+  - patch key:
+    - `tp12_episode_nearmiss_ranked_enumeration_v9`
+  - implementation status:
+    - patched the episode substrate search to enumerate the full bounded core space inside each partition before ranking, then slice after ranking instead of truncating DFS early
+    - replaced lexicographic veto-atom truncation with deterministic ranking by supervised-negative coverage and positive contamination
+    - added ranked-enumeration smoke coverage and reclosed local/server verify green
+  - canonical run:
+    - run id: `tp12_episode_nearmiss_ranked_enumeration_v9_20260416_r1`
+    - source: `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_side_daily_full_period_low_gap_top_allowlist_effective_floor_20160812_v1_r2/step-perfect-prototype-open-train-pack/daily_pack.jsonl`
+    - scope/lookback context remained `LOW_GAP_TOP / lb1`
+  - terminal summaries:
+    - `episodeCount=34767`
+    - `partitionCount=45`
+    - `eligiblePartitionCount=19`
+    - `searchedPartitionCount=19`
+    - `coreCandidateCount=7236`
+    - `supervisedCoreCandidateCount=7236`
+    - `verifiedPatternCount=0`
+    - `verifiedFullZeroNegativePatternCount=0`
+  - interpretation:
+    - `v9` proves the previous DFS-order bias was real and is now fixed, but the canonical branch still keeps post-ranking `maxCoreCandidates=512` and `maxVetoCandidatesPerCore=12` caps, so the search remains incomplete even inside the bounded hypothesis space
+    - the next defensible branch is to remove those remaining caps entirely rather than changing supervision or relaxing the hard contract
+
+## 2026-04-16 Next branch after v9 closure
+  - frozen next patch key:
+    - `tp12_episode_nearmiss_unbounded_enumeration_v10`
+  - rationale:
+    - with `maxAtomsToConsider=48`, `maxCoreAtoms=2`, and `maxVetoAtoms=2`, the per-partition search space is already finitely bounded and tractable enough to enumerate without arbitrary post-ranking caps
+    - as long as `maxCoreCandidates=512` and `maxVetoCandidatesPerCore=12` remain, the branch can still miss survivors even after ranking fixes, so concluding the hypothesis class is exhausted would be premature
+  - immediate implementation target:
+    - allow `0` to mean unbounded for `maxCoreCandidates` and `maxVetoCandidatesPerCore` in the episode substrate contract loader
+    - remove the remaining post-ranking slices in the search code by applying candidate caps only when the limit is strictly positive
+    - add dedicated unbounded-enumeration smoke coverage before reopening the same canonical source under the exact same supervision contract
+
+## 2026-04-16 Unbounded enumeration after v9 close
+  - patch key:
+    - `tp12_episode_nearmiss_unbounded_enumeration_v10`
+  - implementation status:
+    - allowed `0` to mean unbounded for `maxCoreCandidates` and `maxVetoCandidatesPerCore` in the episode substrate contract loader
+    - removed the remaining post-ranking slices by applying candidate caps only when the limit is strictly positive
+    - added dedicated unbounded-enumeration smoke coverage and reclosed local/server verify green
+  - canonical run:
+    - run id: `tp12_episode_nearmiss_unbounded_enumeration_v10_20260416_r1`
+    - source: `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_side_daily_full_period_low_gap_top_allowlist_effective_floor_20160812_v1_r2/step-perfect-prototype-open-train-pack/daily_pack.jsonl`
+    - scope/lookback context remained `LOW_GAP_TOP / lb1`
+  - terminal summaries:
+    - `episodeCount=34767`
+    - `partitionCount=45`
+    - `eligiblePartitionCount=19`
+    - `searchedPartitionCount=19`
+    - `coreCandidateCount=11109`
+    - `supervisedCoreCandidateCount=11109`
+    - `verifiedPatternCount=0`
+    - `verifiedFullZeroNegativePatternCount=0`
+  - interpretation:
+    - `v10` proves the near-miss episode branch is not failing because of post-ranking candidate caps; lifting those caps materially increased searched cores, but still left zero survivor on the canonical source under the unchanged hard contract
+    - the next branch must therefore change the supervision target or the source slice itself rather than continue widening the same near-miss episode search family
+
+
+## 2026-04-16 Next branch after v10 closure
+  - frozen next patch key:
+    - `tp12_episode_matched_control_purity_slice_v11`
+  - rationale:
+    - `v10` proved the near-miss episode family itself is exhausted on the canonical TP12 side-daily `LOW_GAP_TOP/lb1` source under the unchanged hard contract, so the next defensible move must change the source slice rather than keep widening the same hypothesis class
+    - the next branch should build matched positive-vs-control episode pairs inside eligible partition/year buckets, derive contrastive delta atoms from those pairs, and search compact `purity slice` predicates that preserve `2017~2024 each year >=2 positives` while removing control residue
+    - only slice packs that materially purify the source should be handed back to the existing hard episode substrate search for full-train zero-negative recheck
+  - immediate implementation target:
+    - add a matched-control purity-slice helper plus dedicated control-pair, delta-atom, slice-contract, and slice-pack builders
+    - extend the episode substrate contract/search seam with a new `matched_control_purity_slice` supervision mode for direct reuse in later rechecks
+    - keep all discovery train-only and do not touch rolling/OOS unless a slice pack produces a non-empty verified survivor set
+
+## 2026-04-17 Reboot resume handoff
+  - active mainline:
+    - `TP12 12% / year-hit>=2 / recent-operating` technique line
+    - current parent bank remains `MA_RETEST__LOW_GAP_TOP__lb5`
+    - current stage remains `T4 shortlist batch -> year-consensus -> operating bridge`
+  - root cause fixed this session:
+    - original batch `tp12_technique_template_rolling_batch_v1_20260417_r2` died before final summary because the old template child-run slug truncated two long template ids to the same 96-char prefix
+    - that collision overwrote the 5th candidate contract path and prevented the 6th template from completing as a distinct child run
+    - fixed by replacing prefix-only truncation with deterministic hash-suffixed slugs and by failing fast on duplicate child run ids
+  - verify status:
+    - local `bash scripts/verify.sh`: passed after the slug-collision patch
+    - server `npm run verify`: passed after the slug-collision patch
+  - patch seam:
+    - [src/lib/technique_template_screen_contract.mjs](/home/saida/code/stockdesk-lab-lite/src/lib/technique_template_screen_contract.mjs)
+    - [tools/run_technique_template_rolling.sh](/home/saida/code/stockdesk-lab-lite/tools/run_technique_template_rolling.sh)
+    - [tools/smoke_technique_template_run_slug.mjs](/home/saida/code/stockdesk-lab-lite/tools/smoke_technique_template_run_slug.mjs)
+    - [scripts/verify.sh](/home/saida/code/stockdesk-lab-lite/scripts/verify.sh)
+  - in-flight server runs:
+    - resume batch wrapper pid: `983913`
+    - resume rolling child pid: `983954`
+    - current scope window pid: `989485`
+    - current indexed miner pid: `989686`
+    - repair watcher pid: `986594`
+    - waiting year-consensus launcher pid: `878366`
+  - authoritative resume run:
+    - run id: `tp12_technique_template_rolling_batch_v1_20260417_r2_slugfix_resume_r1`
+    - selected template id: `ma_retest_seed__anchor-ma120-break--compression-compaction20--confirm-positive-close-retention-prevclose--confirm-sponsor-quality`
+    - hashed child slug: `ma_retest_seed_anchor_ma120_break_compression_compaction20_confirm_positive_close_reten_e7ca7891`
+  - latest observed state before reboot:
+    - `w1_scope` mining completed with `exploredStates=200000`, `rulesCollected=651`
+    - batch is now on `w2_scope`
+    - latest `w2_scope` progress snapshot:
+      - `phase=search`
+      - `exploredStates=74752`
+      - `rulesCollected=1012`
+      - `etaSeconds≈329.1`
+      - `updatedAt=2026-04-16T21:15:52.040Z`
+  - automatic continuation already attached:
+    - watcher `tp12_technique_template_rolling_batch_v1_20260417_r2_slugfix_repair_r1` is waiting for the resume summary
+    - when the resume batch finishes, the watcher will regenerate the overwritten 5th candidate contract, rebuild the original batch manifest files, and rebuild the original batch summary at the original path
+    - launcher `tp12_technique_year_consensus_v1_20260417_r1` is still waiting for that repaired original summary and should start automatically once the summary appears
+  - do not do on resume:
+    - do not register `tp12_technique_template_batch_slug_collision_resume_v1` yet because the run is still in flight
+    - do not reopen the original broken batch path as a fresh rerun; finish the repair chain already attached
+    - do not touch the year-consensus launcher unless the repaired original summary still fails to appear after the resume batch ends
+  - first checks for next session:
+    - confirm whether `tp12_technique_template_rolling_batch_v1_20260417_r2_slugfix_resume_r1` is still alive
+    - if it finished, inspect whether `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_template_rolling_batch_v1_20260417_r2/step-perfect-prototype-technique-template-screen/summary.json` now exists
+    - if that repaired summary exists, inspect `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_year_consensus_v1_20260417_r1.launch.log` and the resulting year-consensus run directory
+  - status commands:
+    - `bash tools/run_server_command.sh --skip-sync pgrep -af 'tp12_technique_template_rolling_batch_v1_20260417_r2_slugfix_resume_r1|tp12_technique_template_rolling_batch_v1_20260417_r2_slugfix_repair_r1|tp12_technique_year_consensus_v1_20260417_r1'`
+    - `bash tools/run_server_command.sh --skip-sync node -e 'const fs=require("fs"); const p="/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_template_rolling_batch_v1_20260417_r2_slugfix_resume_r1_ma_retest_seed_anchor_ma120_break_compression_compaction20_confirm_positive_close_reten_e7ca7891_w2_scope/step-perfect-prototype-train/progress.json"; if (fs.existsSync(p)) { const j=JSON.parse(fs.readFileSync(p,"utf8")); console.log(JSON.stringify({phase:j.phase, exploredStates:j.exploredStates, rulesCollected:j.rulesCollected, etaSeconds:j.etaSeconds, updatedAt:j.updatedAt}, null, 2)); }'`
+    - `bash tools/run_server_command.sh --skip-sync ls -l /home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_template_rolling_batch_v1_20260417_r2/step-perfect-prototype-technique-template-screen/summary.json`
+    - `bash tools/run_server_command.sh --skip-sync cat /home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_year_consensus_v1_20260417_r1.launch.log`
+
+## 2026-04-17 Year-consensus slugfix closeout
+  - active mainline closed this session:
+    - repaired `T4 shortlist batch -> year-consensus -> operating bridge` for `MA_RETEST__LOW_GAP_TOP__lb5`
+    - no live repair/launcher processes remain for the repaired template batch or the original year-consensus launcher
+  - repaired template batch outcome:
+    - resume run `tp12_technique_template_rolling_batch_v1_20260417_r2_slugfix_resume_r1` completed successfully
+    - repair watcher rebuilt the original broken batch summary at `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_template_rolling_batch_v1_20260417_r2/step-perfect-prototype-technique-template-screen/summary.json`
+    - authoritative repaired screen result:
+      - `selectedTemplateCount=6`
+      - `passTemplateCount=3`
+      - passing templates:
+        - `ma_retest_seed__anchor-ma120-break--compression-compaction20--confirm-sponsor-quality` -> `129/385 = 33.51%`, `top1DateShare=0.10`
+        - `ma_retest_seed__anchor-ma120-break--compression-compaction20--confirm-positive-close-retention-prevclose--confirm-sponsor-quality--invalidate-failed-breakout-count20` -> `104/314 = 33.12%`
+        - `ma_retest_seed__anchor-ma120-break--compression-compaction20--confirm-positive-close-retention-prevclose--confirm-sponsor-quality` -> `128/405 = 31.60%`
+  - second root cause found and fixed:
+    - the auto-launched year-consensus run `tp12_technique_year_consensus_v1_20260417_r1` started after the repaired summary appeared, but it reused a separate local slug helper in `tools/build_technique_year_consensus_summary.mjs`
+    - that helper still truncated normalized template ids to the same 96-char prefix, so two distinct passing templates wrote into the same `templates/...` out dir
+    - patched the year-consensus builder to reuse the hashed slug helper from `src/lib/technique_template_screen_contract.mjs` and to fail fast on duplicate derived output dirs
+    - added a regression assertion in `tools/smoke_technique_year_consensus.mjs` for the exact pair of previously colliding template ids
+  - verify and rerun status:
+    - local `bash scripts/verify.sh`: passed
+    - server `bash tools/run_server_command.sh npm run verify`: passed
+    - authoritative rerun: `tp12_technique_year_consensus_v1_20260417_r1_slugfix_rerun`
+    - rerun summary path:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_year_consensus_v1_20260417_r1_slugfix_rerun/step-perfect-prototype-technique-year-consensus/year_consensus_summary.json`
+    - rerun outputs now contain 3 distinct hashed template dirs:
+      - `ma_retest_seed_anchor_ma120_break_compression_compaction20_confirm_sponsor_quality_6989b3ea`
+      - `ma_retest_seed_anchor_ma120_break_compression_compaction20_confirm_positive_close_reten_22b88544`
+      - `ma_retest_seed_anchor_ma120_break_compression_compaction20_confirm_positive_close_reten_e7ca7891`
+  - authoritative year-consensus result:
+    - `selectedTemplateCount=3`
+    - `consensusTemplateCount=3`
+    - `unionConsensusRuleCount=0`
+    - `status=no_consensus_rules`
+    - each of the 3 passing templates finished with `consensusRuleCount=0` and `readyForExactRefinement=false`
+  - decision:
+    - this branch is now scientifically closed negative at year-consensus, not blocked by infrastructure
+    - do not open `T5` / operating-bridge exact refinement from `MA_RETEST__LOW_GAP_TOP__lb5` unchanged
+    - do not rerun the same repaired shortlist batch or the same year-consensus input unchanged
+    - next work should move to a changed shortlist/bank/template hypothesis rather than reopening this exact line
+
+## 2026-04-17 Unified bank-first patch implementation
+  - umbrella patch delivered this session:
+    - `tp12_unified_bankfirst_rearchitecture_v1`
+  - explicit new paths added:
+    - `technique_cluster_bank_shortlist_v1`
+    - `technique_cluster_bank_discovery_plan_v1`
+    - `technique_cluster_template_screen_plan_v1`
+    - `technique_clause_core_consensus_summary_v1`
+    - `technique_structural_atom_consensus_summary_v1`
+    - `tp12_execution_learning_fixed_support_summary_v1`
+  - checklist updated first:
+    - added the unified bank-first execution checklist and run-order notes to `/home/saida/code/stockdesk-lab-lite/docs/tp12_side_daily_patch_checklist.md`
+  - verify status:
+    - local `bash scripts/verify.sh`: passed
+    - server `bash tools/run_server_command.sh npm run verify`: passed
+  - code-path status:
+    - new cluster-bank shortlist/discovery/template-screen wrappers are live
+    - template-screen summary now preserves lane metadata and explicit concentration rejects without changing existing pass/fail gates
+    - new clause-core and structural-atom consensus builders are explicit sibling paths only; no automatic fallback or auto-promotion was introduced
+    - `run_tp12_scope_expansion_stage.sh` is fail-fast LOW-only and rejects widened scopes
+    - fixed-support execution-learning wrapper/report path now enforces baseline/support immutability contracts
+  - real-artifact validation completed on server:
+    - built cluster-bank shortlist from authoritative seed run `tp12_technique_seed_dryrun_v1_20260412_r3`
+    - artifact:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_cluster_bank_lanes_v1_seed_r3/cluster_bank_shortlist.json`
+    - observed result:
+      - `promotionTemplateCount=35`
+      - `eligibleTemplateCount=18`
+      - `selectedClusterLaneCount=3`
+      - `reserveBankCount=2`
+      - selected cluster lanes stayed inside `MA_RETEST__LOW_GAP_TOP__lb5`
+      - reserve banks surfaced explicitly as `LIQUIDITY_SPONSOR__LOW_GAP_TOP__lb5` and `BREAKOUT_BASE__LOW_GAP_TOP__lb5`
+    - built cluster-bank discovery plan from that shortlist
+    - artifact:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_cluster_bank_lanes_v1_seed_r3/cluster_bank_discovery_plan.json`
+    - observed result:
+      - `selectedClusterLaneCount=3`
+      - `selectedReserveBankCount=2`
+      - `selectedBankCount=5`
+      - plan now contains explicit `cluster_lane` entries plus explicit `reserve_bank` entries instead of collapsing back to one raw bank
+  - representation-path validation completed on server:
+    - built clause-core summary from repaired T4 summary
+    - artifact:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_clause_core_consensus_v1_r2/clause_core_summary.json`
+    - observed result:
+      - `cohortCount=1`
+      - `rerunHypothesisCount=0`
+      - this is negative but structurally correct: the builder resolved the real repaired template-screen artifact and produced an explicit no-core outcome rather than silently widening
+    - built structural-atom projection and motif consensus summary from rerun T5 summary
+    - artifacts:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_structural_atom_consensus_v1_r1/projection.jsonl`
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_structural_atom_consensus_v1_r1/summary.json`
+    - observed result:
+      - `projectionRowCount=20420`
+      - `motifCount=20336`
+      - `passMotifCount=0`
+      - again negative, but the new identity/projection path is alive on the authoritative year-consensus artifact
+  - new live experiment launched after preflight:
+    - bootstrapped target-first session via `tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+    - duplicate checks passed for:
+      - `tp12_unified_bankfirst_rearchitecture_v1`
+      - `tp12_no_stop_scope_expansion_low_lb5_screen_v1`
+      - `tp12_technique_cluster_bank_lanes_v1`
+      - `tp12_technique_bank_reserve_v1`
+      - `tp12_technique_clause_core_consensus_v1`
+      - `tp12_technique_structural_atom_consensus_v1`
+      - `tp12_execution_learning_fixed_support_v1`
+    - started server run:
+      - `tp12_no_stop_scope_expansion_low_lb5_screen_v1`
+    - current observed state:
+      - `w1_source` completed
+      - `w1_scope` is now live
+      - latest scope miner snapshot:
+        - `phase=search`
+        - `exploredStates=113664`
+        - `rulesCollected=199`
+        - `etaSeconds≈119.6`
+        - `effectiveAllocatedMaxSearchStates=200000`
+        - `topExactDateMassShare≈0.0994`
+    - currently materialized run dirs:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_no_stop_scope_expansion_low_lb5_screen_v1`
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_no_stop_scope_expansion_low_lb5_screen_v1_w1_source`
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_no_stop_scope_expansion_low_lb5_screen_v1_w1_scope`
+  - follow-up after turn interruption:
+    - the first live run `tp12_no_stop_scope_expansion_low_lb5_screen_v1` left a partial parent outdir after a turn abort
+    - child results remain useful for diagnostics:
+      - `w1_scope` completed with `exploredStates=200000`, `rulesCollected=235`, `topExactDateMassShare≈0.0785`
+    - authoritative clean relaunch started detached on server:
+      - run id: `tp12_no_stop_scope_expansion_low_lb5_screen_v1_r2`
+      - launcher pid: `1115639`
+      - active rolling pid at launch check: `1115769`
+      - launch log:
+        - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_no_stop_scope_expansion_low_lb5_screen_v1_r2.launch.log`
+    - current observed relaunch state:
+      - `w1_scope` completed with `exploredStates=200000`, `rulesCollected=235`, `topExactDateMassShare≈0.0785`
+      - `w1` interim open-eval readout:
+        - top leaderboard rule `PP_d56fc038171a`
+        - top open OOS `2/2 = 100%`
+        - `top1DateShare≈0.0408`
+        - `uniqueMatchedDates=43`
+      - `w2_scope` completed with `exploredStates=200000`, `rulesCollected=636`
+      - `w2` interim open-eval readout:
+        - top leaderboard rule `PP_398a21ba2dd0`
+        - top open OOS `3/3 = 100%`
+        - `top1DateShare≈0.0755`
+        - `uniqueMatchedDates=80`
+      - `w3_scope` is now live
+      - latest `w3_scope` snapshot:
+        - `phase=search`
+        - `exploredStates=56320`
+        - `rulesCollected=224`
+        - `etaSeconds≈350.7`
+    - next explicit queued runtime already attached:
+      - run id: `tp12_technique_cluster_bank_lanes_v1_r1`
+      - queue pid: `1117299`
+      - queue waits for `1115639` to exit, then runs:
+        - `bash tools/run_technique_cluster_bank_discovery_rolling.sh --run-id=tp12_technique_cluster_bank_lanes_v1_r1 --plan-path=artifacts/runs/tp12_technique_cluster_bank_lanes_v1_seed_r3/cluster_bank_discovery_plan.json --window-group=screen`
+      - queue log:
+        - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_cluster_bank_lanes_v1_r1.queue.log`
+      - launch log:
+        - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_cluster_bank_lanes_v1_r1.launch.log`
+    - explicit downstream queue also attached after the cluster-bank queue:
+      - run id: `tp12_technique_cluster_template_screen_v1_r1`
+      - queue pid: `1120367`
+      - queue waits for `1117299` to exit, then runs:
+        - `node tools/build_technique_cluster_template_screen_plan.mjs --cluster-bank-summary-path=artifacts/runs/tp12_technique_cluster_bank_lanes_v1_r1/step-perfect-prototype-technique-cluster-bank-discovery/summary.json --out=artifacts/runs/tp12_technique_cluster_bank_lanes_v1_r1/cluster_template_plan.json`
+        - `bash tools/run_technique_cluster_template_rolling.sh --run-id=tp12_technique_cluster_template_screen_v1_r1 --plan-path=artifacts/runs/tp12_technique_cluster_bank_lanes_v1_r1/cluster_template_plan.json --window-group=screen`
+        - `bash tools/run_technique_year_consensus.sh --run-id=tp12_technique_cluster_template_year_consensus_v1_r1 --template-screen-summary-path=artifacts/runs/tp12_technique_cluster_template_screen_v1_r1/step-perfect-prototype-technique-cluster-template-screen/summary.json`
+        - `node tools/build_technique_clause_core_consensus_summary.mjs ...`
+        - `node tools/build_technique_clause_core_rerun_plan.mjs ...`
+        - `node tools/build_technique_structural_atom_projection.mjs ...`
+        - `node tools/build_technique_structural_atom_consensus_summary.mjs ...`
+      - queue log:
+        - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_cluster_template_screen_v1_r1.queue.log`
+      - T4 launch log:
+        - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_cluster_template_screen_v1_r1.launch.log`
+      - exact year-consensus launch log:
+        - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_cluster_template_year_consensus_v1_r1.launch.log`
+  - fixed-support branch status:
+    - code path is implemented and verified, but the authoritative frozen `daily_only_no_stop` scientific-control root referenced earlier in handoff is not currently present in the active server workspace
+    - only smoke artifacts are currently discoverable for `selection_manifest.json`, `pipeline_summary.json`, and `execution_learning_summary.json`
+    - do not substitute smoke artifacts or an alternate root; recover the authoritative frozen scientific-control root first or stop this branch
+  - do not do on resume:
+    - treat `tp12_no_stop_scope_expansion_low_lb5_screen_v1` as interrupted partial; use `..._r2` as the clean live scope-expansion rerun unless `..._r2` also dies
+    - do not widen this scope-expansion run beyond `LOW` inside the same wrapper; the new wrapper intentionally fails fast on non-LOW scopes
+    - do not reopen the dead `MA_RETEST__LOW_GAP_TOP__lb5 -> exact year-consensus` line as a fallback
+  - next checks for next session:
+    - inspect whether `tp12_technique_cluster_bank_lanes_v1_r1` is still alive via `pgrep -af 'tp12_technique_cluster_bank_lanes_v1_r1|run_technique_cluster_bank_discovery_rolling'`
+    - inspect whether the queued `tp12_technique_cluster_template_screen_v1_r1` has started via `pgrep -af 'tp12_technique_cluster_template_screen_v1_r1|tp12_technique_cluster_template_year_consensus_v1_r1|kill -0 1117299'`
+    - if needed after that, use the already-built `cluster_bank_shortlist.json` and `cluster_bank_discovery_plan.json` artifacts to open the new cluster-lane T3/T4 branch rather than the old single-bank shortlist
+
+2026-04-17 10:02:00 KST
+- `tp12_no_stop_scope_expansion_low_lb5_screen_v1_r2` completed and is now registered:
+  - patch key: `tp12_no_stop_scope_expansion_low_lb5_screen_v1`
+  - status: `invalid_or_inconclusive`
+  - registry run id: `tp12_no_stop_scope_expansion_low_lb5_screen_v1_r2`
+  - result summary:
+    - screen primary `tp12_no_stop_hit_3d`: `96/354 = 27.12%`
+    - screen secondary `tp12_no_stop_hit_4d`: `115/354 = 32.49%`
+    - `usableWindowCount = 6/6`
+    - `maxTop1DateShare = 20.83%`
+    - incumbent sparse `LOW_GAP_TOP/lb5` screen baseline remains stronger on primary and concentration:
+      - baseline primary `115/370 = 31.08%`
+      - baseline secondary `132/370 = 35.68%`
+      - baseline `maxTop1DateShare = 9.52%`
+  - interpretation:
+    - `LOW x lb5` scope expansion produced a real screen artifact, but it is not a supplier-positive replacement for the incumbent `LOW_GAP_TOP/lb5` line
+    - do not reopen this exact scope-expansion line unchanged
+- the queued cluster-bank T3 opened automatically after the scope run exited:
+  - run id: `tp12_technique_cluster_bank_lanes_v1_r1`
+  - active launcher pid: `1143803`
+  - first child rolling run:
+    - `tp12_technique_cluster_bank_lanes_v1_r1_ma_retest_low_gap_top_lb5_cluster_ma_retest_low_gap_top_lb5_fcf0cbba2b`
+  - first child current state at handoff write:
+    - `w1_source` completed with control-input rows `20835` (`train=13932`, `oos=6903`)
+    - `w1_scope` live snapshot:
+      - `phase=search`
+      - `exploredStates=18432`
+      - `rulesCollected=126`
+      - `etaSeconds≈504.1`
+      - `topExactDateMassShare≈0.1211`
+- downstream queue remains armed and unchanged:
+  - `tp12_technique_cluster_template_screen_v1_r1`
+  - queue pid: `1120367`
+  - it still waits on `1117299` to exit, then builds cluster template plan, runs T4, runs explicit exact year-consensus, then clause-core and structural-atom summaries
+- detached local watcher was also attempted for continuity outside the interactive shell trace:
+  - log path:
+    - `/home/saida/code/stockdesk-lab-lite/artifacts/runs/tp12_unified_bankfirst_rearchitecture_v1.watch.log`
+  - note:
+    - the background shell did not remain persistent, so treat the log as a recent heartbeat trail rather than a continuously-running daemon
+  - latest heartbeat:
+    - first child still `ma_retest_low_gap_top_lb5_cluster_ma_retest_low_gap_top_lb5_fcf0cbba2b`
+    - completed:
+      - `w1_scope rulesCollected=724 topExactDateMassShare≈0.0568`
+      - `w2_scope rulesCollected=1147 topExactDateMassShare≈0.0863`
+      - `w3_scope rulesCollected=635 topExactDateMassShare≈0.0831`
+      - `w4_scope rulesCollected=491 topExactDateMassShare≈0.0884`
+      - `w5_scope rulesCollected=705 topExactDateMassShare≈0.0896`
+    - current active window:
+      - `w6_scope exploredStates=87040 rulesCollected=552 etaSeconds≈250.5 topExactDateMassShare≈0.2509`
+
+2026-04-17 12:35:00 KST
+- root-cause fix status:
+  - corrected generic technique row-filter wiring is now verified both locally and on server
+  - this fix is mandatory for cluster-bank / cluster-template reruns because the earlier `r1` line was not actually filtering train/oos packs by technique clauses
+- do not use for adjudication:
+  - `tp12_technique_cluster_bank_lanes_v1_r1`
+  - `tp12_technique_cluster_template_screen_v1_r1`
+  - `tp12_technique_cluster_template_year_consensus_v1_r1`
+  - reason:
+    - those `r1` outputs were generated before the row-filter root-cause fix and are scientifically invalid for cluster-lane evaluation
+- authoritative live chain has been relaunched cleanly as `r2`:
+  - queue shell pid:
+    - `1577357`
+  - queue log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_cluster_bank_lanes_v1_r2.queue.log`
+  - sequential run ids:
+    - corrected T3:
+      - `tp12_technique_cluster_bank_lanes_v1_r2`
+    - corrected T4:
+      - `tp12_technique_cluster_template_screen_v1_r2`
+    - corrected exact year-consensus:
+      - `tp12_technique_cluster_template_year_consensus_v1_r2`
+    - corrected clause-core outputs:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_clause_core_consensus_v1_r2_cluster/clause_core_summary.json`
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_clause_core_consensus_v1_r2_cluster/rerun_plan.json`
+    - corrected structural-atom outputs:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_structural_atom_consensus_v1_r2_cluster/projection.jsonl`
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_structural_atom_consensus_v1_r2_cluster/summary.json`
+- live process snapshot right after launch:
+  - T3 launcher pid:
+    - `1577362`
+  - first corrected child rolling pid:
+    - `1577395`
+  - first corrected lane:
+    - `MA_RETEST__LOW_GAP_TOP__lb5::cluster::ma_retest_low_gap_top_lb5_fcf0cbba2b`
+  - first corrected child source/control chain was alive:
+    - `1577417`
+    - `1577445`
+    - `1577688`
+- resume instruction:
+  - monitor only `r2`
+  - register only `r2`-based experiments after completion or explicit kill
+  - keep the no-fallback rule intact:
+    - do not reuse `r1` summaries as a substitute
+    - do not reopen the dead old exact line
+- first corrected live evidence after launch:
+  - corrected first child `w1_scope` has already completed
+  - corrected live train miner end-state:
+    - `exploredStates=200000`
+    - `rulesCollected=811`
+    - `topExactDateMassShare≈0.0807`
+  - corrected row-filter proof:
+    - `step-perfect-prototype-train` row count was `73`
+    - filtered OOS input row count was `40`
+    - this is a real lane-specific filtered pack, not the repeated full-pack artifact pattern seen in `r1`
+  - corrected first child `w1_scope` filtered OOS apply-close28 summary:
+    - `sourceRows=40`
+    - `dedupedMatchedRows=40`
+    - `dedupedMatchedPositiveRows=18`
+    - `lineLevelHitCount=18`
+    - `lineLevelHitRate=0.45`
+    - `uniqueMatchedDates=38`
+    - `uniqueMatchedSymbols=39`
+  - parent corrected T3 summary is still pending:
+    - do not register yet
+
+2026-04-17 21:50:00 KST
+- infrastructure interruption:
+  - corrected `tp12_technique_cluster_bank_lanes_v1_r2` stopped on server with `ENOSPC: no space left on device`
+  - failure point:
+    - during `w2_source` OOS step-a write
+  - this is an infrastructure failure, not a scientific result
+  - do not register `r2`
+- root-cause remediation:
+  - reclaimed disk only from invalid or already-closed bulky artifacts
+  - deleted:
+    - invalid pre-fix `tp12_technique_cluster_bank_lanes_v1_r1*`
+    - invalid pre-fix `tp12_technique_cluster_template_screen_v1_r1*`
+    - closed-negative `tp12_no_stop_scope_expansion_low_lb5_screen_v1_r2_w*`
+    - closed-negative `tp12_no_stop_scope_expansion_low_lb5_screen_v1_w*`
+  - server filesystem after cleanup:
+    - `/dev/vda2 296G used=236G avail=48G use%=84%`
+- new authoritative live chain:
+  - corrected clean rerun T3:
+    - `tp12_technique_cluster_bank_lanes_v1_r3`
+  - corrected clean rerun T4:
+    - `tp12_technique_cluster_template_screen_v1_r3`
+  - corrected clean rerun exact year-consensus:
+    - `tp12_technique_cluster_template_year_consensus_v1_r3`
+  - corrected clean rerun clause-core outputs:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_clause_core_consensus_v1_r3_cluster/clause_core_summary.json`
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_clause_core_consensus_v1_r3_cluster/rerun_plan.json`
+  - corrected clean rerun structural-atom outputs:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_structural_atom_consensus_v1_r3_cluster/projection.jsonl`
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_structural_atom_consensus_v1_r3_cluster/summary.json`
+- live `r3` launch snapshot:
+  - queue shell pid:
+    - `1589995`
+  - queue log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_cluster_bank_lanes_v1_r3.queue.log`
+  - T3 launcher pid:
+    - `1590000`
+  - first child rolling pid:
+    - `1590033`
+  - first child lane:
+    - `MA_RETEST__LOW_GAP_TOP__lb5::cluster::ma_retest_low_gap_top_lb5_fcf0cbba2b`
+  - current status at handoff write:
+    - `w1_source` completed
+    - `w1_scope` started
+    - active scope window pid:
+      - `1591523`
+    - active miner pid:
+      - `1591742`
+- resume instruction:
+  - ignore `r2` for adjudication
+  - monitor only `r3`
+  - register only `r3`-based results after completion or explicit kill
+
+2026-04-17 22:12:00 KST
+- `r3` first lane progress update:
+  - first lane remains:
+    - `MA_RETEST__LOW_GAP_TOP__lb5::cluster::ma_retest_low_gap_top_lb5_fcf0cbba2b`
+  - `w1_scope` completed with corrected filtered outcome:
+    - train `topExactDateMassShare≈0.080704`
+    - filtered OOS apply-close28:
+      - `sourceRows=40`
+      - `dedupedMatchedRows=40`
+      - `dedupedMatchedPositiveRows=18`
+      - `lineLevelHitRate=0.45`
+  - `w2_scope` completed:
+    - miner completion:
+      - `exploredStates=200000`
+      - `rulesCollected=2569`
+      - `topExactDateMassShare≈0.083547`
+    - filtered OOS apply-close28:
+      - `sourceRows=111`
+      - `dedupedMatchedRows=106`
+      - `dedupedMatchedPositiveRows=47`
+      - `lineLevelHitCount=47`
+      - `lineLevelHitRate≈0.4434`
+      - `uniqueMatchedDates=81`
+      - `uniqueMatchedSymbols=95`
+  - current active state:
+    - `w3_source` is live
+    - active source-pack pid:
+      - `1601537`
+    - active control-input pid:
+      - `1601565`
+- parent summary state:
+  - corrected T3 parent summary still pending
+  - do not register anything yet
+
+2026-04-17 22:55:00 KST
+- first `r3` lane is now complete across `w1~w6`
+  - lane:
+    - `MA_RETEST__LOW_GAP_TOP__lb5::cluster::ma_retest_low_gap_top_lb5_fcf0cbba2b`
+  - later-window filtered OOS apply-close28 results:
+    - `w3`: `24/60 = 40.00%`
+    - `w4`: `7/27 = 25.93%`
+    - `w5`: `10/37 = 27.03%`
+    - `w6`: `4/17 = 23.53%`
+  - `w6_scope` miner completion:
+    - `exploredStates=200000`
+    - `rulesCollected=530`
+    - `topExactDateMassShare≈0.087303`
+  - qualitative read:
+    - front-half windows were acceptable
+    - back-half weakened enough that this lane alone should not be treated as clearly positive
+- queue advanced correctly to the second lane
+  - second lane:
+    - `MA_RETEST__LOW_GAP_TOP__lb5::cluster::ma_retest_low_gap_top_lb5_573b675e61`
+  - live state at handoff write:
+    - `w1_scope` running
+    - active scope pid:
+      - `1626018`
+    - active miner pid:
+      - `1626237`
+    - early progress snapshot:
+      - `rowsScanned=76`
+      - `exploredStates=8192`
+      - `rulesCollected=251`
+      - `topExactDateMassShare≈0.1005`
+      - `etaSeconds≈386.8`
+- parent corrected T3 summary still pending
+  - keep monitoring `r3`
+  - do not register yet
+
+2026-04-18 19:05:00 KST
+- fixed-window/year2hit continuation opened under the new explicit path
+  - umbrella patch remains:
+    - `tp12_year2hit_multisurface_fixed_mainline_v1`
+  - do not reopen the dead exact `year2x7/year2x8` discovery line
+- continuity/preflight completed before runtime:
+  - re-read:
+    - `meta/active_research_contract.json`
+    - `meta/active_research_handoff.md`
+    - `meta/experiment_patch_memory.json`
+  - ran:
+    - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+  - duplicate checks passed for:
+    - `tp12_year2hit_seed_lattice_expansion_v1`
+    - `tp12_year2hit_cluster_lane_mainline_v1`
+- runtime honesty constraint confirmed:
+  - current authoritative side-daily control-input rows do not contain multiscope or multilookback identifiers
+  - missing row keys confirmed:
+    - `scopeId`
+    - `candidateScopeId`
+    - `lookbackCandidateId`
+    - `candidateId`
+  - implication:
+    - do not fake a seed-lattice runtime from the current pack
+    - first honest live runtime is the fixed cluster-lane path only
+- invalid first attempt:
+  - run:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r1`
+  - failed before scientific execution
+  - root cause:
+    - fixed derived carrier contract lacked a compatible rolling-loader mode and `decisionWindow`
+  - symptom:
+    - `decisionWindow.from is missing or invalid: <null>`
+  - adjudication:
+    - treat `r1` as invalid
+    - do not register `r1`
+- root-cause fix applied:
+  - `src/lib/tp12_no_stop_rolling_contract.mjs`
+    - new explicit loader mode:
+      - `carrier_fixed_window_v1`
+  - `src/lib/tp12_no_stop_fixed_contract.mjs`
+    - derived carrier now emits:
+      - `contractMode=carrier_fixed_window_v1`
+      - copied `decisionWindow`
+  - `tools/smoke_tp12_no_stop_fixed_contract.mjs`
+    - now reloads the derived carrier through the rolling loader
+- verification after the fix:
+  - server `bash tools/run_server_command.sh npm run verify` completed with exit code `0`
+  - no bypasses and no fallback path added
+- new authoritative live run:
+  - fixed T3:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r2`
+  - queued fixed T4:
+    - `tp12_year2hit_cluster_template_fixed_v1_20260418_r2`
+  - authoritative cluster plan:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_technique_cluster_bank_lanes_v1_seed_r3/cluster_bank_discovery_plan.json`
+  - launch shell pid:
+    - `1805417`
+  - fixed T3 wrapper pid:
+    - `1805419`
+  - first child fixed runner pid:
+    - `1805452`
+  - current child:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r2_ma_retest_low_gap_top_lb5_cluster_ma_retest_low_gap_top_lb5_fcf0cbba2b`
+  - current split:
+    - `screen_2019`
+  - launch log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_year2hit_cluster_lane_mainline_v1_20260418_r2.launch.log`
+- resume instruction:
+  - ignore `r1`
+  - monitor only `r2`
+  - do not register until fixed T3/T4 completes or is explicitly killed
+
+2026-04-18 19:55:00 KST
+- second invalid rerun discovered and closed:
+  - run:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r2`
+  - root cause:
+    - fixed scope wrapper still reused the same multi-window carrier for each split
+    - `screen_2019` therefore still passed impossible future core years into the miner:
+      - observed live args:
+        - `--core-years=2017,2018,2019,2020,2021,2022,2023`
+    - this makes `r2` scientifically invalid
+  - adjudication:
+    - ignore `r2`
+    - do not register `r2`
+- root-cause fix applied:
+  - `src/lib/tp12_no_stop_fixed_contract.mjs`
+    - split-aware search-contract resolver added
+    - single-split carrier now shrinks `searchContract.coreYears` to years available in that split's train range
+  - `tools/run_stepb_1d_tp12_no_stop_scope_fixed.sh`
+    - now writes per-split carrier contracts under:
+      - `step-perfect-prototype-1d-tp12-no-stop-fixed/window_contracts/*.json`
+    - search and report stages now read the split-specific carrier
+  - `src/lib/tp12_no_stop_rolling_contract.mjs`
+    - fixed-carrier mode now accepts a one-window carrier
+  - `tools/smoke_tp12_no_stop_fixed_contract.mjs`
+    - now verifies:
+      - `screen_2019 -> coreYears=[2017,2018]`
+      - `confirm_2024 -> coreYears=[2017..2023]`
+- verification after the fix:
+  - local `bash scripts/verify.sh` exited `0`
+  - server `bash tools/run_server_command.sh npm run verify` exited `0`
+- new authoritative live run:
+  - fixed T3:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r3`
+  - queued fixed T4:
+    - `tp12_year2hit_cluster_template_fixed_v1_20260418_r3`
+  - launch shell pid:
+    - `1835456`
+  - fixed T3 wrapper pid:
+    - `1835458`
+  - first fixed child wrapper pid:
+    - `1835491`
+  - first fixed scope-window pid:
+    - `1836717`
+  - first fixed miner pid:
+    - `1836860`
+  - first child:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r3_ma_retest_low_gap_top_lb5_cluster_ma_retest_low_gap_top_lb5_fcf0cbba2b`
+  - first split:
+    - `screen_2019`
+  - launch log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_year2hit_cluster_lane_mainline_v1_20260418_r3.launch.log`
+  - split-specific carrier proof:
+    - window contract:
+      - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_year2hit_cluster_lane_mainline_v1_20260418_r3_ma_retest_low_gap_top_lb5_cluster_ma_retest_low_gap_top_lb5_fcf0cbba2b/step-perfect-prototype-1d-tp12-no-stop-fixed/window_contracts/screen_2019.json`
+    - resolved `coreYears=[2017,2018]`
+    - live miner args also confirmed:
+      - `--core-years=2017,2018`
+- resume instruction:
+  - ignore `r1`
+  - ignore `r2`
+  - monitor only `r3`
+  - do not register until fixed T3/T4 completes or is explicitly killed
+
+2026-04-18 20:20:00 KST
+- first valid split result now exists under the corrected fixed path
+  - run:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r3_ma_retest_low_gap_top_lb5_cluster_ma_retest_low_gap_top_lb5_fcf0cbba2b_screen_2019_scope`
+  - split-specific carrier remained correct:
+    - `coreYears=[2017,2018]`
+  - fixed OOS apply-close28:
+    - `sourceRows=119`
+    - `dedupedMatchedRows=60`
+    - `dedupedMatchedPositiveRows=17`
+    - `lineLevelHitRate=0.283333`
+    - `uniqueMatchedDates=56`
+    - `uniqueMatchedSymbols=54`
+  - read:
+    - positive but below the working 0.30 screen bar
+- queue advanced cleanly to the next split
+  - active split:
+    - `screen_2020`
+  - split-specific carrier proof:
+    - `coreYears=[2017,2018,2019]`
+  - live miner snapshot at handoff write:
+    - `rowsScanned=386`
+    - `exploredStates=71680`
+    - `rulesCollected=177`
+    - `topExactDateMassShare≈0.067041`
+    - `etaSeconds≈317.5`
+- resume instruction:
+  - continue monitoring only `r3`
+  - do not register until the fixed T3/T4 chain completes or is explicitly killed
+
+2026-04-18 21:15:00 KST
+- user redirected work away from year2hit runtime continuation and requested a deep 2016~2026 source-data audit first
+- live run status changed:
+  - stop `r3` and leave it unregistered
+  - stopped:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r3`
+    - queued `tp12_year2hit_cluster_template_fixed_v1_20260418_r3`
+  - no matching fixed wrapper/source/scope/miner pid remained alive after stop
+- server canonical data audit:
+  - `candle_daily.jsonl`
+    - `2016-01-04 ~ 2026-04-17`
+    - `4,467,213` rows
+    - `2,522` distinct dates
+  - `universe_daily.jsonl`
+    - `2016-01-04 ~ 2026-04-17`
+    - `3,299,874` rows
+    - `2,522` distinct dates
+  - `latest_common_data_date=2026-04-17`
+- hard integrity checks all clean:
+  - invalid candle audit rows=`0`
+  - candle/universe/nontrading duplicate symbol-date pairs=`0`
+  - candle vs nontrading overlap=`0`
+  - universe vs nontrading overlap=`0`
+  - universe orphan pairs without candle=`0`
+  - candle blank/null/impossible OHLCV rows=`0`
+  - universe blank/null/negative key numeric rows=`0`
+- unresolved source anomaly found:
+  - `2024-12-31` still has `0` rows in candle/universe/nontrading
+  - however existing coverage-contract notes in this repo already classify it as `KRX holiday` / effective-coverage boundary rather than the main current source defect
+  - isolated partial-coverage anomaly dates found:
+    - `2017-09-22`
+    - `2017-12-20`
+    - `2018-02-06`
+    - `2018-03-02`
+    - `2022-05-02`
+    - `2023-07-11`
+    - `2025-09-19`
+  - strongest anomaly pattern is single-date market-loss, mostly `KSQ`:
+    - `2017-09-22`: `222` rows vs `1274` previous day, `KSQ missing=1052`
+    - `2017-12-20`: `222` rows vs `1297` previous day, `KSQ missing=1075`
+    - `2018-02-06`: `627` rows vs `1293` previous day, `KSQ missing=667`
+    - `2018-03-02`: `618` rows vs `1293` previous day, `KSQ missing=677`
+    - `2022-05-02`: `957` rows vs `2027` previous day, `KSQ missing=1053`
+    - `2023-07-11`: `885` rows vs `2072` previous day, `KSQ missing=1167`
+    - `2025-09-19` is milder but still abnormal and STK-heavy
+- resume instruction:
+  - do not resume year2hit/fixed-window experiments yet
+  - next work should adjudicate whether the anomaly dates are upstream partial snapshots, exchange-closed exceptions, or repairable historical gaps
+
+2026-04-18 20:29:00 KST
+- corrected fixed run `r3` produced the second split result and is still advancing normally
+  - run:
+    - `tp12_year2hit_cluster_lane_mainline_v1_20260418_r3_ma_retest_low_gap_top_lb5_cluster_ma_retest_low_gap_top_lb5_fcf0cbba2b_screen_2020_scope`
+  - split-specific carrier remained correct:
+    - `coreYears=[2017,2018,2019]`
+  - fixed OOS apply-close28:
+    - `sourceRows=250`
+    - `dedupedMatchedRows=109`
+    - `dedupedMatchedPositiveRows=36`
+    - `lineLevelHitRate=0.330275`
+    - `uniqueMatchedDates=82`
+    - `uniqueMatchedSymbols=101`
+  - read:
+    - this is the first corrected split above the working 0.30 screen bar
+- queue advanced cleanly again
+  - next split:
+    - `screen_2021`
+  - status at handoff write:
+    - source stage completed
+    - scope stage live
+    - live miner args confirmed:
+      - `--core-years=2017,2018,2019,2020`
+    - first miner snapshot:
+      - `rowsScanned=638`
+      - `exploredStates=14336`
+      - `rulesCollected=291`
+      - `topExactDateMassShare≈0.155905`
+      - `etaSeconds≈489.8`
+- resume instruction:
+  - continue monitoring only `r3`
+  - do not register until the fixed T3/T4 chain completes or is explicitly killed
+
+2026-04-18 04:51:51 KST
+- user explicitly redirected work away from runtime continuation and requested a root-cause repair patch for public-KR partial date-slice anomalies
+- new continuity file:
+  - `meta/worklog_public_kr_partial_date_slice_repair_v1.md`
+- patch status:
+  - implemented and verified `public_kr_partial_date_slice_repair_v1`
+  - this is not an experiment run; no registry entry was added
+- added files/tools:
+  - anomaly manifest:
+    - `meta/public_kr_partial_coverage_anomaly_manifest.json`
+  - audit:
+    - `tools/audit_public_kr_partial_coverage_dates.py`
+  - stage-only wrappers:
+    - `tools/run_public_kr_historical_stage_only.sh`
+    - `tools/server_run_public_kr_historical_stage_only.sh`
+  - targeted validator:
+    - `tools/validate_public_kr_targeted_repair_stage.py`
+  - targeted repair wrappers:
+    - `tools/run_public_kr_targeted_date_repair.sh`
+    - `tools/server_run_public_kr_targeted_date_repair.sh`
+  - smoke:
+    - `tools/smoke_public_kr_partial_coverage_repair.py`
+- repair contract:
+  - exact one-date full regeneration only
+  - no symbol-only hot patch
+  - no candle-only rewrite
+  - merge forbidden unless stage summary, QC, and targeted validator all pass
+- anomaly targeting:
+  - legacy/all-common group:
+    - `2017-09-22`
+    - `2017-12-20`
+    - `2018-02-06`
+    - `2018-03-02`
+  - filtered/core-threshold group:
+    - `2022-05-02`
+    - `2023-07-11`
+    - `2025-09-19`
+  - keep `2024-12-31` as repo-known effective-coverage boundary, not part of this repair batch
+- verification:
+  - local `bash scripts/verify.sh` exited `0`
+  - server `bash tools/run_server_command.sh npm run verify` exited `0`
+- live state:
+  - no year2hit runtime is active
+  - no repair probe/apply run has been started yet
+- resume instruction:
+  - if repair execution is requested, start with:
+    - `tools/run_public_kr_targeted_date_repair.sh --mode=probe`
+  - inspect validator summaries for all seven dates
+  - only after explicit probe success should `--mode=apply` be run
+
+2026-04-18 06:08:14 KST
+- continuation on `public_kr_partial_date_slice_repair_v1` found and fixed two concrete root causes in live repair execution:
+  - server noninteractive historical wrappers were missing `KRX_ID/KRX_PW` loading
+  - active-symbol candle repair still depended on Yahoo, which has empty-history gaps exactly on anomaly dates like `2017-09-22`
+- env fix:
+  - added `tools/load_krx_mdc_env.sh`
+  - sourced from:
+    - `tools/run_public_kr_historical_inputs.sh`
+    - `tools/run_public_kr_historical_backfill.sh`
+    - `tools/run_public_kr_historical_stage_only.sh`
+- source-contract fix:
+  - source manifest now supports explicit `ACTIVE_KRX`
+  - added `--active-candle-provider=yahoo|krx` to shard planner/backfill/stage-only wrappers
+  - `tools/run_public_kr_targeted_date_repair.sh` now defaults to `--active-candle-provider=krx`
+  - added `tools/smoke_public_kr_active_candle_provider.py`
+- verification after fix:
+  - local `bash scripts/verify.sh` exited `0`
+  - server `bash tools/run_server_command.sh --skip-sync npm run verify` exited `0`
+- live proof on one anomaly date:
+  - targeted probe:
+    - `public_kr_partial_cov_probe_v1_20260418_r3`
+    - date `2017-09-22`
+  - all five shards completed with `missingDataSymbolCount=0`
+  - validator passed with:
+    - `currentCandleRows=222 -> stageCandleRows=1277`
+    - `currentUniverseRows=222 -> stageUniverseRows=1277`
+    - `stageLocalRatio=1.0024`
+    - `recoveryRate=0.9924`
+    - `recoveredPrevMissingSymbols=1045`
+- read:
+  - `2017-09-22` is confirmed repairable
+  - the repaired stage coverage is back to neighborhood-normal scale
+  - Yahoo emptiness was the real blocker for active-symbol repair
+- resume instruction:
+  - next run should be a full seven-date `--mode=probe` sweep using the new default `ACTIVE_KRX` targeted repair path
+  - if the remaining dates validate similarly, proceed to grouped `--mode=apply`
+  - no experiment registry update is needed; this remains a data-repair/root-cause patch track, not an experiment
+
+2026-04-18 06:14:02 KST
+- full anomaly-date probe sweep has now been launched
+  - run id:
+    - `public_kr_partial_cov_probe_v1_20260418_r4`
+  - mode:
+    - `probe`
+  - provider:
+    - `ACTIVE_KRX`
+  - launch pid:
+    - `1983547`
+  - launch log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/data_quality/partial_coverage_repair/run=public_kr_partial_cov_probe_v1_20260418_r4.launch.log`
+- early launch sanity:
+  - first per-date root exists:
+    - `artifacts/backfill/public_kr_historical/run=public_kr_partial_cov_probe_v1_20260418_r4_20170922`
+  - launch log confirms all first-date shards use `--active-candle-provider=krx`
+- resume instruction:
+  - continue monitoring `r4` until each anomaly date writes a validator summary
+  - if all seven probe dates pass, proceed to grouped `--mode=apply`
+  - if any date fails, inspect whether it is a true source gap or a universe/nontrading policy mismatch before any merge attempt
+
+2026-04-18 10:34:50 KST
+- `r4` stopped on `2017-12-20`, but the blocker has now been root-caused and removed
+- root cause:
+  - `delistedOn` was being treated as an inclusive trading upper bound inside historical lifecycle intersection
+  - authenticated KRX active and delisted price endpoints both stop at the trading day before `delistedOn`
+  - therefore the failed symbol `023430 / KR7023430002` should never have been included in the `2017-12-20` one-day stage
+- code fix:
+  - `tools/public_kr_historical_common.py`
+    - `lifecycle_intersects()` now interprets `delistedOn` as an exclusive upper bound for stageable trading rows
+  - `tools/build_historical_shares_intervals.py`
+    - aligned lifecycle/share intersection to the same rule
+  - `tools/smoke_public_kr_historical_input_builders.py`
+    - added regression coverage for same-day delisted exclusion and `effectiveTo=delistedOn-1`
+- verification:
+  - local `bash scripts/verify.sh` exited `0`
+  - server `bash tools/run_server_command.sh npm run verify` reran to completion and printed `==> verify complete`
+- live confirmation:
+  - single-date rerun:
+    - `public_kr_partial_cov_probe_v1_20260418_r5`
+    - date `2017-12-20`
+  - all five shards completed with `missingDataSymbolCount=0`
+  - shard 4 no longer wrote `missing_data_symbols.json`
+  - validator passed with:
+    - `currentCandleRows=222 -> stageCandleRows=1295`
+    - `currentUniverseRows=222 -> stageUniverseRows=1295`
+    - `stageLocalRatio=0.9977`
+    - `recoveryRate=0.9963`
+    - `recoveredPrevMissingSymbols=1071`
+- current live run:
+  - full seven-date probe sweep relaunched:
+    - `public_kr_partial_cov_probe_v1_20260418_r6`
+  - launch log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/data_quality/partial_coverage_repair/run=public_kr_partial_cov_probe_v1_20260418_r6.launch.log`
+- resume instruction:
+  - monitor `r6` only
+  - `2017-09-22` and `2017-12-20` are already proven repairable in probe mode
+  - continue waiting for the remaining anomaly dates to emit passed validator summaries
+  - do not run `--mode=apply` until all anomaly dates have explicit probe success
+
+2026-04-18 11:17:34 KST
+- partial-date repair is still blocked on a fourth live root cause
+- `public_kr_partial_cov_probe_v1_20260418_r7` proved:
+  - `2018-02-06` passed
+  - `2018-03-02` passed
+  - `2022-05-02` failed before validator because stage workers could not resolve canonical share coverage
+- exact root cause:
+  - canonical `data/historical_shares_intervals.jsonl` only covers through `2020-04-19`
+  - local and server copies are identical on this point
+  - filtered-era repair dates (`2022-05-02`, `2023-07-11`, `2025-09-19`) cannot succeed until canonical shares coverage is rebuilt beyond 2020
+- fail-fast fix added:
+  - `tools/assert_public_kr_historical_shares_coverage.py`
+  - wired into `tools/run_public_kr_historical_stage_only.sh`
+  - smoke added in `tools/smoke_public_kr_historical_shares_coverage.py`
+  - local `bash scripts/verify.sh` and server `bash tools/run_server_command.sh --skip-sync npm run verify` both passed after the change
+- canonical remediation in progress:
+  - run id:
+    - `public_kr_shares_full_rebuild_v1_20260418_r1`
+  - run root:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/backfill/public_kr_historical_inputs/run=public_kr_shares_full_rebuild_v1_20260418_r1`
+  - launch log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/backfill/public_kr_historical_inputs/run=public_kr_shares_full_rebuild_v1_20260418_r1/launch.log`
+  - start line:
+    - `START build_historical_shares_intervals from=2016-01-01 to=2026-04-17 symbols=1577 active=1252 delisted=325`
+- hard instruction:
+  - do not rerun filtered-era date repair until the full-range shares rebuild completes and proves coverage beyond `2025-09-19`
+  - next valid sequence is:
+    1. validate rebuilt shares artifact coverage
+    2. rerun `2022-05-02`, `2023-07-11`, `2025-09-19`
+    3. if all seven anomaly dates are passed in probe mode, run grouped `--mode=apply`
+
+2026-04-18 12:44:18 KST
+- live shares rebuild `public_kr_shares_full_rebuild_v1_20260418_r1` is still in progress and should not be interrupted
+- current observed progress:
+  - active-symbol phase reached `processed=800/1252 success=800`
+  - checkpoint size is about `291.7MB`
+  - checkpoint already contains rows with `effectiveTo=2026-04-17`
+- filtered-era shares coverage is improving but not yet sufficient
+  - current guard failures against the live checkpoint:
+    - `2022-05-02`: `missingShareSymbolCount=579`
+    - `2023-07-11`: `missingShareSymbolCount=545`
+    - `2025-09-19`: `missingShareSymbolCount=479`
+- operator instruction:
+  - keep this full rebuild running as the only KRX-heavy job
+  - do not start new filtered-era probes or supplemental parallel shares builds yet
+  - next valid gate is the shares coverage guard returning `0` missing symbols for all three filtered-era dates
+
+2026-04-18 13:26:42 KST
+- public-KR partial-date repair remains the active line; year2hit work is still paused
+- current live state:
+  - shares rebuild:
+    - `public_kr_shares_full_rebuild_v1_20260418_r1`
+    - python pid `2201061`
+    - active phase complete: `processed=1252/1252 success=1252`
+    - delisted phase started: `processed=50/325 success=50`
+    - final shares artifact not written yet
+- latest checkpoint-based filtered-era guard results:
+  - `2022-05-02`: `missingShareSymbolCount=127`
+  - `2023-07-11`: `missingShareSymbolCount=93`
+  - `2025-09-19`: `missingShareSymbolCount=27`
+  - `globalMaxShareEffectiveTo=2026-04-17` in all three summaries
+- critical interpretation:
+  - all remaining missing-share rows are delisted symbols only
+  - there is no evidence of another root cause beyond the still-running delisted phase
+- serialized finalize watcher is now armed:
+  - watcher run id:
+    - `public_kr_partial_cov_finalize_v1_20260418_r1`
+  - watcher pid:
+    - `2268364`
+  - watcher log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/data_quality/partial_coverage_repair/finalize=public_kr_partial_cov_finalize_v1_20260418_r1/watch.log`
+  - watcher sequence:
+    1. wait for shares rebuild pid `2201061` to exit
+    2. require `historical_shares_intervals.jsonl` and `shares_summary.json`
+    3. atomically promote the rebuilt shares artifact to canonical `data/historical_shares_intervals.jsonl`
+    4. rerun final shares coverage guards for `2022-05-02`, `2023-07-11`, `2025-09-19`
+    5. run filtered-era probe: `public_kr_partial_cov_probe_v1_20260418_r8`
+    6. if probe passes, run grouped apply: `public_kr_partial_cov_apply_v1_20260418_r1`
+    7. let apply rebuild sidecar, rerun partial-coverage audit, and execute `npm run verify`
+- resume instruction:
+  - monitor the watcher log first
+  - if it prints `DONE finalize watcher`, the repair line is fully closed
+  - if it stops earlier, inspect the last failing step in the watcher log before taking any manual action
+
+2026-04-18 18:37:28 KST
+- public-KR partial-date repair is still the only active line
+- fifth live root cause confirmed:
+  - first finalize watcher `public_kr_partial_cov_finalize_v1_20260418_r1` promoted canonical shares successfully
+  - its filtered-era probe `public_kr_partial_cov_probe_v1_20260418_r8` then failed at validator on `2022-05-02`
+  - failure was not candle/share fetch; all stage shards had `fetchedSymbolCount == expectedSymbolCount`, `missingDataSymbolCount=0`, `missingShareSymbolCount=0`
+  - the real defect was canonical `data/historical_symbol_lifecycle.jsonl`
+- exact lifecycle defect:
+  - canonical file had only `1577` rows
+  - market split was `KSQ 1481 / STK 96`
+  - `listedFrom` max was only `2020-03-24`
+  - this made filtered-era stages expect only `1379` symbols on `2022-05-02`, far below the local baseline `~2028`
+- root cause:
+  - `tools/public_kr_historical_inputs_common.py`
+    - `normalize_kind_market_code()` did not recognize KRX current-list alias `시장구분='유가'`
+  - live source proof:
+    - `load_kind_current_list_rows()` returns `2766` rows
+    - market counts: `코스닥 1818 / 유가 839 / 코넥스 109`
+    - pre-fix `build_current_rows()` resolved only `1778` current rows and skipped `unsupported_market 945`
+    - post-fix `build_current_rows()` resolves `2614` current rows and only skips `unsupported_market 109`, `invalid_symbol 43`
+- code fix applied:
+  - `tools/public_kr_historical_inputs_common.py`
+    - added `유가`, `유가증권` aliases to `normalize_kind_market_code()`
+  - `tools/smoke_public_kr_historical_input_builders.py`
+    - added regression assertion for `normalize_kind_market_code(\"유가\")`
+    - switched fake current-row market input to `유가`
+- verification:
+  - local smoke passed
+  - local `bash scripts/verify.sh` passed
+  - server `npm run verify` rerun was started after sync and the new public-KR builder smoke passed in-stream
+- old rebuilds are no longer authoritative after this lifecycle fix
+- new full inputs rebuild launched:
+  - run id:
+    - `public_kr_historical_inputs_full_rebuild_v1_20260418_r2`
+  - launcher pid:
+    - `2433047`
+  - launch log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/backfill/public_kr_historical_inputs/run=public_kr_historical_inputs_full_rebuild_v1_20260418_r2/launch.log`
+  - early lifecycle output already confirms the fix:
+    - `DONE build_historical_symbol_lifecycle ... symbols=3044 current=2614 delisted=430`
+  - shares phase started immediately after:
+    - `START build_historical_shares_intervals ... symbols=3044 active=2614 delisted=430`
+- new serialized finalize watcher launched:
+  - watcher run id:
+    - `public_kr_partial_cov_finalize_v1_20260418_r2`
+  - watcher pid:
+    - `2435527`
+  - watcher log:
+    - `/home/moltook/apps/stockdesk-lab-lite/artifacts/data_quality/partial_coverage_repair/finalize=public_kr_partial_cov_finalize_v1_20260418_r2/watch.log`
+  - watcher flow:
+    1. wait for inputs rebuild pid `2433047`
+    2. require rebuilt lifecycle + shares artifacts
+    3. promote canonical lifecycle + shares together
+    4. rerun filtered-era shares guards
+    5. run `public_kr_partial_cov_probe_v1_20260418_r9`
+    6. if probe passes, run grouped apply `public_kr_partial_cov_apply_v1_20260418_r2`
+    7. let apply rebuild sidecar, rerun partial-coverage audit, and execute `npm run verify`
+- resume instruction:
+  - monitor the new watcher log first
+  - if it reaches `DONE finalize watcher`, the public-KR repair is fully closed
+  - if it stops early, inspect the last failing command in the watcher log before any manual rerun
+
+2026-04-18 19:25:00 KST
+- public-KR partial-date repair remains the only active line
+- current authoritative chain:
+  - inputs rebuild:
+    - `public_kr_historical_inputs_full_rebuild_v1_20260418_r2`
+    - launcher pid `2433047`
+  - finalize watcher:
+    - `public_kr_partial_cov_finalize_v1_20260418_r2`
+    - watcher pid `2435527`
+- important status clarification:
+  - `r2` shares rebuild looked stalled because the checkpoint file stopped moving and the launch log stopped at `processed=400/2614`
+  - this is not a broken-symbol hang
+  - manual authenticated KRX replay of the next three symbols after checkpoint symbol `011330`
+    - `011370 서한`
+    - `011390 부산산업`
+    - `011420 갤럭시아에스엠`
+    all completed normally in `~6-9s`
+  - interpretation:
+    - the job is a very long single-session KRX rebuild, not a deadlock
+    - midpoint checkpoint still shows only `checkpointSymbols=400`, so filtered-era coverage guards are expected to fail until the rebuild advances much further
+- checkpoint facts:
+  - `checkpointRows=1005588`
+  - `checkpointSymbols=400`
+  - `lastSymbol=011330`
+  - `globalMaxEffectiveTo=2026-04-17`
+  - midpoint filtered-era guard sample:
+    - `2022-05-02`: `sharesSymbolCount=400`, `missingShareSymbolCount=1973`
+- server verify:
+  - earlier session `54518` left no retained log
+  - verify was restarted explicitly; local launcher session id `32292`
+  - rerun completed successfully with exit `0`
+- latest observed rebuild progress:
+  - launch log now shows `PROGRESS build_historical_shares_intervals processed=500/2614 success=500`
+  - checkpoint snapshot:
+    - `checkpointRows=1251559`
+    - `checkpointSymbols=500`
+    - `lastSymbol=017390`
+    - file size `182608273`
+    - mtime `2026-04-18 19:27:10 +0900`
+- newer progress confirmation:
+  - launch log later advanced to `processed=1200/2614 success=1200`
+  - newer checkpoint snapshot:
+    - `checkpointRows=2973820`
+    - `checkpointSymbols=1200`
+    - `lastSymbol=079900`
+    - file size `433944072`
+    - mtime `2026-04-18 20:36:24 +0900`
+- midpoint filtered-era guard check against the live checkpoint:
+  - `2022-05-02`: `sharesSymbolCount=1200`, `missingShareSymbolCount=1189`
+  - `2023-07-11`: `sharesSymbolCount=1200`, `missingShareSymbolCount=1299`
+  - `2025-09-19`: `sharesSymbolCount=1200`, `missingShareSymbolCount=1443`
+  - this still fails, but it is consistent with an incomplete active-symbol rebuild rather than a new data-contract defect
+- next operator action:
+  - keep watching `2433047` and `2435527`
+  - do not start manual probe/apply while shares rebuild is incomplete
+  - once rebuild finishes, the watcher should promote lifecycle+shares together and continue to filtered-era probe/apply automatically
+
+2026-04-20 status check
+- public-KR repair did not fully finish
+- completed:
+  - `public_kr_historical_inputs_full_rebuild_v1_20260418_r2`
+    - lifecycle rebuilt successfully: `symbols=3044 current=2614 delisted=430`
+    - shares rebuilt successfully:
+      - active `2614/2614`
+      - delisted `430/430`
+      - intervals `5759389`
+  - watcher promoted canonical:
+    - `data/historical_symbol_lifecycle.jsonl`
+    - `data/historical_shares_intervals.jsonl`
+  - final shares coverage guards passed for:
+    - `2022-05-02`
+    - `2023-07-11`
+    - `2025-09-19`
+    all with `missingShareSymbolCount=0`
+- not completed:
+  - grouped apply did not run
+  - no `public_kr_partial_cov_apply_v1_20260418_r2` directory exists
+  - canonical `data/candle_daily.jsonl` and `data/universe_daily.jsonl` were not modified
+- blocker:
+  - `public_kr_partial_cov_probe_v1_20260418_r9`
+  - `2022-05-02` probe validated
+  - `2023-07-11` probe validated
+  - `2025-09-19` probe shard fetch/QC completed with no missing candle/share symbols, but validator failed:
+    - `stage universe rows regressed current rows stage=1340 current=1689`
+- next operator action:
+  - do not claim data repair complete
+  - investigate `2025-09-19` universe row construction/regression under `core_threshold`
+  - likely compare current canonical universe membership for `2025-09-19` vs staged membership and explain why staged full source has fewer universe rows than current canonical
+
+2026-04-20 year2hit foundation patch status
+- implemented explicit no-fallback foundation tooling:
+  - `tools/diff_public_kr_universe_membership.py`
+  - `tools/build_tp12_year2hit_data_readiness_summary.py`
+  - `src/lib/tp12_year2hit_train_gate.mjs`
+  - `tools/build_tp12_year2hit_train_gate_summary.mjs`
+  - `tools/run_tp12_year2hit_train_gate.sh`
+- added verification coverage:
+  - `tools/smoke_public_kr_universe_membership_diff.py`
+  - `tools/smoke_tp12_year2hit_data_readiness.py`
+  - `tools/smoke_tp12_year2hit_train_gate.mjs`
+  - `tools/smoke_tp12_year2hit_same_date_dedup.mjs`
+- patched historical stage summaries to record:
+  - `universeMode`
+  - universe candidate/pass/reject counts
+  - reject reason counts
+  - universe thresholds
+- server diagnostic result for old r9 `2025-09-19` stage:
+  - artifact:
+    - `artifacts/data_quality/year2hit_foundation/run=public_kr_universe_regression_diag_v1_20260420_r1/2025-09-19_universe_diff.json`
+  - current candle unique symbols: `1689`
+  - current universe unique symbols: `1689`
+  - staged candle unique symbols: `2539`
+  - staged universe unique symbols with `core_threshold`: `1340`
+  - stage candle missing universe symbols: `1199`
+  - approximate reject counts:
+    - `liquidity_below_min`: `984`
+    - `market_cap_below_min`: `20`
+    - `market_cap_below_min+liquidity_below_min`: `195`
+- root conclusion:
+  - `2025-09-19` blocker is a per-date universe-mode contract mismatch
+  - canonical daily fill path uses explicit `--universe-mode=all_common`
+  - old repair manifest forced `core_threshold`, causing validator regression
+  - this is not a shares coverage miss after the r2 lifecycle/shares rebuild
+- manifest update:
+  - `meta/public_kr_partial_coverage_anomaly_manifest.json`
+  - `2025-09-19.defaultUniverseMode=all_common`
+  - no automatic fallback was added
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+
+### 2026-04-22 KST - TP12 train100 counterexample frontier partition drain 8x1m
+
+- patch key:
+  - `tp12_train100_counterexample_frontier_partition_drain_v1`
+- continuity gates:
+  - read `meta/active_research_contract.json`, `meta/active_research_handoff.md`, and `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_train100_counterexample_frontier_partition_drain_v1`
+  - target-first bootstrap passed:
+    - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- objective:
+  - continue strict train-only TP12 train100 year2hit search from the `8m` checkpoint:
+    - years `2016..2024`
+    - at least `2` hit decision dates per year
+    - at least `2` hit symbol-dates per year
+    - at least `18` positive symbol-dates total
+    - train precision exactly `100%`
+    - false positive rows exactly `0`
+  - no OOS files were read or used
+- code changes:
+  - extended `src/lib/tp12_train100_year2hit_discovery.mjs` with deterministic frontier partition support:
+    - `frontierPartitionCount`
+    - `frontierPartitionIndex`
+    - `support_hash_mod_v1`
+    - `maxAdditionalVisitedStates`
+  - added delta checkpoint support for resumed partition shards:
+    - resumed shards keep the source checkpoint's full seen-support set for pruning
+    - new shard checkpoints write only `seenSupportDelta`
+    - recursive checkpoint loading supports `full_v1` and `delta_from_base_v1`
+  - extended `tools/mine_tp12_train100_counterexample_exact_completion.mjs` with partition CLI flags
+  - added `tools/build_tp12_train100_counterexample_partition_report.mjs`
+  - added `meta/tp12_train100_counterexample_frontier_partition_drain_contract.json`
+  - extended `tools/smoke_tp12_train100_year2hit_discovery.mjs` and `scripts/verify.sh`
+- root-cause fix during execution:
+  - initial server run failed because the partition contract added an extra `hardStops` line, making it incompatible with the `8m` checkpoint contract
+  - fixed by restoring `hardStops` to match the source contract and keeping partition aggregation requirements in the explicit `counterexampleExactCompletion.notes`
+  - this preserved fail-fast resume compatibility instead of adding any hidden fallback path
+- server run:
+  - run directory:
+    - `artifacts/runs/tp12_train100_counterexample_frontier_partition_drain_v1/step-frontier-partition-drain-8x1m`
+  - source checkpoint:
+    - `artifacts/runs/tp12_train100_counterexample_frontier_resume_8m_v1/step-frontier-resume-8m/counterexample_frontier_resume_8m_checkpoint.json`
+  - source atom table:
+    - `artifacts/runs/tp12_train100_context_atom_discovery_v1/step-train100-context-discovery/atom_events.jsonl.gz`
+  - partition summary:
+    - `partition_summary.json`
+    - `partition_report.md`
+  - quality:
+    - `train100_partition_quality_gate_summary.json`
+  - report:
+    - `train100_partition_discovery_summary.json`
+    - `train100_partition_discovery_report.md`
+- final server result:
+  - status: `incomplete`
+  - searchComplete: `false`
+  - partitionCount: `8`
+  - completedShardCount: `0`
+  - sourceFrontierSize: `317`
+  - selectedFrontierSize: `317`
+  - remainingFrontierSize: `1166`
+  - sourceVisitedStateCount: `8000000`
+  - newVisitedStateCount: `8000000`
+  - globalVisitedStateCount: `16000000`
+  - acceptedCandidateCount: `0`
+  - acceptedTrain100PatternCount: `0`
+  - oosRead: `false`
+  - shard results:
+    - shard `0`: selected `34`, remaining `115`, newVisited `1000000`, accepted `0`, reason `max_visited_states_reached`
+    - shard `1`: selected `47`, remaining `184`, newVisited `1000000`, accepted `0`, reason `max_visited_states_reached`
+    - shard `2`: selected `45`, remaining `185`, newVisited `1000000`, accepted `0`, reason `max_visited_states_reached`
+    - shard `3`: selected `40`, remaining `151`, newVisited `1000000`, accepted `0`, reason `max_visited_states_reached`
+    - shard `4`: selected `42`, remaining `110`, newVisited `1000000`, accepted `0`, reason `max_visited_states_reached`
+    - shard `5`: selected `31`, remaining `196`, newVisited `1000000`, accepted `0`, reason `max_visited_states_reached`
+    - shard `6`: selected `42`, remaining `134`, newVisited `1000000`, accepted `0`, reason `max_visited_states_reached`
+    - shard `7`: selected `36`, remaining `91`, newVisited `1000000`, accepted `0`, reason `max_visited_states_reached`
+- interpretation:
+  - the strict train-only train100 search has now reached `16,000,000` total visited states across the source `8m` run plus the 8 deterministic partition shards
+  - the partition pass found `0` accepted train100 year2hit candidates
+  - this is still not a mathematical absence proof because every shard hit its configured additional `1,000,000` state cap and left frontier states
+  - do not proceed to OOS or selector work from this branch because accepted train100 survivor count is zero
+  - any continuation should either resume the deterministic partition shard checkpoints with larger per-shard caps, or switch to a new explicit objective; do not silently relax the `100%` train precision criterion in this patch
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed after closeout
+
+### 2026-04-22 KST - H80 conjunctive veto rule-grid diagnostic
+
+- patch key:
+  - `tp12_h80_conjunctive_veto_rule_grid_v1`
+- continuity gates:
+  - target-first bootstrap passed:
+    - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+  - read active contract / handoff / patch memory before patching
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_h80_conjunctive_veto_rule_grid_v1`
+- objective:
+  - continue the explicit train-only H80 Wilson/contrastive/abstention path
+  - test whether numeric context vetoes can reduce false positives after the previous foundation failed H80 gate
+  - OOS `2025-01-02..2026-04-17` remains forbidden for tuning / threshold / selector decisions
+- code changes:
+  - extended `src/lib/tp12_veto_bank_trainer.mjs` from single veto rules to explicit diagnostic rule sets
+  - new explicit options:
+    - `maxRuleSetSize`
+    - `maxCandidateRuleSets`
+    - `allowSameFieldRulePairs`
+  - rule-set semantics are conjunctive:
+    - a candidate is vetoed only when all rules inside a rule set match
+  - the artifact remains `diagnostic_only_not_locked`; no locked selector is emitted by this patch
+  - extended `tools/train_tp12_veto_bank.mjs` CLI with:
+    - `--max-rule-set-size`
+    - `--max-candidate-rule-sets`
+    - `--allow-same-field-rule-pairs`
+  - added train-only feature-schema-safe candidate rule file:
+    - `meta/tp12_h80_conjunctive_veto_rule_grid_rules.json`
+  - extended `tools/smoke_tp12_veto_bank_trainer.mjs` with a paired-rule case where only `ruleA AND ruleB` is diagnostic-positive
+  - wired the new JSON rule file into `scripts/verify.sh`
+- server diagnostic run:
+  - source feature file:
+    - `artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/train_only_foundation/enriched_consensus_all_folds.jsonl`
+  - selector config:
+    - `config/tp12_selector_sum_cluster_roweb_v1.json`
+  - candidate rules:
+    - `meta/tp12_h80_conjunctive_veto_rule_grid_rules.json`
+  - output root:
+    - `artifacts/runs/tp12_h80_conjunctive_veto_rule_grid_v1/train_only_diagnostic`
+  - command mode:
+    - `--max-rule-set-size=2`
+    - `--max-candidate-rule-sets=2000`
+    - `--min-selected-rows=150`
+    - `--min-precision-lift=0.03`
+    - `--h80-min-selected-rows=150`
+    - `--h80-target-hit-rate=0.8`
+    - `--h80-min-wilson-lower95=0.8`
+- result:
+  - baseline:
+    - selectedRows: `978`
+    - hitRows: `434`
+    - hitRate: `0.4437627811860941`
+    - wilsonLower95: `0.4129054757251392`
+  - candidateRuleSetCount: `574`
+  - diagnosticPassedRuleCount: `0`
+  - h80PassedRuleCount: `0`
+  - best rule set:
+    - `veto_set__veto_closeLocation_le_0p25`
+    - selectedRows: `978`
+    - hitRows: `440`
+    - hitRate: `0.4498977505112474`
+    - wilsonLower95: `0.41897556299177396`
+    - precision lift: `0.006134969325153339`
+    - rejected by diagnostic gate:
+      - `precision_lift_below_min`
+- additional train-only score-axis diagnostic:
+  - simple score-axis replacement also did not solve the issue
+  - best full one-pick field was `sumClusterDateEb`:
+    - `439/978 = 44.8875%`
+  - best high-confidence top cut found in quick diagnostic:
+    - `sumClusterRowEb` top `50`: `29/50 = 58.0%`, Wilson lower about `44.23%`
+    - `sumClusterRowEb` top `150`: `77/150 = 51.33%`, Wilson lower about `43.40%`
+  - this remains far below H80 requirements
+- interpretation:
+  - numeric context vetoes and two-rule conjunctive vetoes do not currently remove enough false positives
+  - the previous H80 blocker remains:
+    - current feature/selector family has a roughly `45%` OOF one-pick ceiling
+    - high-confidence abstention on these fields reaches only about `58%` in small top cuts
+  - do not promote this veto grid to OOS, locked selector, or live operation
+  - next valid branch must add genuinely new train-only signal or a different objective family, not retune this veto threshold grid
+
+### 2026-04-22 KST - strict train100 closeout and H80 contrastive abstention objective opened
+
+- closeout patch key:
+  - `tp12_train100_closeout_zero_survivor_v1`
+- closeout artifact:
+  - local:
+    - `artifacts/runs/tp12_train100_closeout_zero_survivor_v1/closeout_summary.json`
+  - server canonical run:
+    - `artifacts/runs/tp12_train100_closeout_zero_survivor_v1/closeout_summary.json`
+- closeout decision:
+  - strict train100 exact/frontier search is closed as `closed_negative_incomplete`
+  - acceptedTrain100PatternCount: `0`
+  - globalVisitedStateCount: `16000000`
+  - searchComplete: `false`
+  - remainingFrontierSize: `1166`
+  - oosRead: `false`
+  - strict train100 remains allowed only for explicit unsat diagnostics or feature-gap analysis
+  - strict train100 output is forbidden as an OOS source, selector source, or hidden fallback source
+- new explicit objective patch key:
+  - `tp12_h80_wilson_contrastive_abstention_v1`
+- new contract:
+  - `meta/tp12_h80_wilson_contrastive_abstention_contract.json`
+- contract assert artifact:
+  - `artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/contract_assert_summary.json`
+- objective:
+  - train-only nested OOF high-confidence abstention selector
+  - target 95% Wilson lower bound: `0.8`
+  - minSelectedRows: `150`
+  - outer validation years: `2021,2022,2023,2024`
+  - OOS forbidden range: `2025-01-02..2026-04-17`
+- hard stops:
+  - do not read OOS while fitting selector, thresholds, veto rules, feature groups, or locked manifests
+  - do not emit a locked selector unless H80 train gate passes
+  - do not use strict train100 as fallback or selector source
+  - do not treat research/H70 reports as production locks
+- code/control-plane changes:
+  - added strict train100 closeout library and CLI
+  - added H80 Wilson contrastive contract assert library and CLI
+  - hardened H80 train gate with active-year, active-month, and top-month-share coverage gates
+  - hardened hard-negative dataset builder with train range and forbidden OOS date fail-fast gates
+  - extended abstention selector CV summary with selected coverage and month concentration telemetry
+  - extended verify coverage for new contracts, closeout, hard-negative OOS rejection, abstention coverage, and H80 gate coverage
+- registry updates:
+  - registered `tp12_train100_closeout_zero_survivor_v1` as `completed_closed_negative_incomplete`
+  - registered `tp12_h80_wilson_contrastive_abstention_v1` as `opened_train_only_control_plane`
+- verification before this handoff append:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh --skip-sync npm run verify` passed
+- required immediate continuation:
+  - rerun verification after this meta/handoff registration update
+  - then build the train-only nested split, hard-negative dataset, as-of feature snapshot, folded reliability, contrastive veto, and abstention selector CV under `tp12_h80_wilson_contrastive_abstention_v1`
+  - OOS apply remains forbidden until the H80 train gate passes and a locked selector manifest is emitted
+
+### 2026-04-22 KST - H80 Wilson contrastive abstention train-only foundation result
+
+- patch key:
+  - `tp12_h80_wilson_contrastive_abstention_v1`
+- server artifact root:
+  - `artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/train_only_foundation`
+- generated train-only artifacts:
+  - `nested_split_plan.json`
+  - `pattern_clusters.jsonl`
+  - `pattern_cluster_summary.json`
+  - `pattern_reliability_by_fold.jsonl`
+  - `pattern_reliability_manifest.json`
+  - `context_features.jsonl`
+  - `context_feature_manifest.json`
+  - `consensus_features_outer_2021.jsonl`
+  - `consensus_features_outer_2022.jsonl`
+  - `consensus_features_outer_2023.jsonl`
+  - `consensus_features_outer_2024.jsonl`
+  - `enriched_consensus_outer_2021.jsonl`
+  - `enriched_consensus_outer_2022.jsonl`
+  - `enriched_consensus_outer_2023.jsonl`
+  - `enriched_consensus_outer_2024.jsonl`
+  - `hard_negative_dataset.jsonl`
+  - `hard_negative_manifest.json`
+  - `selector_sum_cluster_roweb_predictions.jsonl`
+  - `selector_sum_cluster_roweb_summary.json`
+  - `h80_gate_sum_cluster_roweb_summary.json`
+- run details:
+  - source train artifact:
+    - `artifacts/runs/tp12_h80_global_next_session_regen_v1_r3/step-tp12-year2hit-positive-first`
+  - OOS selector/threshold read:
+    - `false`
+  - sorted sidecar inputs were generated only to satisfy streaming context mode, then removed after context generation
+  - disposable `artifacts/checks/*` was cleared on server because the filesystem was full; no canonical run/input artifact was deleted
+- root-cause patch during run:
+  - streaming context feature builder now dedupes identical sorted `symbol/date` candidate rows, matching non-stream unique symbol/date semantics
+  - smoke coverage added for duplicate candidate rows in streaming context mode
+- train-only foundation counts:
+  - outerFoldCount: `4`
+  - patternCount: `107`
+  - clusterCount: `106`
+  - contextFeatureRows: `149896`
+  - consensusRowsByFold:
+    - outer_2021: `18042`
+    - outer_2022: `19406`
+    - outer_2023: `16683`
+    - outer_2024: `19930`
+  - hardNegativeDatasetRows: `536550`
+  - hardNegativeClassCounts:
+    - positive: `152878`
+    - near_miss: `69047`
+    - easy_negative: `109704`
+    - hard_negative: `204921`
+- selector result:
+  - selector: `tp12_selector_sum_cluster_roweb_v1`
+  - selectedRows: `978`
+  - hitRows: `434`
+  - hitRate: `0.4437627811860941`
+  - wilsonLower95: `0.4129054757251392`
+  - H80 gate status: `failed`
+  - rejectReasons:
+    - `observed_hit_rate_below_min`
+    - `wilson_lower95_below_min`
+    - `top_pattern_cluster_share_above_max`
+- conclusion:
+  - the existing consensus selector still has no H80 evidence under the new explicit train-only objective
+  - no locked selector was emitted
+  - OOS apply remains forbidden
+  - next valid work is a new train-only contrastive veto/context selector, not strict train100 continuation and not OOS threshold tuning
+- registry:
+  - registered `tp12_h80_wilson_contrastive_abstention_v1` as `completed_train_only_foundation_h80_gate_failed`
+- required next verification:
+  - run local `bash scripts/verify.sh`
+  - run server `bash tools/run_server_command.sh npm run verify`
+
+### 2026-04-22 KST - TP12 train100 counterexample frontier resume to 8M
+
+- patch key:
+  - `tp12_train100_counterexample_frontier_resume_8m_v1`
+- continuity gates:
+  - read `meta/active_research_handoff.md`, `meta/active_research_contract.json`, and `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_train100_counterexample_frontier_resume_8m_v1`
+  - target-first bootstrap passed:
+    - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- objective:
+  - resume strict train-only TP12 train100 year2hit counterexample search from the atomic `4m` checkpoint:
+    - years `2016..2024`
+    - at least `2` hit decision dates per year
+    - at least `2` hit symbol-dates per year
+    - at least `18` positive symbol-dates total
+    - train precision exactly `100%`
+    - false positive rows exactly `0`
+  - no OOS files were read or used
+- code/contract changes:
+  - added resume-compatible contract migration validation in `src/lib/tp12_train100_year2hit_discovery.mjs`
+    - if a checkpoint was created under a previous contract path, resume is allowed only when train range, core years, target, label, preflight, atomBuilder, mining, qualityGate, hardStops, and critical counterexample settings match
+    - mismatched objective fields still fail fast
+  - extended smoke coverage in `tools/smoke_tp12_train100_year2hit_discovery.mjs` to resume a checkpoint under a compatible migrated contract path
+  - added explicit contract:
+    - `meta/tp12_train100_counterexample_frontier_resume_8m_contract.json`
+- server run:
+  - output:
+    - `artifacts/runs/tp12_train100_counterexample_frontier_resume_8m_v1/step-frontier-resume-8m`
+  - source checkpoint:
+    - `artifacts/runs/tp12_train100_counterexample_frontier_drain_v1/step-frontier-drain-resume-4m-atomic/counterexample_frontier_drain_checkpoint.json`
+  - source atom table:
+    - `artifacts/runs/tp12_train100_context_atom_discovery_v1/step-train100-context-discovery/atom_events.jsonl.gz`
+  - manifest:
+    - `counterexample_frontier_resume_8m_manifest.json`
+  - quality:
+    - `train100_frontier_resume_8m_quality_gate_summary.json`
+  - report:
+    - `train100_frontier_resume_8m_discovery_report.md`
+- final server result:
+  - status: `incomplete`
+  - searchComplete: `false`
+  - completionReason: `max_visited_states_reached`
+  - resumedFromCheckpoint: `true`
+  - trainEventCount: `3651066`
+  - atomCount: `338`
+  - seedAtomCount: `311`
+  - availableSeedAtomCount: `311`
+  - visitedStateCount: `8000000`
+  - evaluatedCandidateCount: `8000000`
+  - emittedCandidateCount: `0`
+  - acceptedCandidateCount: `0`
+  - acceptedTrain100PatternCount: `0`
+  - remainingFrontierSize: `317`
+  - maxFrontierSize: `457`
+  - branchRowCount: `24085236`
+  - counterexampleRowsScanned: `2845441`
+  - deadEndReasonCounts:
+    - `max_pattern_atoms_reached`: `5154559`
+    - `no_counterexample_extension_preserves_year_gate`: `559064`
+  - rejectedReasonCounts:
+    - `false_positive_rows_above_max`: `8000000`
+    - `train_precision_below_required`: `8000000`
+  - checkpoint:
+    - `artifacts/runs/tp12_train100_counterexample_frontier_resume_8m_v1/step-frontier-resume-8m/counterexample_frontier_resume_8m_checkpoint.json`
+- interpretation:
+  - the stricter train-only search found `0` strict train100 candidates through `8000000` visited states
+  - this is still not a mathematical absence proof because the run hit the configured state cap with `317` frontier states remaining
+  - do not proceed to OOS or selector work from this branch because accepted train100 survivor count is zero
+  - continuation can resume from the `8m` checkpoint, but repeated uncapped resume is showing the same root result: every visited candidate has at least one train false-positive row
+  - the next high-leverage branch should either parallel-partition the remaining frontier for a real drain proof or add a new explicit as-of-safe atom grammar; do not silently relax the `100%` criterion in this patch
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+- registry:
+  - registered `tp12_train100_counterexample_frontier_resume_8m_v1` with status `completed_frontier_resume_8m_incomplete_zero_survivors`
+- next action:
+  - if continuing this exact `100%` train precision objective, start a new explicit parallel frontier-partition/drain branch from the `8m` checkpoint
+  - alternatively start a new explicit as-of-safe atom grammar branch; do not silently relax the `100%` criterion
+  - do not proceed to OOS or selector work until accepted train100 survivor count is greater than `0`
+
+2026-04-20 year2hit data foundation closeout
+- targeted 2025-09-19 probe was rerun with the fixed manifest:
+  - run id: `public_kr_partial_cov_20250919_universefix_v1_20260420_r2`
+  - result: passed
+  - stage candle rows: `2539`
+  - stage universe rows: `2539`
+  - stage nontrading rows: `101`
+  - validator recovery rate: `0.8422391857506362`
+  - the old blocker `stage universe rows regressed current rows stage=1340 current=1689` did not recur
+- grouped apply was run on server:
+  - run id: `public_kr_partial_cov_apply_v1_20260420_r1`
+  - result: completed with exit `0`
+  - apply-internal `npm run verify` passed
+  - repaired manifest dates and final canonical rows:
+    - `2017-09-22`: candle/universe `1977`, nontrading `33`
+    - `2017-12-20`: candle/universe `2003`, nontrading `30`
+    - `2018-02-06`: candle/universe `2014`, nontrading `24`
+    - `2018-03-02`: candle/universe `2015`, nontrading `26`
+    - `2022-05-02`: candle `2273`, universe `1504`, nontrading `100`
+    - `2023-07-11`: candle `2393`, universe `1371`, nontrading `91`
+    - `2025-09-19`: candle/universe `2539`, nontrading `101`
+- post-apply audit:
+  - artifact: `artifacts/data_quality/partial_coverage_repair/run=public_kr_partial_cov_apply_v1_20260420_r1/post_repair_partial_coverage_audit.json`
+  - candle dates: `2522`
+  - universe dates: `2522`
+  - latest common data date: `2026-04-17`
+  - all 7 manifest repair dates are now `severeAnomaly=false`
+  - audit still reports `severeAnomalyCount=4`, but those are adjacent next trading dates caused by all-common repair spikes:
+    - `2017-09-25`
+    - `2017-12-21`
+    - `2018-02-07`
+    - `2018-03-05`
+  - treat those as a separate explicit continuity-repair target, not as failure of the original manifest-date repair
+- year2hit readiness:
+  - artifact: `artifacts/data_quality/year2hit_foundation/run=tp12_year2hit_data_readiness_post_apply_v1_20260420_r1/summary.json`
+  - status: `passed`
+  - common candle/universe dates: `2522`
+  - latest common date: `2026-04-17`
+  - candle-only dates: `0`
+  - universe-only dates: `0`
+  - required dates passed:
+    - `2022-05-02`
+    - `2023-07-11`
+    - `2025-09-19`
+  - required-date lifecycle/share coverage passed with `missingShareSymbolCount=0`
+- operational warning:
+  - local `/home/saida/code/stockdesk-lab-lite` is not a git repository
+  - server canonical data was repaired directly under `/home/moltook/apps/stockdesk-lab-lite`
+  - avoid a full local-to-server sync unless confirming it will not overwrite repaired server `data/*.jsonl`
+- next target:
+  - resume year2hit mining only through the explicit train gate
+  - first run should produce candidates that satisfy train-year hit coverage before any OOS replay
+
+2026-04-21 TP12 year2hit gated-catalog OOS replay closeout
+- code patch:
+  - added explicit gated-catalog OOS replay path; no fixed-window remine and no hidden fallback path
+  - new core library: `src/lib/tp12_year2hit_candidate_replay_report.mjs`
+  - new tools/wrappers:
+    - `tools/build_tp12_year2hit_candidate_replay_report.mjs`
+    - `tools/run_tp12_year2hit_gated_catalog_oos_replay.sh`
+    - `tools/server_run_tp12_year2hit_gated_catalog_oos_replay.sh`
+    - `tools/smoke_tp12_year2hit_candidate_replay_report.mjs`
+  - `src/lib/tp12_candidate_event_materializer.mjs` now has explicit `failOnZeroMatchCandidates`; default remains fail-fast, OOS replay opts out explicitly so zero-OOS-match train survivors are measured rather than treated as a train materialization error
+  - `scripts/verify.sh` includes syntax/smoke coverage for the new replay path
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+- train-first source artifact:
+  - run id: `tp12_year2hit_positive_first_foundation_v1`
+  - gated catalog: `artifacts/runs/tp12_year2hit_positive_first_foundation_v1/step-tp12-year2hit-positive-first/gated_catalog.jsonl`
+  - survivor count: `93`
+  - quality-passed survivor count: `93`
+  - gated catalog sha256: `4e863cc48394037cab1a4bc948db51f7ac39eabd50bf2a20cbf332e94ee1eb4b`
+  - survivor ids sha256: `46f921e6815d602a097e8b8585b737b10acc1400788103c6ae7041b036d1a43b`
+- OOS replay:
+  - run id: `tp12_year2hit_positive_first_foundation_v1_oos_replay`
+  - artifact root: `artifacts/runs/tp12_year2hit_positive_first_foundation_v1_oos_replay/step-tp12-year2hit-gated-catalog-oos-replay`
+  - OOS range: `2025-01-02` .. `2026-04-17`
+  - OOS label base rate: `63325/751857 = 8.42%`
+  - tokenized OOS rows: `724947`
+  - materialized gated-candidate OOS rows: `131378`
+  - all `93` gated patterns matched at least once in OOS
+  - raw pattern-match OOS: `40272/131378 = 30.65%`
+  - symbol/date union OOS: `8470/36096 = 23.47%`
+  - one-pick-per-day OOS: `152/311 = 48.87%`
+- interpretation:
+  - train-year2hit gate is working as a train-first filter and gives a large lift over the raw OOS label base rate
+  - it is not enough for the operating target of at least `80%`; one-pick-per-day remains below target
+  - the next improvement should be an explicit selection/ranking layer trained inside train-period folds, not reusing the old fixed-window remine runner and not relaxing the year2hit gate
+- registry:
+  - registered `tp12_year2hit_positive_first_foundation_v1_oos_replay` with status `completed_below_goal`
+
+2026-04-21 TP12 year2hit survivor-freeze extended-preflight patch
+- source analysis:
+  - reviewed GPT Pro shared answer `https://chatgpt.com/share/69e6b655-6f40-83e8-83b4-1fa86104cd30`
+  - accepted the control-plane recommendation that OOS should only run after train label/token/event artifacts, quality survivors, and frozen survivor catalog are explicitly manifest-checked
+  - did not tune against OOS and did not add fallback behavior
+- code patch key:
+  - `tp12_year2hit_survivor_freeze_extended_preflight_v1`
+  - duplicate check passed before patch
+- new explicit freeze path:
+  - `src/lib/tp12_survivor_catalog_freeze.mjs`
+  - `tools/freeze_tp12_year2hit_survivor_catalog.mjs`
+  - artifact kind: `tp12_year2hit_survivor_catalog_manifest_v1`
+  - freezes only quality-passed train survivors from the source candidate catalog
+  - writes deterministic survivor pattern IDs, source candidate catalog sha256, quality summary sha256, frozen catalog sha256, survivor count, and survivorPatternIdsSha256
+  - fails if quality summary is not passed, passed ID hash mismatches, survivor rows are missing from candidate catalog, duplicate IDs exist, or tokenSet is empty
+- OOS preflight hardening:
+  - `tools/assert_tp12_year2hit_oos_preflight.mjs` now accepts:
+    - `--label-manifest`
+    - `--token-dictionary-manifest`
+    - `--event-row-manifest`
+    - `--survivor-catalog-manifest`
+    - `--require-extended-manifests`
+  - validates status, failures array, artifact-chain path consistency, survivor hash/count consistency, survivor frozen catalog sha256, and source candidate catalog sha256 alignment with gated catalog manifest
+  - `meta/tp12_year2hit_train_2016_2024_contract.json` now sets `oosPreflight.blockedWithoutExtendedManifests=true`
+- wrapper integration:
+  - `tools/run_tp12_year2hit_trainfirst_mining_pipeline.sh` now builds `survivor_catalog.jsonl` / `survivor_catalog_manifest.json` after quality gate and passes all extended manifests into preflight
+  - `tools/run_tp12_year2hit_gated_catalog_oos_replay.sh` now accepts and forwards the extended manifest paths; with the current train contract, missing extended manifests fail before OOS replay
+  - `tools/run_stepb_1d_tp12_no_stop_scope_fixed_trainfirst.sh` also accepts the extended manifest paths for the fixed-window explicit entry point
+- verification:
+  - added smoke coverage:
+    - `tools/smoke_tp12_survivor_catalog_freeze.mjs`
+    - `tools/smoke_tp12_year2hit_oos_preflight_extended.mjs`
+  - updated `scripts/verify.sh`
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+- operational consequence:
+  - old raw candidate catalog direct OOS entry is now contract-blocked on the active TP12 year2hit train contract
+  - next OOS replay from the previous `tp12_year2hit_positive_first_foundation_v1` artifacts requires first generating the missing survivor freeze manifest from its candidate catalog and quality gate summary, then passing all train label/token/event/survivor manifests explicitly
+
+2026-04-21 TP12 year2hit extended-preflight replay closeout
+- patch key:
+  - `tp12_year2hit_positive_first_foundation_extended_preflight_replay_v1`
+  - duplicate check passed before run
+- source train artifact:
+  - run id: `tp12_year2hit_positive_first_foundation_v1`
+  - train root: `artifacts/runs/tp12_year2hit_positive_first_foundation_v1/step-tp12-year2hit-positive-first`
+  - quality-passed survivor count: `93`
+  - survivorPatternIdsSha256: `46f921e6815d602a097e8b8585b737b10acc1400788103c6ae7041b036d1a43b`
+- survivor freeze:
+  - generated on server:
+    - `survivor_catalog.jsonl`
+    - `survivor_catalog_manifest.json`
+  - freeze status: `passed`
+  - survivor count: `93`
+  - survivor catalog sha256: `4ffe690eb799c963d4bc5b9b240264f3a508e9ab32053f6765d126b873fd38df`
+- extended OOS replay:
+  - run id: `tp12_year2hit_positive_first_foundation_extended_preflight_replay_v1`
+  - artifact root: `artifacts/runs/tp12_year2hit_positive_first_foundation_extended_preflight_replay_v1/step-tp12-year2hit-gated-catalog-oos-replay`
+  - extended preflight status: `passed`
+  - manifest chain checked:
+    - train label summary
+    - train tokenized summary
+    - train candidate event materialize summary
+    - quality gate summary
+    - survivor catalog manifest
+    - gated catalog manifest
+  - OOS range: `2025-01-02` .. `2026-04-17`
+  - OOS label base rate: `63325/751857 = 8.42%`
+  - tokenized OOS rows: `724947`
+  - materialized gated-candidate OOS rows: `131378`
+  - all `93` frozen survivor patterns matched at least once in OOS
+  - raw pattern-match OOS: `40272/131378 = 30.65%`
+  - symbol/date union OOS: `8470/36096 = 23.47%`
+  - one-pick-per-day OOS: `152/311 = 48.87%`
+- interpretation:
+  - the old 93-survivor result is now reproducible under the strict frozen-survivor preflight
+  - this does not improve the OOS score; it locks the measurement path and prevents accidental OOS entry without train artifact provenance
+  - the operating target of `>=80%` is still not met
+  - next work should add a train-fold-only selector/ranker on top of frozen survivors, then run OOS once through the same extended preflight
+- registry:
+  - registered locally and on server with status `completed_below_goal`
+
+2026-04-21 TP12 year2hit train-fold selector audit
+- patch key:
+  - `tp12_year2hit_trainfold_selector_audit_v1`
+  - duplicate check passed before patch
+- reason:
+  - the strict extended-preflight replay reproduced one-pick-per-day OOS at `152/311 = 48.87%`
+  - before building any OOS-facing selector, the safe next step was to test selector/ranker evidence inside 2016-2024 train folds only
+  - no OOS rows were used by this audit
+- code added:
+  - `src/lib/tp12_year2hit_trainfold_selector_audit.mjs`
+  - `tools/build_tp12_year2hit_trainfold_selector_audit.mjs`
+  - `tools/smoke_tp12_year2hit_trainfold_selector_audit.mjs`
+  - `scripts/verify.sh` now checks syntax and smoke coverage
+- evaluated policies:
+  - `current_like`
+  - `date_precision_first`
+  - `stability_first`
+  - `support_count_then_precision`
+  - `support_weighted_precision`
+- server audit artifact:
+  - run id: `tp12_year2hit_trainfold_selector_audit_v1`
+  - summary: `artifacts/runs/tp12_year2hit_trainfold_selector_audit_v1/step-tp12-year2hit-trainfold-selector-audit/selector_audit_summary.json`
+  - report: `artifacts/runs/tp12_year2hit_trainfold_selector_audit_v1/step-tp12-year2hit-trainfold-selector-audit/selector_audit_report.md`
+- result:
+  - verdict: `train_selector_no_evidence_for_target`
+  - survivor count: `93`
+  - train date count: `2204`
+  - target hit rate: `80%`
+  - best no-abstain policy: `support_weighted_precision`
+  - best no-abstain train-fold hit rate: `993/2204 = 45.05%`
+  - best confidence top-cut policy: `support_count_then_precision`
+  - best confidence top-cut: `89/150 = 59.33%`
+  - no evaluated train-fold selector reached `80%` at the configured selected-row floor
+- interpretation:
+  - selector/ranker changes on the current 93 frozen survivors do not have train-fold evidence for the 80% operating target
+  - do not tune thresholds on OOS to rescue this survivor set
+  - next improvement should add new train-only signal/features or discover a stronger survivor set before another OOS replay
+- registry:
+  - registered `tp12_year2hit_trainfold_selector_audit_v1` with status `completed_below_goal`
+
+2026-04-21 TP12 year2hit GPT-Pro operating gate hardening
+- patch key:
+  - `tp12_year2hit_gptpro_operating_gate_hardening_v1`
+  - duplicate check passed before patch
+- source analysis:
+  - reviewed GPT Pro shared answer `https://chatgpt.com/share/69e6b655-6f40-83e8-83b4-1fa86104cd30`
+  - implemented the control-plane recommendations without adding fallback behavior:
+    - block OOS unless data readiness passes
+    - block OOS unless as-of survivorship passes
+    - keep survivor/OOS provenance explicit
+    - judge operating readiness using observed precision and Wilson lower bound, not observed precision alone
+- code/contracts:
+  - `meta/tp12_year2hit_train_2016_2024_contract.json`
+    - `oosPreflight.blockedWithoutDataReadiness=true`
+    - `oosPreflight.blockedWithoutAsofSurvivorship=true`
+    - added `oosResultGate` with `targetObservedHitRate=0.8`, `minWilsonLowerBound95=0.8`, row/date/symbol floors, and concentration ceiling
+  - `tools/assert_tp12_year2hit_oos_preflight.mjs`
+    - now requires data-readiness and as-of summaries when the contract says so
+    - records both artifact hashes into the preflight summary
+  - `tools/run_tp12_year2hit_trainfirst_mining_pipeline.sh`
+    - now builds `data_readiness_summary.json` and `asof_survivorship_summary.json` before OOS preflight
+  - `tools/run_tp12_year2hit_gated_catalog_oos_replay.sh`
+    - now accepts and forwards explicit readiness/as-of summary paths
+  - `src/lib/tp12_year2hit_operating_gate.mjs`
+    - added Wilson 95% lower-bound operating gate summary
+    - fixed CLI/default option resolution so omitted `--target-selection-key` resolves to the contract/default `onePickPerDay`
+  - `tools/audit_tp12_asof_survivorship.mjs`
+    - aligned `delistedOn` handling with the public-KR historical contract: raw `delistedOn` is exclusive; `effectiveTo` remains inclusive
+    - added top missing/inactive symbol diagnostics to the failure summary
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+- server artifacts:
+  - root:
+    - `artifacts/runs/tp12_year2hit_gptpro_operating_gate_hardening_v1/step-tp12-year2hit-operating-gate`
+  - `data_readiness_summary.json`
+    - status: `passed`
+    - latest common date: `2026-04-17`
+  - `asof_survivorship_summary.json`
+    - status: `failed`
+    - activeAsOfRowCount: `457143`
+    - missingLifecycleRowCount: `386`
+    - inactiveAsOfRowCount: `14463`
+    - top inactive symbols:
+      - `211050:1331`
+      - `344860:1181`
+      - `260970:1150`
+      - `107640:1036`
+      - `012210:1000`
+    - top missing lifecycle symbols:
+      - `407830:75`
+      - `253250:61`
+      - `253230:50`
+      - `294400:39`
+      - `316670:31`
+  - `strict_oos_preflight_summary.json`
+    - not accepted; preflight command correctly failed because as-of summary status is `failed`
+  - `oos_operating_gate_summary.json`
+    - status: `failed`
+    - verdict: `not_ready_for_live_operation`
+    - selection key: `onePickPerDay`
+    - selectedRows: `311`
+    - hitRows: `152`
+    - observedHitRate: `0.4887459807073955`
+    - Wilson lower95: `0.43366748436203384`
+    - reject reasons:
+      - `observed_hit_rate_below_target`
+      - `wilson_lower95_below_target`
+- interpretation:
+  - the old `93` frozen survivor OOS replay must not be used as an operating-ready result under the new gate
+  - it fails twice:
+    - preflight blocks it on as-of/lifecycle integrity
+    - diagnostic operating gate is far below the 80% observed and 80% Wilson-lower target
+  - next valid work is not OOS threshold tuning; it is fixing the train data/lifecycle provenance issue or explicitly redesigning the as-of audit around source-event provenance, then re-mining train-first before another OOS replay
+- registry:
+  - registered `tp12_year2hit_gptpro_operating_gate_hardening_v1` with status `completed_blocked_by_asof_gate`
+
+2026-04-21 TP12 H80 abstention foundation and global next-session label hardening
+- patch key:
+  - `tp12_h80_abstention_foundation_v1`
+  - duplicate check passed before patch
+  - session bootstrap passed with `tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- source analysis:
+  - reviewed the GPT-Pro H80/OOS80 operating plan against current artifacts and treated 2025-2026 OOS as an already-seen audit region
+  - conclusion remains unchanged: the existing 93 year2hit survivor set and simple selector layer do not justify an 80% claim
+  - existing trainfold selector audit fails the H80 gate:
+    - selectedRows: `150`
+    - hitRows: `89`
+    - observedHitRate: `0.5933333333333334`
+    - Wilson lower95: `0.5133466505133206`
+    - reject reasons:
+      - `observed_hit_rate_below_min`
+      - `wilson_lower95_below_min`
+      - missing concentration fields for symbol/pattern-cluster/regime
+- code added:
+  - `src/lib/tp12_entry_feasibility_audit.mjs`
+    - audits `decisionDateKey -> entryDateKey` against the global market next session
+    - emits explicit invalid reasons such as `entry_not_global_next_session` and `entry_gap_calendar_days_above_max`
+  - `tools/build_tp12_entry_feasibility_audit.mjs`
+  - `src/lib/tp12_nested_split_plan.mjs`
+    - builds explicit expanding train-only outer/inner split plans with purge/embargo metadata
+  - `tools/build_tp12_nested_split_plan.mjs`
+  - `src/lib/tp12_pattern_cluster_dedupe.mjs`
+    - builds near-duplicate pattern clusters using token/support overlap
+  - `tools/build_tp12_pattern_clusters.mjs`
+  - `src/lib/tp12_symbol_date_consensus_features.mjs`
+    - aggregates pattern events into cluster-aware symbol/date consensus rows
+  - `tools/build_tp12_symbol_date_consensus_features.mjs`
+  - `src/lib/tp12_h80_train_gate.mjs`
+    - enforces selected row count, observed hit rate, Wilson lower bound, and concentration-field presence before H80 claims
+  - `tools/assert_tp12_h80_train_gate.mjs`
+  - `tools/smoke_tp12_h80_foundation.mjs`
+- root-cause label fix:
+  - `src/lib/tp12_label_event_builder.mjs`
+    - `NEXT_DAY_OPEN` now means the global market next trading session, not the next available same-symbol candle
+    - stale/suspended same-symbol candles are no longer accepted as next-day entries
+    - terminal/invalid handling remains explicit through `terminalForwardPolicy`; no fallback path was added
+    - label config now records `entryCalendarPolicy: global_next_session`
+  - `tools/smoke_tp12_label_global_next_session.mjs`
+    - proves missing global next-session entry is skipped under skip policy and fail-fast under `fail_invalid`
+  - `tools/smoke_tp12_label_horizon_boundary.mjs`
+    - updated to assert global forward-session terminal behavior
+- scripts:
+  - `scripts/verify.sh`
+    - adds syntax and smoke coverage for the H80 foundation tools
+    - adds the global next-session label smoke
+- server diagnostics against existing artifacts:
+  - output root:
+    - `artifacts/runs/tp12_h80_abstention_foundation_v1/step-tp12-h80-foundation`
+  - train candidate events:
+    - rows: `471992`
+    - invalid entry rows: `7488`
+    - invalid reason counts:
+      - `entry_not_global_next_session: 7284`
+      - `entry_gap_calendar_days_above_max: 4692`
+    - max entry gap calendar days: `1180`
+    - example: symbol `000020`, decision `2017-12-20`, entry `2018-02-06`, expected `2017-12-21`
+  - OOS candidate events:
+    - rows: `131378`
+    - invalid entry rows: `2515`
+    - invalid reason counts:
+      - `entry_not_global_next_session: 2310`
+      - `entry_gap_calendar_days_above_max: 1633`
+    - max entry gap calendar days: `153`
+    - example: symbol `000080`, decision `2025-09-19`, entry `2026-02-19`, expected `2025-09-22`
+  - nested split plan:
+    - outer validation years: `2021,2022,2023,2024`
+    - purge bars: `5`
+    - embargo bars: `5`
+  - pattern clusters:
+    - input patterns: `93`
+    - clusters: `92`
+    - max cluster pattern count: `2`
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+- interpretation:
+  - the earlier OOS metrics are not operating-ready because the old label builder allowed stale same-symbol next-candle entries
+  - valid next work is to regenerate train/OOS artifacts under the global next-session label policy, then run train-only nested selector/veto/context work
+  - the H80 foundation is in place, but the full hard-negative veto trainer, context feature builder, abstention selector/calibrator, locked OOS apply, and live lockbox are intentionally not claimed as completed in this patch
+- registry:
+  - register `tp12_h80_abstention_foundation_v1` with status `completed_foundation_h80_gate_failed_existing_selector`
+
+## Reboot handoff - 2026-04-21T07:23:11Z - `tp12_h80_foundation_hardening_v2`
+
+- patch key:
+  - `tp12_h80_foundation_hardening_v2`
+- continuity gates:
+  - read `meta/active_research_contract.json`, `meta/active_research_handoff.md`, and `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_h80_foundation_hardening_v2`
+  - target-first bootstrap passed:
+    - `tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- source conclusion:
+  - the GPT-Pro/H80 review remains binding: the existing 93 year2hit survivor set plus simple selector/ranker does not justify an OOS 80% claim
+  - current work is foundation hardening only, not an H80 performance claim
+  - old OOS figures remain descriptive historical audit numbers until train/OOS artifacts are regenerated under the fixed global-next-session label policy
+- code hardened:
+  - `src/lib/tp12_symbol_date_consensus_features.mjs`
+    - consensus scoring now uses cluster-deduped support instead of raw duplicate pattern support
+    - added `supportClusterSummaries`, cluster EB/Wilson score fields, `nearDuplicatePatternPenalty`, and raw-vs-cluster support separation
+    - added fold-aware validation materialization; if `foldId` is provided, `splitPlanPath` is required and rows outside the fold validation dates are skipped
+  - `tools/build_tp12_symbol_date_consensus_features.mjs`
+    - added `--fold-id` and `--split-plan`
+  - `src/lib/tp12_entry_feasibility_audit.mjs`
+    - default is now fail-fast on invalid entries
+  - `tools/build_tp12_entry_feasibility_audit.mjs`
+    - default `--fail-on-invalid=true`
+  - `src/lib/tp12_h80_train_gate.mjs`
+    - default is now fail-fast on gate failure
+    - multi-policy summaries now require explicit `selectorKey`; no post-hoc best-policy selection
+  - `tools/assert_tp12_h80_train_gate.mjs`
+    - added `--selector-key`
+    - default `--fail-on-gate-failure=true`
+  - `src/lib/tp12_nested_split_plan.mjs`
+    - added label-horizon overlap audit with `labelHorizonBars`
+    - folds now fail if train label horizon overlaps validation dates
+  - `tools/build_tp12_nested_split_plan.mjs`
+    - added `--label-horizon-bars`
+  - `src/lib/tp12_pattern_reliability_by_fold.mjs`
+    - new fold-specific pattern reliability builder
+    - emits row/date precision, EB means, Wilson lower bounds, and year hit counts per fold
+  - `tools/build_tp12_pattern_reliability_by_fold.mjs`
+  - `src/lib/tp12_hard_negative_dataset.mjs`
+    - new hard-negative dataset builder
+    - classifies rows as `positive`, `near_miss`, `hard_negative`, `easy_negative`, or `negative_unqualified`
+    - requires path-quality fields such as `maxForwardReturn` for non-hit rows by default
+  - `tools/build_tp12_hard_negative_dataset.mjs`
+  - `src/lib/tp12_context_feature_builder.mjs`
+    - new as-of context feature builder from candidate symbol/date rows and daily candles
+    - emits market breadth, return, range, close-location, traded-value rank, and limit-up proxy fields
+    - fail-fast on missing candidate candle rows
+  - `tools/build_tp12_context_features.mjs`
+  - `src/lib/tp12_abstention_selector_cv.mjs`
+    - new deterministic abstention selector CV evaluator
+    - requires a locked selector config with `selectionPolicyId` and `scoreField`
+    - applies thresholds, top-per-date selection, Wilson/concentration reporting, and no implicit threshold fitting
+  - `tools/run_tp12_abstention_selector_cv.mjs`
+  - `src/lib/tp12_candidate_event_materializer.mjs`
+    - candidate events now propagate optional path-quality label metrics:
+      - `entryPrice`, `targetPrice`, `hitDateKey`, `stopHit`, `stopDateKey`
+      - `targetBeforeStop`, `stopBeforeTarget`, `sameBarAmbiguous`
+      - `maxForwardReturn`, `maxForwardHighPct`, `minForwardReturn`, `minForwardLowPct`
+      - `maxForwardDrawdown`, `availableForwardBars`
+  - smoke coverage added:
+    - `tools/smoke_tp12_hard_negative_dataset.mjs`
+    - `tools/smoke_tp12_context_features.mjs`
+    - `tools/smoke_tp12_abstention_selector_cv.mjs`
+    - updated `tools/smoke_tp12_h80_foundation.mjs`
+    - updated `tools/smoke_tp12_candidate_event_materializer.mjs`
+  - `scripts/verify.sh`
+    - added syntax/smoke coverage for the new H80 hardening libs/tools
+- server diagnostic data run:
+  - output root:
+    - `artifacts/runs/tp12_h80_foundation_hardening_v2/step-tp12-h80-foundation-hardening`
+  - split plan:
+    - status: `passed`
+    - outerFoldCount: `4`
+    - failures: `[]`
+  - fold reliability:
+    - status: `passed`
+    - outputRowCount: `372`
+    - foldCount: `4`
+    - failures: `[]`
+  - pattern clusters:
+    - status: `passed`
+    - patternCount: `93`
+    - clusterCount: `92`
+  - outer 2024 consensus:
+    - status: `passed`
+    - symbolDateRowCount: `16953`
+    - skippedOutsideFoldValidationRowCount: `413312`
+  - outer 2024 context:
+    - status: `passed`
+    - candidateRowCount: `16953`
+    - outputRowCount: `16953`
+    - failures: `[]`
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+- important caveat:
+  - existing old `candidate_events.jsonl` artifacts do not contain `maxForwardReturn`/path-quality fields, so `tp12_hard_negative_dataset` correctly cannot be used on those old events
+  - next data step is to regenerate train/OOS label, token, and candidate-event artifacts under `entryCalendarPolicy: global_next_session`
+  - only after regeneration should hard-negative/veto/context/abstention selector reports be considered research-valid
+- not completed in this patch:
+  - learned veto bank trainer/calibrator
+  - locked OOS apply
+  - live lockbox logger/gate
+  - any H80 performance claim
+- registry:
+  - register `tp12_h80_foundation_hardening_v2` with status `completed_foundation_hardened_no_h80_claim`
+
+## Reboot handoff - 2026-04-21T09:06:00Z - `tp12_h80_global_next_session_regen_v1`
+
+- patch key:
+  - `tp12_h80_global_next_session_regen_v1`
+- continuity gates:
+  - read `meta/active_research_contract.json`, `meta/active_research_handoff.md`, and `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_h80_global_next_session_regen_v1`
+  - target-first bootstrap passed:
+    - `tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- root-cause fixes made:
+  - `tools/build_tp12_tokenized_events.mjs`
+    - fixed optional bool parsing so missing CLI bools inherit contract values instead of overriding them to false
+    - confirmed `requireUniverse:true` now fails fast on missing universe rows
+  - `src/lib/tp12_feature_tokenizer.mjs`
+    - propagated path-quality label fields into tokenized rows:
+      - `entryPrice`, `targetPrice`, `hitDateKey`, `stopHit`, `stopDateKey`
+      - `targetBeforeStop`, `stopBeforeTarget`, `sameBarAmbiguous`
+      - `maxForwardReturn`, `maxForwardHighPct`, `minForwardReturn`, `minForwardLowPct`
+      - `maxForwardDrawdown`, `availableForwardBars`
+  - `tools/build_tp12_asof_clean_daily_inputs.py`
+    - new explicit run-scoped clean input builder from canonical candle + lifecycle + shares
+    - does not overwrite canonical data
+    - drops rows with missing lifecycle, inactive lifecycle as-of date, or missing shares
+    - accepts unsorted canonical candle input and sorts per symbol before rolling calculations
+  - `tools/smoke_tp12_asof_clean_daily_inputs.py`
+  - `scripts/verify.sh`
+    - added as-of clean input smoke
+  - `src/lib/tp12_entry_feasibility_audit.mjs`
+    - long calendar gaps are diagnostic when `entryDateKey` equals the global next trading session
+    - stale entries still fail on `entry_not_global_next_session` or missing entry bar
+  - `src/lib/tp12_hard_negative_dataset.mjs`
+    - added deterministic target-boundary tolerance for label/path floating-point edge cases
+    - true target overshoot with `hitTarget=false` still fails fast
+  - `tools/build_tp12_hard_negative_dataset.mjs`
+    - added `--target-boundary-tolerance`
+  - `tools/smoke_tp12_hard_negative_dataset.mjs`
+    - added boundary tolerance and hard failure coverage
+  - `tools/smoke_tp12_h80_foundation.mjs`
+    - added long-holiday global-next-session coverage
+  - `config/tp12_selector_sum_cluster_roweb_v1.json`
+    - explicit deterministic selector config for train-only consensus CV
+- server clean input build:
+  - output:
+    - `artifacts/runs/tp12_h80_global_next_session_regen_v1/inputs-asof-clean`
+  - status: `passed`
+  - keptRowCount: `4419758`
+  - keptSymbolCount: `3021`
+  - keptDateCount: `2522`
+  - latestCommonDate: `2026-04-17`
+  - droppedMissingLifecycleRowCount: `34728`
+  - droppedInactiveLifecycleRowCount: `22721`
+  - droppedMissingSharesRowCount: `0`
+  - duplicatePairCount: `0`
+  - unsortedInputAccepted: `true`
+- server train-first regeneration:
+  - run:
+    - `tp12_h80_global_next_session_regen_v1_r3`
+  - output:
+    - `artifacts/runs/tp12_h80_global_next_session_regen_v1_r3/step-tp12-year2hit-positive-first`
+  - data readiness: `passed`
+  - train label:
+    - validLabelCount: `3651066`
+    - hitRowCount: `296966`
+    - rowHitRate: `0.08133679314479661`
+    - invalidLabelCount: `0`
+  - tokenizer:
+    - status: `passed`
+    - requireUniverse: `true`
+    - outputRowCount: `3651066`
+    - tokenCount: `49`
+  - candidate mining/materialization:
+    - evaluatedCandidateCount: `3217`
+    - emittedCandidateCount: `3214`
+    - materialized candidateCount: `107`
+    - rejectedByQualityCount: `3107`
+    - outputRowCount: `536550`
+    - hitRowCount: `152878`
+    - rowHitRate: `0.28492777933091046`
+  - as-of survivorship:
+    - status: `passed`
+    - missingLifecycleRowCount: `0`
+    - inactiveAsOfRowCount: `0`
+  - year2hit train gate:
+    - patternCount: `107`
+    - survivorCount: `107`
+  - quality gate:
+    - passedSurvivorCount: `107`
+  - OOS preflight:
+    - status: `passed`
+    - data readiness, as-of, label, token, event row, survivor, train-gate, and gated catalog manifests present and hashed
+  - train entry feasibility audit:
+    - status: `passed`
+    - invalidRowCount: `0`
+- train-only selection foundation artifacts:
+  - output:
+    - `artifacts/runs/tp12_h80_global_next_session_regen_v1_r3/step-tp12-year2hit-positive-first/selection_foundation`
+  - hard-negative dataset:
+    - status: `passed`
+    - outputRowCount: `536550`
+    - labelClassCounts:
+      - positive: `152878`
+      - near_miss: `69047`
+      - hard_negative: `204921`
+      - easy_negative: `109704`
+  - nested split plan:
+    - status: `passed`
+    - outerFoldCount: `4`
+  - pattern clusters:
+    - status: `passed`
+    - patternCount: `107`
+    - clusterCount: `106`
+    - maxClusterPatternCount: `2`
+  - context features:
+    - status: `passed`
+    - outputRowCount: `149896`
+  - fold reliability:
+    - status: `passed`
+    - outputRowCount: `428`
+    - foldCount: `4`
+  - consensus features all folds:
+    - rows: `74061`
+    - hitRows: `15245`
+    - max support cluster count by fold: `47` to `53`
+  - deterministic consensus selector:
+    - policy: `tp12_selector_sum_cluster_roweb_v1`
+    - selectedRows: `978`
+    - hitRows: `434`
+    - hitRate: `0.4437627811860941`
+    - Wilson lower95: `0.4129054757251392`
+    - falsePositiveRows: `544`
+    - topSymbolShare: `0.010224948875255624`
+    - topPatternClusterShare: `0.4396728016359918`
+  - H80 train gate:
+    - status: `failed`
+    - verdict: `h80_train_gate_failed`
+    - rejectReasons:
+      - `observed_hit_rate_below_min`
+      - `wilson_lower95_below_min`
+      - `top_pattern_cluster_share_above_max`
+- clean-input OOS descriptive replay:
+  - run:
+    - `tp12_h80_global_next_session_regen_v1_oos_r1`
+  - output:
+    - `artifacts/runs/tp12_h80_global_next_session_regen_v1_oos_r1/step-tp12-year2hit-gated-catalog-oos-replay`
+  - OOS preflight: `passed`
+  - OOS label:
+    - validLabelCount: `734028`
+    - hitRowCount: `62711`
+    - rowHitRate: `0.08543407063490766`
+    - invalidLabelCount: `0`
+  - raw pattern match:
+    - selectedRows: `164231`
+    - hitRows: `46328`
+    - hitRate: `0.28209047013048694`
+  - symbol/date union:
+    - selectedRows: `42171`
+    - hitRows: `9210`
+    - hitRate: `0.21839652842000426`
+  - one-pick per day:
+    - selectedRows: `311`
+    - hitRows: `143`
+    - hitRate: `0.45980707395498394`
+  - OOS as-of survivorship:
+    - status: `passed`
+    - missingLifecycleRowCount: `0`
+    - inactiveAsOfRowCount: `0`
+  - OOS entry feasibility:
+    - status: `passed`
+    - invalidRowCount: `0`
+    - longGlobalNextSessionCalendarGapRowCount: `243`
+- interpretation:
+  - the clean/as-of/global-next-session path is now reproducible and strict
+  - the old 93-pattern OOS one-pick `48.87%` remains historical only; the current clean 107-pattern replay is `45.98%`
+  - current train-only consensus selector is `44.38%`, Wilson lower `41.29%`; H80 evidence is absent
+  - no OOS threshold tuning was performed
+  - no H80 or live-operating precision claim is allowed from this patch
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh --skip-sync npm run verify` passed
+- disk cleanup performed:
+  - removed only this patch's failed/incomplete server run dirs:
+    - `tp12_h80_global_next_session_regen_v1_r2`
+    - failed `tp12_h80_global_next_session_regen_v1_r3`
+    - obsolete failed `tp12_h80_global_next_session_regen_v1/step-tp12-year2hit-positive-first`
+  - preserved canonical data and final clean/run artifacts
+- next work:
+  - build a real train-only hard-negative veto trainer using the new hard-negative dataset
+  - merge context features into consensus feature rows for a locked abstention-first selector
+  - run inner-fold threshold calibration only inside train folds
+  - do not re-use OOS for threshold selection
+- registry:
+  - register `tp12_h80_global_next_session_regen_v1` with status `completed_strict_regen_h80_gate_failed`
+
+## 2026-04-21 Reboot Handoff - TP12 H80 Veto/Context Selector Foundation
+
+- patch key:
+  - `tp12_h80_veto_context_selector_v1`
+- continuity gates:
+  - read `meta/active_research_contract.json`
+  - read this handoff and `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_h80_veto_context_selector_v1`
+  - target-first bootstrap passed:
+    - `tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- code added:
+  - `src/lib/tp12_context_consensus_joiner.mjs`
+  - `tools/build_tp12_context_consensus_features.mjs`
+  - `tools/smoke_tp12_context_consensus_features.mjs`
+  - `src/lib/tp12_veto_bank_trainer.mjs`
+  - `tools/train_tp12_veto_bank.mjs`
+  - `tools/smoke_tp12_veto_bank_trainer.mjs`
+- verify wiring:
+  - `scripts/verify.sh` now checks the new TP12 context-consensus joiner and veto-bank trainer syntax/smokes
+  - added smoke coverage for CLI default gate parsing so missing flags cannot silently become zero thresholds
+- server artifact application:
+  - base selection foundation:
+    - `artifacts/runs/tp12_h80_global_next_session_regen_v1_r3/step-tp12-year2hit-positive-first/selection_foundation`
+  - fold context join outputs:
+    - `enriched_consensus_outer_2021.jsonl`
+    - `enriched_consensus_outer_2022.jsonl`
+    - `enriched_consensus_outer_2023.jsonl`
+    - `enriched_consensus_outer_2024.jsonl`
+    - `enriched_consensus_all_folds.jsonl`
+  - fold join row counts:
+    - `outer_2021`: `18042/18042`, missing context `0`
+    - `outer_2022`: `19406/19406`, missing context `0`
+    - `outer_2023`: `16683/16683`, missing context `0`
+    - `outer_2024`: `19930/19930`, missing context `0`
+- enriched baseline selector result:
+  - output:
+    - `enriched_selector_sum_cluster_roweb_summary.json`
+    - `h80_gate_enriched_sum_cluster_roweb_summary.json`
+  - selectedRows: `978`
+  - hitRows: `434`
+  - hitRate: `0.4437627811860941`
+  - Wilson lower95: `0.4129054757251392`
+  - concentration:
+    - topSymbolShare: `0.010224948875255624`
+    - topPatternClusterShare: `0.4396728016359918`
+    - topRegimeShare: `null`
+  - H80 train gate:
+    - status: `failed`
+    - verdict: `h80_train_gate_failed`
+    - rejectReasons:
+      - `observed_hit_rate_below_min`
+      - `wilson_lower95_below_min`
+      - `top_pattern_cluster_share_above_max`
+- veto diagnostic result:
+  - outputs:
+    - `veto_bank_train_summary.json`
+    - `veto_bank_rules.json`
+    - `veto_bank_predictions.jsonl`
+  - mode: `train_only_diagnostic`
+  - lockedRuleCount: `0`
+  - baseline:
+    - selectedRows: `978`
+    - hitRows: `434`
+    - hitRate: `0.4437627811860941`
+    - Wilson lower95: `0.4129054757251392`
+  - diagnosticPassedRuleCount: `0`
+  - h80PassedRuleCount: `0`
+  - best diagnostic single rule:
+    - ruleId: `veto_closeLocation_le_0p25`
+    - selectedRows: `978`
+    - hitRows: `440`
+    - hitRate: `0.4498977505112474`
+    - Wilson lower95: `0.41897556299177396`
+    - precisionLift: `0.006134969325153339`
+    - diagnostic gate: `failed`
+    - diagnostic reject reason: `precision_lift_below_min`
+    - H80 reject reasons:
+      - `h80_observed_hit_rate_below_target`
+      - `h80_wilson_lower95_below_target`
+- interpretation:
+  - context join is clean and fail-fast: no missing context rows in train folds
+  - adding the current deterministic context/veto candidate audit does not produce an acceptable train-only veto
+  - no locked veto bank was emitted
+  - no H80 evidence was found
+  - OOS was not used for any threshold or veto selection
+  - current conclusion remains: simple context/veto one-rule layer is insufficient; next work needs nested inner-fold calibration plus stronger context features or multi-rule models, still train-only
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+- registry:
+  - register `tp12_h80_veto_context_selector_v1` with status `completed_train_only_veto_diagnostic_h80_failed`
+
+## 2026-04-21 Reboot Handoff - TP12 Year2Hit Train100 Probe
+
+- patch key:
+  - `tp12_year2hit_train100_year2hit_probe_v1`
+- user direction:
+  - move the year2hit discovery target toward patterns that are both:
+    - `2016..2024` each year has at least `2` hit decision dates
+    - train precision is `100%`
+  - interpretation: train100 is a stricter discovery objective, not an OOS-tuned selector
+- continuity gates:
+  - read `meta/active_research_contract.json`
+  - read this handoff and `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_year2hit_train100_year2hit_probe_v1`
+  - target-first bootstrap passed:
+    - `tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- server train-only probes:
+  - base tokenized input:
+    - `artifacts/runs/tp12_h80_global_next_session_regen_v1_r3/step-tp12-year2hit-positive-first/tokenized_events.jsonl`
+  - no OOS files were read
+- probe A:
+  - output:
+    - `artifacts/runs/tp12_year2hit_train100_year2hit_probe_v1/step-train100-candidate-mine`
+  - options:
+    - `--min-candidate-precision=1`
+    - `--min-candidate-date-precision=1`
+    - contract defaults otherwise: `maxPatternSize=3`, `beamWidthPerSize=2000`
+  - result:
+    - evaluatedCandidateCount: `3217`
+    - emittedCandidateCount: `3214`
+    - statusCounts:
+      - `raw_survivor`: `3214`
+      - `failed_year2hit`: `3`
+    - `quality_seed_passed`: `0`
+  - conclusion:
+    - no train100 + year2hit pattern exists in the current 3-token/default beam candidate space
+- probe B:
+  - first attempt:
+    - `maxPatternSize=4`, `beamWidthPerSize=10000`, `maxExtensionsPerParent=128`
+    - default Node heap OOMed after producing a partial catalog
+  - explicit server rerun:
+    - `NODE_OPTIONS=--max-old-space-size=8192`
+  - output:
+    - `artifacts/runs/tp12_year2hit_train100_year2hit_probe_v1/step-train100-candidate-mine_s4_beam10000_heap8g`
+  - result:
+    - evaluatedCandidateCount: `21217`
+    - emittedCandidateCount: `21214`
+    - patternKindCounts:
+      - `single_token`: `49`
+      - `pair_token`: `1168`
+      - `year_balanced_beam`: `20000`
+    - statusCounts:
+      - `raw_survivor`: `21214`
+      - `failed_year2hit`: `3`
+    - `quality_seed_passed`: `0`
+  - conclusion:
+    - no train100 + year2hit pattern exists in the expanded 4-token coarse-token beam probe either
+- interpretation:
+  - the user-requested train100 objective is correct for high-precision discovery, but the current coarse 49-token grammar is too weak to produce any full-train 100% survivor under year2hit
+  - merely ranking the existing `107` clean year2hit patterns cannot reach H80
+  - the next viable branch must be a new explicit train100-first discovery path with richer/as-of-safe atoms or contrastive negative elimination, not another OOS replay
+  - OOS remains locked; no threshold or rule was selected using OOS
+- next work:
+  - add a train100-specific miner/report that emits only train100 survivors and records raw-survivor counts separately
+  - expand tokenizer/atom grammar before deeper train100 search; otherwise deeper beam search only creates more raw survivors
+  - require train100 year2hit survivor count > 0 before any selector/OOS step
+
+## 2026-04-21 Handoff - TP12 Train100 Year2Hit Discovery Path
+
+- patch key:
+  - `tp12_train100_year2hit_discovery_v1`
+- user direction:
+  - implement the explicit path for train patterns that satisfy both:
+    - `2016..2024` each year has at least `2` hit decision dates and `2` hit symbol-dates
+    - train precision is exactly `100%` (`falsePositiveRows=0`)
+  - no OOS thresholding or automatic fallback was allowed
+- continuity gates:
+  - read `meta/active_research_contract.json`
+  - read this handoff and `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_train100_year2hit_discovery_v1`
+  - target-first bootstrap passed:
+    - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- code patch:
+  - added `meta/tp12_train100_year2hit_discovery_contract.json`
+  - added `src/lib/tp12_train100_year2hit_discovery.mjs`
+  - added tools:
+    - `tools/assert_tp12_train100_preflight.mjs`
+    - `tools/build_tp12_train100_atom_table.mjs`
+    - `tools/mine_tp12_train100_exact_candidates.mjs`
+    - `tools/mine_tp12_train100_negative_elimination.mjs`
+    - `tools/assert_tp12_train100_quality_gate.mjs`
+    - `tools/build_tp12_train100_discovery_report.mjs`
+  - added smoke:
+    - `tools/smoke_tp12_train100_year2hit_discovery.mjs`
+  - wired the smoke/syntax/contract checks into `scripts/verify.sh`
+- server run:
+  - output:
+    - `artifacts/runs/tp12_train100_year2hit_discovery_v1/step-train100-discovery`
+  - input:
+    - `artifacts/runs/tp12_h80_global_next_session_regen_v1_r3/step-tp12-year2hit-positive-first/tokenized_events.jsonl`
+    - `artifacts/runs/tp12_h80_global_next_session_regen_v1_r3/step-tp12-year2hit-positive-first/entry_feasibility_summary.json`
+  - preflight:
+    - status: `passed`
+    - OOS read: `false`
+    - inputRowCount: `3651066`
+    - hitRowCount: `296966`
+  - atom table:
+    - atomCount: `114`
+    - outputRowCount: `3651066`
+- exact train100 miner:
+  - searchComplete: `true`
+  - seedAtomCount: `41`
+  - evaluatedCandidateCount: `413195`
+  - acceptedCandidateCount: `0`
+  - rejectedReasonCounts:
+    - `false_positive_rows_above_max`: `413195`
+    - `train_precision_below_required`: `413195`
+  - note:
+    - first exact attempt showed the need for root-cause performance work, so the miner was patched with typed-array row storage, progress/failure manifest, quick rejected-candidate assessment, and redundant-support branch pruning; no rule criterion was loosened
+- negative-elimination miner:
+  - seedAtomCount: `41`
+  - traceRowCount: `216`
+  - acceptedCandidateCount: `0`
+- quality/report:
+  - acceptedTrain100PatternCount: `0`
+  - qualityStatus: `passed`
+  - report:
+    - `artifacts/runs/tp12_train100_year2hit_discovery_v1/step-train100-discovery/train100_discovery_report.md`
+- interpretation:
+  - in the current clean train token/derived atom space, there are no patterns that are both every-year 2-hit and train precision 100%
+  - the result is stronger than the previous coarse probe because it used a dedicated train100 path, explicit exact DFS, negative-elimination, entry-feasibility preflight, and no OOS
+  - this branch should not proceed to OOS or selector work because the required train100 survivor count is zero
+  - next viable direction is to add richer as-of-safe atoms/context features and rerun train100 discovery; do not relax precision or use OOS to pick thresholds
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+- registry:
+  - register `tp12_train100_year2hit_discovery_v1` with status `completed_train100_zero_survivors`
+
+## 2026-04-21 Handoff - TP12 Train100 Context Atom Discovery Path
+
+- patch key:
+  - `tp12_train100_context_atom_discovery_v1`
+- user direction:
+  - continue the strict train-only search for patterns satisfying:
+    - `2016..2024` each year has at least `2` hit decision dates and `2` hit symbol-dates
+    - total train positive support is at least `18`
+    - train precision is exactly `100%` (`falsePositiveRows=0`)
+  - add richer as-of-safe context atoms without reading OOS or auto-fallbacking into a weaker objective
+- continuity gates:
+  - read `meta/active_research_contract.json`
+  - read this handoff and `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_train100_context_atom_discovery_v1`
+  - target-first bootstrap passed:
+    - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- code patch:
+  - added `meta/tp12_train100_context_atom_discovery_contract.json`
+  - extended `src/lib/tp12_context_feature_builder.mjs` with explicit `stream_by_symbol_v1` context mode
+  - added gzip-aware JSONL writing in `src/lib/tp12_year2hit_foundation_io.mjs`
+  - extended `src/lib/tp12_train100_year2hit_discovery.mjs` with:
+    - context numeric atom specs
+    - `numericAtomMode=bucket_only`
+    - `contextJoinMode=stream_sorted_symbol_date`
+    - gzip atom table input/output support
+    - negative-elimination beam controls: `beamWidth`, `branchCount`, `maxVisitedStates`
+    - redundant-support branch dedupe
+    - multi-negative-manifest report support
+  - extended tools:
+    - `tools/build_tp12_context_features.mjs` with `--stream-by-symbol`
+    - `tools/mine_tp12_train100_negative_elimination.mjs` with beam flags
+    - `tools/build_tp12_train100_discovery_report.mjs` with `--negative-manifests`
+  - updated smokes and `scripts/verify.sh`
+- server run:
+  - output:
+    - `artifacts/runs/tp12_train100_context_atom_discovery_v1/step-train100-context-discovery`
+  - input:
+    - `artifacts/runs/tp12_h80_global_next_session_regen_v1_r3/step-tp12-year2hit-positive-first/tokenized_events.jsonl`
+    - `artifacts/runs/tp12_h80_global_next_session_regen_v1_r3/step-tp12-year2hit-positive-first/entry_feasibility_summary.json`
+    - `artifacts/runs/tp12_h80_global_next_session_regen_v1/inputs-asof-clean/candle_daily.jsonl`
+  - context feature build:
+    - mode: `stream_by_symbol_v1`
+    - candidateRowCount: `3651066`
+    - outputRowCount: `3651066`
+    - candleRowCount: `4419758`
+    - missingCandleRowCount: `0`
+    - output: `context_features.jsonl.gz`
+  - preflight:
+    - status: `passed`
+    - OOS read: `false`
+    - inputRowCount: `3651066`
+    - hitRowCount: `296966`
+  - atom table:
+    - contextJoinMode: `stream_sorted_symbol_date`
+    - atomCount: `338`
+    - outputRowCount: `3651066`
+    - output: `atom_events.jsonl.gz`
+- completed negative-elimination searches:
+  - greedy:
+    - seedAtomCount: `127`
+    - traceRowCount: `772`
+    - acceptedCandidateCount: `0`
+  - beam:
+    - beamWidth: `4`
+    - branchCount: `6`
+    - maxVisitedStates: `12000`
+    - seedAtomCount: `127`
+    - traceRowCount: `11145`
+    - visitedStateCount: `2595`
+    - acceptedCandidateCount: `0`
+  - dedup-wide beam:
+    - beamWidth: `8`
+    - branchCount: `12`
+    - maxVisitedStates: `30000`
+    - seedAtomCount: `127`
+    - traceRowCount: `28718`
+    - visitedStateCount: `5733`
+    - acceptedCandidateCount: `0`
+- quality/report:
+  - acceptedTrain100PatternCount: `0`
+  - qualityStatus: `passed`
+  - accepted catalog:
+    - `artifacts/runs/tp12_train100_context_atom_discovery_v1/step-train100-context-discovery/train100_accepted_catalog.jsonl`
+  - report:
+    - `artifacts/runs/tp12_train100_context_atom_discovery_v1/step-train100-context-discovery/train100_discovery_report.md`
+- exact exhaustive status:
+  - full exact DFS over the expanded context atom space was started but not completed because the state space became combinatorially too large
+  - the completed evidence is therefore the greedy/beam/dedup-wide negative-elimination search result, not a mathematical proof that every possible conjunction is impossible
+- interpretation:
+  - in the completed strict train-only context atom searches, no pattern satisfied every-year 2-hit plus `100%` train precision
+  - this branch should not proceed to OOS or selector work because accepted train100 survivor count is zero
+  - the strict objective remains too strong for the current token plus context atom grammar
+  - next viable explicit branch is counterexample-guided exact completion, richer as-of-safe atoms, or a separate lower-bound precision objective; do not silently relax this patch's `100%` criterion
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+- registry:
+  - register `tp12_train100_context_atom_discovery_v1` with status `completed_train100_context_zero_survivors`
+
+### 2026-04-22 KST - TP12 train100 counterexample exact-completion audit
+
+- patch key:
+  - `tp12_train100_counterexample_exact_completion_v1`
+- continuity gates:
+  - read `meta/active_research_handoff.md`, `meta/active_research_contract.json`, `meta/experiment_patch_memory.json`, and `meta/tp12_train100_context_atom_discovery_contract.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_train100_counterexample_exact_completion_v1`
+  - target-first bootstrap passed:
+    - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- objective:
+  - train-only search for TP12 patterns satisfying all strict train100 gates:
+    - years `2016..2024`
+    - at least `2` hit decision dates per year
+    - at least `2` hit symbol-dates per year
+    - at least `18` positive symbol-dates total
+    - train precision exactly `100%`
+    - false positive rows exactly `0`
+  - no OOS files may be read or used
+- code changes:
+  - added counterexample-guided exact-completion miner in `src/lib/tp12_train100_year2hit_discovery.mjs`
+  - added row atom bitsets and bitset-based support filtering for root-cause performance repair
+  - added CLI:
+    - `tools/mine_tp12_train100_counterexample_exact_completion.mjs`
+  - added contract:
+    - `meta/tp12_train100_counterexample_exact_completion_contract.json`
+  - extended report support for counterexample exact-completion manifests:
+    - `tools/build_tp12_train100_discovery_report.mjs`
+  - extended smoke and verify coverage:
+    - `tools/smoke_tp12_train100_year2hit_discovery.mjs`
+    - `scripts/verify.sh`
+- server run:
+  - output:
+    - `artifacts/runs/tp12_train100_counterexample_exact_completion_v1/step-counterexample-exact-completion-200k`
+  - source atom table:
+    - `artifacts/runs/tp12_train100_context_atom_discovery_v1/step-train100-context-discovery/atom_events.jsonl.gz`
+  - manifest:
+    - `counterexample_exact_completion_manifest.json`
+  - quality:
+    - `train100_counterexample_quality_gate_summary.json`
+  - report:
+    - `train100_counterexample_discovery_report.md`
+- server result:
+  - status: `incomplete`
+  - searchComplete: `false`
+  - completionReason: `max_visited_states_reached`
+  - trainEventCount: `3651066`
+  - atomCount: `338`
+  - seedAtomCount: `311`
+  - availableSeedAtomCount: `311`
+  - visitedStateCount: `200000`
+  - evaluatedCandidateCount: `200000`
+  - acceptedCandidateCount: `0`
+  - acceptedTrain100PatternCount: `0`
+  - remainingFrontierSize: `303`
+  - maxFrontierSize: `411`
+  - branchRowCount: `341844`
+  - counterexampleRowsScanned: `945290`
+  - deadEndReasonCounts:
+    - `max_pattern_atoms_reached`: `46603`
+    - `no_counterexample_extension_preserves_year_gate`: `110705`
+  - rejectedReasonCounts:
+    - `false_positive_rows_above_max`: `200000`
+    - `train_precision_below_required`: `200000`
+- interpretation:
+  - the counterexample exact-completion path found `0` strict train100 candidates in the completed `200000` visited states
+  - this is not a mathematical absence proof because the run hit the configured state cap with `303` frontier states remaining
+  - do not proceed to OOS or selector work from this branch because accepted train100 survivor count is zero
+  - next explicit branch, if continuing the same strict objective, should be resumable/parallel exact-completion with checkpointing and deterministic frontier partitioning
+  - alternatively use a separate lower-bound precision objective, but do not silently relax this patch's `100%` criterion
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+- registry:
+  - register `tp12_train100_counterexample_exact_completion_v1` with status `completed_counterexample_exact_completion_incomplete_zero_survivors`
+
+### 2026-04-22 KST - TP12 train100 counterexample frontier drain + resumable checkpoint
+
+- patch key:
+  - `tp12_train100_counterexample_frontier_drain_v1`
+- continuity gates:
+  - read `meta/active_research_handoff.md`, `meta/active_research_contract.json`, and `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_train100_counterexample_frontier_drain_v1`
+  - target-first bootstrap passed:
+    - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2`
+- objective:
+  - continue strict train-only TP12 train100 year2hit search:
+    - years `2016..2024`
+    - at least `2` hit decision dates per year
+    - at least `2` hit symbol-dates per year
+    - at least `18` positive symbol-dates total
+    - train precision exactly `100%`
+    - false positive rows exactly `0`
+  - no OOS files were read or used
+- code changes:
+  - extended `src/lib/tp12_train100_year2hit_discovery.mjs` counterexample exact-completion miner with explicit checkpoint/resume support
+  - added checkpoint sidecars for `seenSupport` and `frontier`, plus manifest/progress fields:
+    - `outCheckpointPath`
+    - `resumeCheckpointPath`
+    - `resumedFromCheckpoint`
+    - `checkpointPath`
+    - `checkpointSeenSupportPath`
+    - `checkpointFrontierPath`
+  - made checkpoint writes atomic at the manifest pointer level:
+    - sidecars now use unique checkpoint ids
+    - checkpoint JSON is written through atomic rename
+    - old valid checkpoints remain usable if a later checkpoint write is interrupted
+  - extended CLI:
+    - `tools/mine_tp12_train100_counterexample_exact_completion.mjs`
+    - `--out-checkpoint`
+    - `--resume-checkpoint`
+    - `--checkpoint-every-states`
+  - added contract:
+    - `meta/tp12_train100_counterexample_frontier_drain_contract.json`
+  - extended smoke and verify coverage:
+    - `tools/smoke_tp12_train100_year2hit_discovery.mjs`
+    - `scripts/verify.sh`
+- server runs:
+  - initial checkpoint run:
+    - `artifacts/runs/tp12_train100_counterexample_frontier_drain_v1/step-frontier-drain-checkpoint-2m`
+    - completed at `2000000` visited states
+    - accepted candidate count: `0`
+    - remaining frontier size: `312`
+  - interrupted diagnostic run:
+    - `artifacts/runs/tp12_train100_counterexample_frontier_drain_v1/step-frontier-drain-resume-4m`
+    - stopped manually after detecting non-atomic checkpoint sidecar overwrite risk during a large periodic checkpoint
+    - superseded by the atomic checkpoint patch and rerun below
+  - final resumed run:
+    - `artifacts/runs/tp12_train100_counterexample_frontier_drain_v1/step-frontier-drain-resume-4m-atomic`
+    - source checkpoint:
+      - `artifacts/runs/tp12_train100_counterexample_frontier_drain_v1/step-frontier-drain-checkpoint-2m/counterexample_frontier_drain_checkpoint.json`
+    - source atom table:
+      - `artifacts/runs/tp12_train100_context_atom_discovery_v1/step-train100-context-discovery/atom_events.jsonl.gz`
+    - manifest:
+      - `counterexample_frontier_drain_manifest.json`
+    - quality:
+      - `train100_frontier_drain_quality_gate_summary.json`
+    - report:
+      - `train100_frontier_drain_discovery_report.md`
+- final server result:
+  - status: `incomplete`
+  - searchComplete: `false`
+  - completionReason: `max_visited_states_reached`
+  - resumedFromCheckpoint: `true`
+  - trainEventCount: `3651066`
+  - atomCount: `338`
+  - seedAtomCount: `311`
+  - availableSeedAtomCount: `311`
+  - visitedStateCount: `4000000`
+  - evaluatedCandidateCount: `4000000`
+  - emittedCandidateCount: `0`
+  - acceptedCandidateCount: `0`
+  - acceptedTrain100PatternCount: `0`
+  - remainingFrontierSize: `350`
+  - maxFrontierSize: `457`
+  - branchRowCount: `11421885`
+  - counterexampleRowsScanned: `1561855`
+  - deadEndReasonCounts:
+    - `max_pattern_atoms_reached`: `2438145`
+    - `no_counterexample_extension_preserves_year_gate`: `341157`
+  - rejectedReasonCounts:
+    - `false_positive_rows_above_max`: `4000000`
+    - `train_precision_below_required`: `4000000`
+  - checkpoint:
+    - `artifacts/runs/tp12_train100_counterexample_frontier_drain_v1/step-frontier-drain-resume-4m-atomic/counterexample_frontier_drain_checkpoint.json`
+- interpretation:
+  - the deeper train-only counterexample frontier drain found `0` strict train100 candidates through `4000000` visited states
+  - this is still not a mathematical absence proof because the run hit the configured state cap with `350` frontier states remaining
+  - do not proceed to OOS or selector work from this branch because accepted train100 survivor count is zero
+  - any continuation should resume from the atomic `4m` checkpoint or switch to a new explicit objective; do not silently relax the `100%` train precision criterion in this patch
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+
+### 2026-04-22 KST - latest closeout pointer
+
+- latest patch key:
+  - `tp12_train100_counterexample_frontier_partition_drain_v1`
+- latest result:
+  - strict train-only train100 year2hit partition drain from the `8m` checkpoint visited `8,000,000` additional states across `8` deterministic shards
+  - total visited state depth is now `16,000,000`
+  - acceptedTrain100PatternCount: `0`
+  - oosRead: `false`
+  - searchComplete: `false`
+  - remainingFrontierSize: `1166`
+  - all `8` shards ended with `max_visited_states_reached`
+- full detailed handoff section:
+  - `2026-04-22 KST - TP12 train100 counterexample frontier partition drain 8x1m`
+- continuation rule:
+  - do not proceed to OOS or selector work from this branch because accepted strict train100 survivors remain `0`
+  - continue only by explicitly resuming partition shard checkpoints with larger caps, or by opening a new explicit objective; do not silently relax the `100%` train precision criterion
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed after closeout
+
+### 2026-04-22 KST - H80 path-quality label audit
+
+- patch key:
+  - `tp12_h80_path_quality_label_audit_v1`
+- status:
+  - `completed_train_only_diagnostic_ranker_bottleneck`
+- purpose:
+  - close the next diagnostic gap after strict train100 and conjunctive veto did not produce H80 evidence
+  - determine whether the 2021-2024 train OOF selector failures are no-hit-day failures or same-day ranking failures
+  - keep OOS 2025-01-02..2026-04-17 forbidden for fitting, thresholds, and selector design
+- continuity gates:
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2` passed
+  - read `meta/active_research_contract.json`
+  - read `meta/active_research_handoff.md`
+  - read `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_h80_path_quality_label_audit_v1`
+- code added:
+  - `src/lib/tp12_path_quality_label_audit.mjs`
+  - `tools/build_tp12_path_quality_label_audit.mjs`
+  - `tools/smoke_tp12_path_quality_label_audit.mjs`
+  - `meta/tp12_h80_path_quality_label_audit_contract.json`
+- code changed:
+  - `scripts/verify.sh`
+- server artifact root:
+  - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_h80_path_quality_label_audit_v1/train_only_diagnostic`
+- server audit command:
+  - `node tools/build_tp12_path_quality_label_audit.mjs --path-labels artifacts/runs/tp12_h80_global_next_session_regen_v1_r3/step-tp12-year2hit-positive-first/candidate_events.jsonl --candidates artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/train_only_foundation/enriched_consensus_all_folds.jsonl --predictions artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/train_only_foundation/selector_sum_cluster_roweb_predictions.jsonl --date-from=2016-01-04 --date-to=2024-12-30 --forbidden-date-from=2025-01-02 --forbidden-date-to=2026-04-17 --target-pct=0.12 --near-miss-min-pct=0.08 --hard-negative-max-forward-return-pct=0.04 --separability-min-comparison-count=100 --out-summary artifacts/runs/tp12_h80_path_quality_label_audit_v1/train_only_diagnostic/path_quality_audit_summary.json --out-selected artifacts/runs/tp12_h80_path_quality_label_audit_v1/train_only_diagnostic/path_quality_selected_rows.jsonl --out-daily artifacts/runs/tp12_h80_path_quality_label_audit_v1/train_only_diagnostic/path_quality_daily_rows.jsonl`
+- key metrics:
+  - pathLabelRowCount: `536550`
+  - pathLabelSymbolDateCount: `149896`
+  - candidateRows: `74061`
+  - candidateDateCount: `978`
+  - datesWithPositiveCandidate: `978`
+  - dailyOracleHitRate: `1`
+  - selectedRows: `978`
+  - hitRows: `434`
+  - falsePositiveRows: `544`
+  - hitRate: `0.4437627811860941`
+  - wilsonLower95: `0.4129054757251392`
+  - falsePositiveWithSameDateHitCount: `544`
+  - falsePositiveNoSameDateHitCount: `0`
+- false-positive path-quality composition:
+  - hard_negative: `237`
+  - near_miss: `147`
+  - easy_negative: `160`
+  - drawdown `lte_m12pct`: `331`
+  - drawdown `m12_to_m8pct`: `94`
+  - drawdown `m8_to_m4pct`: `77`
+  - drawdown `m4_to_0pct`: `39`
+  - drawdown `gte_0pct`: `3`
+- separability result:
+  - every selected false positive was a same-day ranking miss because the same date had at least one positive candidate
+  - current support-heavy selector systematically overselected high-support/high-score false positives
+  - same-day positive candidates had lower current support/score than selected false positives in all audited false-positive days:
+    - `selectorScore`: selected mean `8.995`, same-day positive mean `1.692`, positiveLessShare `1.0`
+    - `supportClusterCount`: selected mean `25.80`, same-day positive mean `3.94`, positiveLessShare `1.0`
+    - `supportPatternCount`: selected mean `25.93`, same-day positive mean `3.94`, positiveLessShare `1.0`
+    - `supportWeightedClusterRowEb`: selected mean `56.64`, same-day positive mean `8.16`, positiveLessShare `1.0`
+    - `sumClusterRowEb`: selected mean `8.02`, same-day positive mean `1.15`, positiveLessShare `1.0`
+- interpretation:
+  - candidate generation is not the binding bottleneck in this train OOF diagnostic because every candidate date had at least one hit candidate
+  - the binding bottleneck is same-day top1 ranking/selection
+  - current support/count/score axis is directionally wrong on missed days because it favors crowded high-support names that often become false positives
+  - simple one-sided path-quality thresholds are unlikely to be enough; the next explicit objective should be same-day pairwise ranking or a support-overcrowding penalty ranker
+  - no OOS read, no OOS tuning, no locked selector, and no fallback path were introduced
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+- continuation rule:
+  - do not emit an OOS selector from this diagnostic patch
+  - open a new explicit patch key for train-only same-day pairwise/support-overcrowding ranker work
+  - keep `2025-01-02..2026-04-17` as forbidden OOS for threshold and selector design
+
+### 2026-04-22 KST - latest closeout pointer
+
+- latest patch key:
+  - `tp12_h80_path_quality_label_audit_v1`
+- latest result:
+  - train-only path-quality audit completed
+  - OOS read: `false`
+  - selectedRows: `978`
+  - hitRows: `434`
+  - hitRate: `44.38%`
+  - wilsonLower95: `41.29%`
+  - dailyOracleHitRate: `100%`
+  - falsePositiveWithSameDateHitCount: `544`
+  - falsePositiveNoSameDateHitCount: `0`
+- decision:
+  - current H80 blocker is not lack of same-day positive candidates
+  - current H80 blocker is same-day ranker direction; high support/count/score overselects false positives
+  - next explicit branch should target train-only same-day pairwise ranking / support-overcrowding penalty
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed
+
+### 2026-04-22 KST - H80 same-day pairwise overcrowding ranker diagnostic
+
+- patch key:
+  - `tp12_h80_same_day_pairwise_overcrowding_ranker_v1`
+- status:
+  - `completed_train_only_diagnostic_no_h80_lift`
+- purpose:
+  - follow the path-quality audit finding that current same-day top1 failures are ranker misses
+  - test explicit train-only same-day pairwise/support-overcrowding ranking policies without OOS reads or locked selector emission
+  - determine whether simple anti-crowd and support-tempering policies are enough to materially improve the 2021-2024 train OOF selector
+- continuity gates:
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2` passed
+  - read `meta/active_research_contract.json`
+  - read `meta/active_research_handoff.md`
+  - read `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_h80_same_day_pairwise_overcrowding_ranker_v1`
+- code added:
+  - `src/lib/tp12_same_day_pairwise_overcrowding_ranker.mjs`
+  - `tools/run_tp12_same_day_pairwise_overcrowding_ranker.mjs`
+  - `tools/smoke_tp12_same_day_pairwise_overcrowding_ranker.mjs`
+  - `meta/tp12_h80_same_day_pairwise_overcrowding_ranker_contract.json`
+- code changed:
+  - `scripts/verify.sh`
+- server artifact root:
+  - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_h80_same_day_pairwise_overcrowding_ranker_v1/train_only_diagnostic`
+- server diagnostic command:
+  - `node tools/run_tp12_same_day_pairwise_overcrowding_ranker.mjs --candidates=artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/train_only_foundation/enriched_consensus_all_folds.jsonl --date-from=2016-01-04 --date-to=2024-12-30 --forbidden-date-from=2025-01-02 --forbidden-date-to=2026-04-17 --target-wilson-lower95=0.8 --min-selected-rows=150 --out-summary=artifacts/runs/tp12_h80_same_day_pairwise_overcrowding_ranker_v1/train_only_diagnostic/same_day_pairwise_overcrowding_summary.json --out-selections=artifacts/runs/tp12_h80_same_day_pairwise_overcrowding_ranker_v1/train_only_diagnostic/same_day_pairwise_overcrowding_selections.jsonl`
+- key metrics:
+  - candidateRows: `74061`
+  - candidateDateCount: `978`
+  - dailyOracleHitRate: `1`
+  - baseline policy: `baseline_selector_score_desc`
+  - baseline hitRows: `434`
+  - baseline hitRate: `0.4437627811860941`
+  - baseline wilsonLower95: `0.4129054757251392`
+  - best policy: `support_tempered_roweb_v1`
+  - best hitRows: `439`
+  - best hitRate: `0.4488752556237219`
+  - best wilsonLower95: `0.41796355064000634`
+  - bestVsBaselineHitRateDelta: `0.005112474437627801`
+  - h80PassedPolicyCount: `0`
+  - lockedSelectorEmitted: `false`
+- policy result snapshot:
+  - `baseline_selector_score_desc`: `434/978 = 44.38%`, Wilson lower95 `41.29%`, mean selected supportClusterCount `26.46`
+  - `support_tempered_roweb_v1`: `439/978 = 44.89%`, Wilson lower95 `41.80%`, mean selected supportClusterCount `26.39`
+  - `low_support_quality_rank_v1`: `269/978 = 27.51%`, Wilson lower95 `24.80%`, mean selected supportClusterCount `1.15`
+  - `pairwise_overcrowding_penalty_l1_v1`: `316/978 = 32.31%`, Wilson lower95 `29.45%`, mean selected supportClusterCount `3.76`
+  - `pairwise_overcrowding_penalty_l2_v1`: `292/978 = 29.86%`, Wilson lower95 `27.07%`, mean selected supportClusterCount `1.05`
+  - `undercrowded_selector_contrast_v1`: `270/978 = 27.61%`, Wilson lower95 `24.90%`, mean selected supportClusterCount `1.01`
+- interpretation:
+  - simple support-overcrowding penalties do not solve the same-day ranking problem
+  - blindly favoring low-support candidates is materially worse than the current support-heavy baseline
+  - the only improvement was a tiny support-tempered row-EB variant at `+0.51pp`, far below H80 evidence
+  - this confirms the next useful branch needs richer train-only pairwise/context learning, not another hand-written one-axis support penalty
+  - no OOS read, no OOS tuning, no locked selector, and no fallback path were introduced
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed after closeout
+- continuation rule:
+  - do not apply these diagnostic policies to OOS
+  - do not lower H80 gates
+  - next explicit branch should build a train-only pairwise candidate dataset and evaluate richer same-day learning features under nested calibration
+
+### 2026-04-22 KST - latest closeout pointer
+
+- latest patch key:
+  - `tp12_h80_same_day_pairwise_overcrowding_ranker_v1`
+- latest result:
+  - train-only same-day pairwise/support-overcrowding ranker diagnostic completed
+  - OOS read: `false`
+  - baseline: `434/978 = 44.38%`
+  - best diagnostic policy: `439/978 = 44.89%`
+  - best delta: `+0.51pp`
+  - h80PassedPolicyCount: `0`
+  - lockedSelectorEmitted: `false`
+- decision:
+  - support-overcrowding is a real symptom but not a sufficient standalone correction
+  - low-support inversion is harmful
+  - next branch must use richer same-day pairwise/context learning and nested calibration; do not OOS-apply this diagnostic
+- verification:
+  - local `bash scripts/verify.sh` passed
+  - server `bash tools/run_server_command.sh npm run verify` passed after closeout
+
+### 2026-04-22 KST - same-day listwise/context abstention diagnostic closeout
+
+- patch key:
+  - `tp12_h80_same_day_listwise_context_abstention_v1`
+- status:
+  - `completed_train_only_diagnostic_no_h80_lift`
+- purpose:
+  - test the GPTPro-recommended explicit same-day top1 ranking path:
+    `year2hit candidates -> same-day listwise/context policies -> support saturation/interaction -> hard-negative-aware diagnostics -> abstention top-cuts`
+  - keep OOS `2025-01-02..2026-04-17` forbidden and emit no locked selector
+  - compare new context policies against the prior support-tempered anti-crowd benchmark in one train-only diagnostic artifact
+- continuity gates:
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2` passed
+  - read `meta/active_research_contract.json`
+  - read `meta/active_research_handoff.md`
+  - read `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_h80_same_day_listwise_context_abstention_v1`
+- code added:
+  - `src/lib/tp12_same_day_listwise_context_abstention.mjs`
+  - `tools/run_tp12_same_day_listwise_context_abstention.mjs`
+  - `tools/smoke_tp12_same_day_listwise_context_abstention.mjs`
+  - `meta/tp12_h80_same_day_listwise_context_abstention_contract.json`
+- code changed:
+  - `scripts/verify.sh`
+- server artifact root:
+  - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_h80_same_day_listwise_context_abstention_v1/train_only_diagnostic`
+- server diagnostic command:
+  - `node tools/run_tp12_same_day_listwise_context_abstention.mjs --candidates=artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/train_only_foundation/enriched_consensus_all_folds.jsonl --path-labels=artifacts/runs/tp12_h80_global_next_session_regen_v1_r3/step-tp12-year2hit-positive-first/candidate_events.jsonl --date-from=2016-01-04 --date-to=2024-12-30 --forbidden-date-from=2025-01-02 --forbidden-date-to=2026-04-17 --target-pct=0.12 --near-miss-min-pct=0.08 --hard-negative-max-forward-return-pct=0.04 --min-selected-rows=150 --target-wilson-lower95=0.8 --primary-policy-id=listwise_context_quality_v1 --primary-top-cut-rows=150 --top-cuts=50,75,100,150,200,300,500,978 --out-summary=artifacts/runs/tp12_h80_same_day_listwise_context_abstention_v1/train_only_diagnostic/same_day_listwise_context_abstention_summary.json --out-selections=artifacts/runs/tp12_h80_same_day_listwise_context_abstention_v1/train_only_diagnostic/same_day_listwise_context_abstention_selections.jsonl --out-features=artifacts/runs/tp12_h80_same_day_listwise_context_abstention_v1/train_only_diagnostic/same_day_listwise_context_features.jsonl.gz`
+- key metrics:
+  - candidateRows: `74061`
+  - candidateDateCount: `978`
+  - dailyOracleHitRate: `1`
+  - baseline: `434/978 = 44.38%`, Wilson lower95 `41.29%`
+  - primary context policy `listwise_context_quality_v1`: forced `355/978 = 36.30%`
+  - primary top-cut 150: `41/150 = 27.33%`, Wilson lower95 `20.83%`
+  - best forced policy: `support_tempered_roweb_v1`
+  - best forced: `439/978 = 44.89%`, Wilson lower95 `41.80%`
+  - best forced delta vs baseline: `+0.51pp`
+  - best top-cut policy: `support_tempered_roweb_v1`
+  - best top-cut 150: `82/150 = 54.67%`, Wilson lower95 `46.68%`
+  - h80PassedTopCutCount: `0`
+  - lockedSelectorEmitted: `false`
+  - oosRead: `false`
+- interpretation:
+  - GPTPro's bottleneck diagnosis is confirmed: every train OOF candidate date has a same-day hit candidate, but top1 ranking remains weak
+  - the new hand-written context/listwise policies did not beat the support-heavy baseline; the best result remains the prior support-tempered row-EB benchmark
+  - context/liquidity/support-saturation features in this static policy form are insufficient for H80
+  - top pattern cluster concentration remains too high in the best top-cut (`~49.33%`), so the result also fails concentration discipline
+  - no OOS read, no OOS tuning, no locked selector, and no fallback path were introduced
+- continuation rule:
+  - do not apply `tp12_h80_same_day_listwise_context_abstention_v1` to OOS
+  - do not emit a locked selector from this diagnostic
+  - next explicit path should either:
+    - implement a real fold-local learned listwise/pairwise model with nested calibration, or
+    - add genuinely new as-of signals such as side-daily/theme/intraday-open-latency under a new label contract
+  - do not repeat more hand-written one-axis support/context policies unless they add a new independent data source or a proper nested learner
+
+### 2026-04-22 KST - latest closeout pointer
+
+- latest patch key:
+  - `tp12_h80_same_day_listwise_context_abstention_v1`
+- latest result:
+  - train-only same-day listwise/context/abstention diagnostic completed
+  - OOS read: `false`
+  - baseline: `434/978 = 44.38%`
+  - best forced diagnostic policy: `439/978 = 44.89%`
+  - best top-cut: `82/150 = 54.67%`, Wilson lower95 `46.68%`
+  - h80PassedTopCutCount: `0`
+  - lockedSelectorEmitted: `false`
+- decision:
+  - same-day top1 ranking is the bottleneck, but current static support/context policy features do not solve it
+  - H80 remains blocked; OOS replay is prohibited until a separate train-only nested H80 gate passes
+
+### 2026-04-22 KST - learned same-day pairwise ranker diagnostic closeout
+
+- patch key:
+  - `tp12_h80_learned_same_day_ranker_v1`
+- status:
+  - `completed_train_only_diagnostic_no_lift`
+- purpose:
+  - test GPTPro's bounded learned-ranker recommendation using the current same-day feature artifact
+  - implement a single explicit `pairwise_logistic_l2_v1` path only; no LightGBM/XGBoost auto-fallback and no dependency fallback
+  - keep OOS `2025-01-02..2026-04-17` forbidden and emit no locked selector
+- continuity gates:
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2` passed before this branch
+  - read `meta/active_research_contract.json`
+  - read `meta/active_research_handoff.md`
+  - read `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_h80_learned_same_day_ranker_v1`
+- code added:
+  - `meta/tp12_h80_learned_same_day_ranker_contract.json`
+  - `src/lib/tp12_learned_same_day_ranker.mjs`
+  - `tools/run_tp12_learned_same_day_ranker.mjs`
+  - `tools/smoke_tp12_learned_same_day_ranker.mjs`
+- code changed:
+  - `scripts/verify.sh`
+- server artifact root:
+  - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_h80_learned_same_day_ranker_v1/train_only_diagnostic`
+- main server diagnostic command:
+  - `node tools/run_tp12_learned_same_day_ranker.mjs --features=artifacts/runs/tp12_h80_same_day_listwise_context_abstention_v1/train_only_diagnostic/same_day_listwise_context_features.jsonl.gz --date-from=2016-01-04 --date-to=2024-12-30 --forbidden-date-from=2025-01-02 --forbidden-date-to=2026-04-17 --epochs=60 --learning-rate=0.005 --lambda=0.01 --max-pairs-per-date=120 --min-selected-rows=150 --target-wilson-lower95=0.8 --top-cuts=50,75,100,150,200,300,500,978 --out-summary=artifacts/runs/tp12_h80_learned_same_day_ranker_v1/train_only_diagnostic/learned_same_day_ranker_summary.json --out-predictions=artifacts/runs/tp12_h80_learned_same_day_ranker_v1/train_only_diagnostic/learned_same_day_ranker_predictions.jsonl`
+- key metrics:
+  - candidateRows: `74061`
+  - candidateDateCount: `978`
+  - baseline: `434/978 = 44.38%`
+  - support-tempered benchmark: `439/978 = 44.89%`
+  - learned pairwise logistic: `205/978 = 20.96%`
+  - learned delta vs baseline: `-23.42pp`
+  - learned top-cut 150: `36/150 = 24.00%`, Wilson lower95 `17.87%`
+  - h80PassedTopCutCount: `0`
+  - lockedSelectorEmitted: `false`
+  - oosRead: `false`
+- sanity rerun:
+  - command used lower learning rate / stronger regularization:
+    - `--epochs=20 --learning-rate=0.001 --lambda=0.05 --max-pairs-per-date=80`
+  - result: learned `194/978 = 19.84%`, top-cut150 `33/150 = 22.00%`
+  - conclusion: failure is not just an aggressive-learning-rate artifact
+- implementation notes:
+  - first server run correctly failed fast on feature schema mismatch (`sumClusterRowEb` absent in exported feature artifact)
+  - root fix changed support-tempered benchmark to use exported `supportQualityRatio` and raw day-level market fields where rank fields were not exported
+  - no missing-field best-effort fill was added
+- interpretation:
+  - current feature artifact has insufficient stable OOF signal for a simple learned pairwise ranker
+  - the learner overreacts to anti-support / anti-crowding structure and collapses below the candidate row base rate; this reinforces that same-day ranking needs new independent as-of signal, not more retuning of the same feature set
+  - do not repeat this exact current-feature pairwise logistic path as an H80 primary path
+  - do not OOS-apply this model and do not create a locked selector
+- continuation rule:
+  - stop current-feature hand-written and pairwise-logistic ranker retuning for H80
+  - next explicit path should add independent as-of information, prioritized as:
+    - side-daily supply/demand feature coverage and lag-policy audit
+    - sector/theme breadth if an as-of theme/sector map exists
+    - intraday open-latency confirmation only under a new non-next-open entry contract
+  - strict train100 remains diagnostic-only and must not be used as a selector source
+
+### 2026-04-22 KST - latest closeout pointer
+
+- latest patch key:
+  - `tp12_h80_learned_same_day_ranker_v1`
+- latest result:
+  - train-only current-feature learned pairwise ranker failed
+  - OOS read: `false`
+  - baseline: `434/978 = 44.38%`
+  - support-tempered benchmark: `439/978 = 44.89%`
+  - learned: `205/978 = 20.96%`
+  - top-cut150: `36/150 = 24.00%`
+  - h80PassedTopCutCount: `0`
+  - lockedSelectorEmitted: `false`
+- decision:
+  - GPTPro's same-day top1 bottleneck diagnosis remains correct, but current feature learned-ranker evidence is negative
+  - H80 is still blocked; next work should open a new explicit feature-source branch rather than retune this ranker
+
+### 2026-04-22 KST - side-daily coverage audit closeout
+
+- patch key:
+  - `tp12_h80_side_daily_coverage_audit_v1`
+- status:
+  - `completed_train_only_coverage_failed_data_repair_required`
+- purpose:
+  - test whether the existing Kiwoom side-daily canonical files can be safely joined to the current train-only same-day OOF candidate artifact before building side-daily ranker features
+  - report `sameDate`, `strictPrior`, and `priorOrSame` coverage separately; no feature join, no model training, no selector lock
+  - keep OOS `2025-01-02..2026-04-17` forbidden
+- continuity gates:
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2` passed before this branch
+  - read `meta/active_research_contract.json`
+  - read `meta/active_research_handoff.md`
+  - read `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_h80_side_daily_coverage_audit_v1`
+- code added:
+  - `meta/tp12_h80_side_daily_coverage_audit_contract.json`
+  - `src/lib/tp12_side_daily_coverage_audit.mjs`
+  - `tools/audit_tp12_side_daily_coverage.mjs`
+  - `tools/smoke_tp12_side_daily_coverage_audit.mjs`
+- code changed:
+  - `scripts/verify.sh`
+  - `scripts/sync_to_server.sh`
+- sync note:
+  - `scripts/sync_to_server.sh` now excludes `artifacts/checks/` because local verify smoke outputs are volatile and caused rsync code 24 during server sync
+  - this is not a runtime fallback; it removes non-runtime generated check artifacts from deployment sync
+- server artifact root:
+  - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/tp12_h80_side_daily_coverage_audit_v1/train_only_audit`
+- main server audit command:
+  - `node tools/audit_tp12_side_daily_coverage.mjs --candidates=artifacts/runs/tp12_h80_same_day_listwise_context_abstention_v1/train_only_diagnostic/same_day_listwise_context_features.jsonl.gz --dataset=investor_daily:data/intraday_side/investor_daily.jsonl --dataset=program_daily:data/intraday_side/program_daily.jsonl --dataset=trade_strength_daily:data/intraday_side/trade_strength_daily.jsonl --date-from=2016-01-04 --date-to=2024-12-30 --forbidden-date-from=2025-01-02 --forbidden-date-to=2026-04-17 --min-same-date-coverage=0.95 --min-strict-prior-coverage=0.95 --min-prior-or-same-coverage=0.95 --out-summary=artifacts/runs/tp12_h80_side_daily_coverage_audit_v1/train_only_audit/side_daily_coverage_summary.json --out-missing=artifacts/runs/tp12_h80_side_daily_coverage_audit_v1/train_only_audit/side_daily_missing_examples.jsonl`
+- key metrics:
+  - candidateRows: `74061`
+  - candidateDateRange: `2021-01-04..2024-12-24`
+  - candidateDateCount: `978`
+  - candidateSymbolCount: `2284`
+  - side-daily source rows per dataset: `798`
+  - side-daily source date range: `2024-12-30..2026-02-05`
+  - side-daily source symbols: `20`
+  - candidateDateOverlapCount: `0`
+  - candidateSymbolOverlapCount: `20`
+  - investor sameDateCoverage: `0.00%`
+  - program sameDateCoverage: `0.00%`
+  - trade_strength sameDateCoverage: `0.00%`
+  - strictPriorCoverage: `0.00%`
+  - priorOrSameCoverage: `0.00%`
+  - OOS read: `false`
+  - lockedSelectorEmitted: `false`
+- interpretation:
+  - side-daily is currently not usable for the 2021-2024 train OOF ranker artifact
+  - root cause is coverage, not model quality: the available canonical side-daily source starts after the candidate artifact ends and contains only 20 symbols
+  - no side-daily feature join should be attempted until the side-daily source is backfilled/repaired for the train candidate universe and explicit lag/as-of policy
+- continuation rule:
+  - next explicit path should be a side-daily train-universe backfill/repair plan or a different independent feature source
+  - do not silently fill missing side-daily values
+  - do not use the 2024-12-30..2026-02-05 side-daily slice to tune OOS thresholds
+
+### 2026-04-22 KST - latest closeout pointer
+
+- latest patch key:
+  - `tp12_h80_side_daily_coverage_audit_v1`
+- latest result:
+  - existing side-daily canonical files failed train OOF coverage audit
+  - candidate artifact: `74061` rows, `978` dates, `2284` symbols, `2021-01-04..2024-12-24`
+  - side-daily sources: `798` rows each, `20` symbols, `2024-12-30..2026-02-05`
+  - candidate date overlap: `0`
+  - same-date/prior coverage: `0.00%`
+  - OOS read: `false`
+  - locked selector: `false`
+- decision:
+  - H80 remains blocked
+  - side-daily cannot be used until train-period candidate-universe coverage is backfilled or repaired
+  - next branch should either repair side-daily coverage for 2021-2024 train OOF candidates or move to another explicit independent feature source
+
+### 2026-04-22 KST - year2hit precision-first daily-only closeout
+
+- patch key:
+  - `tp12_year2hit_precision_first_daily_only_v1`
+- status:
+  - `completed_train_only_research_lift_no_promotion`
+- purpose:
+  - lift raw year2hit candidate-pool precision before one-pick ranking using existing daily-only/as-of-safe fields only
+  - keep side-daily, intraday, theme/sector, OOS tuning, hidden fallback, and locked selector emission forbidden
+  - keep the year2hit requirement intact; do not relax to alternate lines
+- continuity gates:
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2` passed
+  - read `meta/active_research_contract.json`
+  - read `meta/active_research_handoff.md`
+  - read `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_year2hit_precision_first_daily_only_v1`
+- code added:
+  - `meta/tp12_year2hit_precision_first_daily_only_contract.json`
+  - `meta/worklog_tp12_year2hit_precision_first_daily_only_v1.md`
+  - `src/lib/tp12_precision_first_contract_assert.mjs`
+  - `src/lib/tp12_precision_first_feature_whitelist.mjs`
+  - `src/lib/tp12_year2hit_precision_first_daily_only.mjs`
+  - `tools/assert_tp12_precision_first_daily_only_contract.mjs`
+  - `tools/run_tp12_year2hit_precision_first_daily_only.mjs`
+  - `tools/server_run_tp12_year2hit_precision_first_daily_only.sh`
+  - `tools/smoke_tp12_precision_first_contract.mjs`
+  - `tools/smoke_tp12_precision_first_feature_whitelist.mjs`
+  - `tools/smoke_tp12_precision_first_oos_lock.mjs`
+  - `tools/smoke_tp12_precision_first_rule_grid.mjs`
+- code changed:
+  - `scripts/verify.sh`
+- verification:
+  - local `npm run verify`: passed, exit 0
+  - server `bash tools/run_server_command.sh npm run verify`: passed, exit 0
+- server diagnostic command:
+  - `bash tools/server_run_tp12_year2hit_precision_first_daily_only.sh --contract meta/tp12_year2hit_precision_first_daily_only_contract.json --candidates artifacts/gptpro_bundles/tp12_same_day_ranker_gptpro_20260422/full_compressed/enriched_consensus_all_folds.jsonl.gz --out-summary artifacts/runs/tp12_year2hit_precision_first_daily_only_v1/train_only_diagnostic/precision_first_daily_summary.json --out-selected artifacts/runs/tp12_year2hit_precision_first_daily_only_v1/train_only_diagnostic/precision_first_daily_selected.jsonl --out-rejected artifacts/runs/tp12_year2hit_precision_first_daily_only_v1/train_only_diagnostic/precision_first_daily_rejected.jsonl --out-rule-report artifacts/runs/tp12_year2hit_precision_first_daily_only_v1/train_only_diagnostic/precision_first_daily_rule_report.jsonl`
+- key metrics:
+  - candidateRows: `74061`
+  - hitCandidateRows: `15245`
+  - baseline candidate hit rate: `20.58%`
+  - ruleCount: `21`
+  - researchPassedRuleCount: `6`
+  - promotionPassedRuleCount: `0`
+  - bestRuleId: `support_quality_density_gate_q0.55_tc0.75`
+  - bestRuleSelectedRows: `29236`
+  - bestRuleHitRows: `7811`
+  - bestRuleHitRate: `26.72%`
+  - bestRuleHitRateLift: `+6.13pp`
+  - bestRuleWilsonLower95: `26.21%`
+  - matchedControlPrecision: `17.96%`
+  - matchedControlAbsoluteLift: `+8.76pp`
+  - matchedControlRelativeLift: `1.49x`
+  - OOS read: `false`
+  - sideDailyUsed: `false`
+  - intradayUsed: `false`
+  - themeUsed: `false`
+  - lockedSelectorEmitted: `false`
+- interpretation:
+  - current daily-only fields can clean the raw year2hit candidate pool, but only to a research-lift level
+  - this does not solve H80 or same-day top1 selection
+  - no promotion rule exists, so this branch must not proceed to OOS or emit a selector
+- continuation rule:
+  - treat `support_quality_density_gate_q0.55_tc0.75` as a candidate-pool cleaning diagnostic, not an operating selector
+  - next explicit branch can either use this as a prefilter for a fresh train-only one-pick/ranker audit, or open a new daily-only feature-engineering objective
+  - do not retune thresholds on OOS `2025-01-02..2026-04-17`
+  - do not add side-daily or intraday fields to this branch
+
+### 2026-04-22 KST - latest closeout pointer
+
+- latest patch key:
+  - `tp12_year2hit_precision_first_daily_only_v1`
+- latest result:
+  - daily-only candidate-pool precision lift found: `20.58% -> 26.72%`
+  - research-passed rules: `6`
+  - promotion-passed rules: `0`
+  - OOS read: `false`
+  - locked selector: `false`
+- decision:
+  - useful as a raw candidate-pool cleaning layer
+  - not sufficient for H80, OOS, or live operation
+  - next work should test whether the cleaned pool improves same-day top1 selection under train-only validation, or build richer daily-only features before ranking
+
+### 2026-04-22 KST - TP12 train100 year2hit existence certificate closeout
+
+- patch key:
+  - `tp12_train100_year2hit_existence_cert_v1`
+- status:
+  - `completed_scoped_absence_proven_global_unresolved`
+- purpose:
+  - answer the explicit existence question for patterns that satisfy every-year 2-hit across 2016..2024, at least 18 positive symbol/date rows, train precision exactly `100%`, and false-positive rows exactly `0`
+  - keep this as a certificate/reporting path only; no OOS replay, no selector, no fallback, no precision/year2hit relaxation
+- continuity gates:
+  - `bash tools/bootstrap_target_first_session.sh --scope=target_first_v2` passed
+  - read `meta/active_research_contract.json`
+  - read `meta/active_research_handoff.md`
+  - read `meta/experiment_patch_memory.json`
+  - duplicate check passed:
+    - `bash tools/check_duplicate_experiment.sh --patch-key=tp12_train100_year2hit_existence_cert_v1`
+- code added:
+  - `meta/tp12_train100_year2hit_existence_cert_contract.json`
+  - `meta/worklog_tp12_train100_year2hit_existence_cert_v1.md`
+  - `src/lib/tp12_train100_existence_certificate.mjs`
+  - `tools/build_tp12_train100_existence_certificate.mjs`
+  - `tools/server_build_tp12_train100_existence_certificate.sh`
+  - `tools/smoke_tp12_train100_existence_certificate.mjs`
+- code changed:
+  - `scripts/verify.sh`
+- output artifacts:
+  - `artifacts/runs/tp12_train100_year2hit_existence_cert_v1/existence_certificate_summary.json`
+  - `artifacts/runs/tp12_train100_year2hit_existence_cert_v1/existence_certificate_report.md`
+- verification:
+  - local `npm run verify`: passed, exit `0`
+  - server `bash tools/run_server_command.sh npm run verify`: passed, exit `0`
+- key metrics:
+  - declared scope count: `2`
+  - found train100 year2hit pattern count: `0`
+  - global existence resolved: `false`
+  - OOS read: `false`
+  - locked selector emitted: `false`
+  - exact source-token scope:
+    - scope id: `token_source_atoms_exact_max6_v1`
+    - absence status: `absence_proven_in_scope`
+    - atom count: `114`
+    - seed atom count: `41`
+    - evaluated candidates: `413195`
+    - accepted candidates: `0`
+    - search complete: `true`
+  - context-expanded counterexample scope:
+    - scope id: `context_counterexample_atoms_max7_16m_v1`
+    - absence status: `no_survivor_observed_incomplete`
+    - visited states: `16000000`
+    - accepted train100 patterns: `0`
+    - remaining frontier: `1166`
+    - search complete: `false`
+- interpretation:
+  - within the complete 114 source-token atom scope, train100 year2hit pattern existence is disproven
+  - broader context-expanded branch has strong negative evidence but is incomplete, so global non-existence is not proven
+  - current correct answer is: discovered count `0`; scoped absence proven for one bounded exact space; global existence unresolved
+- continuation rule:
+  - do not treat this certificate as an operating selector or OOS input
+  - do not claim global non-existence from the incomplete context branch
+  - if strict train100 existence must continue, open a new explicit completion/unsat diagnostic objective with full frontier drain or certificate-grade pruning
+
+### 2026-04-22 KST - TP12 train100 year2hit unsat completion certificate
+
+- patch key:
+  - `tp12_train100_year2hit_unsat_completion_cert_v1`
+- status:
+  - `completed_no_survivor_found_completion_scope_incomplete`
+- purpose:
+  - continue the explicit strict train100 question without relaxing the target: 2016..2024 every-year >=2 hit decision dates and symbol-dates, total positive symbol/date rows >=18, train precision exactly `100%`, false-positive rows exactly `0`
+  - certificate/control-plane path only; no OOS replay, no selector, no fallback
+- code added:
+  - `meta/tp12_train100_year2hit_unsat_completion_cert_contract.json`
+  - `meta/worklog_tp12_train100_year2hit_unsat_completion_cert_v1.md`
+  - `src/lib/tp12_train100_unsat_completion_common.mjs`
+  - `src/lib/tp12_train100_frontier_normalizer.mjs`
+  - `src/lib/tp12_train100_dominance_pruner.mjs`
+  - `src/lib/tp12_train100_unsat_bounds.mjs`
+  - `src/lib/tp12_train100_partitioned_completion.mjs`
+  - `src/lib/tp12_train100_survivor_verifier.mjs`
+  - `src/lib/tp12_train100_unsat_completion_certificate.mjs`
+  - `tools/normalize_tp12_train100_frontier.mjs`
+  - `tools/prune_tp12_train100_frontier_dominance.mjs`
+  - `tools/apply_tp12_train100_unsat_bounds.mjs`
+  - `tools/build_tp12_train100_partitioned_completion_plan.mjs`
+  - `tools/build_tp12_train100_partition_completion_status.mjs`
+  - `tools/verify_tp12_train100_survivor_catalog.mjs`
+  - `tools/build_tp12_train100_unsat_completion_certificate.mjs`
+  - `tools/server_run_tp12_train100_unsat_completion_certificate.sh`
+  - `tools/smoke_tp12_train100_unsat_completion_certificate.mjs`
+- code changed:
+  - `scripts/verify.sh`
+- output artifacts:
+  - `artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/certificate/unsat_completion_certificate_summary.json`
+  - `artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/certificate/unsat_completion_certificate_report.md`
+  - `artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/partition/partition_plan.json`
+  - `artifacts/runs/tp12_train100_year2hit_unsat_completion_cert_v1/partition/partition_completion_status.json`
+- verification:
+  - local `npm run verify`: passed, exit `0`
+  - server `bash tools/run_server_command.sh npm run verify`: passed, reached `verify complete`
+  - server certificate pipeline: passed, exit `0`
+- key metrics:
+  - source closeout remaining frontier: `1166`
+  - normalized frontier from existing 8M checkpoint: `317`
+  - dominance-pruned frontier: `317`
+  - bounds-pruned frontier: `317`
+  - partition plan: `8` shards, all runnable with existing miner
+  - partition completion status: `incomplete`
+  - remaining frontier after this planning pass: `317`
+  - verified survivor count: `0`
+  - accepted candidate count: `0`
+  - OOS read: `false`
+  - locked selector emitted: `false`
+- conclusion:
+  - `no_survivor_found_but_completion_scope_incomplete`
+  - existenceResolved: `false`
+  - absenceProvenInScope: `false`
+- interpretation:
+  - still no train100 year2hit 100% pattern found
+  - this patch improved the unresolved branch from a coarse `1166` closeout count to a certificate-ready normalized frontier of `317` runnable shard states
+  - global non-existence is still not proven until all 8 shard frontiers complete with zero accepted candidates and zero remaining frontier
+- continuation rule:
+  - next strict-train100 step, if requested, should run the 8 planned shards from `partition/shards/*_plan.json` on server and then build a partition report/status
+  - do not switch to OOS/ranking/selector from this branch
+
+### 2026-04-22 KST - TP12 train100 neutral anchor/veto certificate code path
+
+- patch key:
+  - `tp12_train100_neutral_anchor_veto_certificate_v1`
+- status:
+  - `completed_code_path_verified_no_authoritative_train_run`
+- purpose:
+  - open a new explicit train-only existence/certificate path for strict TP12 train100 year2hit patterns using neutral feature atoms, anchor clauses, and conditional veto clauses
+  - this is not an OOS replay, not a selector, and not a fallback from the prior strict branch
+- design:
+  - all atom names are neutral measurements, not human-polarity labels such as good/bad/weak
+  - expression form is `anchorSupport AND NOT(vetoClause1 OR vetoClause2 ...)`
+  - exact verifier recomputes final support and enforces false-positive rows `0`, train precision `1.0`, every core year hit decision dates `>=2`, every core year hit symbol-dates `>=2`, total positive symbol-dates `>=18`
+  - certificate writer distinguishes found, complete-unsat, and honest-incomplete; incomplete is never labeled unsat
+- code added:
+  - `contracts/tp12_train100_neutral_anchor_veto_certificate_contract.json`
+  - `meta/worklog_tp12_train100_neutral_anchor_veto_certificate_v1.md`
+  - `src/lib/tp12_train100_neutral_search_guards.mjs`
+  - `src/lib/tp12_train100_neutral_feature_catalog.mjs`
+  - `src/lib/tp12_train100_neutral_atom_bitsets.mjs`
+  - `src/lib/tp12_train100_neutral_anchor_generator.mjs`
+  - `src/lib/tp12_train100_neutral_veto_setcover.mjs`
+  - `src/lib/tp12_train100_neutral_anchor_veto_miner.mjs`
+  - `src/lib/tp12_train100_neutral_exact_verifier.mjs`
+  - `src/lib/tp12_train100_neutral_certificate_writer.mjs`
+  - `tools/build_tp12_train100_neutral_feature_catalog.mjs`
+  - `tools/build_tp12_train100_neutral_atom_bitsets.mjs`
+  - `tools/generate_tp12_train100_neutral_anchors.mjs`
+  - `tools/mine_tp12_train100_neutral_anchor_veto_patterns.mjs`
+  - `tools/verify_tp12_train100_neutral_survivors.mjs`
+  - `tools/write_tp12_train100_neutral_certificates.mjs`
+  - `tools/smoke_tp12_train100_neutral_*.mjs`
+- code changed:
+  - `scripts/verify.sh`
+- verification:
+  - local `npm run verify`: passed, exit `0`
+  - server `bash tools/run_server_command.sh npm run verify`: passed, exit `0`
+- key metrics:
+  - feature space count: `7`
+  - authoritative full-train mining run executed: `false`
+  - OOS read: `false`
+  - locked selector emitted: `false`
+  - fallback used: `false`
+- conclusion:
+  - code path and guards are ready for an authoritative train-only run against real 2016..2024 event rows
+  - no real train100 neutral anchor/veto survivor has been claimed yet because this turn implemented and verified the path, not the heavy full-data search
+- continuation rule:
+  - next step is to run the neutral feature catalog -> atom support -> anchor generation -> anchor/veto mining -> exact verifier -> certificate writer pipeline on authoritative train-only event rows
+  - do not read 2025..2026 OOS data, do not emit a selector, and do not label capped/incomplete searches as absence proofs
+
+### 2026-04-22 KST - TP12 train100 neutral anchor/veto bounded train-only run
+
+- patch key:
+  - `tp12_train100_neutral_anchor_veto_certificate_v1`
+- status:
+  - `completed_train_only_bounded_incomplete_no_survivor_found`
+- purpose:
+  - execute the neutral anchor/veto certificate path on authoritative train-only rows, without OOS read, selector emission, or fallback
+  - test whether the neutral expression form can find a 2016..2024 every-year `>=2` hit, train precision `100%`, false-positive `0` pattern
+- added during run hardening:
+  - `src/lib/tp12_train100_neutral_event_builder.mjs`
+  - `tools/build_tp12_train100_neutral_events.mjs`
+  - `tools/smoke_tp12_train100_neutral_event_builder.mjs`
+  - compact anchor output and rehydration in anchor/veto mining
+  - explicit anchor/veto search caps and fail-fast no-OOS/no-fallback guards
+- output artifacts:
+  - `artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/events/neutral_train_events.jsonl.gz`
+  - `artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/events/neutral_train_event_build_summary.json`
+  - `artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/atoms/neutral_atom_catalog.jsonl.gz`
+  - `artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/atoms/neutral_atom_bitset_manifest.json`
+  - `artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/anchors/anchor_catalog.jsonl.gz`
+  - `artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/anchors/anchor_generation_summary.json`
+  - `artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/search/train100_neutral_anchor_veto_search_summary.json`
+  - `artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/verify/train100_neutral_survivor_verifier_summary.json`
+  - `artifacts/runs/tp12_train100_neutral_anchor_veto_certificate_v1/certificates/train100_neutral_expression_space_certificate.json`
+- verification:
+  - local `npm run verify`: passed, exit `0`
+  - server `bash tools/run_server_command.sh npm run verify`: passed, exit `0`
+- key metrics:
+  - neutral train rows: `149896`
+  - hit rows: `32793`
+  - hit rate: `21.88%`
+  - feature specs: `631`
+  - emitted atoms: `156`
+  - generated anchors: `4000`
+  - anchor search status: `incomplete`
+  - processed anchors in first veto mining pass: `50`
+  - found candidates: `0`
+  - verified survivors: `0`
+  - certificate conclusion: `incomplete_no_survivor_found`
+  - absence proven in scope: `false`
+  - OOS read: `false`
+  - fallback used: `false`
+  - locked selector emitted: `false`
+- interpretation:
+  - no strict train100 neutral anchor/veto pattern was found in the bounded first pass
+  - this is not a non-existence proof because anchor generation and anchor/veto mining were capped
+  - all processed top anchors failed with `no_clause_set_covers_all_negatives_without_killing_year2hit`
+  - this branch remains a train100 existence/certificate branch only; it is forbidden as OOS replay, live selector, or hidden fallback source
+- continuation rule:
+  - if strict train100 existence must continue, mine remaining anchors in deterministic batches or implement a faster indexed/native set-cover completion path
+  - do not claim absence unless search completes or a feature-space unsat certificate is produced

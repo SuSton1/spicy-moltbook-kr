@@ -1,0 +1,64 @@
+{
+  "kind": "tp12_train100_year2hit_existence_cert_contract_v1",
+  "patchKey": "tp12_train100_year2hit_existence_cert_v1",
+  "updatedAt": "2026-04-22T00:00:00+09:00",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "target": {
+    "minHitDecisionDatesPerYear": 2,
+    "minHitSymbolDatesPerYear": 2,
+    "minPositiveSymbolDatesTotal": 18,
+    "requiredTrainPrecision": 1,
+    "maxFalsePositiveRows": 0
+  },
+  "label": {
+    "labelConfigId": "tp12_target12_next_global_session_open_hold3_no_stop_v1",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "entryPolicy": "GLOBAL_NEXT_SESSION_OPEN",
+    "stopPolicy": "no_stop",
+    "requireEntryFeasibilitySummary": true
+  },
+  "globalRules": {
+    "oosReadAllowed": false,
+    "emitLockedSelector": false,
+    "oosReplayAllowed": false,
+    "fallbackAllowed": false,
+    "relaxYear2HitAllowed": false,
+    "relaxTrainPrecisionAllowed": false
+  },
+  "scopes": [
+    {
+      "scopeId": "token_source_atoms_exact_max6_v1",
+      "description": "Complete exact DFS over the 114 source-token atom table with maxPatternAtoms=6.",
+      "proofKind": "complete_exact_manifest",
+      "atomManifestPath": "artifacts/runs/tp12_train100_year2hit_discovery_v1/step-train100-discovery/atom_manifest.json",
+      "exactManifestPath": "artifacts/runs/tp12_train100_year2hit_discovery_v1/step-train100-discovery/exact_train100_mining_manifest.json",
+      "qualitySummaryPath": "artifacts/runs/tp12_train100_year2hit_discovery_v1/step-train100-discovery/train100_quality_gate_summary.json"
+    },
+    {
+      "scopeId": "context_counterexample_atoms_max7_16m_v1",
+      "description": "Counterexample exact-completion branch over the context-expanded atom family. This is strong negative evidence, but not a complete absence proof because frontier remains.",
+      "proofKind": "incomplete_counterexample_closeout",
+      "closeoutSummaryPath": "artifacts/runs/tp12_train100_closeout_zero_survivor_v1/closeout_summary.json"
+    }
+  ],
+  "outputPaths": {
+    "summary": "artifacts/runs/tp12_train100_year2hit_existence_cert_v1/existence_certificate_summary.json",
+    "report": "artifacts/runs/tp12_train100_year2hit_existence_cert_v1/existence_certificate_report.md"
+  },
+  "hardStops": [
+    "Do not read OOS paths or OOS rows for existence certification.",
+    "Do not infer global non-existence from incomplete frontier searches.",
+    "Do not treat date-level 100% as symbol/date row-level 100%.",
+    "Do not emit an operating selector from this certificate.",
+    "Do not relax requiredTrainPrecision below 1 or maxFalsePositiveRows above 0.",
+    "Do not relax the 2016-2024 every-year 2-hit requirement."
+  ]
+}

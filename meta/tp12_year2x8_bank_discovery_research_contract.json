@@ -1,0 +1,79 @@
+{
+  "kind": "tp12_year2x8_bank_discovery_research_contract_v1",
+  "contractId": "tp12_year2x8_bank_discovery_v1",
+  "updatedAt": "2026-04-11T23:40:00+09:00",
+  "baseLookbackLadderContractPath": "meta/tp12_no_stop_lookback_ladder_contract.json",
+  "canonicalBaseline": {
+    "scopeId": "LOW_GAP_TOP",
+    "candidateId": "lb5",
+    "screenHitRate": 0.3108108108108108,
+    "screenHitRows": 115,
+    "screenSelectedRows": 370,
+    "finalHitRate": 0.2857142857142857,
+    "finalHitRows": 30,
+    "finalSelectedRows": 105
+  },
+  "yearHitPrune": {
+    "enableYearHitUpperBoundPrune": true,
+    "coreYears": [
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024
+    ],
+    "excludedBoundaryYears": [
+      2016
+    ],
+    "minTrainHitsPerCoreYear": 2
+  },
+  "bankDiscovery": {
+    "scopeIds": [
+      "LOW_GAP_TOP",
+      "LOW",
+      "MID",
+      "TOP"
+    ],
+    "lookbackCandidateIds": [
+      "lb1",
+      "lb3",
+      "lb5",
+      "lb8"
+    ],
+    "screenWindowGroup": "screen",
+    "screenMaxSearchStates": 200000,
+    "dryRunCell": {
+      "scopeId": "LOW_GAP_TOP",
+      "candidateId": "lb5"
+    }
+  },
+  "promotion": {
+    "screenMinUsableWindows": 5,
+    "screenMinRollingOosHitRate": 0.2857142857142857,
+    "screenMinSignalsPer20TradingDays": 6,
+    "screenMinYearsWithAtLeast2Hits": 4,
+    "screenMaxTop1DateShare": 0.1,
+    "finalMinOosHitRate": 0.5,
+    "finalMinSelectedRows": 80,
+    "finalMinSignalsPer20TradingDays": 8,
+    "finalMinUniqueMatchedDates": 70,
+    "finalMaxTop1DateShare": 0.06,
+    "finalSoftFailBelowHitRate": 0.4,
+    "liveLikeSignalsPer20TradingDaysMin": 8,
+    "liveLikeSignalsPer20TradingDaysMax": 12
+  },
+  "hardStops": [
+    "Do not mutate the frozen canonical LOW_GAP_TOP+lb5 baseline while opening the year2x8 branch.",
+    "Do not reopen year2x7 or no-gap matrices unchanged inside this branch.",
+    "Do not disable strict_label_boundary or live-like replay equivalence checks."
+  ],
+  "notes": [
+    "This branch exists to test search-time year-hit pruning directly inside the miner.",
+    "2016 is excluded from the core-year gate because the first usable decision date is 2016-08-12.",
+    "2024 is included in the core-year gate by explicit request.",
+    "The branch starts with 16-cell 200k discovery across scope x sparse lookback and only promotes top cells to 20M final confirm."
+  ]
+}

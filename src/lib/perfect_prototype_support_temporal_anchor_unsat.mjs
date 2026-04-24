@@ -1,0 +1,25 @@
+export const buildPerfectPrototypeSupportTemporalAnchorUnsat = ({
+  reason = "unsat_no_temporal_anchor_candidates",
+  supportFitExcluded = false,
+  supportLeaveOneOutRecovered = false,
+  selectedFeaturePoolCount = 0,
+  candidateCount = 0,
+  qualifiedCandidateCount = 0,
+  bestTrainSummary = null,
+  bestOosSummary = null,
+  unsatReasonCounts = {},
+  candidatesEvaluated = [],
+} = {}) => ({
+  ok: false,
+  reason,
+  supportFitExcluded,
+  supportLeaveOneOutRecovered,
+  selectedFeaturePoolCount,
+  candidateCount,
+  qualifiedCandidateCount,
+  bestTrainSummary,
+  bestOosSummary,
+  unsatReasonCounts,
+  candidatesEvaluated,
+})
+

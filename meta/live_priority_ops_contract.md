@@ -1,0 +1,1565 @@
+# Live Priority Ops Contract
+
+Updated: `2026-03-25`
+
+## Status
+- This document is the human-readable canonical contract for the current live operating stack.
+- The canonical runtime path is the registry-driven daily ops stack, not the legacy A-free-only wrapper.
+- The pinned A-free `7`-rule catalog remains active, but only as the `afree_primary` line-level operating subset inside the broader stack.
+
+## Canonical Runtime Path
+- Entrypoint: `tools/run_daily_ops_once.sh`
+- Daily ops orchestrator: `tools/server_run_daily_ops_stack.mjs`
+- Fill stage: `tools/run_public_fill_once.sh`
+- Live stack runner: `tools/server_run_live_priority_stack.sh`
+- Registry source of truth: `config/ops/live_priority_registry.server.json`
+- Machine-readable artifact manifest: `meta/live_priority_reusable_artifacts.json`
+- A-free line artifact manifest: `meta/afree_reusable_artifacts.json`
+- Ingest contract: `meta/public_kr_daily_ingest_contract.md`
+- Timer: `tools/systemd/stockdesk-lab-lite-daily-ops.timer`
+- Service: `tools/systemd/stockdesk-lab-lite-daily-ops.service`
+
+## Terms
+- `Canonical Live Operating Stack`: the full after-close path `fill -> latest_common_data_date gate -> line applies -> priority union -> report/state update`.
+- `Line-Level Operating Subset`: one frozen catalog used by one enabled registry line.
+- `Priority-First Symbol-Day Union`: final union keyed by `recommendationDateKey::symbol`; lower numeric priority wins, then lower `lineOrder` wins.
+
+## Daily Semantics
+1. Fill the public KR daily data.
+   - classify rows as `valid_candle`, `nontrading_status`, or `fatal_invalid`
+   - write `nontrading_status` to `data/nontrading_symbol_daily.jsonl`
+   - emit `fill/fill_summary.json`
+2. Compute `latest_common_data_date` from synchronized `candle_daily.jsonl` and `universe_daily.jsonl`.
+3. If that date already equals the last successful target date, exit with `noop_already_processed`.
+4. Run every enabled line from the live-priority registry against that target date only when fill status is `completed` or `completed_with_nontrading_status`.
+   - every active line must exclude matched rows whose recommendation-date close return is `>= +28%` before dedupe
+5. Merge line outputs with `priority_first_symbol_dedup`.
+6. Write `live/final_union.jsonl`, `live/final_summary.json`, root `daily_ops_summary.json`, root `report.md`, and the latest-success state.
+
+## Success Rules
+- `0` picks is a valid successful run.
+- Any line failure is a stack failure.
+- The stack must fail fast on stale or unsynchronized candle/universe latest dates.
+- `fatal_invalid` fill rows are hard-stop failures.
+- `nontrading_status` rows are canonical sidecar outputs, not warnings to ignore and not fallback candles.
+- `recommendationDateCloseRetPct >= 28` rows are excluded from live picks before dedupe on every active line.
+
+## Current Line Roster
+- `afree_primary`
+  - priority `1`
+  - runner `afree_stepb_open`
+  - catalog `operating_7rule_plus_pp935d6457f10a_v1`
+  - close-return filter `excludeRecommendationCloseRetPctGte=28`
+- `1d_primary`
+  - priority `1`
+  - runner `plus_lite_same_day_recent`
+  - catalog `dual80_recent80_live0323_v1`
+  - close-return filter `excludeRecommendationCloseRetPctGte=28`
+- `7d_primary`
+  - priority `1`
+  - runner `plus_lite_same_day_recent`
+  - catalog `dual80_recent80_live0323_v1`
+  - close-return filter `excludeRecommendationCloseRetPctGte=28`
+- `8d_primary`
+  - priority `1`
+  - runner `plus_lite_same_day_recent`
+  - catalog `dual80_recent80_live0323_v1`
+  - close-return filter `excludeRecommendationCloseRetPctGte=28`
+- `1d_secondary`
+  - priority `2`
+  - runner `plus_lite_same_day_recent`
+  - catalog `second_priority_hitge4_100pct_daydedup_live0323_v1`
+  - close-return filter `excludeRecommendationCloseRetPctGte=28`
+- `7d_secondary`
+  - priority `2`
+  - runner `plus_lite_same_day_recent`
+  - catalog `second_priority_hitge4_100pct_daydedup_live0323_v1`
+  - close-return filter `excludeRecommendationCloseRetPctGte=28`
+- `8d_secondary`
+  - priority `2`
+  - runner `plus_lite_same_day_recent`
+  - catalog `second_priority_hitge4_100pct_daydedup_live0323_v1`
+  - close-return filter `excludeRecommendationCloseRetPctGte=28`
+
+## 1d Recent-Only Shadow Expansion Contract
+- `1d_primary` / `1d_secondary` remain pinned to `same_day_plus_recent_upto_1d`.
+- Those existing `1d` operating subsets are intentionally `TOP`-leaning and remain unchanged during this patch.
+- The active miss class under review is:
+  - `recent_impulse_1d` candidates that survive pack admission but fail rule match because current exact subsets over-concentrate on `tag:xsec.closeRank:TOP`.
+- This is treated as `TOP monoculture`, not a ranking-calculation bug.
+- New `MID/LOW` work must not be mined inside combined `same_day_plus_recent_upto_1d`.
+- New work must ship as recent-only shadow-only line-level subsets before any promotion:
+  - `1d_mid_recent_shadow`
+  - `1d_low_recent_shadow`
+- Shadow line invariants:
+  - existing `1d_primary` / `1d_secondary` remain unchanged
+  - shadow lines must not displace priority `1` or `2` outputs during validation
+  - recommended initial shadow priority is `3`
+- Recent-only shadow work must use:
+  - line id `stepb_dplus1_plus_lite_recent_mid_low`
+  - discovery universe `recent_impulse_upto_1d`
+  - surface `v6_contextual_plus_lite_recent_only_lane_local_pool8`
+- Recent-only shadow work must not reuse `v5` combined-line artifacts.
+- Missing `stepALaneId` / lane reference is a hard error on the new surface.
+- Thin-pool semantics are explicit:
+  - `laneEventCount < 8` => `THIN_POOL`
+  - `pool8` is part of the surface contract
+- New shadow families must be exact-only:
+  - `mid_close_continuation`
+  - `low_close_continuation` (legacy umbrella; not the preferred new mining family)
+  - `low_gap_top_continuation`
+  - `low_gap_high_continuation`
+  - `low_jump_below_continuation`
+- `mid_close_continuation` / `low_close_continuation` must not silently collapse back into `TOP` rules.
+- `MID/LOW` families are defined by row cohorts:
+  - `stepALaneId=recent_impulse_1d`
+  - global `xsec.closeRank=MID|LOW`
+  - `THIN_POOL` excluded
+- The current LOW blocker is survival, not entry:
+  - LOW cohort entry exists
+  - LOW accepted root seeds exist
+  - LOW purity rejects are `0`
+  - the active collapse is search-time breadth below min-hit during exact expansion
+- LOW recovery must therefore use:
+  - subtype split
+  - longer LOW root-stage depth than MID
+  - LOW-only mining runs for diagnosis and search
+  - LOW-specific search-time min-hit floor without relaxing exactness or promotion thresholds
+  - deterministic per-scope budget fairness across recent-only LOW subtype root scopes so the first subtype cannot consume the entire allocated search budget before the later subtype scopes run
+- recent-only exact indexed mining requires `row_lane_meta.parquet` even when generic lane-stratified mining is off.
+- `MID/LOW` root search must be row-cohort based, not token-bucket seeded.
+- recent-only root ranking must prioritize cohort concentration / cohort coverage before generic precision.
+- Required cohort tokens may constrain the family positive rowset, but they must not be injected into the learned rule token list as synthetic root tokens.
+- Recent-only family scopes must be built from explicit row-cohort predicates first, with token membership only refining the cohort rowset afterward.
+- Recent-only root-stage gating must use an explicit family root-stage limit; it must not derive from `requiredRootTokens.length`.
+- `MID/LOW` root vocabulary must exclude generic same-day anchors.
+- continuation-specific volume roots remain allowed:
+  - `num:feature.volume.exhaustionProxy:*`
+  - `num:feature.volume.ratio5Over20:*`
+- `MID/LOW` root search must be coarse-first, with fine numeric bins delayed to child expansion.
+- recent-only wrapper defaults must pin:
+  - `--discovery-universe-id=recent_impulse_upto_1d`
+  - `--recent-impulse-lookback-days=1`
+  - `--enable-family-scoped-mining=true`
+  - a default recent-only seed budget when the caller does not override `--max-seed-tokens`
+- Family purity guard:
+  - `mid_close_continuation`: `MID share >= 0.6`, `TOP share = 0`
+  - `low_close_continuation`: `LOW share >= 0.6`, `TOP share = 0`
+  - `low_gap_top_continuation`: `LOW share >= 0.6`, `TOP share = 0`
+  - `low_gap_high_continuation`: `LOW share >= 0.6`, `TOP share = 0`
+  - `low_jump_below_continuation`: `LOW share >= 0.6`, `TOP share = 0`
+- Continuation families additionally require `recent_impulse_1d share >= 0.8`.
+- recent-only wrappers must pin family thresholds explicitly so runtime metadata cannot drift to `midFamilyMinShare=0` / `lowFamilyMinShare=0`.
+- any non-zero LOW fold breadth threshold must ship with an explicit `foldScheme=chronological_<N>`; recent-only wrappers must fail fast instead of silently running with `lowFamilyMinTrainMatchedFolds > 0` and `foldScheme=null`.
+- Shadow freeze must be driven by operating-like metrics:
+  - recent-only shadow freeze forbids explicit `--rule-ids` / `--rule-ids-file`
+  - recent-only family selection must fail fast unless `selectionLineId=stepb_dplus1_plus_lite_recent_mid_low` is resolved via CLI or selection manifest
+  - recent-only shadow freeze requires family-only selection and rejects out-of-family survivors
+  - recent-only curated shadow catalogs must persist a complete provenance bundle:
+    - `selectionLineId`
+    - `selectionSurface`
+    - `selectionContractId`
+    - `selectionAllowedFamilyIds`
+    - `selectionDiscoveryUniverseId`
+    - `selectionManifestPath`
+  - recent-only report rejects catalogs whose rule families are outside `mid_close_continuation` / allowed LOW subtype families
+  - `close28`
+  - day-dedup
+  - final-union proxy
+- LOW subtype promotion may additionally use an explicit bundle contract:
+  - `selectionContractId=recent_only_low_shadow_bundle_v1`
+  - allowed families:
+    - `low_gap_top_continuation`
+    - `low_gap_high_continuation`
+    - `low_jump_below_continuation`
+  - bundle selection still uses exact `train precision=1.0` source rules only
+  - bundle-level scoring is based on close28/day-dedup line-level metrics, not on per-rule OOS hit thresholds alone
+  - bundle contract must persist:
+    - `selectionBundleRuleIds`
+    - `selectionBundleMetrics`
+    - `selectionBundlePromotable`
+    - `selectionBundleRejectReasons`
+  - bundle contract must fail fast if provenance is incomplete or if requested families are outside the allowed LOW subtype set
+- Haesung-targeted recovery uses a separate per-rule contract before any shadow promotion:
+  - `selectionContractId=haesung_low_gap_top_oos100_v1`
+  - allowed family:
+    - `low_gap_top_continuation`
+  - required support case:
+    - `076610:2026-03-18`
+  - rule-level promotion requires:
+    - `train precision=1.0`
+    - `openOosPrecision=1.0`
+    - `openOosMatchCount>=3`
+    - `openOosUniqueMatchedDates>=3`
+    - `trainMatchedMonthCount>=4`
+    - `trainMatchedFoldCount>=4`
+    - `haesungSupport=true`
+  - support-case export may persist:
+    - `donorRuleIds`
+    - `donorTokens`
+  - targeted telemetry must persist:
+    - `supportCaseRootSeedCandidateCount`
+    - `supportCaseFilteredRootSeedCount`
+    - `supportCaseEffectiveRootSeedCount`
+    - `supportCaseCompressionRatio`
+    - `supportCaseMatchedRuleCount`
+    - `supportCaseMatchedRuleIds`
+  - targeted recent-only wrappers must fail fast unless `--support-cases-file` is supplied
+  - targeted recent-only wrappers must also pin donor-aware narrowing:
+    - `--support-case-max-effective-root-seeds`
+    - `--support-case-min-donor-root-overlap`
+    - `--support-case-min-donor-prefix-overlap`
+    - `--support-case-donor-prefix-depth-limit`
+  - targeted recent-only wrappers must also fail fast unless support-case search-space compression is explicit:
+    - root candidate set must be reduced by support-case token overlap plus targeted root allowlist
+    - broad root families (`global/market/seq/volume/trend`) are forbidden for Haesung low-gap-top targeted search
+    - early prefix expansion must preserve support-case overlap for the first `2~3` tokens
+    - donor-neighborhood runs must preserve donor-token overlap through the configured prefix depth
+    - targeted support-case runs must fail fast if constrained effective root count still exceeds the configured root cap
+  - `v11` broad-targeted rerun is not promotable evidence:
+    - it was stopped because support-case mode still selected `664` seed tokens and did not materially compress the search space
+  - `v12` validation order:
+    - probe-first (`200k` / `2M`) only
+    - escalate to full `20M` only after constrained-root diagnostics confirm real search-space reduction
+- Current `low_gap_top` conclusion after donor-targeted validation:
+  - support-case / donor-neighborhood narrowing is useful only as a probe
+  - the next blocker is generalized breadth, not root compression
+  - `low_gap_top` exact rules still cap out below the desired `10+ matched-date` breadth target
+- Therefore the next canonical research direction is:
+  - generalized `low_gap_top` TP-cluster discovery before exact refinement
+  - support-case anchored runs stay probe-only and are not valid final promotion evidence
+  - final candidate selection must come from support-case-free generalized mining
+  - generalized prepass must enforce:
+    - `matchedDateCount >= 10`
+    - `matchedMonthCount >= 6`
+    - `matchedFoldCount >= 4`
+  - generalized prepass telemetry must persist:
+    - `subgroupCandidateCount`
+    - `subgroupQualifiedCandidateCount`
+    - `subgroupEffectiveRootSeedCount`
+    - `subgroupPrefixPruneCount`
+    - `subgroupRejectedCounts`
+    - `subgroupAcceptedPreview`
+  - generalized hardening must also ensure:
+    - `tag:lowGapTop.fpRisk:*` stays exclusion-only and is never promoted as a generalized root seed
+    - broad subgroup discovery is ranked by breadth / coverage / WRAcc / TP lift and must not hard-fail solely because `subgroupScore <= 0`
+    - accepted generalized roots are collapsed into deterministic bundle-seed manifests before exact refinement
+    - early exact refinement remains inside generalized subgroup roots for `low_gap_top_continuation`
+    - early generalized exact refinement must preserve subgroup breadth retention floors derived from the selected subgroup manifest
+    - the generalized final wrapper rejects `--support-cases-file` and all `--support-case-*` flags
+    - TP/FP differential reports are built from row-level matched clusters, not rule-token frequency summaries
+    - generalized zero-rule runs must fail before curated freeze with an explicit no-rules summary artifact
+  - generalized report/leaderboard must expose:
+    - `trainMatchedDateCount`
+    - `trainMatchedMonthCount`
+    - `trainMatchedFoldCount`
+    - `tpRegimeTagPresent`
+    - `fpRiskTagPresent`
+    - `generalizedQualified`
+  - generalized success is staged:
+    - first, broad `low_gap_top` subgroup survivors with `10+ matched dates`
+    - second, exact `train100 + OOS100`
+    - third, at least one of those exact rules also supports `076610:2026-03-18`
+  - subgroup-system canonicalization now requires:
+    - subgroup discovery emits manifest records rather than singleton-root-only survivors
+    - manifest records persist:
+      - `subgroupId`
+      - `bundleTokens`
+      - `bundleAxes`
+      - `matchedDateCount`
+      - `matchedMonthCount`
+      - `matchedFoldCount`
+      - `coverageShare`
+      - `precision`
+      - `tpLift`
+      - `wracc`
+      - `fpPenalty`
+      - `top1DateHitShare`
+      - `selectionFrequency`
+      - `foldPresenceCount`
+      - `windowPresenceCount`
+      - `coverDateKeys`
+      - `coverMonthKeys`
+      - `coverFoldKeys`
+    - stability/diversity filtering occurs before exact refinement
+    - exact refinement runs only inside selected subgroup manifests
+    - `haesungSupport` remains a final acceptance filter after generalized mining
+    - staged subgroup pipeline reasons are explicit:
+      - `no_subgroup_candidates`
+      - `no_stable_subgroups`
+      - `no_diverse_subgroups`
+      - `no_exact_entry`
+      - `no_exact_refinements`
+      - `no_oos_perfect_rules`
+    - generalized runtime summaries must derive subgroup-stage state from `enableSubgroupPrepass`, not a stale `subgroupPrepassEnabled` metadata key
+    - stable/diverse subgroup manifests are not valid evidence until they materialize into exact-entry seeds with persisted telemetry:
+      - `subgroupExactEntryCandidateCount`
+      - `subgroupExactEntryAcceptedCount`
+      - `subgroupExactEntryRejectedCount`
+      - `subgroupExactEntryRejectReasonCounts`
+      - `subgroupExactEntryRejectReasonByFamily`
+      - `subgroupExactEntrySeedPreviewByFamily`
+    - exact-entry bridge must start exact refinement from materialized subgroup bundle states, not from `tokens=[]` root scopes
+    - subgroup bundle states must be collectable as the first exact candidate before child expansion
+    - the current `v21` generalized reprobe has already proven:
+      - `subgroupBundleManifestCount = 8`
+      - `subgroupExactEntryAcceptedCount = 7`
+      - `exploredStates = 9`
+      - zero-rule termination now resolves to `no_exact_refinements`
+    - exact-entry success alone is not promotable evidence until at least one train-exact survivor is produced from the accepted subgroup-entry states
+    - the current `v22` direction replaces generic child expansion after subgroup entry with counterexample-guided exact completion:
+      - each accepted subgroup manifest must materialize:
+        - positive cover `P`
+        - negative frontier `N`
+        - manifest-local candidate token pool
+      - low-gap-top exact refinement is canonicalized as a bounded exact-completion solve over that manifest-local pool
+      - runtime telemetry must expose:
+        - `exactCompletionManifestCount`
+        - `exactCompletionSolvedCount`
+        - `exactCompletionUnsatCount`
+        - `exactCompletionCollectedRuleCount`
+        - `exactCompletionUnsatReasonCounts`
+        - `exactCompletionCandidatePoolSizeByManifest`
+        - `exactCompletionNegativeFrontierSizeByManifest`
+      - staged no-rule reasons must distinguish:
+        - `no_exact_completion_solutions`
+        - `no_exact_completion_train_rules`
+        - `no_oos_perfect_rules`
+      - `haesungSupport` remains a final acceptance filter after exact completion and OOS validation
+    - the current `v22` probe has now proven:
+      - `subgroupBundleManifestCount = 8`
+      - `subgroupExactEntryAcceptedCount = 7`
+      - `exactCompletionManifestCount = 7`
+      - `exactCompletionSolvedCount = 0`
+      - `exactCompletionUnsatCount = 7`
+      - `exactCompletionUnsatReasonCounts.unsat_breadth_retention = 7`
+      - zero-rule termination now resolves to `no_exact_completion_solutions`
+    - the active blocker is no longer wrapper provenance, exact-entry materialization, or generic stage transitions
+    - the active blocker is now manifest-local exact-completion feasibility:
+      - every accepted subgroup manifest is currently UNSAT under the present breadth-retention contract
+      - the next patch must target breadth-retention feasibility inside the exact-completion solver itself
+    - the current `v23` direction replaces `one manifest -> one hard solve` with exact-core frontier solving:
+      - each accepted subgroup manifest must first decompose into a small set of exactable cores
+      - each exactable core is solved under exact-stage family breadth minima rather than the original broad subgroup contract
+      - runtime telemetry must expose:
+        - `exactCoreCandidateCount`
+        - `exactCoreQualifiedCount`
+        - `exactCoreSolvedCount`
+        - `exactCoreUnsatCount`
+        - `exactCoreUnsatReasonCounts`
+        - `exactCoreFrontierBestRetainedDateCount`
+        - `exactCoreFrontierBestRetainedMonthCount`
+        - `exactCoreFrontierBestRetainedFoldCount`
+      - staged no-rule reasons must distinguish:
+        - `no_exactable_cores`
+        - `no_core_frontier_solutions`
+        - `no_exact_completion_train_rules`
+        - `no_oos_perfect_rules`
+      - `haesungSupport` remains a final acceptance filter after core-frontier solving and OOS validation
+    - current `v23` probe outcome:
+      - `subgroupBundleManifestCount = 8`
+      - `subgroupExactEntryAcceptedCount = 7`
+      - `exactCompletionSolvedCount = 5`
+      - `exactCoreSolvedCount = 16`
+      - `trainRuleCount = 4`
+      - best train breadth now reaches `18 dates / 16 months / 4 folds`
+      - open OOS close28 remains weak at `6 selected / 1 hit`
+      - no surviving `v23` rule currently has `haesungSupport = true`
+    - the next blocker is post-solve generalization, not search reachability:
+      - do not revisit subgroup/entry plumbing unless `exactCoreSolvedCount` regresses to zero
+      - next root-cause work must improve OOS quality and haesung coverage of surviving exact-core rules
+    - `v24` crossfit hard-negative refinement is implemented, but the outcome is still insufficient:
+      - keep subgroup discovery / stability / diversity / exact-core frontier unchanged
+      - rolling holdout evaluation and hard-negative collection now run in the canonical path
+      - measured summary:
+        - `exactCompletionCollectedRuleCount = 2`
+        - `hardNegativeAddedCount = 9`
+        - `hardNegativeRefinedRuleCount = 0`
+        - `crossfitWindowCount = 252`
+        - `crossfitNegativeWindowCount = 5`
+        - `crossfitFalsePositiveRowCount = 9`
+      - surviving rules still fail operating acceptance:
+        - open OOS close28 `0 selected / 0 hits`
+        - `haesungSupport = false`
+        - historical replay `076610 / 2026-03-18` also returns `0 matches`
+      - post-refine success must still satisfy:
+        - `train precision=1.0`
+        - `openOosPrecision=1.0`
+        - `openOosMatchCount>=3`
+        - `openOosUniqueMatchedDates>=3`
+        - `haesungSupport=true`
+    - `v26` replaces staged low-gap-top post-solve refinement with a joint feasibility contract:
+      - active blocker is no longer search reachability, subgroup quality, exact entry, or hard-negative collection
+      - active blocker is that staged refinement can produce train survivors which still fail both OOS recurrence and Haesung historical support
+      - canonical `low_gap_top_continuation` post-subgroup path must enforce in one solve:
+        - `train precision=1.0`
+        - `trainMatchedDateCount>=10`
+        - `trainMatchedMonthCount>=6`
+        - `trainMatchedFoldCount>=4`
+        - zero crossfit negative windows
+        - retained crossfit positive recurrence
+        - historical support match for `076610:2026-03-18`
+      - the solver must emit explicit telemetry and fail-fast reasons:
+        - `jointFeasibilityManifestCount`
+        - `jointFeasibilitySolvedCount`
+        - `jointFeasibilityUnsatCount`
+        - `jointFeasibilityUnsatReasonCounts`
+        - `jointHistoricalSupportMatchedCount`
+        - `jointCrossfitRetainedPositiveWindowCount`
+        - `jointCrossfitNegativeWindowCount`
+      - accepted rules are still required to pass open-OOS evaluation afterward:
+      - actual `v26` probe outcome is now part of the operating contract:
+        - missing support-case JSON on server is a hard runtime contract violation; regenerate the explicit support-case file before rerunning
+        - after restoring support cases, the canonical `v26` probe still produced:
+          - `subgroupBundleManifestCount = 1`
+          - `subgroupExactEntryAcceptedCount = 1`
+          - `jointFeasibilitySolvedCount = 0`
+          - `jointFeasibilityUnsatCount = 1`
+          - `unsat_historical_support`
+          - `jointHistoricalSupportMatchedCount = 0`
+        - therefore the current blocker is historical-support feasibility inside the present feature space, not train/OOS runtime plumbing
+    - `v27` replaces attempts to further tune the same atomic token space:
+      - the joint feasibility solver remains canonical
+      - the candidate atom space must expand explicitly to support-compatible atoms:
+        - interval atoms
+        - macro/composite atoms
+        - support-anchor atoms
+      - support-case export and train mining must use the same enabled atom flags
+      - `unsat_historical_support` after atom-space expansion is treated as evidence of feature-space infeasibility, not a reason to add fallback search paths
+      - `v27` probe outcome is now fixed:
+        - run `perfect_proto_low_gap_top_support_compatible_atom_space_v27_probe200k_20260327`
+        - `subgroupBundleManifestCount = 1`
+        - `subgroupExactEntryAcceptedCount = 1`
+        - `exactCoreCandidateCount = 24`
+        - `exactCoreQualifiedCount = 6`
+        - `exactCompletionSolvedCount = 0`
+        - `exactCompletionUnsatReasonCounts.unsat_historical_support = 1`
+        - `jointHistoricalSupportMatchedCount = 0`
+      - therefore the current blocker is no longer atomic-token plumbing:
+        - the expanded support-compatible atom bank still failed the historical-support feasibility contract
+        - next work must target a broader feature-family redesign, not more wrapper/solver plumbing
+    - `v29` is the canonical broader feature-family redesign after `v27`:
+      - keep the joint feasibility solver path unchanged
+      - replace raw support-compatible atom expansion with a support-manifold signature feature family:
+        - support-manifold dataset
+        - support-manifold signature metrics
+        - adaptive support-threshold atoms
+      - support-case export must preserve raw support-row signature inputs so train mining and historical-support checks use the same support geometry
+      - `v29` probe outcome is now fixed:
+        - run `perfect_proto_low_gap_top_support_manifold_distillation_v29_probe200k_20260327`
+        - `subgroupBundleManifestCount = 1`
+        - `subgroupExactEntryAcceptedCount = 1`
+        - `exactCoreCandidateCount = 24`
+        - `exactCoreQualifiedCount = 6`
+        - `exactCompletionSolvedCount = 0`
+        - `exactCompletionUnsatReasonCounts.unsat_historical_support = 1`
+        - `jointHistoricalSupportMatchedCount = 0`
+        - run ended with `reason = no_core_frontier_solutions`
+      - `unsat_historical_support` after support-manifold signature expansion is treated as evidence that the current `low_gap_top` framing itself is infeasible, not a reason to add fallback search or relaxed acceptance
+        - `openOosPrecision=1.0`
+        - `openOosMatchCount>=3`
+        - `openOosUniqueMatchedDates>=3`
+        - `haesungSupport=true`
+    - `v30` is now the canonical structural redesign after `v29`:
+      - do not continue patching single-rule exact search for `low_gap_top_continuation`
+      - the canonical artifact changes to a bounded tiny decision set (`<= 3` clauses)
+      - the canonical solve path must be:
+        - support-aware metric build
+        - stable clause-bank extraction
+        - global decision-set solve
+      - the decision-set solve must enforce historical support and generalization as hard constraints, not post-hoc acceptance:
+        - must-cover `076610:2026-03-18`
+        - `train precision = 1.0`
+        - `trainMatchedDateCount >= 10`
+        - `trainMatchedMonthCount >= 6`
+        - `trainMatchedFoldCount = 4`
+        - `crossfitNegativeWindowCount = 0`
+        - `crossfitRetainedPositiveWindowCount >= 2`
+      - decision-set clause budgets `1/2/3` must be explicit and produce either:
+        - a solved bounded decision set
+        - or an UNSAT certificate by clause budget / support / breadth / crossfit constraint
+      - first row-level execution outcome is now fixed:
+        - run `perfect_proto_low_gap_top_support_metric_decision_set_v30_probe200k_r3_20260327`
+        - the decision-set stage actually executed and failed with `reason = unsat_no_feasible_decision_set`
+        - `stableClauseCandidateCount = 0`
+        - therefore the current blocker is no longer hidden plumbing; it is the absence of any admissible support-metric clause under the present clause-bank constraints
+      - until that blocker is resolved, do not treat legacy train-mine survivor promotion as success:
+        - current frozen survivor `PP_d57fd9233a09` is below target breadth (`9 dates / 9 months / 4 folds`)
+        - `openOosMatchCount = 0`
+        - `haesungSupport = false`
+    - `v31` is now the canonical structural redesign after `v30 r3`:
+      - do not continue patching clause-bank admissibility inside the bounded decision-set path as the primary low-gap-top artifact
+      - the canonical artifact changes to a subgroup-gated support scorecard with hard abstention
+      - the canonical solve path must be:
+        - support-positive / hard-negative prototype cohort build
+        - deterministic support-metric feature emission
+        - role-aware scorecard term-bank extraction
+        - sparse integer scorecard solve
+      - the scorecard solve must enforce historical support and generalization as hard constraints, not post-hoc acceptance:
+        - must-cover `076610:2026-03-18`
+        - `train precision = 1.0`
+        - `trainMatchedDateCount >= 10`
+        - `trainMatchedMonthCount >= 6`
+        - `trainMatchedFoldCount = 4`
+        - `crossfitNegativeWindowCount = 0`
+        - `crossfitRetainedPositiveWindowCount >= 2`
+      - the scorecard artifact must produce either:
+        - a solved support scorecard
+        - or an explicit UNSAT certificate by role-bank emptiness / breadth / crossfit / OOS constraint
+      - `v31 r3` now fixes the first concrete scorecard failure mode:
+        - server run `perfect_proto_low_gap_top_support_scorecard_router_v31_probe200k_r3_20260327` completed end-to-end
+        - baseline low-gap-top mining produced exactly one upstream frozen rule, but it stayed below target breadth and had `openOosMatchCount = 0`, `haesungSupport = false`
+        - scorecard stage emitted:
+          - `scorecardTermCandidateCount = 166`
+          - `scorecardTermQualifiedCount = 140`
+          - `scorecardSolvedCount = 0`
+          - `scorecardHistoricalSupportMatchedCount = 0`
+          - `scorecardUnsatReasonCounts.unsat_no_breadth_extender_terms = 1`
+        - prototype/term-bank diagnostics prove the path is wired:
+          - `592` support-positive rows
+          - `1352` hard-negative rows
+          - `8` support-anchor terms
+          - `8` risk-killer terms
+          - `0` breadth-extender terms
+      - operational conclusion:
+          - current blocker is scorecard breadth-extension feasibility under the present support-metric representation
+          - do not spend more cycles on wrapper/search-budget/plumbing patches for `v31`
+      - `v32` canonical runtime replacement is now fixed:
+        - keep the subgroup gate and support-manifold signature path from `v31`
+        - replace the support-scorecard artifact with a deterministic `support-prototype router`
+        - the router must not depend on prequalified independent breadth-extender terms
+        - the router must calibrate monotone threshold feasibility directly under:
+          - `076610:2026-03-18` must-cover
+          - `train precision = 1.0`
+          - `trainMatchedDateCount >= 10`
+          - `trainMatchedMonthCount >= 6`
+          - `trainMatchedFoldCount = 4`
+          - `crossfitNegativeWindowCount = 0`
+          - `crossfitRetainedPositiveWindowCount >= 2`
+        - the router stage must produce either:
+          - a solved support-prototype router artifact
+          - or an explicit UNSAT certificate with `unsat_no_gate`, `unsat_historical_support`, `unsat_train_breadth`, `unsat_crossfit_negatives`, or `unsat_no_monotone_threshold_router`
+        - `v32 r2` now fixes the first concrete router-runtime failure mode:
+          - server run `perfect_proto_low_gap_top_support_prototype_router_v32_probe200k_r2_20260327` completed end-to-end
+          - router calibration no longer stalls on the full ungated train pack; it evaluates gate-reachable rows only
+          - prototype cohort remained broad:
+            - gate tokens `tag:lowGapTop.gapContinuationRegime:GAP_FADE`, `tag:xsec.gapRank:HIGH`
+            - gated-train `188 rows / 162 dates / 48 months / 4 folds`
+            - support-positive `592 rows`
+            - hard-negative `1352 rows`
+          - router candidate space was non-empty:
+            - `routerCandidateCount = 24`
+            - `routerFeatureCandidateCount = 6`
+            - `routerThresholdCandidateCount = 24`
+            - `triedCandidateCount = 19704`
+          - router UNSAT is now explicit:
+            - `reason = unsat_no_monotone_threshold_router`
+            - `routerUnsatReasonCounts.unsat_train_precision = 19704`
+        - operational conclusion:
+          - do not spend more cycles on router runtime performance or wrapper plumbing for `v32`
+          - the active blocker is monotone-threshold purity feasibility under the current support-signature surface
+      - `v33` canonical runtime replacement is now fixed:
+        - keep the subgroup gate and support-manifold signature path from `v32`
+        - replace the global-threshold `support-prototype router` with a deterministic `local prototype atlas`
+        - the atlas must model multiple local positive pockets plus negative veto pockets inside the same broad gate
+        - the atlas must not depend on independent breadth-extender terms or a single global monotone threshold surface
+        - the atlas must calibrate local acceptance radius / veto margin feasibility directly under:
+          - `076610:2026-03-18` must-cover
+          - `train precision = 1.0`
+          - `trainMatchedDateCount >= 10`
+          - `trainMatchedMonthCount >= 6`
+          - `trainMatchedFoldCount = 4`
+          - `crossfitNegativeWindowCount = 0`
+          - `crossfitRetainedPositiveWindowCount >= 2`
+        - the atlas stage must produce either:
+          - a solved local-prototype atlas artifact
+          - or an explicit UNSAT certificate with `unsat_no_gate`, `unsat_no_local_cells`, `unsat_historical_support`, `unsat_train_precision`, `unsat_train_breadth`, `unsat_crossfit_negatives`, or `unsat_no_local_prototype_atlas`
+        - `v33` probe now fixes the first concrete atlas-runtime failure mode:
+          - server run `perfect_proto_low_gap_top_local_prototype_atlas_v33_probe200k_20260327` completed end-to-end after local/server verify both passed
+          - atlas candidate space was non-empty:
+            - `atlasCellCandidateCount = 4`
+            - `atlasQualifiedCellCount = 3`
+            - `triedCandidateCount = 1368`
+          - atlas UNSAT is now explicit:
+            - `reason = unsat_no_local_prototype_atlas`
+            - `atlasUnsatReasonCounts.unsat_historical_support = 1368`
+          - qualified cells all kept the support case outside the positive pocket:
+            - `ATLAS_CELL_01 supportCaseMarginMean = -0.07913476157876032`
+            - `ATLAS_CELL_04 supportCaseMarginMean = -0.48946091207711095`
+            - `ATLAS_CELL_03 supportCaseMarginMean = -1.577422426383034`
+        - operational conclusion:
+          - do not spend more cycles on global-threshold tuning for `v32`
+          - do not spend more cycles on atlas wrapper plumbing or calibration-loop performance for `v33`
+          - the active blocker is support-case local-pocket membership under the current support-signature surface
+      - `v34` canonical representation replacement is now fixed:
+        - keep the `v33` deterministic `local prototype atlas` as the canonical runtime artifact
+        - do not replace atlas with another `exact rule`, `decision set`, `scorecard`, or global threshold runtime
+        - replace the atlas input surface with a `support-contrastive bridge subtype` family
+        - the bridge family must be defined contrastively from:
+          - `bridgePositiveRows`
+          - `supportNearHardNegativeRows`
+          - `backgroundRows`
+          - `gatedPositiveRows`
+        - the bridge family must not use symbol/date/id direct features or support-case row-key features
+        - the bridge family must not be accepted unless the resulting atlas still satisfies:
+          - `076610:2026-03-18` must-cover
+          - `train precision = 1.0`
+          - `trainMatchedDateCount >= 10`
+          - `trainMatchedMonthCount >= 6`
+          - `trainMatchedFoldCount = 4`
+          - `crossfitNegativeWindowCount = 0`
+          - `crossfitRetainedPositiveWindowCount >= 2`
+        - `v34` must fail fast with explicit representation-stage reasons:
+          - `unsat_no_bridge_positive_cohort`
+          - `unsat_bridge_positive_breadth`
+          - `unsat_no_support_near_hard_negative`
+          - `unsat_support_case_outside_all_bridge_cells`
+          - `unsat_train_precision`
+          - `unsat_train_breadth`
+          - `unsat_crossfit_negatives`
+          - `unsat_oos_precision`
+        - `v34` probe now fixes the first bridge-representation outcome:
+          - server run `perfect_proto_low_gap_top_support_contrastive_bridge_family_v34_probe200k_20260327` completed end-to-end after local/server verify both passed
+          - the bridge representation became real and support-aware:
+            - `bridgeReady = true`
+            - `bridgePositiveSummary = 18 rows / 18 dates / 15 months / 4 folds`
+            - `supportNearHardNegativeSummary = 32 rows / 31 dates / 25 months / 4 folds`
+            - `supportCaseBridgeBestPositiveCellMarginMean = 0.3731458321528325`
+          - the support case is no longer outside every cell:
+            - `atlasPositiveSupportMarginCellCount = 1`
+            - `ATLAS_CELL_02 supportCaseMarginMean = 0.282872745174483`
+          - atlas UNSAT remains explicit:
+            - `reason = unsat_no_local_prototype_atlas`
+            - `atlasUnsatReasonCounts.unsat_historical_support = 24`
+            - `atlasCellCandidateCount = 2`
+            - `atlasQualifiedCellCount = 1`
+          - the surviving pocket stayed too narrow:
+            - best train summary reached only `6 dates / 6 months / 3 folds`
+            - `crossfitPositiveWindowCount <= 1`
+            - `haesungSupport = false`
+            - `openOosMatchCount = 0`
+        - operational conclusion:
+          - do not spend more cycles on atlas wrapper plumbing for `v34`
+          - the old blocker `support-case outside all cells` is now closed
+          - the active blocker is bridge-cell breadth/generalization: the bridge-positive pocket exists but is too narrow to satisfy `10/6/4` plus crossfit/OOS
+      - `v35` canonical atlas-breadth replacement is now fixed:
+        - keep the deterministic `local prototype atlas` as the canonical runtime artifact
+        - keep the `v34` bridge family as the seed membership stage
+        - add a deterministic `bridge recurrence lift` stage that widens the seed bridge pocket only with positives that improve breadth and recurrence under bounded negative-leak cost
+        - replace the `single-prototype` local pocket model with a deterministic `multi-anchor local cover`:
+          - `positiveAnchors[]`
+          - `negativeBorderAnchors[]`
+          - `kPositive`
+          - `minPositiveVotes`
+          - `positiveRadius`
+          - `negativeMargin`
+          - `abstainThreshold`
+        - bounded cell union is explicit:
+          - allow at most `2` compatible cells
+          - fail fast if union breaks `train precision = 1.0`
+        - `v35` must still satisfy:
+          - `076610:2026-03-18` must-cover
+          - `train precision = 1.0`
+          - `trainMatchedDateCount >= 10`
+          - `trainMatchedMonthCount >= 6`
+          - `trainMatchedFoldCount = 4`
+          - `crossfitNegativeWindowCount = 0`
+          - `crossfitRetainedPositiveWindowCount >= 2`
+      - `v35` must fail fast with explicit breadth/generalization-stage reasons:
+          - `unsat_no_seed_bridge_family`
+          - `unsat_no_recurrence_companion_candidates`
+          - `unsat_companion_lift_no_breadth_gain`
+          - `unsat_companion_lift_negative_leak`
+          - `unsat_support_case_lost_after_lift`
+          - `unsat_no_anchor_cover`
+          - `unsat_anchor_cover_breadth`
+          - `unsat_anchor_vote_support`
+      - `v35` corrected short-probe outcome is now fixed:
+        - the short-probe wrapper root cause was real and is now closed:
+          - `server_run_stepb_dplus1_plus_lite_recent_low_gap_top_support_atlas.sh` had been launching the so-called `probe200k` path with `configuredMaxSearchStates = 20000000`
+          - the wrapper now injects an explicit short-probe cap and the rerun used `--max-search-states=200000`
+          - server `npm run verify` passed after the fix
+        - corrected run `perfect_proto_low_gap_top_recurrence_anchor_cover_atlas_v35_probe200k_r2_20260327` finished with:
+          - `train_mine.rules = 1`
+          - `train_mine.exploredStates = 200000`
+          - atlas fail-fast reason `unsat_no_local_prototype_atlas`
+          - `atlasUnsatReasonCounts.unsat_historical_support = 192`
+        - recurrence lift worked, but not enough:
+          - seed bridge positives = `18 rows / 18 dates / 15 months / 4 folds`
+          - accepted companions = `6 / 170`
+          - lifted bridge positives = `24 rows / 24 dates / 18 months / 4 folds`
+          - marginal lift = `+6 dates / +3 months / +0 folds`
+        - the remaining blocker is now precise:
+          - support-case membership survived into anchor-cover cells
+          - most companion candidates were rejected by negative leak (`157`)
+          - surviving cells stayed below operating breadth:
+            - `ATLAS_CELL_01 = 17 dates / 14 months / 4 folds`
+            - `ATLAS_CELL_02 = 7 dates / 6 months / 3 folds`
+          - final operating surface stayed empty:
+            - close28 OOS selected rows = `0`
+            - top leaderboard rule still had `openOosMatchCount = 0`
+            - `haesungSupport = false`
+          - `unsat_cell_union_precision`
+      - `v36` canonical proof patch is now fixed:
+        - keep the deterministic `local prototype atlas` runtime for one final validation round only
+        - `v36` is a representation/calibration proof patch, not a new runtime-family switch
+        - add explicit `support leave-one-out fit`:
+          - exclude `076610:2026-03-18` from bridge fitting, prototype estimation, feature scaling, and cell seeding
+          - reapply the support case only at final acceptance
+        - replace static companion gating with a deterministic `dynamic bridge frontier`:
+          - recompute positive prototype / positive-cell margins after each accepted companion
+          - rebuild support-near hard-negative shell after each accepted companion
+          - evaluate companion acceptance by marginal breadth gain versus marginal negative-leak / purity-drop cost
+        - add a deterministic `boundary-veto frontier` before atlas calibration:
+          - pre-threshold frontier points for breadth / support / precision must be persisted
+          - support-near hard-negative vetoes are applied before the final threshold grid
+          - fail fast if precision cannot be recovered without losing support
+        - `v36` success still requires:
+          - `076610:2026-03-18` must-cover
+          - `train precision = 1.0`
+          - `trainMatchedDateCount >= 10`
+          - `trainMatchedMonthCount >= 6`
+          - `trainMatchedFoldCount = 4`
+          - `crossfitNegativeWindowCount = 0`
+          - `crossfitRetainedPositiveWindowCount >= 2`
+          - `openOosPrecision = 1.0`
+          - `openOosMatchCount >= 3`
+          - `openOosUniqueMatchedDates >= 3`
+          - `haesungSupport = true`
+      - `v36` must fail fast with explicit proof-stage reasons:
+          - `unsat_support_leave_one_out_fit`
+          - `unsat_dynamic_bridge_frontier_empty`
+          - `unsat_dynamic_bridge_frontier_no_breadth`
+          - `unsat_dynamic_bridge_frontier_negative_leak`
+          - `unsat_boundary_veto_no_precision_recovery`
+          - `unsat_boundary_veto_support_loss`
+          - `unsat_prethreshold_frontier_empty`
+          - `unsat_prethreshold_frontier_below_breadth`
+      - actual `v36` proof result (`perfect_proto_low_gap_top_dynamic_bridge_boundary_frontier_v36_probe200k_r2_20260327`):
+          - wrapper root cause was fixed first:
+            - `recent_mid_low` now passes `--split-policy=decision_date_only`
+          - support leave-one-out contract executed:
+            - `supportFitExcluded = true`
+            - `supportLeaveOneOutRecovered = false`
+          - dynamic bridge frontier failed to expand the seed pocket:
+            - `bridgeCompanionAcceptedCount = 0`
+            - reject reasons were dominated by:
+              - `unsat_boundary_veto_support_loss = 157`
+              - `unsat_dynamic_bridge_frontier_negative_leak = 10`
+              - `unsat_dynamic_bridge_frontier_no_breadth = 5`
+          - atlas candidate space still produced one qualified cell:
+            - raw breadth before thresholding = `12 dates / 11 months / 4 folds`
+          - pre-threshold frontier had `3` candidates, but every candidate had:
+            - `supportMatched = []`
+            - `selectedRowCount = 0`
+          - final atlas outcome:
+            - `atlasSolvedCount = 0`
+            - `atlasHistoricalSupportMatchedCount = 0`
+            - `atlasUnsatReasonCounts.unsat_historical_support = 3`
+            - close28 OOS selected rows = `0`
+          - operational interpretation:
+            - the remaining blocker is now `support recovery after leave-one-out`
+            - mining/runtime plumbing are no longer the active blocker for this line
+      - `v37` canonical runtime switch is now fixed:
+        - retire `local prototype atlas` as the primary runtime artifact after the v36 proof failure
+        - keep the bridge/contrastive representation work from `v34~v36`
+        - add a `support boundary residual` feature family that scores:
+          - `support-near TP` versus `support-near FP` boundaries
+          - recurrence/stability carry
+          - false-positive pressure
+        - move runtime execution to `discriminative scorer + calibrated abstention`
+        - keep `076610:2026-03-18` in acceptance-only scope:
+          - exclude it from fit / prototype / scaling / threshold calibration
+          - require `haesungSupport = true` only after non-support breadth/purity already hold
+        - `v37` success requires:
+          - `supportFitExcluded = true`
+          - `supportLeaveOneOutRecovered = true`
+          - non-support train selection reaches:
+            - `trainMatchedDateCount >= 10`
+            - `trainMatchedMonthCount >= 6`
+            - `trainMatchedFoldCount = 4`
+          - `train precision = 1.0`
+          - `crossfitNegativeWindowCount = 0`
+          - `crossfitRetainedPositiveWindowCount >= 2`
+          - `openOosPrecision = 1.0`
+          - `openOosMatchCount >= 3`
+          - `openOosUniqueMatchedDates >= 3`
+          - `haesungSupport = true`
+      - `v37` must fail fast with explicit scorer-stage reasons:
+          - `unsat_support_leave_one_out_fit`
+          - `unsat_support_recovery_after_leave_one_out`
+          - `unsat_non_support_train_breadth`
+          - `unsat_non_support_crossfit_recurrence`
+          - `unsat_boundary_residual_not_separable`
+          - `unsat_scorer_train_precision`
+          - `unsat_scorer_oos_zero_match`
+          - `unsat_scorer_oos_precision`
+          - `unsat_support_acceptance_only_dependency`
+      - actual `v37` probe outcome (`perfect_proto_low_gap_top_boundary_residual_scorer_v37_probe200k_20260328`):
+          - support exclusion contract executed:
+            - `supportFitExcluded = true`
+          - boundary family built:
+            - `boundaryResidualFeatureCount = 35`
+            - `boundaryResidualPositiveGroupCount = 6`
+          - scorer remained infeasible:
+            - `reason = unsat_scorer_train_precision`
+            - `supportLeaveOneOutRecovered = false`
+            - `scorerCandidateCount = 6`
+            - `triedCandidateCount = 2904`
+            - `scorerQualifiedCount = 0`
+            - `unsat_scorer_train_precision = 2793`
+            - `unsat_non_support_train_breadth = 111`
+          - best broad scorer candidate was operationally unusable:
+            - `618 selected / 176 hit / 442 negative`
+            - `train precision = 0.2848`
+            - `152 dates / 48 months / 4 folds`
+            - `crossfitNegativeWindowCount = 6`
+            - `haesungSupport = false`
+          - close28 OOS remained `0 selected / 0 hit`
+          - operational interpretation:
+            - the active blocker is now `boundary residual separability / purity`
+            - support membership is no longer the primary blocker for this line
+      - `v38` grouped local experts are now closed as an infeasible iteration:
+        - local/server verify both passed and the server short probe completed
+        - upstream surfaces remained healthy:
+          - `supportFitExcluded = true`
+          - `bridgeReady = true`
+          - `boundaryResidualReady = true`
+          - `recurrencePurityReady = true`
+          - `recurrencePurityFeatureCount = 32`
+          - `boundaryResidualFeatureCount = 35`
+          - `boundaryResidualPositiveGroupCount = 6`
+        - runtime failure happened before local expert calibration:
+          - `reason = unsat_no_local_experts`
+          - `boundaryGroupCount = 6`
+          - `boundaryGroupEligibleCount = 0`
+          - `localExpertCandidateCount = 0`
+          - `localExpertQualifiedCount = 0`
+          - `expertUnionCandidateCount = 0`
+          - `expertUnionQualifiedCount = 0`
+          - `supportLeaveOneOutRecovered = false`
+        - concrete blocker:
+          - grouped dataset collapsed to `30` rows
+          - `supportCaseEligibleGroups = ["candle"]`
+          - `supportCaseLocalRecoveryMarginMean = 0`
+          - no recurrence-purity group survived the current local-core / negative-shell eligibility contract
+        - close28 OOS stayed `0 selected / 0 hit`
+      - any continuation after `v38` must repair `boundary group eligibility` first:
+          - do not retune union thresholds while `boundaryGroupEligibleCount = 0`
+          - preserve `supportFitExcluded = true` and acceptance-only support semantics
+          - fail fast on:
+            - `unsat_no_local_experts`
+            - `boundaryGroupEligibleCount = 0`
+            - `localExpertCandidateCount = 0`
+            - `supportLeaveOneOutRecovered = false`
+      - `v39 perfect_proto_support_carrier_graph_local_experts_v39_probe200k_20260328` is now closed:
+          - local/server verify both passed before probe
+          - the probe failed at pre-runtime carrier-family gating, not at local-expert union
+          - terminal outcome:
+            - `reason = unsat_support_case_not_component_reachable`
+            - `supportFitExcluded = true`
+            - `supportLeaveOneOutRecovered = false`
+            - `carrierGraphFeatureCount = 15`
+            - `carrierComponentCount = 3`
+            - `carrierEligibleComponentCount = 1`
+            - `supportCaseReachableComponentCount = 0`
+            - `boundaryGroupCount = 0`
+            - `localExpertCandidateCount = 0`
+          - interpretation:
+            - one non-support carrier component did survive breadth screening
+            - but the support case fell off at the bridge-to-carrier projection boundary
+            - `supportCaseBridgeBestPositiveCellMarginMean = 0.030262614771508156` shows the support case was only marginally attached even before carrier projection
+          - any continuation must therefore repair reachability at the carrier-family boundary itself:
+            - do not retune local-expert or union thresholds while `supportCaseReachableComponentCount = 0`
+            - preserve `supportFitExcluded = true` and acceptance-only support semantics
+            - keep fail-fast on:
+              - `unsat_no_carrier_components`
+              - `unsat_no_positive_carrier_components`
+              - `unsat_support_case_not_component_reachable`
+              - `unsat_component_breadth`
+      - `v40 perfect_proto_low_gap_top_support_corridor_graph_propagation_v40` is now closed with actual outcome:
+          - `r1` implementation bug was fixed in-patch:
+            - original failure `unsat_no_corridor_metric_features`
+            - root cause was metric-learning support rows coming only from the tiny propagation seed set
+            - metric learning now fits on broader recurring positive/negative reference cohorts
+          - final `r2` probe (`perfect_proto_low_gap_top_support_corridor_graph_propagation_v40_probe200k_r2_20260328`) failed with:
+            - `reason = unsat_support_case_not_corridor_reachable`
+            - `supportFitExcluded = true`
+            - `supportLeaveOneOutRecovered = false`
+            - `graphPositiveSeedCount = 2`
+            - `graphNegativeSeedCount = 24`
+            - `corridorFeatureCount = 24`
+            - `graphNodeCount = 658`
+            - `graphEdgeCount = 2464`
+            - `supportCasePositivePotential = 0`
+            - `supportCaseNegativePotential = 1.3262364245709249e-11`
+          - interpretation:
+            - propagation now runs end-to-end, so the blocker is no longer graph construction
+            - the blocker is support recovery collapse inside the fitted non-support corridor
+          - any continuation must therefore fail fast on:
+            - `supportCasePositivePotential = 0`
+            - `supportCasePositivePotential <= supportCaseNegativePotential`
+            - `graphPositiveSeedCount < 3`
+            - any runtime tuning attempted before propagation reachability is repaired
+      - `v41 perfect_proto_low_gap_top_ordinal_multibasin_local_experts_v41` has now completed and failed conclusively at expert-union breadth:
+          - verified outcomes:
+            - `supportFitExcluded = true`
+            - `ordinalMotifFeatureCount = 49`
+            - `corridorPositiveBasinCount = 4`
+            - `corridorPositiveEligibleBasinCount = 3`
+            - `corridorPositiveSeedCount = 9`
+            - `supportCaseReachableBasinCount = 2`
+            - `boundaryGroupEligibleCount = 3`
+            - `localExpertCandidateCount = 29862`
+            - `localExpertQualifiedCount = 4`
+          - root-cause runtime fix applied during v41:
+            - local-expert OOS scoring is now deferred until after train/crossfit feasibility
+            - do not revert this; eager OOS scoring caused unnecessary server-time blowup
+          - final unsat result:
+            - `reason = unsat_expert_union_train_breadth`
+            - `expertUnionCandidateCount = 14`
+            - `expertUnionQualifiedCount = 0`
+            - `supportLeaveOneOutRecovered = false`
+            - close28 OOS `0 selected / 0 hit`
+          - operational interpretation:
+            - v41 repaired basin reachability and produced pure experts
+            - but every qualified expert collapsed to the same pocket:
+              - `9 dates / 8 months / 3 folds`
+            - bounded unions added no new breadth, so support recovery and OOS never activated
+          - any continuation inside `low_gap_top` must now fail fast when:
+            - all qualified experts share the same matched-date set
+            - union breadth equals single-expert breadth
+            - `supportLeaveOneOutRecovered = false` after expert qualification
+      - `v42 perfect_proto_low_gap_top_multibasin_simplex_complement_frontier_v42` is now completed and rejected as a breadth-restoration fix:
+          - memory/OOM repair succeeded:
+            - support-corridor builder now reuses one family stage at a time
+            - simplex stage no longer clones `tokenSet` per row
+          - empirical result on `perfect_proto_low_gap_top_multibasin_simplex_complement_frontier_v42_probe200k_r2_20260328`:
+            - `localExpertQualifiedCount = 2`
+            - `qualifiedExpertDistinctMatchedDateSignatureCount = 1`
+            - `coverageFrontierQualifiedCount = 1`
+            - `bestSingleExpertTrainMatchedDateCount = 8`
+            - `bestSingleExpertTrainMatchedMonthCount = 7`
+            - `bestSingleExpertTrainMatchedFoldCount = 3`
+            - `expertUnionDateGainOverBestSingleExpert = 0`
+            - `expertUnionMonthGainOverBestSingleExpert = 0`
+            - `expertUnionFoldGainOverBestSingleExpert = 0`
+            - `supportLeaveOneOutRecovered = false`
+            - close28 OOS remained `0 selected / 0 hit`
+          - operational interpretation:
+            - current `low_gap_top` family can still emit one pure pocket
+            - it cannot emit a second complementary pure pocket that increases breadth without breaking purity
+          - any further continuation inside current `low_gap_top` must fail fast before support/OOS unless:
+            - `qualifiedExpertDistinctMatchedDateSignatureCount > 1`
+            - `coverageFrontierQualifiedCount > 1`
+            - `bestSingleExpertTrainMatchedDateCount > 8`
+            - `expertUnionDateGainOverBestSingleExpert > 0`
+            - `expertUnionFoldGainOverBestSingleExpert > 0`
+      - `v43 perfect_proto_support_recurrence_motif_bag_cover_v43` is now completed and its blocker is pinned:
+          - canonical run:
+            - `perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328`
+          - what succeeded:
+            - current `low_gap_top` was demoted to a gate / feature supplier
+            - learning unit changed from row pockets to `date bag` coverage
+            - bag diversity existed before detector qualification:
+              - `positiveBagCount = 16`
+              - `negativeBagCount = 28`
+              - `motifBundleCount = 23`
+              - `distinctBagCoverSignatureCount = 14`
+              - `motifPrototypeCount = 6`
+          - what failed:
+            - final reason was `unsat_no_bag_local_detectors`
+            - `bagLocalDetectorCandidateCount = 480`
+            - `bagLocalDetectorQualifiedCount = 0`
+            - best detector remained impure:
+              - `49 selected / 15 positive / 34 negative`
+              - `precision = 0.3061`
+              - `trainMatchedDateCount = 14`
+              - `trainMatchedMonthCount = 11`
+              - `trainMatchedFoldCount = 3`
+              - `crossfitNegativeWindowCount = 6`
+            - support remained unrecovered:
+              - `supportCaseTopBundleCount = 0`
+              - `supportLeaveOneOutRecovered = false`
+            - close28 OOS remained `0 selected / 0 hit`
+          - operational interpretation:
+            - bag-level diversity alone is not enough
+            - the active blocker is now bag-local detector purity / separability
+            - current bag-cover family still fails before support or OOS because no detector reaches non-support `train100 + 10 dates + 6 months + 4 folds + crossfitNegativeWindowCount = 0`
+          - any `v43` continuation must fail fast before support/OOS unless:
+            - `bagLocalDetectorQualifiedCount > 0`
+            - best detector `train precision = 1.0`
+            - best detector `trainMatchedFoldCount = 4`
+            - best detector `crossfitNegativeWindowCount = 0`
+      - `v44 perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44` is now completed and its blocker is pinned:
+          - canonical run:
+            - `perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44_probe200k_20260328`
+          - what succeeded:
+            - current `low_gap_top` was demoted to a gate / feature supplier without collapsing the family reset
+            - canonical learning unit changed to `decision-date anchored temporal episodes`
+            - role-topology representation existed before final solve:
+              - `episodeCandidateCount = 469`
+              - `episodePositiveCount = 16`
+              - `episodeNegativeCount = 31`
+              - `episodeFeatureCount = 30`
+              - `roleTopologyFeatureCount = 35`
+              - `roleTopologySignatureCount = 6`
+              - `supportCaseReachableRoleSignatureCount = 1`
+            - best non-support breadth reached:
+              - `trainMatchedDateCount = 11`
+              - `trainMatchedMonthCount = 11`
+              - `trainMatchedFoldCount = 4`
+          - what failed:
+            - final reason was `unsat_temporal_anchor_train_precision`
+            - `supportFitExcluded = true`
+            - `supportLeaveOneOutRecovered = false`
+            - `candidateCount = 108`
+            - `qualifiedCandidateCount = 0`
+            - best anchored scorer remained impure:
+              - `38 selected / 11 positive / 27 negative`
+              - `precision = 0.2895`
+              - `crossfitPositiveWindowCount = 2`
+              - `crossfitNegativeWindowCount = 6`
+            - close28 OOS remained `0 selected / 0 hit`
+          - operational interpretation:
+            - breadth is no longer the dominant blocker for this family reset
+            - the active blocker is temporal-anchor purity / separability
+            - the current temporal-role-topology family still fails before support or OOS because every viable-breadth candidate leaks too many negatives
+          - any `v44` continuation must fail fast before support/OOS unless:
+            - `qualifiedCandidateCount > 0`
+            - best candidate `train precision = 1.0`
+            - best candidate `crossfitNegativeWindowCount = 0`
+            - `supportLeaveOneOutRecovered = true`
+      - `v45 perfect_proto_low_gap_top_counterfactual_outranking_residual_v45` has now been executed as the canonical selection-family reset:
+          - current `low_gap_top` was used only as a gate / feature supplier
+          - canonical learning unit changed from row or bag membership to `decision-date query top1 selection`
+          - the runtime path materialized temporal episodes, built same-date peer outranking and matched-control residual features, and calibrated a top1-per-date query ranker with abstention
+          - the first server probe exposed a root-cause heap blow-up in stage-by-stage row cloning; this was fixed by converting the new supplier stages to in-place augmentation before rerunning
+          - the corrected short probe `perfect_proto_low_gap_top_counterfactual_outranking_residual_v45_probe200k_r2_20260328` failed at:
+            - `/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_counterfactual_outranking_residual_v45_probe200k_r2_20260328/step-perfect-prototype-support-top1-query/no_support_top1_query_summary.json`
+          - final blocker:
+            - `reason = unsat_top1_query_train_precision`
+            - `supportFitExcluded = true`
+            - `supportLeaveOneOutRecovered = false`
+            - `candidateCount = 1552`
+            - `qualifiedCandidateCount = 0`
+            - best non-support candidate `269 selected / 131 positive / 138 negative / precision 0.48698884758364314`
+            - best non-support candidate `trainMatchedDateCount = 131`
+            - best non-support candidate `trainMatchedMonthCount = 48`
+            - best non-support candidate `trainMatchedFoldCount = 4`
+            - best non-support candidate `crossfitNegativeWindowCount = 6`
+          - operating interpretation:
+            - the selection-family reset broke the old breadth bottleneck
+            - the active blocker is now purity collapse inside same-date top1 selection
+            - the surviving surface is still dominated by `sig.ctrlResidual.regimeResidualRank` plus `sig.ctrlResidual.temporalEpisode_episodePositiveCarry`, not a clean peer-winner signal
+          - support acceptance contract remains strict:
+            - `076610:2026-03-18` is acceptance-only
+            - support case is forbidden in fit / seed / threshold / scaling
+            - artifact hash must not change during support acceptance
+          - any `v45` continuation must fail fast before support/OOS unless:
+            - best non-support candidate `train precision = 1.0`
+            - best non-support candidate `trainMatchedDateCount >= 10`
+            - best non-support candidate `trainMatchedMonthCount >= 6`
+            - best non-support candidate `trainMatchedFoldCount = 4`
+            - best non-support candidate `crossfitNegativeWindowCount = 0`
+            - `supportLeaveOneOutRecovered = true`
+      - `v46 perfect_proto_low_gap_top_support_separability_audit_v46` has now finished and it is the terminal gating result for the current `low_gap_top` continuation family:
+          - run:
+            - `perfect_proto_low_gap_top_support_separability_audit_v46_probe200k_20260328`
+          - outcome:
+            - `reason = unsat_pairwise_win_rate`
+            - `supportFitExcluded = true`
+            - `supportLeaveOneOutRecovered = false`
+            - `supplierFeatureCount = 240`
+            - `selectedFeaturePoolCount = 12`
+            - `pairwiseCandidateCount = 781`
+            - `pairwiseQualifiedCandidateCount = 0`
+          - best pairwise subset still failed the strict gating contract:
+            - `pairwiseWinRate = 0.9534883720930233`
+            - `minFoldPairwiseWinRate = 0.75`
+            - `sameDateRunnerUpBeatRate = 0.8181818181818182`
+            - `hardNegativeLeakCount = 11`
+            - `supportProjectionPositive = false`
+          - operating interpretation:
+            - the current `low_gap_top` supplier family is broad enough to generate candidate structure
+            - it is not separable enough to justify any further in-family selector/runtime patch
+          - live-ops policy implication:
+            - no further `low_gap_top` continuation experiment should try to recover the target by adding another atlas / scorer / expert / bag / query runtime inside the same family
+            - any next recovery attempt must start from target/family redefinition outside the current `low_gap_top_continuation` framing
+      - `v47 perfect_proto_support_counterfactual_episode_transition_admission_top1_v47` has now completed and failed at Stage A:
+          - short probe:
+            - `perfect_proto_support_counterfactual_episode_transition_admission_top1_v47_probe200k_20260328`
+          - final reason:
+            - `unsat_episode_admission_train_precision`
+          - strict support handling did hold:
+            - `supportFitExcluded = true`
+            - `supportProjectionPositive = true`
+          - but the admission surface remained almost fully open:
+            - `candidateCount = 18`
+            - `qualifiedCandidateCount = 0`
+            - best admission candidate:
+              - `selectedEpisodeCount = 465`
+              - `positiveEpisodeCount = 16`
+              - `negativeEpisodeCount = 449`
+              - `precision = 0.034408602150537634`
+              - `trainMatchedDateCount = 16`
+              - `trainMatchedMonthCount = 14`
+              - `trainMatchedFoldCount = 4`
+              - `crossfitNegativeWindowCount = 6`
+          - live implication:
+            - this family reset removed the old breadth bottleneck
+            - it did not solve hard-negative separation
+            - `supportLeaveOneOutRecovered = false`
+            - OOS remained `0 selected / 0 hit`
+          - post-v47 hard-stop:
+            - do not resume another `low_gap_top`-supplier recovery patch by retuning `episode admission`, `admitted-date top1`, or adjacent selectors
+            - any next recovery attempt must begin from another target/family definition rather than another in-family runtime tweak
+      - `v48 perfect_proto_recent_mid_low_same_date_winner_query_v48` completed and is now hard-stopped:
+          - tested family:
+            - `recent_mid_low` same-date winner query
+            - `low_gap_top_continuation` survived only as supplier / gate input
+          - tested runtime:
+            - `same-date top1 outranking + abstention`
+            - no `episode admission` stage was allowed on this line
+          - support contract remained intact:
+            - `076610` fit-excluded
+            - support acceptance artifact-hash-stable and acceptance-only
+          - required singleton root-cause fix did land:
+            - peerless queries no longer encode `runner-up gap = 0`
+            - peerless queries no longer encode `consensus win-share = 0`
+            - local smoke plus local/server `npm run verify` both passed before probing
+          - actual short-probe outcome:
+            - `reason = unsat_top1_query_train_precision`
+            - `supportFitExcluded = true`
+            - `supportLeaveOneOutRecovered = false`
+            - `selectedFeaturePoolCount = 3`
+            - `candidateCount = 960`
+            - `qualifiedCandidateCount = 0`
+            - best train summary:
+              - `998 selected / 299 positive / 699 negative`
+              - `precision = 0.2996`
+              - `299 dates / 50 months / 4 folds`
+              - `crossfitNegativeWindowCount = 6`
+            - no feasible winner-query artifact emitted
+            - OOS remained `0 selected / 0 hit`
+          - operational interpretation:
+            - this line proved the family is broad enough
+            - it did not prove same-date winner separability
+            - the blocker is now `same-date winner purity collapse`
+          - post-v48 hard-stop:
+            - do not continue retuning this same `recent_mid_low` winner-query runtime
+            - any next recovery attempt must start from another target/family definition, not another micro-adjustment of this same top1-query surface
+      - `v49 perfect_proto_support_failure_regime_veto_top1_v49` is now closed after server short probe `perfect_proto_support_failure_regime_veto_top1_v49_20260328_234759`:
+          - actual result:
+            - `reason = unsat_veto_train_breadth`
+            - `supportFitExcluded = true`
+            - `supportLeaveOneOutRecovered = false`
+            - `vetoCandidateCount = 3776`
+            - `vetoQualifiedCandidateCount = 0`
+            - `selectedClusterUniverseCount = 4`
+          - observed veto behavior:
+            - the explored veto family was led by `slateArchetype_border_riskMargin`
+            - strict veto thresholds collapsed to `0 survivors`
+            - permissive veto thresholds preserved `92 positive dates / 35 months / 4 folds` but leaked `102 negative dates / 36 months / 4 folds`
+            - `supportProjectionPositive = false`, so no survivor-top1 runtime was allowed
+          - post-v49 hard-stop:
+            - do not retune this same `failure-regime veto` surface
+            - do not reuse the same `low_gap_top` / `recent_mid_low` supplier framing for the next recovery line
+            - any next recovery attempt must start from a new target/family definition, not another veto/query variant of this line
+      - `v50 perfect_proto_shadow_winner_slate_top1_v50` is now closed after server short probe `perfect_proto_shadow_winner_slate_top1_v50_probe200k_20260329`:
+          - actual result:
+            - `reason = unsat_pairwise_win_rate`
+            - `supportFitExcluded = true`
+            - `supportLeaveOneOutRecovered = false`
+            - `supplierFeatureCount = 103`
+            - `shadowWinnerSlateFeatureCount = 14`
+            - `pairwiseCandidateCount = 1`
+            - `pairwiseQualifiedCandidateCount = 0`
+          - observed winner-slate audit behavior:
+            - dataset breadth was ample:
+              - `queryEligibleTrainRowCount = 14450`
+              - `winnerPositiveDateCount = 958`
+              - `shadowWinnerSlatePairCount = 5742`
+            - the best pairwise subset still only reached:
+              - `pairwiseWinRate = 0.5951`
+              - `sameDateRunnerUpBeatRate = 0.5953`
+              - `matchedControlBeatRate = 0.5950`
+              - `failureImpostorBeatRate = 0.5950`
+              - `minFoldPairwiseWinRate = 0.5619`
+              - `hardNegativeLeakCount = 1956`
+              - `supportProjectionPositive = false`
+            - canonical top1 runtime never started because the winner-slate audit failed first
+          - post-v50 hard-stop:
+            - do not retune this same `shadow winner-slate` family/runtime
+            - do not return to `low_gap_top`, `recent_mid_low`, admission, veto, expert-union, or adjacent query retuning for this target
+            - any next recovery attempt must start from another target universe / family definition, not another selector tweak on the same supplier framing
+      - `v51 perfect_proto_prejump_predictive_hypothesis_portfolio_v51` completed as a capped server microprobe and is now recorded as `invalid_or_inconclusive`, not as the next runtime contract:
+          - run id:
+            - `perfect_proto_prejump_predictive_hypothesis_portfolio_v51_microprobe10k5k_r3_20260329`
+          - implementation blockers closed in the same turn:
+            - `feature_store` `limitRows` is now honored on server pack builds
+            - the v51 builder now streams/compacts input JSONL instead of `readFile`-loading multi-gigabyte packs
+            - failed v51 runs and DuckDB temp directories were pruned to recover server disk headroom
+          - canonical target universe tested:
+            - `PREJUMP_PREDICTIVE_V1`
+            - `afree_open` decision-date candidate slates
+            - as-of-`t` features only
+          - supplier policy tested:
+            - `low_gap_top_continuation` and `recent_mid_low` remained supplier / gate inputs only
+            - neither family acted as the canonical recovery family
+          - actual capped probe coverage:
+            - train pack `limitRowsApplied = 10000`
+            - OOS pack `limitRowsApplied = 5000`
+            - train decision coverage = `9` dates
+            - winner breadth = `9 dates / 2 months / 4 folds`
+          - actual shared-audit result:
+            - `pairwiseCandidateCount = 17`
+            - `pairwiseQualifiedCandidateCount = 0`
+            - best hypothesis = `H3 trade-vs-abstain`
+            - best metrics:
+              - `pairwiseWinRate = 0.9167`
+              - `sameDateRunnerUpBeatRate = 0.8333`
+              - `failureImpostorBeatRate = 1.0`
+              - `hardNegativeLeakCount = 2`
+              - `supportProjectionPositive = true`
+            - strongest alternate = `H2 episode-transition`
+              - `pairwiseWinRate = 0.9722`
+              - `sameDateRunnerUpBeatRate = 0.9444`
+              - `matchedControlBeatRate = 0`
+            - final reason:
+              - `unsat_same_date_runner_up_beat_rate`
+          - operating implication:
+            - v51 no longer has a wrapper/runtime plumbing blocker
+            - the capped prejump snapshot still does not produce a qualified pre-runtime hypothesis
+            - because the probe only covered `9` positive dates / `2` months, this result is not a final family kill for live-ops promotion
+          - post-v51 hard-stop:
+            - do not retune the same five-hypothesis portfolio on the same capped snapshot and call it a new family
+            - do not return to `low_gap_top`, `recent_mid_low`, admission, veto, expert-union, bag-cover, or adjacent query retuning for this target
+            - any next recovery attempt must either widen the prejump decision-date universe enough to test the true breadth floor or redefine the target universe again before another selector/runtime patch
+      - `v52 perfect_proto_prejump_episode_transition_counterfactual_controls_v52` has now completed as the canonical prejump verdict:
+          - corrected substrate succeeded:
+            - target universe stayed `PREJUMP_PREDICTIVE_V1` on `afree_open`
+            - feature-store packs now support deterministic `decision-date stratified` sampling with `maxDecisionDates` and `maxRowsPerDate`
+            - actual train probe reached `48 decision dates / 48 months / 4 folds / 6144 rows`
+          - family scope stayed narrow:
+            - canonical family = `H2 episode-transition`
+            - `H3 trade-vs-abstain` remained diagnostic-only
+            - `H1/H4/H5` never entered runtime consideration
+          - negative cohort redesign landed:
+            - matched controls were rebuilt as `counterfactual execution-feasible impostors`
+            - same-date runner-up negatives remained mandatory
+            - failure-impostor negatives remained mandatory
+          - audit-first hard gate still failed on the corrected substrate:
+            - `pairwiseQualifiedCandidateCount = 0`
+            - best canonical `H2` only reached:
+              - `pairwiseWinRate = 0.7986`
+              - `sameDateRunnerUpBeatRate = 0.6771`
+              - `matchedControlBeatRate = 0.7292`
+              - `hardNegativeLeakCount = 78`
+              - `supportProjectionPositive = true`
+            - wrapper exited `42` before any runtime artifact was emitted
+          - post-v52 hard-stop is active:
+            - this line is not blocked by breadth any more; it is blocked by canonical `H2` non-separability on the corrected substrate
+            - stop the prejump `PREJUMP_PREDICTIVE_V1` / `afree_open` episode-transition line here
+            - do not reopen the v51 five-hypothesis portfolio
+            - do not retune `H2/H3`, top1, admission, veto, expert-union, or adjacent wrappers on this same substrate
+            - any next recovery attempt must redefine the target universe again before live-ops promotion work resumes
+      - `v53 perfect_proto_daily_canonical_winner_slate_contrastive_top1_v53` has now completed and is not promotable:
+          - implemented reset:
+            - primary target universe moved to `same_day_plus_recent_upto_1d`
+            - canonical label unit = `decision-date canonical winner`
+            - runtime stayed single-path `same-date top1 outranking`
+            - `PREJUMP_PREDICTIVE_V1` / `afree_open` remained supplier-only
+          - root-cause fixes completed:
+            - wrapper now passes the required Step-A seed-input / lane contract for `same_day_plus_recent_upto_1d`
+            - generic `afree_open` control rows now carry baseline `stepALaneId`, fixing the lane-local contextual-surface contract
+            - local/server `verify` both passed after the fixes
+          - final probe `perfect_proto_daily_canonical_winner_slate_contrastive_top1_v53_probe200k_r3_20260329` failed at dataset formation:
+            - reason = `unsat_no_daily_canonical_winner_rows`
+            - `canonicalPositiveDateCount = 489`
+            - `controlOnlyDateCount = 0`
+            - `queryEligiblePositiveSummary = 18316 rows / 489 dates / 24 months / 4 folds`
+            - `queryEligibleNegativeSummary = 0 rows / 0 dates / 0 months / 0 folds`
+          - operational interpretation:
+            - the row-capped `afree_open` control packs collapsed into dates already occupied by canonical positives
+            - no control-only / abstain dates survived, so matched-control negatives never formed
+          - post-v53 hard-stop:
+            - do not retune v53 top1/query logic on this row-capped substrate
+            - do not reopen the prejump or low-gap supplier lines
+            - any next recovery attempt must build control-only decision dates upstream before packing or redefine the target universe again
+      - `v54 perfect_proto_trade_abstain_archetype_winner_bank_v54` is now closed by actual probe outcome:
+          - corrected substrate contract succeeded:
+            - `same_day_plus_recent_upto_1d` remained the canonical universe
+            - `PREJUMP_PREDICTIVE_V1` and `afree_open` stayed supplier/control-only sources
+            - daily pack now supports deterministic `maxDecisionDates`
+            - daily pack now supports deterministic `maxRowsPerDate`
+            - daily pack now supports explicit `excludeDecisionDates`
+            - control-only dates were constructed upstream before any ranking stage
+            - `canonicalPositiveDateCount = 156`
+            - `controlOnlyDateCount = 48`
+          - stage verdicts:
+            - Stage A `trade vs abstain` gate passed:
+              - `tradeGatePrecision = 1.0`
+              - `controlLeakCount = 0`
+              - `tradeGateSupportProjectionPositive = true`
+            - Stage B `winner archetype` router passed:
+              - `winnerArchetypeCount = 2`
+              - `winnerArchetypeDistinctDateSignatureCount = 2`
+            - Stage C archetype-local `same-date top1` rule bank failed:
+              - `reason = unsat_no_archetype_rule_bank`
+              - `archetypeRuleBankCandidateCount = 2`
+              - `archetypeRuleBankQualifiedCount = 0`
+              - best candidate precision collapsed to `0.3412698412698413`
+              - `crossfitNegativeWindowCount = 6`
+              - `supportLeaveOneOutRecovered = false`
+          - hard-stop:
+            - do not retune v54 pack, trade/abstain gate, or archetype router as if substrate were still open
+            - do not continue the corrected `same_day_plus_recent_upto_1d` trade-abstain/archetype line
+            - the next recovery attempt must redefine the target universe again
+      - `v55 perfect_proto_daily_trade_slate_mechanism_bank_v55` is now closed by actual probe outcome:
+          - the new `decision-date slate` / `ABSTAIN|WINNER(slot)` target contract landed
+          - `same_day_plus_recent_upto_1d`, `PREJUMP_PREDICTIVE_V1`, and `afree_open` stayed supplier/control-only sources
+          - the new primary target universe was `daily_trade_slate_v1`
+          - OHLCV-derived mechanism banks landed:
+            - `sig.pathGeom.*`
+            - `sig.sponsor.*`
+            - `sig.stateTrans.*`
+            - `sig.phaseDiv.*`
+            - `sig.slateJoint.*`
+            - `sig.liqPath.*`
+          - corrected breadth-valid substrate:
+            - train pack reached `48 decision dates / 24 months / 4 folds`
+            - `canonicalPositiveDateCount = 156`
+            - `controlOnlyDateCount = 48`
+          - Stage A `trade vs abstain` gate passed:
+            - `tradeGateQualifiedCandidateCount = 56`
+            - `tradeGatePrecision = 1.0`
+            - `tradeGateControlLeakCount = 0`
+            - `tradeGateSupportProjectionPositive = true`
+          - Stage B mechanism archetype router passed:
+            - `winnerArchetypeCount = 2`
+            - `winnerArchetypeDistinctDateSignatureCount = 2`
+          - Stage C mechanism-local exact winner bank failed:
+            - `reason = unsat_top1_query_train_breadth`
+            - `mechanismHypothesisQualifiedCount = 0`
+            - `archetypeRuleBankCandidateCount = 6`
+            - `archetypeRuleBankQualifiedCount = 0`
+            - `H1` and `H2` produced no top1 candidates
+            - best `H3 / A2` candidate only reached `precision = 0.12962962962962962`
+            - best `H3 / A2` candidate only covered `7 dates / 5 months / 4 folds`
+            - `crossfitNegativeWindowCount = 3`
+            - `supportLeaveOneOutRecovered = false`
+          - hard-stop:
+            - do not retune the v55 trade gate, archetype router, or `H1/H2/H3` mechanism-bank families on the same daily-OHLCV-only substrate
+            - treat the `daily_trade_slate_v1` OHLCV-only mechanism-bank line as exhausted
+            - no reopening of v44~v54 after v55
+      - `v56 perfect_proto_daily_trade_slate_symbolic_microcard_bank_v56` actual outcome:
+          - breadth-valid substrate and Stage A remained solved:
+            - `canonicalPositiveDateCount = 156`
+            - `controlOnlyDateCount = 48`
+            - `tradeGatePrecision = 1.0`
+            - `tradeGateControlLeakCount = 0`
+            - `tradeGateSupportProjectionPositive = true`
+          - symbolic token families were added successfully:
+            - `sig.microCard.dayGlyph.*`
+            - `sig.microCard.kgram.*`
+            - `sig.phaseGrammar.transition.*`
+            - `sig.auctionControl.pattern.*`
+            - `sig.sponsorCoupling.pattern.*`
+            - `sig.anchorPath.extrema.*`
+            - `sig.slateSymbolicContrast.*`
+          - the blocker moved to witness/micro-card diversity:
+            - `reason = unsat_symbolic_microcard_router`
+            - `witnessQualifiedCount = 293`
+            - `witnessDistinctSignatureCount = 1`
+            - `microCardCount = 3`
+            - `maxMicroCardShare = 0.8846153846153846`
+          - exact bank never became eligible because the giant-card guard failed before symbolic rule mining
+          - operating conclusion:
+            - daily OHLCV-only recovery is exhausted at witness-to-micro-card diversity collapse
+          - hard-stop:
+            - do not retune symbolic thresholds, token-length bounds, or micro-card share bounds on the same substrate
+            - do not reopen scalar winner-bank variants after `v56`
+            - treat the daily-OHLCV-only line as closed unless the target or data universe changes materially
+      - `v57 perfect_proto_daily_trade_slate_sequence_shapelet_witness_bank_v57` actual outcome:
+          - breadth-valid substrate and Stage A still held:
+            - `canonicalPositiveDateCount = 156`
+            - `controlOnlyDateCount = 48`
+            - `tradeGatePrecision = 1.0`
+            - `tradeGateControlLeakCount = 0`
+            - `tradeGateSupportProjectionPositive = true`
+          - multiscale sequence-shapelet representation landed with full coverage:
+            - `sequenceShapeletRowCount = 15441`
+            - `sequenceShapeletMissingRowCount = 0`
+          - bag-level witness diversity was repaired:
+            - `witnessQualifiedCount = 293`
+            - `witnessDistinctSignatureCount = 293`
+          - prototype routing also passed diversity:
+            - `prototypeCount = 5`
+            - `prototypeDistinctDateSignatureCount = 5`
+            - `maxPrototypeShare = 0.03205128205128205`
+          - exact bank still failed on breadth:
+            - `reason = unsat_top1_query_train_breadth`
+            - `shapeletHypothesisCount = 3`
+            - `shapeletHypothesisQualifiedCount = 0`
+            - `shapeletRuleBankCandidateCount = 142`
+            - `qualifiedRuleCount = 0`
+            - best `H2 / PC5` candidate only reached `2 selected / 2 positive / 0 negative`
+            - best `H2 / PC5` candidate only covered `2 dates / 2 months / 2 folds`
+            - `supportLeaveOneOutRecovered = false`
+            - `openOosMatchCount = 0`
+          - hard-stop:
+            - do not reopen `v55`, `v56`, or `v57` on the same daily-OHLCV-only substrate
+            - do not retune prototype axes, token bins, witness caps, or prototype share bounds as if prototype diversity were still the blocker
+            - treat daily OHLCV-only exact-one-pick as exhausted; future recovery must add new data axes or downgrade the objective
+      - `v58 perfect_proto_support_like_surge_episode_bank_v58` actual outcome:
+          - breadth-valid detector substrate and frozen Stage A still held:
+            - `supportFitExcluded = true`
+            - `canonicalPositiveDateCount = 156`
+            - `controlOnlyDateCount = 48`
+            - `tradeGatePrecision = 1.0`
+            - `tradeGateControlLeakCount = 0`
+            - `tradeGateSupportProjectionPositive = true`
+          - detector supervision also formed cleanly:
+            - `detectorPositiveSummary = 293 rows / 156 dates / 24 months / 4 folds`
+            - `detectorNegativeSummary = 349 rows / 206 dates / 24 months / 4 folds`
+            - `detectorHardNegativeSummary = 58 rows / 58 dates / 24 months / 4 folds`
+          - failure moved upstream of the detector bank:
+            - `reason = unsat_support_like_archetype_router`
+            - `supportLikeArchetypeCount = 3`
+            - `supportLikeDistinctDateSignatureCount = 3`
+            - `supportLikeMaxArchetypeShare = 0.9358974358974359`
+            - dominant `SA1` under `sig.seqShapelet.combo.f3__f3__f3` consumed `146 / 156` positive dates
+            - `support_like_exact_detector_bank` did not execute because the giant-archetype guard failed first
+          - hard-stop:
+            - treat daily OHLCV-only exact `support-like surge` detection as exhausted
+            - do not reopen `v55~v58` on the same daily-OHLCV-only substrate
+            - do not retune `combo` bins, archetype counts, or max-share guards as if router tuning were still a viable rescue
+            - future recovery must add a new data axis or downgrade the objective
+- line-level metrics are canonical for promotion and experiment registration:
+  - `close28SelectedRows`
+  - `close28HitRows`
+  - `lineLevelHitCount`
+  - `lineLevelHitRate`
+- Promotion gate is full live replay, not single-row counterfactual:
+  - missed-case recovery target: `076610 / 2026-03-18`
+  - positive-control keeper: `331920 / 2026-03-23`
+- Shadow lines must be visible in summary/report/state outputs under `priority=3`.
+- The live-priority runner must maintain a separate `latest_activity.json` progress state; `latest_success.json` stays success-only.
+
+## A-free Governance Split
+- `afree_primary` is the current operating benchmark inside the canonical live stack.
+- `afree_primary` is not a pure exact-only benchmark:
+  - it includes the manually promoted relaxed rule `PP_935d6457f10a`
+- Any new exact-only shadow line comparison must distinguish:
+  - exact-only benchmark
+  - operating benchmark
+
+## Reporting Contract
+- Daily ops artifacts must expose:
+  - `fill/fill_summary.json`
+  - `live/final_summary.json`
+  - `live/final_union.jsonl`
+  - `daily_ops_summary.json`
+  - `report.md`
+- Daily ops report must expose:
+  - fill status
+  - non-trading symbol count
+  - line-level picks
+  - final union picks
+- Every final union row must expose:
+  - `priority`
+  - `lineId`
+  - `sourceCatalogLabel`
+  - `primaryRuleId`
+  - `supportingLines`
+- Every line summary must expose:
+  - `rowsWritten`
+  - `rawMatchedRows`
+  - `dedupedRows`
+  - `runId`
+- The user-facing interpretation is:
+  - `priority=1`: primary operating line
+  - `priority=2`: secondary operating line that survives only when no higher-priority line already owns the same symbol-date
+  - `priority=3`: shadow-only line that must not displace primary or secondary ownership
+
+## Verified Replay Reference
+- Latest canonical replay reference:
+  - target date `2026-03-24`
+  - final union count `1`
+  - picked symbol `078590 휴림에이텍`
+  - priority `2`
+  - line `8d_secondary`
+  - primary rule `PP_74ec7833d3e3`
+  - excluded-by-close28 example: `076610 해성옵틱스`
+  - excluded recommendation-date close return: `29.96633%`
+
+## Interpretation
+- The previous A-free-only statement is now too narrow for current operations.
+- The correct canonical statement is:
+  - the current live operating stack is the registry-driven daily ops stack
+  - the frozen A-free `7`-rule catalog is the `afree_primary` line-level operating subset inside that stack
+
+## 2026-03-29 v59a Pilot Outcome
+- patch key:
+  - `perfect_proto_1d_top_mid_low_failure_bank_oos_report_v59a`
+- this line is report-only and shadow-only:
+  - it must not promote directly into the live priority registry
+  - it existed to validate the `positive bank -> failure bank -> veto bank` architecture on small `1D` regime cells
+- executed pilot cells:
+  - `TOP x 1D`
+  - `MID x 1D`
+  - `LOW x 1D`
+- achieved:
+  - train cell breadth and folds are now valid:
+    - `TOP`: `651 rows / 171 dates / 24 months / 4 folds`
+    - `MID`: `478 rows / 133 dates / 24 months / 4 folds`
+    - `LOW`: `935 rows / 131 dates / 24 months / 4 folds`
+  - `failure bank` and `veto bank` artifacts were mined in every cell
+- failed:
+  - no cell produced a promotable `positive bank`
+  - summary outcome is `unsat_no_positive_bank_cells`
+  - because the positive-bank union stayed empty, OOS `positiveOnly -> positivePlusFailure -> positivePlusFailurePlusVeto` comparisons remained all-zero and could not validate runtime lift
+- operational meaning:
+  - the architecture is not yet runtime-eligible
+  - `failure/veto` artifacts from this pilot must not be promoted independently
+  - the exact `v59a` pilot configuration is do-not-repeat; next work must change cell scope or positive-bank discovery surface before shadow runtime comparison is meaningful
+
+## 2026-03-30 v60b live-line overlay diagnostic outcome
+- patch keys:
+  - `perfect_proto_live_line_failure_veto_overlay_report_v60b_20260330`
+  - `perfect_proto_live_line_failure_veto_overlay_report_v60b_full_dates_20260330`
+  - `perfect_proto_live_line_failure_veto_overlay_report_v60b_fixed_full_dates_20260330`
+- scope:
+  - `1d_primary`
+  - `7d_primary`
+  - `8d_primary`
+  - `1d_secondary`
+  - `7d_secondary`
+  - `8d_secondary`
+- first diagnostic result:
+  - sampled coverage (`train=48`, `oos=16`) was insufficient and yielded all-zero baselines, so the first report was `invalid_or_inconclusive`
+- root-cause fix:
+  - the issue was not catalog freeze integrity
+  - the issue was row-contract loss inside `v60b` replay preparation:
+    - compacting scope-pack rows removed required tokenizer/replay fields
+    - replay then collapsed to `ruleCandidateChecks = 0`
+  - operational contract update:
+    - any live-line overlay replay must preserve the full daily-pack row contract until after replay
+    - no future overlay diagnostic may compact rows before `enrich -> normalize -> tokenize -> match`
+- final fixed full-date rerun:
+  - full coverage rerun used `trainMaxDecisionDates=512` and `oosMaxDecisionDates=320`
+  - all six lines produced non-zero operating baselines
+  - line-level outcomes:
+    - `1d_primary`: `positive_only_best`
+    - `7d_primary`: `positive_only_best`
+    - `8d_primary`: `veto_bank_lift`
+    - `1d_secondary`: `positive_only_best`
+    - `7d_secondary`: `positive_only_best`
+    - `8d_secondary`: `veto_bank_lift`
+- current operational meaning:
+  - `failure/veto` overlay is now validated as a real diagnostic path on live frozen lines
+  - overlay promotion is still not automatic:
+    - `1d` and `7d` lines do not justify overlay because `positive_only` remains best
+    - `8d_primary` is the cleanest positive lift case
+    - `8d_secondary` lifts precision to `1.0`, but only by collapsing coverage from `82` rows to `4`, so any future runtime consideration must explicitly weigh retention loss

@@ -1,0 +1,6 @@
+{
+  "selectionPolicyId": "tp12_selector_sum_cluster_roweb_v1",
+  "scoreField": "selectorScore",
+  "minSupportClusterCount": 0,
+  "minDayScoreMargin": 0
+}

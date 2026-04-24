@@ -1,0 +1,1637 @@
+{
+  "generatedAt": "2026-04-24T01:25:09Z",
+  "goalMode": "TARGET_FIRST_V2",
+  "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+  "sourceRegistryPath": "meta/experiment_registry.jsonl",
+  "rows": [
+    {
+      "ts": "2026-03-08T18:20:13Z",
+      "patchKey": "target_first_probe12_lockboxeval_replay_smoke_v2",
+      "status": "exploratory_replay",
+      "scope": "exploratory_target_first_v2",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "probe12",
+      "runIds": [
+        "tf2_smoke_lockboxeval_v2_probe12_20260308_182002"
+      ],
+      "primaryMetrics": {
+        "targetHitRate": 0.3,
+        "targetHitCount": 6,
+        "targetsPer20TradingDays": 1.4457831325301205
+      },
+      "secondaryMetrics": {
+        "stopRate": 0.35,
+        "timeoutNegativeRate": 0.15
+      },
+      "notes": "target-first lockbox-eval replay smoke v2 for probe12"
+    },
+    {
+      "ts": "2026-03-09T07:52:52Z",
+      "patchKey": "target_first_fp_override_block_c120_c109_reject_midvol_liqhigh_v1",
+      "status": "candidate_improved",
+      "scope": "exploratory_target_first_v2",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "probe38",
+      "runIds": [
+        "tf2_c120c109rej_onlive_probe38_20260309"
+      ],
+      "primaryMetrics": {
+        "targetHitRate": 0.2857142857142857,
+        "targetHitCount": 8,
+        "targetsPer20TradingDays": 1.927710843373494
+      },
+      "secondaryMetrics": {
+        "stopRate": 0.2857142857142857,
+        "timeoutNegativeRate": 0.17857142857142858,
+        "dTargetHitRateEval": 0.16279069767441862,
+        "dExecutedHitRateEval": 0.15384615384615385
+      },
+      "notes": "Blocking C120 and C109 on MIDVOL/VOL_MID_LIQ_HIGH with agreement REJECT lifted fresh probe38 Step E target hit from 26.67% to 28.57% while keeping D target hit flat and slightly improving D executed hit."
+    },
+    {
+      "ts": "2026-03-08T18:31:36Z",
+      "patchKey": "target_first_probe59_fresh_stepd_confirm_v1",
+      "status": "completed",
+      "scope": "confirm_target_first_v2",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "probe59",
+      "runIds": [
+        "tf2_confirm_fresh_stepd_probe59_20260309_000004"
+      ],
+      "primaryMetrics": {
+        "targetHitRate": 0.25,
+        "targetHitCount": 9,
+        "targetsPer20TradingDays": 2.1686746987951806
+      },
+      "secondaryMetrics": {
+        "stopRate": 0.3055555555555556,
+        "timeoutNegativeRate": 0.25,
+        "winRate": 0.4444444444444444,
+        "avgNetRet": 0.008110983152868947,
+        "cumulativeReturn": 0.28666441019331046
+      },
+      "notes": "target-first fresh step-d confirm for probe59"
+    },
+    {
+      "ts": "2026-03-08T18:20:24Z",
+      "patchKey": "target_first_probe13_lockboxeval_replay_smoke_v2",
+      "status": "exploratory_replay",
+      "scope": "exploratory_target_first_v2",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "probe13",
+      "runIds": [
+        "tf2_smoke_lockboxeval_v2_probe13_20260308_182002"
+      ],
+      "primaryMetrics": {
+        "targetHitRate": 0.21052631578947367,
+        "targetHitCount": 4,
+        "targetsPer20TradingDays": 0.963855421686747
+      },
+      "secondaryMetrics": {
+        "stopRate": 0.42105263157894735,
+        "timeoutNegativeRate": 0.15789473684210525
+      },
+      "notes": "target-first lockbox-eval replay smoke v2 for probe13"
+    },
+    {
+      "ts": "2026-03-08T18:26:16Z",
+      "patchKey": "target_first_probe44_evalfull_replay_confirm_v2",
+      "status": "completed",
+      "scope": "confirm_target_first_v2",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "probe44",
+      "runIds": [
+        "tf2_confirm_evalfull_v2_probe44_20260309_000003"
+      ],
+      "primaryMetrics": {
+        "targetHitRate": 0.21052631578947367,
+        "targetHitCount": 4,
+        "targetsPer20TradingDays": 0.963855421686747
+      },
+      "secondaryMetrics": {
+        "stopRate": 0.5789473684210527,
+        "timeoutNegativeRate": 0.15789473684210525,
+        "winRate": 0.2631578947368421,
+        "avgNetRet": -0.008979436064358798,
+        "cumulativeReturn": -0.17506482633245601
+      },
+      "notes": "target-first eval-full replay confirm v2 for probe44"
+    },
+    {
+      "ts": "2026-03-08T18:26:05Z",
+      "patchKey": "target_first_probe43_evalfull_replay_confirm_v2",
+      "status": "completed",
+      "scope": "confirm_target_first_v2",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "probe43",
+      "runIds": [
+        "tf2_confirm_evalfull_v2_probe43_20260309_000003"
+      ],
+      "primaryMetrics": {
+        "targetHitRate": 0.21052631578947367,
+        "targetHitCount": 4,
+        "targetsPer20TradingDays": 0.963855421686747
+      },
+      "secondaryMetrics": {
+        "stopRate": 0.5789473684210527,
+        "timeoutNegativeRate": 0.15789473684210525,
+        "winRate": 0.2631578947368421,
+        "avgNetRet": -0.008979436064358798,
+        "cumulativeReturn": -0.17506482633245601
+      },
+      "notes": "target-first eval-full replay confirm v2 for probe43"
+    },
+    {
+      "ts": "2026-03-08T18:25:55Z",
+      "patchKey": "target_first_probe41_evalfull_replay_confirm_v2",
+      "status": "completed",
+      "scope": "confirm_target_first_v2",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "probe41",
+      "runIds": [
+        "tf2_confirm_evalfull_v2_probe41_20260309_000003"
+      ],
+      "primaryMetrics": {
+        "targetHitRate": 0.21052631578947367,
+        "targetHitCount": 4,
+        "targetsPer20TradingDays": 0.963855421686747
+      },
+      "secondaryMetrics": {
+        "stopRate": 0.5789473684210527,
+        "timeoutNegativeRate": 0.15789473684210525,
+        "winRate": 0.2631578947368421,
+        "avgNetRet": -0.008979436064358798,
+        "cumulativeReturn": -0.17506482633245601
+      },
+      "notes": "target-first eval-full replay confirm v2 for probe41"
+    },
+    {
+      "ts": "2026-03-08T18:25:44Z",
+      "patchKey": "target_first_probe40_evalfull_replay_confirm_v2",
+      "status": "completed",
+      "scope": "confirm_target_first_v2",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "probe40",
+      "runIds": [
+        "tf2_confirm_evalfull_v2_probe40_20260309_000003"
+      ],
+      "primaryMetrics": {
+        "targetHitRate": 0.21052631578947367,
+        "targetHitCount": 4,
+        "targetsPer20TradingDays": 0.963855421686747
+      },
+      "secondaryMetrics": {
+        "stopRate": 0.5789473684210527,
+        "timeoutNegativeRate": 0.15789473684210525,
+        "winRate": 0.2631578947368421,
+        "avgNetRet": -0.008979436064358798,
+        "cumulativeReturn": -0.17506482633245601
+      },
+      "notes": "target-first eval-full replay confirm v2 for probe40"
+    },
+    {
+      "ts": "2026-03-08T18:25:33Z",
+      "patchKey": "target_first_probe39_evalfull_replay_confirm_v2",
+      "status": "completed",
+      "scope": "confirm_target_first_v2",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "probe39",
+      "runIds": [
+        "tf2_confirm_evalfull_v2_probe39_20260309_000003"
+      ],
+      "primaryMetrics": {
+        "targetHitRate": 0.21052631578947367,
+        "targetHitCount": 4,
+        "targetsPer20TradingDays": 0.963855421686747
+      },
+      "secondaryMetrics": {
+        "stopRate": 0.5789473684210527,
+        "timeoutNegativeRate": 0.15789473684210525,
+        "winRate": 0.2631578947368421,
+        "avgNetRet": -0.008979436064358798,
+        "cumulativeReturn": -0.17506482633245601
+      },
+      "notes": "target-first eval-full replay confirm v2 for probe39"
+    },
+    {
+      "ts": "2026-03-08T18:24:13Z",
+      "patchKey": "target_first_probe42_evalfull_replay_confirm_v2",
+      "status": "completed",
+      "scope": "confirm_target_first_v2",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "probe42",
+      "runIds": [
+        "tf2_confirm_evalfull_v2_probe42_20260309_000001"
+      ],
+      "primaryMetrics": {
+        "targetHitRate": 0.21052631578947367,
+        "targetHitCount": 4,
+        "targetsPer20TradingDays": 0.963855421686747
+      },
+      "secondaryMetrics": {
+        "stopRate": 0.5789473684210527,
+        "timeoutNegativeRate": 0.15789473684210525,
+        "winRate": 0.2631578947368421,
+        "avgNetRet": -0.008979436064358798,
+        "cumulativeReturn": -0.17506482633245601
+      },
+      "notes": "target-first eval-full replay confirm v2 for probe42"
+    },
+    {
+      "ts": "2026-04-03T10:57:26Z",
+      "patchKey": "perfect_proto_stepb_1d_tp12_low_gap_top_execution_menu_stop_recovery_v1_20260403",
+      "status": "candidate_tradeoff",
+      "scope": "target_first_v2",
+      "candidateMode": "tp12_execution_menu_stop_recovery",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "LOW_GAP_TOP",
+      "runIds": [
+        "perfect_proto_stepb_1d_tp12_low_gap_top_execution_menu_stop_recovery_v1_20260403"
+      ],
+      "primaryMetrics": {
+        "scope": "LOW_GAP_TOP",
+        "baselinePolicyId": "baseline_tp12_sl4_stop_first_3d",
+        "bestOverallPolicyId": "touch_anchor_tp12_no_stop_3d",
+        "bestStopAwarePolicyId": "tp12_sl4_stop_delay1_4d",
+        "baselineRecentHitRate": 0.19607843137254902,
+        "baselineOosHitRate": 0.23300970873786409,
+        "bestStopAwareRecentHitRate": 0.37254901960784315,
+        "bestStopAwareOosHitRate": 0.2961165048543689,
+        "bestStopAwareRecentAvgNetRet": 0.021142183649416058,
+        "bestStopAwareOosAvgNetRet": 0.013163215931874556,
+        "donorRecentStopBeforeTouchShare": 0.5238095238095238,
+        "donorOosStopBeforeTouchShare": 0.3684210526315789
+      },
+      "secondaryMetrics": {
+        "touchAnchorRecentHitRate": 0.4117647058823529,
+        "touchAnchorOosHitRate": 0.36893203883495146,
+        "recentRows": 51,
+        "recentPositiveRows": 21,
+        "recentDateCount": 29,
+        "serverVerifyPassed": true,
+        "localVerifyPassed": true
+      },
+      "notes": "LOW_GAP_TOP fixed touch-donor execution menu confirmed heavy stop pressure and found a stop-aware recovery candidate. The no-stop touch anchor remained best overall at recent 21/51=41.18% and OOS 76/206=36.89%, but the best stop-aware policy tp12_sl4_stop_delay1_4d improved baseline stop-first from recent 10/51=19.61% to 19/51=37.25% and OOS 48/206=23.30% to 61/206=29.61%, with recent avgNetRet 2.11% and OOS avgNetRet 1.32%. Donor stop-before-touch pressure stayed material at 52.38% recent and 36.84% OOS, so the next TP12 step should continue execution-contract redesign around delayed-stop and hold extension rather than exact-rule search."
+    },
+    {
+      "ts": "2026-03-30T10:29:09Z",
+      "patchKey": "afree_primary_recent0327_replay_v1_20260330",
+      "status": "completed",
+      "scope": "target_first_v2",
+      "candidateMode": "afree_line_replay",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "afree_primary_recent0327",
+      "runIds": [
+        "afree_primary_recent0327_replay_v1_20260330"
+      ],
+      "primaryMetrics": {
+        "requestedStart": "2026-02-02",
+        "requestedEnd": "2026-03-27",
+        "actualStart": "2026-02-02",
+        "actualEnd": "2026-03-27",
+        "actualCoverageCount": 36,
+        "preFilterRawMatches": 21,
+        "close28RemovedRawMatches": 3,
+        "close28RemovedHitMatches": 3,
+        "selectedRows": 18,
+        "hitRows": 13,
+        "precision": 0.7222222222222222,
+        "selectedDateCount": 8,
+        "hitDateCount": 6,
+        "missOnlyDateCount": 2
+      },
+      "secondaryMetrics": {
+        "catalogRuleCount": 7,
+        "selectionMode": "union_all",
+        "uniqueMatchedSymbols": 18,
+        "missOnlyDates": [
+          "2026-03-20",
+          "2026-03-25"
+        ]
+      },
+      "notes": "Replayed frozen afree_primary operating 7-rule catalog on afree_open open-eval pack through 2026-03-27. Requested and actual coverage both 2026-02-02..2026-03-27 over 36 decision dates. Close28 removed 3 hit rows. Final deduped line output was 18 selections across 8 dates with 13 hits, precision 0.7222; miss-only dates were 2026-03-20 and 2026-03-25."
+    },
+    {
+      "ts": "2026-03-30T10:15:08Z",
+      "patchKey": "live_priority_selection_contract_replay_v61r_recent0327_split_live_20260330",
+      "status": "completed",
+      "scope": "target_first_v2",
+      "candidateMode": "live_priority_selection_contract_replay",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "live_priority_contract_replay_recent0327",
+      "runIds": [
+        "live_priority_selection_contract_replay_v61r_recent0327_lb1_20260330",
+        "live_priority_selection_contract_replay_v61r_recent0327_lb7_20260330",
+        "live_priority_selection_contract_replay_v61r_recent0327_lb8_20260330"
+      ],
+      "primaryMetrics": {
+        "recentWindowStart": "2026-02-02",
+        "recentWindowEnd": "2026-03-27",
+        "oneDPrimaryRecentPrecision": 1.0,
+        "oneDSecondaryRecentPrecision": 0.3,
+        "sevenDPrimaryRecentPrecision": 0.6666666666666666,
+        "sevenDSecondaryRecentPrecision": 0.0,
+        "eightDPrimaryRecentPrecision": 1.0,
+        "eightDSecondaryRecentPrecision": 0.35,
+        "oneDPrimarySatisfied": false,
+        "oneDSecondarySatisfied": true,
+        "sevenDPrimarySatisfied": false,
+        "sevenDSecondarySatisfied": true,
+        "eightDPrimarySatisfied": true,
+        "eightDSecondarySatisfied": true
+      },
+      "secondaryMetrics": {},
+      "notes": "v61r rerun with recent window extended through 2026-03-27. 1d_primary stayed OOS-failing but recent=1.0; 1d_secondary recent improved from 0.1429 to 0.3 but stayed weak. 7d_primary lost recent80 contract at 0.6667; 7d_secondary recent was 0.0. 8d_primary kept dual80_recent80 at recent=1.0; 8d_secondary recent improved from 0.2143 to 0.35 but remained weak. Secondary one-year 100pct OOS contracts still held for 1d/7d/8d."
+    },
+    {
+      "ts": "2026-03-30T09:31:28Z",
+      "patchKey": "live_priority_selection_contract_replay_v61r_full_live_20260330",
+      "status": "completed",
+      "scope": "target_first_v2",
+      "candidateMode": "live_priority_selection_contract_replay",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "live_priority_contract_replay",
+      "runIds": [
+        "live_priority_selection_contract_replay_v61r_full_live_20260330"
+      ],
+      "primaryMetrics": {
+        "fullBatchBuilderOom": true,
+        "oneDPrimarySatisfied": false,
+        "oneDPrimaryOosPrecision": 0.75,
+        "oneDSecondarySatisfied": true,
+        "oneDSecondaryContractSelectedRows": 79,
+        "oneDSecondaryContractHitDateCount": 79,
+        "sevenDPrimarySatisfied": true,
+        "sevenDPrimaryOosPrecision": 0.8,
+        "sevenDSecondarySatisfied": true,
+        "sevenDSecondaryContractSelectedRows": 70,
+        "sevenDSecondaryContractHitDateCount": 70,
+        "eightDPrimarySatisfied": true,
+        "eightDPrimaryOosPrecision": 0.86,
+        "eightDSecondarySatisfied": true,
+        "eightDSecondaryContractSelectedRows": 75,
+        "eightDSecondaryContractHitDateCount": 75
+      },
+      "secondaryMetrics": {},
+      "notes": "v61r strict_label_boundary close28 replay completed for 1d/7d/8d live plus-lite lines. Full all-scope report build hit Node heap OOM, but reusing the same generated packs with per-lookback subset manifests recovered final verdicts. Secondary original 100pct day-dedup contracts held for 1d/7d/8d; primary dual80_recent80 held for 7d/8d, while 1d_primary missed with OOS precision 0.75 below the 0.8 contract."
+    },
+    {
+      "ts": "2026-03-29T13:07:06Z",
+      "patchKey": "perfect_proto_1d_top_mid_low_failure_bank_oos_report_v59a",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "1d_regime_matrix_pilot",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "target_first_probe_shortlist",
+      "runIds": [
+        "perfect_proto_1d_top_mid_low_failure_bank_oos_report_v59a_probe200k_r3_20260329"
+      ],
+      "primaryMetrics": {
+        "positiveQualifiedCellCount": 0,
+        "failureLiftCellCount": 0,
+        "vetoLiftCellCount": 0
+      },
+      "secondaryMetrics": {
+        "topFailureQualifiedRuleCount": 8,
+        "topVetoQualifiedRuleCount": 4,
+        "midFailureQualifiedRuleCount": 8,
+        "midVetoQualifiedRuleCount": 6,
+        "lowFailureQualifiedRuleCount": 8,
+        "lowVetoQualifiedRuleCount": 5,
+        "topBestTrainMatchedDateCount": 2,
+        "midBestTrainMatchedDateCount": 5,
+        "lowBestTrainMatchedDateCount": 3
+      },
+      "notes": "1D TOP/MID/LOW pilot restored train fold breadth and mined failure/veto banks in all cells, but no positive bank met 10 dates / 6 months / 4 folds, so OOS lift comparison remained degenerate with zero selected rows."
+    },
+    {
+      "ts": "2026-03-29T07:40:49Z",
+      "patchKey": "perfect_proto_stepb_afree_rule_pp_cefa17c34587_future_to_0326_replay_v1",
+      "status": "completed",
+      "scope": "target_first_v2",
+      "candidateMode": "afree_rule_replay",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "pp_cefa17c34587_future_replay",
+      "runIds": [
+        "perfect_proto_stepb_afree_rule_pp_cefa17c34587_future_to_0326_replay_v1_r2_20260329"
+      ],
+      "primaryMetrics": {
+        "requestedStart": "2026-02-01",
+        "requestedEnd": "2026-03-26",
+        "actualStart": "2026-02-02",
+        "actualEnd": "2026-03-25",
+        "actualCoverageCount": 34,
+        "oosMatchCount": 6,
+        "oosHitCount": 6,
+        "oosPrecision": 1.0,
+        "oosMatchedDateCount": 1
+      },
+      "secondaryMetrics": {
+        "close28PreFilterRawMatches": 6,
+        "close28RawMatchedRows": 4,
+        "close28DedupedMatches": 2,
+        "close28LineLevelHitCount": 2,
+        "close28LineLevelHitRate": 1.0,
+        "close28RemovedRawMatches": 2,
+        "close28RemovedHitMatches": 2
+      },
+      "notes": "Replayed PP_cefa17c34587 on current server data through 2026-03-27; requested 2026-02-01..2026-03-26, strict boundary yielded actual coverage 2026-02-02..2026-03-25; raw future report remained 6/6 on one date, close28 apply reduced to 4 raw matches and 2 deduped hits after removing 2 >=28% rows."
+    },
+    {
+      "ts": "2026-03-29T05:50:49Z",
+      "patchKey": "perfect_proto_daily_trade_slate_mechanism_bank_v55",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "daily_trade_slate_mechanism_bank",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "target_first_short_probe",
+      "runIds": [
+        "perfect_proto_daily_trade_slate_mechanism_bank_v55_probe200k_20260329"
+      ],
+      "primaryMetrics": {
+        "canonicalPositiveDateCount": 156,
+        "controlOnlyDateCount": 48,
+        "tradeGatePrecision": 1.0,
+        "tradeGateControlLeakCount": 0,
+        "winnerArchetypeCount": 2,
+        "mechanismHypothesisQualifiedCount": 0,
+        "archetypeRuleBankQualifiedCount": 0,
+        "bestTrainPrecision": 0.12962962962962962,
+        "bestTrainMatchedDateCount": 7,
+        "bestTrainMatchedMonthCount": 5,
+        "bestTrainMatchedFoldCount": 4,
+        "crossfitNegativeWindowCount": 3
+      },
+      "secondaryMetrics": {
+        "trainDecisionDateCount": 48,
+        "trainDecisionMonthCount": 24,
+        "trainDecisionFoldCount": 4,
+        "trainRows": 5551,
+        "hypothesisH1CandidateCount": 0,
+        "hypothesisH2CandidateCount": 0,
+        "hypothesisH3CandidateCount": 45,
+        "supportProjectionPositive": true
+      },
+      "notes": "v55 closed the daily_trade_slate_v1 substrate, control-only date, trade-abstain gate, and 2-archetype routing contracts, but the OHLCV-only mechanism-local exact winner bank exhausted at archetype-local top1 purity/breadth: H1 and H2 produced no candidates, best H3/A2 reached only 7 dates / 5 months / 4 folds at 0.1296 precision with crossfitNegativeWindowCount 3; the daily OHLCV-only mechanism-bank line hard-stops here."
+    },
+    {
+      "ts": "2026-03-29T04:08:55Z",
+      "patchKey": "perfect_proto_daily_canonical_winner_slate_contrastive_top1_v53",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "daily_canonical_winner_slate_contrastive_top1",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "probe200k",
+      "runIds": [
+        "perfect_proto_daily_canonical_winner_slate_contrastive_top1_v53_probe200k_r3_20260329"
+      ],
+      "primaryMetrics": {
+        "reason": "unsat_no_daily_canonical_winner_rows",
+        "canonicalPositiveDateCount": 489,
+        "controlOnlyDateCount": 0,
+        "queryEligiblePositiveRowCount": 18316,
+        "queryEligiblePositiveDateCount": 489,
+        "queryEligibleNegativeRowCount": 0,
+        "queryEligibleNegativeDateCount": 0
+      },
+      "secondaryMetrics": {
+        "supportFitExcluded": true,
+        "normalizedTrainRowCount": 56838,
+        "normalizedControlTrainRowCount": 200000,
+        "fitTrainRowCount": 56836,
+        "normalizedOosRowCount": 29989,
+        "normalizedControlOosRowCount": 200000,
+        "queryEligiblePositiveMonthCount": 24,
+        "queryEligiblePositiveFoldCount": 4
+      },
+      "notes": "v53 completed after wrapper seed-input repair and generic afree_open stepALaneId repair, but the final daily winner-slate probe failed at unsat_no_daily_canonical_winner_rows: canonicalPositiveDateCount=489, controlOnlyDateCount=0, queryEligibleNegativeSummary.rowCount=0. The row-capped afree_open control packs collapsed into dates already occupied by canonical positives, so matched-control/abstain negative queries never formed; do not retune v53 ranking/query logic on this substrate."
+    },
+    {
+      "ts": "2026-03-28T15:40:39Z",
+      "patchKey": "perfect_proto_shadow_winner_slate_top1_v50",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "perfect_proto_shadow_winner_slate_top1_v50_probe200k_20260329",
+      "runIds": [
+        "perfect_proto_shadow_winner_slate_top1_v50_probe200k_20260329"
+      ],
+      "primaryMetrics": {
+        "pairwiseWinRate": 0.5950888192267503,
+        "sameDateRunnerUpBeatRate": 0.5952879581151832,
+        "hardNegativeLeakCount": 1956,
+        "pairwiseQualifiedCandidateCount": 0
+      },
+      "secondaryMetrics": {
+        "supplierFeatureCount": 103,
+        "shadowWinnerSlateFeatureCount": 14,
+        "queryEligibleTrainRowCount": 14450,
+        "winnerPositiveDateCount": 958,
+        "shadowWinnerSlatePairCount": 5742,
+        "supportProjectionPositive": false
+      },
+      "notes": "v50 family reset passed local/server verify but failed at the shadow winner-slate separability audit; current low_gap_top/recent_mid_low supplier framing cannot separate canonical winner-slate positives from runner-up and hard-impostor negatives."
+    },
+    {
+      "ts": "2026-03-28T12:21:00Z",
+      "patchKey": "perfect_proto_low_gap_top_support_separability_audit_v46",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "perfect_proto_low_gap_top_support_separability_audit_v46_probe200k_20260328",
+      "runIds": [
+        "perfect_proto_low_gap_top_support_separability_audit_v46_probe200k_20260328"
+      ],
+      "primaryMetrics": {
+        "supplierFeatureCount": 240,
+        "selectedFeaturePoolCount": 12,
+        "pairwiseCandidateCount": 781,
+        "pairwiseQualifiedCandidateCount": 0,
+        "bestPairwiseWinRate": 0.9534883720930233,
+        "bestMinFoldPairwiseWinRate": 0.75,
+        "bestSameDateRunnerUpBeatRate": 0.8181818181818182,
+        "bestHardNegativeLeakCount": 11,
+        "supportProjectionPositive": false
+      },
+      "secondaryMetrics": {
+        "separabilityPositiveDateCount": 16,
+        "separabilityNegativeDateCount": 35,
+        "sameDatePairCount": 17,
+        "matchedControlPairCount": 42,
+        "bestSupportProjectionScore": -0.6934119069706872
+      },
+      "notes": "v46 separability audit failed before query/runtime selection: 240 supplier features and 781 pairwise candidates were evaluated, but no qualified subset met fold stability, runner-up separation, hard-negative leak, and support-projection requirements."
+    },
+    {
+      "ts": "2026-03-28T10:59:35Z",
+      "patchKey": "perfect_proto_low_gap_top_counterfactual_outranking_residual_v45",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "support_top1_query",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "probe200k_r2_20260328",
+      "runIds": [
+        "perfect_proto_low_gap_top_counterfactual_outranking_residual_v45_probe200k_r2_20260328"
+      ],
+      "primaryMetrics": {
+        "trainPrecision": 0.48698884758364314,
+        "trainMatchedDateCount": 131,
+        "trainMatchedMonthCount": 48,
+        "trainMatchedFoldCount": 4,
+        "openOosMatchCount": 0,
+        "openOosPrecision": 0
+      },
+      "secondaryMetrics": {
+        "candidateCount": 1552,
+        "qualifiedCandidateCount": 0,
+        "crossfitNegativeWindowCount": 6,
+        "selectedFeaturePoolCount": 8,
+        "supportLeaveOneOutRecovered": 0
+      },
+      "notes": "v45 top1-query reset solved breadth but collapsed on train purity: 1552 candidates, 0 qualified, best non-support candidate 269 selected / 131 positive / 138 negative (precision 0.48699), crossfitNegativeWindowCount=6, supportLeaveOneOutRecovered=false, close28 OOS 0 selected."
+    },
+    {
+      "ts": "2026-03-28T10:00:19Z",
+      "patchKey": "perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_support_temporal_episode",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44_probe200k_20260328",
+      "runIds": [
+        "perfect_proto_low_gap_top_temporal_episode_role_topology_scorer_v44_probe200k_20260328"
+      ],
+      "primaryMetrics": {
+        "serverVerifyPassed": true,
+        "reason": "unsat_temporal_anchor_train_precision",
+        "bestTrainPrecision": 0.2894736842105263,
+        "trainMatchedDateCount": 11,
+        "trainMatchedMonthCount": 11,
+        "trainMatchedFoldCount": 4,
+        "crossfitNegativeWindowCount": 6,
+        "supportLeaveOneOutRecovered": false,
+        "close28SelectedRows": 0,
+        "close28HitRows": 0
+      },
+      "secondaryMetrics": {
+        "supportFitExcluded": true,
+        "selectedFeaturePoolCount": 8,
+        "candidateCount": 108,
+        "qualifiedCandidateCount": 0,
+        "bestTrainSelectedRowCount": 38,
+        "bestTrainPositiveRowCount": 11,
+        "bestTrainNegativeRowCount": 27
+      },
+      "notes": "v44 temporal-episode role-topology family reset reached breadth (11 dates / 11 months / 4 folds) but every anchored scorer candidate failed train purity: best train 38 selected / 11 positive / 27 negative / precision 0.2895, crossfitNegativeWindowCount=6, supportLeaveOneOutRecovered=false, close28 OOS 0 selected / 0 hit."
+    },
+    {
+      "ts": "2026-03-28T08:13:31Z",
+      "patchKey": "perfect_proto_support_recurrence_motif_bag_cover_v43",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_support_bag_cover",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328",
+      "runIds": [
+        "perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328",
+        "perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328_train_mine"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "supportFitExcluded": true,
+        "positiveBagCount": 16,
+        "negativeBagCount": 28,
+        "motifBundleCount": 23,
+        "motifPrototypeCount": 6,
+        "bagLocalDetectorCandidateCount": 480,
+        "bagLocalDetectorQualifiedCount": 0,
+        "supportLeaveOneOutRecovered": false,
+        "openOosSelectedRows": 0,
+        "openOosHitRows": 0
+      },
+      "secondaryMetrics": {
+        "runDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_support_recurrence_motif_bag_cover_v43_probe200k_20260328",
+        "unsatReason": "unsat_no_bag_local_detectors",
+        "distinctBagCoverSignatureCount": 14,
+        "witnessAcceptedCount": 24,
+        "witnessAcceptedBagCount": 16,
+        "bestDetectorTrainSelectedRowCount": 49,
+        "bestDetectorTrainPositiveRowCount": 15,
+        "bestDetectorTrainNegativeRowCount": 34,
+        "bestDetectorTrainPrecision": 0.30612244897959184,
+        "bestDetectorTrainMatchedDateCount": 14,
+        "bestDetectorTrainMatchedMonthCount": 11,
+        "bestDetectorTrainMatchedFoldCount": 3,
+        "bestDetectorCrossfitNegativeWindowCount": 6,
+        "supportCaseTopBundleCount": 0,
+        "upstreamChampionRuleId": "PP_0833e2a41b90",
+        "upstreamChampionOpenOosMatchCount": 0,
+        "upstreamChampionHaesungSupport": false
+      },
+      "notes": "v43 date-bag family reset produced real bag diversity (16 positive bags, 23 motif bundles, 6 motif prototypes) but failed at bag-local detector purity: 480 detector candidates, 0 qualified, best detector precision 0.3061 with 14 dates/11 months/3 folds and 6 crossfit-negative windows, support remained unrecovered, and close28 OOS stayed 0 selected / 0 hit."
+    },
+    {
+      "ts": "2026-03-28T06:17:56Z",
+      "patchKey": "perfect_proto_low_gap_top_ordinal_multibasin_local_experts_v41",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_support_corridor_local_experts",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "perfect_proto_low_gap_top_ordinal_multibasin_local_experts_v41_probe200k_r2_20260328",
+      "runIds": [
+        "perfect_proto_low_gap_top_ordinal_multibasin_local_experts_v41_probe200k_r2_20260328",
+        "perfect_proto_low_gap_top_ordinal_multibasin_local_experts_v41_probe200k_r2_20260328_train_mine"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "supportFitExcluded": true,
+        "ordinalMotifFeatureCount": 49,
+        "corridorPositiveBasinCount": 4,
+        "corridorPositiveEligibleBasinCount": 3,
+        "corridorPositiveSeedCount": 9,
+        "supportCaseReachableBasinCount": 2,
+        "boundaryGroupCount": 3,
+        "boundaryGroupEligibleCount": 3,
+        "localExpertCandidateCount": 29862,
+        "localExpertQualifiedCount": 4,
+        "expertUnionCandidateCount": 14,
+        "expertUnionQualifiedCount": 0,
+        "supportLeaveOneOutRecovered": false,
+        "openOosSelectedRows": 0,
+        "openOosHitRows": 0
+      },
+      "secondaryMetrics": {
+        "runDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_ordinal_multibasin_local_experts_v41_probe200k_r2_20260328",
+        "unsatReason": "unsat_expert_union_train_breadth",
+        "bestPureExpertTrainMatchedDateCount": 9,
+        "bestPureExpertTrainMatchedMonthCount": 8,
+        "bestPureExpertTrainMatchedFoldCount": 3,
+        "bestPureExpertCrossfitNegativeWindowCount": 0,
+        "bestPureExpertCrossfitPositiveWindowCount": 5,
+        "bestPureExpertOosSelectedRows": 0,
+        "bestTrainSelectedRowCount": 188,
+        "bestTrainPositiveRowCount": 64,
+        "bestTrainNegativeRowCount": 124,
+        "bestTrainPrecision": 0.3404255319148936,
+        "supportCaseBridgeBestPositiveCellMarginMean": 0.030262614771508156,
+        "supportCasePositivePotential": 0,
+        "supportCaseSafeReachabilityScore": -0.25000000028477615,
+        "upstreamChampionRuleId": "PP_0833e2a41b90",
+        "upstreamChampionTrainMatchedDateCount": 5,
+        "upstreamChampionOpenOosMatchCount": 0,
+        "upstreamChampionHaesungSupport": false
+      },
+      "notes": "v41 ordinal-multibasin local experts passed local/server verify and recovered basin reachability (4 basins, 3 eligible, 9 seeds, support reachable basins=2), but all 4 qualified experts collapsed to the same 9-date/8-month/3-fold pocket, every 14 union candidates failed unsat_expert_union_train_breadth, supportLeaveOneOutRecovered stayed false, and close28 OOS remained 0 selected / 0 hit."
+    },
+    {
+      "ts": "2026-03-28T05:08:38Z",
+      "patchKey": "perfect_proto_low_gap_top_support_corridor_graph_propagation_v40",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "perfect_proto_low_gap_top_support_corridor_graph_propagation_v40_probe200k_r2_20260328",
+      "runIds": [
+        "perfect_proto_low_gap_top_support_corridor_graph_propagation_v40_probe200k_20260328",
+        "perfect_proto_low_gap_top_support_corridor_graph_propagation_v40_probe200k_r2_20260328"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "supportFitExcluded": true,
+        "supportLeaveOneOutRecovered": false,
+        "graphPositiveSeedCount": 2,
+        "graphNegativeSeedCount": 24,
+        "corridorFeatureCount": 24,
+        "graphNodeCount": 658,
+        "graphEdgeCount": 2464,
+        "supportCasePositivePotential": 0,
+        "supportCaseNegativePotential": 1.3262364245709249e-11,
+        "supportCaseSafeReachabilityScore": -0.25000000000994677,
+        "openOosSelectedRows": 0,
+        "openOosHitRows": 0
+      },
+      "secondaryMetrics": {
+        "initialUnsatReason": "unsat_no_corridor_metric_features",
+        "finalUnsatReason": "unsat_support_case_not_corridor_reachable",
+        "graphPositiveReferenceCount": 16,
+        "graphNegativeReferenceCount": 32,
+        "graphPositiveSeedDateCount": 2,
+        "graphNegativeSeedDateCount": 23,
+        "graphPositiveReferenceDateCount": 16,
+        "graphNegativeReferenceDateCount": 31,
+        "supportCaseBridgeBestPositiveCellMarginMean": 0.030262614771508156,
+        "upstreamChampionRuleId": "PP_0833e2a41b90",
+        "upstreamChampionTrainMatchedDateCount": 5,
+        "upstreamChampionOpenOosMatchCount": 0,
+        "upstreamChampionHaesungSupport": false
+      },
+      "notes": "v40 corridor graph propagation fixed the initial metric-learning/seed mismatch (r1 unsat_no_corridor_metric_features) and re-passed local/server verify, but the final r2 probe still failed at graph-level support recovery: supportFitExcluded=true, graphPositiveSeedCount=2, graphNegativeSeedCount=24, corridorFeatureCount=24, graphNodeCount=658, graphEdgeCount=2464, supportCasePositivePotential=0, supportCaseNegativePotential=1.3262364245709249e-11, supportLeaveOneOutRecovered=false, and close28 OOS stayed 0 selected / 0 hit."
+    },
+    {
+      "ts": "2026-03-28T04:19:00Z",
+      "patchKey": "perfect_proto_support_carrier_graph_local_experts_v39",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "perfect_proto_support_carrier_graph_local_experts_v39_probe200k_20260328",
+      "runIds": [
+        "perfect_proto_support_carrier_graph_local_experts_v39_probe200k_20260328"
+      ],
+      "primaryMetrics": {
+        "supportFitExcluded": true,
+        "supportLeaveOneOutRecovered": false,
+        "carrierGraphFeatureCount": 15,
+        "carrierComponentCount": 3,
+        "carrierEligibleComponentCount": 1,
+        "supportCaseReachableComponentCount": 0,
+        "localExpertCandidateCount": 0,
+        "expertUnionQualifiedCount": 0
+      },
+      "secondaryMetrics": {
+        "supportCaseBridgeBestPositiveCellMarginMean": 0.030262614771508156,
+        "bridgePositiveRowCount": 16,
+        "bridgePositiveDateCount": 16,
+        "bridgePositiveMonthCount": 14,
+        "bridgePositiveFoldCount": 4,
+        "close28SelectedRows": 0,
+        "close28HitRows": 0
+      },
+      "notes": "v39 carrier-graph local experts failed at pre-runtime carrier-family gating: carrierEligibleComponentCount=1 but supportCaseReachableComponentCount=0, so local expert calibration never started."
+    },
+    {
+      "ts": "2026-03-28T03:37:12Z",
+      "patchKey": "perfect_proto_low_gap_top_grouped_boundary_residual_experts_v38",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_boundary_residual_experts",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "perfect_proto_low_gap_top_grouped_boundary_residual_experts_v38_probe200k_20260328",
+      "runIds": [
+        "perfect_proto_low_gap_top_grouped_boundary_residual_experts_v38_probe200k_20260328",
+        "perfect_proto_low_gap_top_grouped_boundary_residual_experts_v38_probe200k_20260328_train_mine"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "supportFitExcluded": true,
+        "recurrencePurityFeatureCount": 32,
+        "recurrencePurityGroupCount": 6,
+        "boundaryGroupCount": 6,
+        "boundaryGroupEligibleCount": 0,
+        "localExpertCandidateCount": 0,
+        "localExpertQualifiedCount": 0,
+        "expertUnionCandidateCount": 0,
+        "expertUnionQualifiedCount": 0,
+        "supportLeaveOneOutRecovered": false,
+        "openOosSelectedRows": 0,
+        "openOosHitRows": 0
+      },
+      "secondaryMetrics": {
+        "runDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_grouped_boundary_residual_experts_v38_probe200k_20260328",
+        "unsatReason": "unsat_no_local_experts",
+        "groupDatasetRowCount": 30,
+        "supportCaseEligibleGroups": [
+          "candle"
+        ],
+        "supportCaseLocalRecoveryMarginMean": 0,
+        "bridgePositiveRowCount": 16,
+        "bridgePositiveMatchedDateCount": 16,
+        "bridgePositiveMatchedMonthCount": 14,
+        "bridgePositiveMatchedFoldCount": 4,
+        "supportNearHardNegativeRowCount": 32,
+        "supportNearHardNegativeMatchedDateCount": 31,
+        "supportNearHardNegativeMatchedMonthCount": 26,
+        "supportNearHardNegativeMatchedFoldCount": 4,
+        "boundaryResidualFeatureCount": 35,
+        "boundaryResidualPositiveGroupCount": 6,
+        "supportCaseBridgeBestPositiveCellMarginMean": 0.030262614771508156,
+        "upstreamChampionRuleId": "PP_0833e2a41b90",
+        "upstreamChampionTrainMatchedDateCount": 5,
+        "upstreamChampionOpenOosMatchCount": 0,
+        "upstreamChampionHaesungSupport": false
+      },
+      "notes": "v38 grouped boundary residual experts passed local/server verify and completed the 200k server short probe, but failed before local-expert calibration: boundaryGroupCount=6, boundaryGroupEligibleCount=0, localExpertCandidateCount=0, expertUnionQualifiedCount=0, supportLeaveOneOutRecovered=false, close28 OOS stayed 0 selected / 0 hit, and the active blocker moved to boundary group eligibility collapse."
+    },
+    {
+      "ts": "2026-03-28T02:49:45Z",
+      "patchKey": "perfect_proto_low_gap_top_boundary_residual_scorer_v37",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_boundary_residual_scorer",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "perfect_proto_low_gap_top_boundary_residual_scorer_v37_probe200k_20260328",
+      "runIds": [
+        "perfect_proto_low_gap_top_boundary_residual_scorer_v37_probe200k_20260328",
+        "perfect_proto_low_gap_top_boundary_residual_scorer_v37_probe200k_20260328_train_mine"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "supportFitExcluded": true,
+        "supportLeaveOneOutRecovered": false,
+        "boundaryResidualFeatureCount": 35,
+        "boundaryResidualPositiveGroupCount": 6,
+        "scorerCandidateCount": 6,
+        "scorerQualifiedCount": 0,
+        "triedCandidateCount": 2904,
+        "bestTrainPrecision": 0.284789644012945,
+        "bestTrainMatchedDateCount": 152,
+        "bestTrainMatchedMonthCount": 48,
+        "bestTrainMatchedFoldCount": 4,
+        "bestCrossfitPositiveWindowCount": 6,
+        "bestCrossfitNegativeWindowCount": 6,
+        "openOosSelectedRows": 0,
+        "openOosHitRows": 0
+      },
+      "secondaryMetrics": {
+        "runDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_boundary_residual_scorer_v37_probe200k_20260328",
+        "unsatReason": "unsat_scorer_train_precision",
+        "scorerUnsatReasonCounts": {
+          "unsat_scorer_train_precision": 2793,
+          "unsat_non_support_train_breadth": 111
+        },
+        "bestTrainSelectedRowCount": 618,
+        "bestTrainPositiveRowCount": 176,
+        "bestTrainNegativeRowCount": 442,
+        "bridgePositiveRowCount": 16,
+        "bridgePositiveMatchedDateCount": 16,
+        "bridgePositiveMatchedMonthCount": 14,
+        "bridgePositiveMatchedFoldCount": 4,
+        "supportNearHardNegativeRowCount": 32,
+        "supportCaseBridgeBestPositiveCellMarginMean": 0.030262614771508156,
+        "upstreamChampionRuleId": "PP_0833e2a41b90",
+        "upstreamChampionTrainMatchedDateCount": 5,
+        "upstreamChampionOpenOosMatchCount": 0,
+        "upstreamChampionHaesungSupport": false
+      },
+      "notes": "v37 boundary residual scorer passed local/server verify and built a broad support-near feature family, but no scorer satisfied purity. supportFitExcluded=true, supportLeaveOneOutRecovered=false, scorerQualifiedCount=0/2904, best train candidate reached 152 dates / 48 months / 4 folds at precision 0.2848, and close28 OOS stayed 0 selected / 0 hit."
+    },
+    {
+      "ts": "2026-03-27T14:48:24Z",
+      "patchKey": "perfect_proto_low_gap_top_dynamic_bridge_boundary_frontier_v36",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "low_gap_top_continuation",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "perfect_proto_low_gap_top_dynamic_bridge_boundary_frontier_v36_probe200k_r2_20260327",
+      "runIds": [
+        "perfect_proto_low_gap_top_dynamic_bridge_boundary_frontier_v36_probe200k_r2_20260327",
+        "perfect_proto_low_gap_top_dynamic_bridge_boundary_frontier_v36_probe200k_r2_20260327_train_mine"
+      ],
+      "primaryMetrics": {
+        "supportFitExcluded": true,
+        "supportLeaveOneOutRecovered": false,
+        "bridgeCompanionAcceptedCount": 0,
+        "atlasBestTrainBreadthBeforeThreshold": {
+          "trainMatchedDateCount": 12,
+          "trainMatchedMonthCount": 11,
+          "trainMatchedFoldCount": 4
+        },
+        "atlasSolvedCount": 0,
+        "atlasHistoricalSupportMatchedCount": 0,
+        "openOosSelectedRows": 0,
+        "openOosHitRows": 0
+      },
+      "secondaryMetrics": {
+        "bridgeCompanionRejectReasonCounts": {
+          "unsat_boundary_veto_support_loss": 157,
+          "unsat_dynamic_bridge_frontier_negative_leak": 10,
+          "unsat_dynamic_bridge_frontier_no_breadth": 5
+        },
+        "atlasUnsatReasonCounts": {
+          "unsat_historical_support": 3
+        },
+        "preThresholdFrontierPointCount": 3,
+        "supportCaseBridgeBestPositiveCellMarginMean": 0.030262614771508156
+      },
+      "notes": "v36 fixed the recent_mid_low split-policy wrapper root cause and completed the base recent-mid-low 200k run, but the leave-one-out dynamic bridge atlas still failed. supportFitExcluded=true, supportLeaveOneOutRecovered=false, bridgeCompanionAcceptedCount=0/172, best raw atlas cell reached 12 dates / 11 months / 4 folds, every pre-threshold frontier point had supportMatched=[], final atlas unsat_historical_support, and close28 OOS stayed 0 selected / 0 hit."
+    },
+    {
+      "ts": "2026-03-27T09:13:23Z",
+      "patchKey": "perfect_proto_low_gap_top_support_contrastive_bridge_family_v34",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_support_atlas",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "low_gap_top_support_contrastive_bridge_family_v34_probe200k",
+      "runIds": [
+        "perfect_proto_low_gap_top_support_contrastive_bridge_family_v34_probe200k_20260327",
+        "perfect_proto_low_gap_top_support_contrastive_bridge_family_v34_probe200k_20260327_train_mine"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "bridgeReady": true,
+        "bridgePositiveRowCount": 18,
+        "bridgePositiveMatchedDates": 18,
+        "bridgePositiveMatchedMonths": 15,
+        "bridgePositiveMatchedFolds": 4,
+        "supportNearHardNegativeRowCount": 32,
+        "supportCaseBridgeBestPositiveCellMarginMean": 0.3731458321528325,
+        "atlasCellCandidateCount": 2,
+        "atlasQualifiedCellCount": 1,
+        "atlasPositiveSupportMarginCellCount": 1,
+        "supportCaseMarginMean": 0.282872745174483,
+        "atlasSolvedCount": 0,
+        "atlasHistoricalSupportMatchedCount": 0,
+        "atlasUnsatHistoricalSupportCount": 24,
+        "bestTrainMatchedDateCount": 6,
+        "bestTrainMatchedMonthCount": 6,
+        "bestTrainMatchedFoldCount": 3,
+        "bestCrossfitPositiveWindowCount": 1,
+        "openOosMatchCount": 0,
+        "haesungSupport": false
+      },
+      "secondaryMetrics": {},
+      "notes": "v34 support-contrastive bridge family passed local/server verify and closed the old support-case cell-membership blocker: the support case entered one bridge-positive atlas cell with positive margin. The atlas still failed with unsat_historical_support because the surviving pocket remained too narrow at 4-6 dates / 4-6 months / 3 folds, crossfit positive windows stayed <=1, OOS matches stayed 0, and haesungSupport stayed false. The active blocker is now bridge-cell breadth/generalization under the existing low_gap_top family."
+    },
+    {
+      "ts": "2026-03-27T08:32:02Z",
+      "patchKey": "perfect_proto_low_gap_top_local_prototype_atlas_v33",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_support_atlas",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "low_gap_top_local_prototype_atlas_v33_probe200k",
+      "runIds": [
+        "perfect_proto_low_gap_top_local_prototype_atlas_v33_probe200k_20260327",
+        "perfect_proto_low_gap_top_local_prototype_atlas_v33_probe200k_20260327_train_mine"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "atlasSolvedCount": 0,
+        "atlasHistoricalSupportMatchedCount": 0,
+        "atlasCellCandidateCount": 4,
+        "atlasQualifiedCellCount": 3
+      },
+      "secondaryMetrics": {
+        "runDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_local_prototype_atlas_v33_probe200k_20260327",
+        "unsatReason": "unsat_no_local_prototype_atlas",
+        "atlasUnsatReasonCounts": {
+          "unsat_historical_support": 1368
+        },
+        "triedCandidateCount": 1368,
+        "gateTokens": [
+          "tag:lowGapTop.gapContinuationRegime:GAP_FADE",
+          "tag:xsec.gapRank:HIGH"
+        ],
+        "atlasCalibrationPositiveRowCount": 188,
+        "atlasCalibrationPositiveMatchedDateCount": 162,
+        "atlasCalibrationPositiveMatchedMonthCount": 48,
+        "atlasCalibrationPositiveMatchedFoldCount": 4,
+        "atlasCalibrationNegativeRowCount": 470,
+        "atlasCalibrationNegativeMatchedDateCount": 363,
+        "atlasCalibrationNegativeMatchedMonthCount": 50,
+        "atlasCalibrationNegativeMatchedFoldCount": 4,
+        "supportCaseMarginMeanByCell": {
+          "ATLAS_CELL_01": -0.07913476157876032,
+          "ATLAS_CELL_04": -0.48946091207711095,
+          "ATLAS_CELL_03": -1.577422426383034
+        },
+        "upstreamChampionRuleId": "PP_0833e2a41b90",
+        "upstreamChampionTrainMatchedDateCount": 5,
+        "upstreamChampionOpenOosMatchCount": 0,
+        "upstreamChampionHaesungSupport": false
+      },
+      "notes": "v33 local prototype atlas passed local/server verify and the 200k server probe completed end-to-end, but the atlas still produced no feasible artifact: atlasCellCandidateCount=4, atlasQualifiedCellCount=3, triedCandidateCount=1368, reason=unsat_no_local_prototype_atlas, and every qualified cell kept the Haesung support case outside the positive pocket (all supportCaseMarginMean values remained negative)."
+    },
+    {
+      "ts": "2026-03-27T07:48:38Z",
+      "patchKey": "perfect_proto_low_gap_top_support_prototype_router_v32",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_support_router",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "low_gap_top_support_prototype_router_v32_probe200k_r2",
+      "runIds": [
+        "perfect_proto_low_gap_top_support_prototype_router_v32_probe200k_r2_20260327",
+        "perfect_proto_low_gap_top_support_prototype_router_v32_probe200k_r2_20260327_train_mine"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "routerSolvedCount": 0,
+        "routerHistoricalSupportMatchedCount": 0,
+        "routerCandidateCount": 24,
+        "triedCandidateCount": 19704
+      },
+      "secondaryMetrics": {
+        "runDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_support_prototype_router_v32_probe200k_r2_20260327",
+        "unsatReason": "unsat_no_monotone_threshold_router",
+        "routerUnsatReasonCounts": {
+          "unsat_train_precision": 19704
+        },
+        "gateTokens": [
+          "tag:lowGapTop.gapContinuationRegime:GAP_FADE",
+          "tag:xsec.gapRank:HIGH"
+        ],
+        "gatedTrainRowCount": 188,
+        "gatedTrainMatchedDateCount": 162,
+        "gatedTrainMatchedMonthCount": 48,
+        "gatedTrainMatchedFoldCount": 4,
+        "supportPositiveRowCount": 592,
+        "supportPositiveMatchedDateCount": 377,
+        "hardNegativeRowCount": 1352,
+        "hardNegativeMatchedDateCount": 646,
+        "routerFeatureCandidateCount": 6,
+        "routerThresholdCandidateCount": 24,
+        "upstreamChampionRuleId": "PP_0833e2a41b90",
+        "upstreamChampionTrainMatchedDateCount": 5,
+        "upstreamChampionOpenOosMatchCount": 0,
+        "upstreamChampionHaesungSupport": false
+      },
+      "notes": "v32 r2 fixed the router calibration performance bug by restricting calibration to gate-reachable rows, and the server probe completed end-to-end, but all 19,704 monotone threshold candidates still failed on train purity. The support-prototype router is wired and no longer performance-blocked; the active blocker is monotone-threshold purity feasibility under the current support-signature surface."
+    },
+    {
+      "ts": "2026-03-27T06:29:36Z",
+      "patchKey": "perfect_proto_low_gap_top_support_scorecard_router_v31",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_support_scorecard",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "low_gap_top_support_scorecard_probe200k_v31_r3",
+      "runIds": [
+        "perfect_proto_low_gap_top_support_scorecard_router_v31_probe200k_r3_20260327",
+        "perfect_proto_low_gap_top_support_scorecard_router_v31_probe200k_r3_20260327_train_mine"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "scorecardSolvedCount": 0,
+        "scorecardHistoricalSupportMatchedCount": 0,
+        "scorecardTermCandidateCount": 166,
+        "scorecardTermQualifiedCount": 140,
+        "upstreamCuratedRuleCount": 1
+      },
+      "secondaryMetrics": {
+        "runDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_support_scorecard_router_v31_probe200k_r3_20260327",
+        "unsatReason": "unsat_no_breadth_extender_terms",
+        "prototypeCohortPositiveCount": 592,
+        "prototypeCohortHardNegativeCount": 1352,
+        "gatedTrainRowCount": 188,
+        "gatedTrainMatchedDateCount": 162,
+        "gatedTrainMatchedMonthCount": 48,
+        "gatedTrainMatchedFoldCount": 4,
+        "supportAnchorTermCount": 8,
+        "breadthExtenderTermCount": 0,
+        "riskKillerTermCount": 8,
+        "championRuleId": "PP_0833e2a41b90",
+        "championTrainMatchedDateCount": 5,
+        "championTrainMatchedMonthCount": 4,
+        "championTrainMatchedFoldCount": 4,
+        "championOpenOosMatchCount": 0,
+        "championHaesungSupport": false
+      },
+      "notes": "v31 r3 support-scorecard router passed local/server verify and executed end-to-end, but the scorecard solve failed fast with unsat_no_feasible_support_scorecard because the role-aware term bank produced 8 support-anchor terms and 8 risk-killer terms but 0 breadth-extender terms; the only upstream frozen rule remained below target breadth with OOS 0 and haesungSupport=false."
+    },
+    {
+      "ts": "2026-03-27T03:47:13Z",
+      "patchKey": "perfect_proto_low_gap_top_support_manifold_distillation_v29",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_support_signature",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "low_gap_top_support_manifold_distillation_probe200k_v29",
+      "runIds": [
+        "perfect_proto_low_gap_top_support_manifold_distillation_v29_probe200k_20260327"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "ruleCount": 0,
+        "jointFeasibilitySolvedCount": 0,
+        "jointHistoricalSupportMatchedCount": 0,
+        "exactCompletionUnsatCount": 1
+      },
+      "secondaryMetrics": {
+        "supportCaseFile": "/home/moltook/apps/stockdesk-lab-lite/artifacts/support_cases/haesung_076610_20260318_low_gap_top_v29.json",
+        "supportCaseExportInputPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_haesung_076610_20260318_low20m_historical_replay_v1_20260326/step-perfect-prototype-open-live-pack/daily_pack.jsonl",
+        "supportCaseExportCatalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_haesung_low_gap_top_support_pruned_search_v12_probe200k_20260326_train_mine/95f72f31a8d68467/catalog.json",
+        "subgroupBundleManifestCount": 1,
+        "subgroupExactEntryAcceptedCount": 1,
+        "exactCompletionManifestCount": 1,
+        "exactCompletionSolvedCount": 0,
+        "exactCompletionUnsatReasonCounts": {
+          "unsat_historical_support": 1
+        },
+        "exactCoreCandidateCount": 24,
+        "exactCoreQualifiedCount": 6,
+        "runReason": "no_core_frontier_solutions",
+        "jointHistoricalSupportMatchedCount": 0,
+        "runDir": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_low_gap_top_support_manifold_distillation_v29_probe200k_20260327"
+      },
+      "notes": "v29 support-manifold signature feature-family patch passed local/server verify and rebuilt the support-case export, but the 200k low_gap_top joint-feasibility probe still ended with no_core_frontier_solutions and unsat_historical_support, so the current v6 low_gap_top framing still cannot express a jointly feasible Haesung-supporting train rule."
+    },
+    {
+      "ts": "2026-03-27T03:11:25Z",
+      "patchKey": "perfect_proto_low_gap_top_support_compatible_atom_space_v27",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_support_atoms",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "low_gap_top_support_atoms_probe200k_v27",
+      "runIds": [
+        "perfect_proto_low_gap_top_support_compatible_atom_space_v27_probe200k_20260327"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "ruleCount": 0,
+        "jointFeasibilitySolvedCount": 0,
+        "jointHistoricalSupportMatchedCount": 0
+      },
+      "secondaryMetrics": {
+        "supportCaseFile": "/home/moltook/apps/stockdesk-lab-lite/artifacts/support_cases/haesung_076610_20260318_low_gap_top_v27.json",
+        "subgroupBundleManifestCount": 1,
+        "subgroupExactEntryAcceptedCount": 1,
+        "exactCoreCandidateCount": 24,
+        "exactCoreQualifiedCount": 6,
+        "exactCompletionSolvedCount": 0,
+        "exactCompletionUnsatCount": 1,
+        "exactCompletionUnsatReasonCounts": {
+          "unsat_historical_support": 1
+        },
+        "runReason": "no_core_frontier_solutions"
+      },
+      "notes": "v27 expanded low_gap_top joint-feasibility candidate atoms to interval/macro/support-anchor tokens and closed wrapper telemetry plumbing, but the 200k server probe still ended with no rules: subgroupBundleManifestCount=1, subgroupExactEntryAcceptedCount=1, exactCoreCandidateCount=24, exactCoreQualifiedCount=6, exactCompletionSolvedCount=0, exactCompletionUnsatReasonCounts.unsat_historical_support=1, and jointHistoricalSupportMatchedCount=0."
+    },
+    {
+      "ts": "2026-03-27T02:31:32Z",
+      "patchKey": "perfect_proto_low_gap_top_joint_feasibility_solver_v26",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_joint_solver",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "low_gap_top_joint_feasibility_probe200k_v26",
+      "runIds": [
+        "perfect_proto_low_gap_top_joint_feasibility_solver_v26_probe200k_20260327"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "ruleCount": 0,
+        "jointFeasibilitySolvedCount": 0,
+        "jointFeasibilityUnsatCount": 1,
+        "jointHistoricalSupportMatchedCount": 0
+      },
+      "secondaryMetrics": {
+        "supportCaseFile": "/home/moltook/apps/stockdesk-lab-lite/artifacts/support_cases/haesung_076610_20260318_low_gap_top_v12.json",
+        "supportCaseExportInputPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_haesung_076610_20260318_low20m_historical_replay_v1_20260326/step-perfect-prototype-open-live-pack/daily_pack.jsonl",
+        "supportCaseExportCatalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_haesung_low_gap_top_support_pruned_search_v12_probe200k_20260326_train_mine/95f72f31a8d68467/catalog.json",
+        "subgroupBundleManifestCount": 1,
+        "subgroupExactEntryAcceptedCount": 1,
+        "exactCompletionManifestCount": 1,
+        "exactCompletionSolvedCount": 0,
+        "exactCompletionUnsatReasonCounts": {
+          "unsat_historical_support": 1
+        },
+        "runReason": "no_core_frontier_solutions",
+        "historicalReplayRun": null
+      },
+      "notes": "v26 joint-feasibility plumbing passed verify and the real probe ran after regenerating the missing server support-case file, but the only surviving manifest ended as unsat_historical_support and produced zero train rules, so no historical replay catalog was emitted."
+    },
+    {
+      "ts": "2026-03-26T14:36:55Z",
+      "patchKey": "perfect_proto_low_gap_top_counterexample_exact_completion_v22",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_subgroup_system",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "low_gap_top_counterexample_exact_completion_v22_200k",
+      "runIds": [
+        "perfect_proto_low_gap_top_counterexample_exact_completion_v22_probe200k_20260326"
+      ],
+      "primaryMetrics": {
+        "serverVerifyPassed": true,
+        "ruleCount": 0,
+        "exploredStates": 175,
+        "subgroupCandidateCount": 24,
+        "subgroupQualifiedCandidateCount": 24,
+        "subgroupEffectiveRootSeedCount": 24,
+        "subgroupManifestCandidateCount": 64,
+        "subgroupStableManifestCount": 64,
+        "subgroupDiverseManifestCount": 8,
+        "subgroupBundleManifestCount": 8,
+        "subgroupExactEntryAcceptedCount": 7,
+        "subgroupExactEntryRejectedCount": 1,
+        "exactCompletionManifestCount": 7,
+        "exactCompletionSolvedCount": 0,
+        "exactCompletionUnsatCount": 7,
+        "exactCompletionCollectedRuleCount": 0
+      },
+      "secondaryMetrics": {
+        "reason": "no_exact_completion_solutions",
+        "searchBelowMinHitCount": 0,
+        "subgroupExactEntryRejectReasonCounts": {
+          "breadth_floor_conflict": 1
+        },
+        "exactCompletionUnsatReasonCounts": {
+          "unsat_breadth_retention": 7
+        }
+      },
+      "notes": "v22 exact-completion solver passed server verify and removed the wrapper, exact-entry, and stage-transition blockers, but all 7 accepted subgroup manifests ended UNSAT on breadth retention, so train mining finished with zero rules."
+    },
+    {
+      "ts": "2026-03-26T13:40:49Z",
+      "patchKey": "perfect_proto_low_gap_top_exact_entry_bridge_v21",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_subgroup_system",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "low_gap_top_exact_entry_bridge_v21_200k",
+      "runIds": [
+        "perfect_proto_low_gap_top_exact_entry_bridge_v21_probe200k_20260326"
+      ],
+      "primaryMetrics": {
+        "serverVerifyPassed": true,
+        "subgroupBundleManifestCount": 8,
+        "subgroupExactEntryAcceptedCount": 7,
+        "subgroupExactEntryRejectedCount": 1,
+        "exploredStates": 9,
+        "trainRuleCount": 0
+      },
+      "secondaryMetrics": {},
+      "notes": "v21 exact-entry bridge opened subgroup-to-exact search: 8 subgroup bundles produced 7 accepted exact entries and 9 explored states, but train mining still finished with 0 rules and no_rules reason no_exact_refinements."
+    },
+    {
+      "ts": "2026-03-26T02:43:51Z",
+      "patchKey": "perfect_proto_haesung_low_gap_top_support_pruned_search_v12",
+      "status": "completed",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_gap_top_targeted",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "haesung_low_gap_top_support_pruned_probe200k_v12",
+      "runIds": [
+        "perfect_proto_haesung_low_gap_top_support_pruned_search_v12_probe200k_20260326"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "exactRuleCount": 5,
+        "haesungSupportRuleCount": 1,
+        "haesungOosPerfectRuleCount": 0,
+        "oosSelectedRows": 16,
+        "oosHitCount": 6,
+        "oosHitRate": 0.375
+      },
+      "secondaryMetrics": {
+        "splitPolicy": "decision_date_only",
+        "supportCaseId": "076610:2026-03-18",
+        "supportCaseFile": "/home/moltook/apps/stockdesk-lab-lite/artifacts/support_cases/haesung_076610_20260318_low_gap_top_v12.json",
+        "supportCasePrefixPruneCount": 577,
+        "acceptedRootSeedCountLowGapTop": 16,
+        "haesungSupportRuleId": "PP_54cba5347052",
+        "haesungSupportRuleOpenOosMatchCount": 4,
+        "haesungSupportRuleOpenOosHitCount": 2,
+        "haesungSupportRuleOpenOosPrecision": 0.5,
+        "frozenCatalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_haesung_low_gap_top_support_pruned_search_v12_probe200k_20260326_train_mine/95f72f31a8d68467/catalog.json",
+        "catalogContentSha256": "7bbab43f89c58c120ccb8d5dde35fca346450ae27fe148bff11aa9c835ce87e0",
+        "ruleIdsSha256": "7ce40c7760533cb78adf37ddfb999fb991fa6f8fbe0ae389b0a459b590face6e"
+      },
+      "notes": "v12 support-pruned low_gap_top probe200k passed local/server verify, generated 5 exact low_gap_top rules, reduced accepted low_gap_top root seeds to 16, and produced one Haesung-supporting exact rule, but no Haesung-supporting OOS-perfect rule; close28 OOS was 16 selected / 6 hits (37.5%)."
+    },
+    {
+      "ts": "2026-03-25T09:40:54Z",
+      "patchKey": "perfect_proto_stepb_1d_low_recent_shadow_promotion_v8",
+      "status": "completed",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_only",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "1d_low_recent_shadow_bundle_v8_200k",
+      "runIds": [
+        "perfect_proto_stepb_dplus1_plus_lite_recent_low_only_probe200k_v7d_20260325"
+      ],
+      "primaryMetrics": {
+        "localVerifyPassed": true,
+        "serverVerifyPassed": true,
+        "lowExactRuleCount": 5,
+        "lowBundlePromotable": true,
+        "lowBundleRuleCount": 2,
+        "close28SelectedRows": 4,
+        "close28HitCount": 2,
+        "close28HitRate": 0.5,
+        "close28UniqueDates": 4
+      },
+      "secondaryMetrics": {
+        "selectedBundleRuleIds": [
+          "PP_21acadb965eb",
+          "PP_52ecb0a55991"
+        ],
+        "selectedBundleFamilies": [
+          "low_gap_high_continuation",
+          "low_gap_top_continuation"
+        ],
+        "sourceRunId": "perfect_proto_stepb_dplus1_plus_lite_recent_low_only_probe200k_v7d_20260325",
+        "bundleCatalogPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/curated/frozen/perfect_proto_stepb_dplus1_plus_lite_recent_low_only_probe200k_v7d_20260325_train_mine/d3375b2c6b18ab7e/catalog.json",
+        "bundleCatalogSha256": "65034d5b33ab8eec8f7b7f1add0079edf8dcff05aedbee9b227b14f874c36fc0"
+      },
+      "notes": "LOW subtype exact mining now produces a promotable bundle-level recent-only shadow candidate. The new recent_only_low_shadow_bundle_v1 contract selected 2 exact LOW rules from the v7d low-only catalog, yielding close28 line-level 4 selected rows, 2 hits, 4 unique dates, and 0.50 hit rate. Registry wiring remains deferred until temporary replay against Haesung and recent shadow replay are completed."
+    },
+    {
+      "ts": "2026-03-25T08:58:02Z",
+      "patchKey": "perfect_proto_stepb_1d_low_recent_subtype_breadth_v7",
+      "status": "completed",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_low_only",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "1d_low_recent_subtype_v7d_200k",
+      "runIds": [
+        "perfect_proto_stepb_dplus1_plus_lite_recent_low_only_probe200k_v7d_20260325"
+      ],
+      "primaryMetrics": {
+        "serverVerifyPassed": true,
+        "lowFamilyRuleCount": 5,
+        "oosSelectedRows": 4,
+        "oosHitCount": 2,
+        "oosHitRate": 0.5,
+        "promotableShadowRuleCount": 0
+      },
+      "secondaryMetrics": {
+        "surface": "v6_contextual_plus_lite_recent_only_lane_local_pool8",
+        "discoveryUniverseId": "recent_impulse_upto_1d",
+        "selectionMode": "union_all",
+        "foldScheme": "chronological_4",
+        "catalogContentSha256": "26b4a4042917019cfb5bebc6fd7a736610945b7c56def46587c6c94d157addfe",
+        "ruleIdsSha256": "4cc748b93029e59591d4881d04871368c387b080f6b61eec25cde3ebb7ba36ba",
+        "ruleCountByFamily": {
+          "low_gap_high_continuation": 2,
+          "low_gap_top_continuation": 1,
+          "low_jump_below_continuation": 2
+        },
+        "familyAcceptedRootSeedCountByFamily": {
+          "low_gap_top_continuation": 223,
+          "low_gap_high_continuation": 232,
+          "low_jump_below_continuation": 217
+        },
+        "lineLevelHitCount": 2,
+        "lineLevelHitRate": 0.5
+      },
+      "notes": "LOW subtype breadth patch fixed the real bottleneck: synced recent-only low-only mining with subtype families, per-scope budget fairness, and explicit chronological_4 fold breadth produced 5 exact LOW rules across 3 subtype families and line-level close28 OOS 4 selected rows / 2 hits, but a strict recent-only shadow freeze still resolved to zero promotable rules so registry promotion remains blocked."
+    },
+    {
+      "ts": "2026-03-25T08:03:22Z",
+      "patchKey": "perfect_proto_stepb_1d_recent_only_cohort_rootstats_v6",
+      "status": "metric_correction",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_mid_low",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "1d_recent_only_cohort_rootstats_v6_200k_correction",
+      "runIds": [
+        "perfect_proto_stepb_dplus1_plus_lite_recent_mid_low_probe200k_diag_v6_20260325"
+      ],
+      "primaryMetrics": {
+        "serverVerifyPassed": true,
+        "oosSelectedRows": 21,
+        "oosHitCount": 8,
+        "oosHitRate": 0.38095238095238093
+      },
+      "secondaryMetrics": {
+        "correctionForPatchKey": "perfect_proto_stepb_1d_recent_only_cohort_rootstats_v6",
+        "correctionForRunId": "perfect_proto_stepb_dplus1_plus_lite_recent_mid_low_probe200k_diag_v6_20260325",
+        "source": "step-perfect-prototype-open-oos-apply-close28/deduped_symbols.jsonl",
+        "selectionMode": "union_all"
+      },
+      "notes": "Corrected line-level close28 OOS metrics for the recent-only v6 rerun. The prior append-only entry misread rule-level/report aggregates as line-level results; canonical deduped close28 output is 21 selected rows with 8 hits (38.10%)."
+    },
+    {
+      "ts": "2026-03-25T03:05:52Z",
+      "patchKey": "perfect_proto_stepb_1d_recent_only_cohort_rootstats_v6",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_mid_low",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "1d_recent_only_cohort_rootstats_v6_200k",
+      "runIds": [
+        "perfect_proto_stepb_dplus1_plus_lite_recent_mid_low_probe200k_diag_v6_20260325"
+      ],
+      "primaryMetrics": {
+        "serverVerifyPassed": true,
+        "trainRuleCount": 344,
+        "midFamilyRuleCount": 344,
+        "lowFamilyRuleCount": 0,
+        "oosSelectedRows": 21,
+        "oosHitCount": 0,
+        "oosHitRate": 0.0,
+        "promotableShadowRuleCount": 0
+      },
+      "secondaryMetrics": {
+        "surface": "v6_contextual_plus_lite_recent_only_lane_local_pool8",
+        "discoveryUniverseId": "recent_impulse_upto_1d",
+        "selectionMode": "union_all",
+        "catalogContentSha256": "0b2ed9e98af89c58e81de6358e4a098d49c37a8276540934af674d7e6117d7d8",
+        "ruleIdsSha256": "1477e19a82bcd44713f1c317a03980d4ea9cf97a8c85b229833a285031bf4262",
+        "openOosMatchedRules": 44,
+        "zeroNegativeRuleCount": 15,
+        "trainUniqueMatchedDates": 60,
+        "oosRawMatchedRows": 21
+      },
+      "notes": "Recent-only v6 cohort-rootstats 200k rerun completed on server with 344 mid_close_continuation rules and 0 low_close_continuation rules, but close28 OOS selected 21 rows with 0 actual target hits and both mid/low shadow freezes resolved to zero promotable rules."
+    },
+    {
+      "ts": "2026-03-24T15:17:06Z",
+      "patchKey": "perfect_proto_stepb_1d_mid_low_recent_only_cohort_exact_family_v3",
+      "status": "completed",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_recent_mid_low",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "1d_mid_low_recent_only_v3c_200k",
+      "runIds": [
+        "perfect_proto_stepb_dplus1_plus_lite_recent_mid_low_probe200k_diag_v3c_20260324"
+      ],
+      "primaryMetrics": {
+        "serverVerifyPassed": true,
+        "trainRuleCount": 298,
+        "midFamilyRuleCount": 298,
+        "lowFamilyRuleCount": 0,
+        "oosSelectedRows": 19,
+        "oosHitCount": 7,
+        "oosHitRate": 0.3684210526315789,
+        "promotableShadowRuleCount": 0
+      },
+      "secondaryMetrics": {
+        "surface": "v6_contextual_plus_lite_recent_only_lane_local_pool8",
+        "discoveryUniverseId": "recent_impulse_upto_1d",
+        "selectionMode": "union_all",
+        "catalogContentSha256": "6c2b79c1838bf2811d5bc8a21ee7799907d3595100ec2d7cdbe9bcba50ae5ad3",
+        "ruleIdsSha256": "cc58955dbbeb08c00d546059782624d4411513f9fb8027f23514883aed454f3f"
+      },
+      "notes": "Root-cause fix for recent-only family root-scope intersection validated on server. The v6 recent_impulse_upto_1d line produced 298 mid_close_continuation exact rules, zero low survivors, and close28 OOS selected 19 rows with 7 hits, but no promotable shadow subset met the operating freeze thresholds yet."
+    },
+    {
+      "ts": "2026-03-24T09:47:13Z",
+      "patchKey": "perfect_proto_stepb_1d_mid_low_continuation_exact_family_v2",
+      "status": "invalid_or_inconclusive",
+      "scope": "target_first_v2",
+      "candidateMode": "perfect_prototype_stepb_plus_lite_lane_local",
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "1d_mid_low_continuation_v2",
+      "runIds": [
+        "perfect_proto_stepb_1d_mid_low_continuation_exact_family_v2_full200k_v5_20260324",
+        "perfect_proto_stepb_1d_mid_single_rule_haesung_live0318_decisiondate_v1_20260324"
+      ],
+      "primaryMetrics": {
+        "serverVerifyPassed": true,
+        "curatedRuleCount": 14,
+        "midFamilyRuleCount": 1,
+        "lowFamilyRuleCount": 0,
+        "midShadowRuleCount": 0,
+        "lowShadowRuleCount": 0,
+        "haesungHistoricalLiveMatchedTrain100ExactRuleCount": 0
+      },
+      "secondaryMetrics": {
+        "midFamilyOpenOosHitCount": 1,
+        "midFamilyOpenOosMatchCount": 2,
+        "midFamilyOpenOosPrecision": 0.5,
+        "unclassifiedRuleCount": 13,
+        "freezeCatalogSha256": "0c38f595fd66b2448d8ea074f1b04ae8ade4e1e14f9320922aecdce0d8c5dd5a"
+      },
+      "notes": "v5 lane-local fail-fast surface and MID/LOW exact-family stack verified on server, but full 1d 200k run produced 1 mid rule, 0 low rules, zero promotable shadow subsets, and the surviving mid rule did not match Haesung in 2026-03-18 historical decision-date live replay."
+    },
+    {
+      "ts": "2026-03-24T00:04:16Z",
+      "patchKey": "perfect_proto_haesung_076610_20260318_counterfactual_matrix_v1",
+      "status": "completed",
+      "scope": "target_first_v2",
+      "candidateMode": null,
+      "goalMode": "TARGET_FIRST_V2",
+      "positionSemantics": "OVERLAP_DAILY_ONE_PICK_V2",
+      "probeId": "haesung_076610_20260318_counterfactual_matrix",
+      "runIds": [
+        "perfect_proto_haesung_076610_20260318_counterfactual_matrix_v1_20260324"
+      ],
+      "primaryMetrics": {
+        "exactMatchLineCount": 6,
+        "noSupportLineCount": 5,
+        "widenedExactMatchLines": [
+          "1d",
+          "2d",
+          "3d",
+          "5d",
+          "6d",
+          "8d"
+        ],
+        "noSupportLines": [
+          "4d",
+          "7d",
+          "afree_exact_53",
+          "afree_daycap2_exact_9",
+          "afree_operating_7"
+        ]
+      },
+      "secondaryMetrics": {
+        "widenedRuleCounts": {
+          "1d": 269,
+          "2d": 208,
+          "3d": 476,
+          "4d": 0,
+          "5d": 224,
+          "6d": 214,
+          "7d": 0,
+          "8d": 64
+        },
+        "primaryRuleIds": {
+          "1d": "PP_009f5c4354d8",
+          "2d": "PP_325691e05994",
+          "3d": "PP_3feedec9938e",
+          "5d": "PP_580c314212de",
+          "6d": "PP_13b21547e01f",
+          "8d": "PP_21d8f7f14e79"
+        },
+        "summaryPath": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_haesung_076610_20260318_counterfactual_matrix_v1_20260324/matrix_summary.json"
+      },
+      "notes": "Counterfactual 076610:2026-03-18 current open-eval matrix: widened 1d/2d/3d/5d/6d/8d train100-exact catalogs matched; widened 4d/7d and A-free exact/operating catalogs had no downstream rule support."
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "kind": "tp12_no_stop_rolling_research_contract_v1",
+  "contractId": "tp12_no_stop_rolling_low_gap_top_3y1y_v1",
+  "updatedAt": "2026-04-07T18:30:00+09:00",
+  "scopeId": "LOW_GAP_TOP",
+  "decisionWindow": {
+    "from": "2016-08-12",
+    "to": "2026-03-27"
+  },
+  "inputContract": {
+    "discoveryUniverseId": "recent_impulse_upto_1d",
+    "requestedLookbackTradingDays": 1,
+    "stepALaneSet": [
+      "recent_impulse_1d"
+    ],
+    "allowlistPolicy": "required_low_gap_top_allowlist_exact_pair_v1",
+    "commonSupportPolicy": "pair_exact_intersection_v1"
+  },
+  "labelContract": {
+    "targetPct": 0.12,
+    "stopLossPct": 0,
+    "primaryHoldDays": 3,
+    "secondaryHoldDays": 4,
+    "primaryLabelId": "tp12_no_stop_hit_3d",
+    "secondaryLabelIds": [
+      "tp12_no_stop_hit_4d"
+    ],
+    "targetLabelIds": [
+      "tp12_no_stop_hit_3d",
+      "tp12_no_stop_hit_4d"
+    ]
+  },
+  "searchContract": {
+    "configPath": "config/lab.config.server.lite.stepb_dplus1_plus_lite_target12_no_stop.json",
+    "lineId": "stepb_dplus1_plus_lite_target12_no_stop",
+    "contextSurface": "v3_contextual_plus_lite",
+    "splitPolicy": "strict_label_boundary",
+    "selectionMode": "union_all",
+    "foldScheme": "chronological_4",
+    "maxGapTradingDays": 100000,
+    "minHitCount": 4,
+    "minTrainMatchedDates": 4,
+    "minTrainMatchedMonths": 4,
+    "minTrainMatchedFolds": 3,
+    "maxRuleSize": 6,
+    "maxSeedTokens": 4000,
+    "maxRules": 4000,
+    "screenMaxSearchStates": 200000,
+    "finalMaxSearchStates": 20000000
+  },
+  "screenAcceptance": {
+    "minUsableScreenWindows": 4,
+    "earlyStopIfFirstTwoWindowsHaveZeroOosSelections": true
+  },
+  "windows": [
+    {
+      "windowId": "w1",
+      "kind": "screen",
+      "trainDateFrom": "2016-08-12",
+      "trainDateTo": "2018-12-31",
+      "oosDateFrom": "2019-01-02",
+      "oosDateTo": "2019-12-31"
+    },
+    {
+      "windowId": "w2",
+      "kind": "screen",
+      "trainDateFrom": "2017-01-02",
+      "trainDateTo": "2019-12-31",
+      "oosDateFrom": "2020-01-02",
+      "oosDateTo": "2020-12-31"
+    },
+    {
+      "windowId": "w3",
+      "kind": "screen",
+      "trainDateFrom": "2018-01-02",
+      "trainDateTo": "2020-12-31",
+      "oosDateFrom": "2021-01-04",
+      "oosDateTo": "2021-12-30"
+    },
+    {
+      "windowId": "w4",
+      "kind": "screen",
+      "trainDateFrom": "2019-01-02",
+      "trainDateTo": "2021-12-31",
+      "oosDateFrom": "2022-01-03",
+      "oosDateTo": "2022-12-29"
+    },
+    {
+      "windowId": "w5",
+      "kind": "screen",
+      "trainDateFrom": "2020-01-02",
+      "trainDateTo": "2022-12-30",
+      "oosDateFrom": "2023-01-02",
+      "oosDateTo": "2023-12-28"
+    },
+    {
+      "windowId": "w6",
+      "kind": "screen",
+      "trainDateFrom": "2021-01-04",
+      "trainDateTo": "2023-12-29",
+      "oosDateFrom": "2024-01-02",
+      "oosDateTo": "2024-12-27"
+    },
+    {
+      "windowId": "final_confirm",
+      "kind": "final_confirm",
+      "trainDateFrom": "2016-08-12",
+      "trainDateTo": "2024-12-27",
+      "oosDateFrom": "2025-01-02",
+      "oosDateTo": "2026-03-27"
+    }
+  ],
+  "hardStops": [
+    "Do not mutate the frozen tp12_side_daily scientific-control root while opening this sibling branch.",
+    "Do not reuse HIGH8 or close28 as the primary promotion metric for this branch.",
+    "Do not reopen TP12/SL4/3d exact-search tuning as the main path for this branch."
+  ],
+  "notes": [
+    "This sibling branch exists only for a true TP12 no-stop selection supplier check.",
+    "The frozen scientific baseline remains daily_only_no_stop until this branch proves otherwise.",
+    "The final confirm window must stay untouched by rolling-screen tuning decisions."
+  ]
+}

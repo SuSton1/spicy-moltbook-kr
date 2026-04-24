@@ -1,0 +1,4 @@
+export {
+  applyPerfectPrototypeSupportTop1QueryRanker as applyPerfectPrototypeRecentMidLowWinnerQuery,
+  summarizePerfectPrototypeSupportTop1Selections as summarizePerfectPrototypeRecentMidLowWinnerQuerySelections,
+} from "./perfect_prototype_support_top1_query_ranker.mjs"

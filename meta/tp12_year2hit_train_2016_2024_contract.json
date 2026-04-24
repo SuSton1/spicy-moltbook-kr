@@ -1,0 +1,128 @@
+{
+  "kind": "tp12_year2hit_train_first_contract_v1",
+  "contractId": "tp12_year2hit_train_2016_2024_v1",
+  "patchKey": "tp12_year2hit_foundation_trainfirst_2016_2024_v1",
+  "updatedAt": "2026-04-21T00:00:00+09:00",
+  "scopeId": "LOW_GAP_TOP",
+  "decisionWindow": {
+    "from": "2016-01-04",
+    "to": "2026-04-17"
+  },
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "oosDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "coreYearsRequested": [
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "excludedBoundaryYears": [],
+  "yearHitMetric": "unique_decision_dates",
+  "trainGate": {
+    "gateBeforeOosApply": true,
+    "minHitsPerCoreYear": 2,
+    "hitField": "hitTarget",
+    "sameDateDedup": true,
+    "failOnInvalidRows": true,
+    "failOnZeroSurvivors": true,
+    "requireCoreYearsWithinTrain": true,
+    "outRuleIdsRequired": true,
+    "survivorPatternIdsSha256Required": true
+  },
+  "labelEvent": {
+    "labelConfigId": "tp12_target12_next_open_hold3_no_stop_v1",
+    "defaultRangeKey": "trainDateRange",
+    "entryRule": "NEXT_DAY_OPEN",
+    "targetPct": 0.12,
+    "holdDays": 3,
+    "stopLossPct": 0,
+    "stopPolicy": "no_stop",
+    "sameBarPolicy": "fail",
+    "labelHorizonDateTo": "2024-12-30",
+    "horizonBoundaryPolicy": "skip_cross_boundary",
+    "terminalForwardPolicy": "skip_terminal_incomplete_forward",
+    "failOnInvalidLabels": true
+  },
+  "featureTokenizer": {
+    "tokenizerVersion": "tp12_positive_first_tokenizer_v1",
+    "requireUniverse": true,
+    "includeFeatureSnapshot": false,
+    "minTokenCount": 1,
+    "belowMinTokenPolicy": "skip_below_min"
+  },
+  "candidateMining": {
+    "maxPatternSize": 3,
+    "minSeedHitRows": 18,
+    "minSeedMatchRows": 18,
+    "minSeedPrecision": 0,
+    "maxTokensPerPositiveEvent": 64,
+    "maxPairCandidates": 1000000,
+    "beamWidthPerSize": 2000,
+    "maxExtensionsPerParent": 64,
+    "minCandidatePrecision": 0.12,
+    "minCandidateDatePrecision": 0.12,
+    "minCandidateHitRows": 18,
+    "minCandidateHitDates": 18,
+    "maxTop1HitDateShare": 0.25,
+    "maxTop1MatchDateShare": 0.25,
+    "maxCandidateMatchRows": 10000,
+    "minUniqueHitSymbols": 3,
+    "emitRejected": false
+  },
+  "candidateMaterialization": {
+    "requireYear2hitPassed": true,
+    "requireCandidateQualityPassed": true
+  },
+  "qualityGate": {
+    "minRowPrecision": 0.12,
+    "minDatePrecision": 0.12,
+    "minHitRows": 18,
+    "minUniqueHitDates": 18,
+    "minUniqueHitSymbols": 3,
+    "maxTop1HitDateShare": 0.25,
+    "maxTop1MatchDateShare": 0.25,
+    "maxMatchRows": 10000,
+    "failOnZeroQualitySurvivors": true
+  },
+  "oosPreflight": {
+    "blockedWithoutTrainGate": true,
+    "blockedWithoutGatedCatalog": true,
+    "blockedWithoutDataReadiness": true,
+    "blockedWithoutAsofSurvivorship": true,
+    "blockedWithoutExtendedManifests": true,
+    "blockedOnGateHashMismatch": true,
+    "blockedOnCatalogHashMismatch": true,
+    "blockedOnTrainOosOverlap": true
+  },
+  "oosResultGate": {
+    "targetSelectionKey": "onePickPerDay",
+    "targetObservedHitRate": 0.8,
+    "minWilsonLowerBound95": 0.8,
+    "minSelectedRows": 50,
+    "minUniqueMatchedDates": 50,
+    "minUniqueMatchedSymbols": 20,
+    "maxTop1DateShare": 0.12,
+    "failOnGateFailure": false
+  },
+  "hardStops": [
+    "Do not use oosHit as the train hit field unless explicitly requested on the command line.",
+    "Do not run OOS directly from a raw candidate catalog.",
+    "Do not auto-drop 2016 or any requested core year; explicit excludedBoundaryYears is required.",
+    "Do not relax minHitsPerCoreYear when survivorCount is zero."
+  ],
+  "notes": [
+    "This contract is the train-first control plane for searching patterns that hit at least twice per requested year before any OOS replay.",
+    "Candidate generation may be broad, but OOS entry must use the gated catalog produced from the train gate survivor IDs."
+  ]
+}

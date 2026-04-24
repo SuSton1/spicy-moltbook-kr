@@ -1,0 +1,46 @@
+{
+  "periods": {
+    "warmup": {
+      "from": "2025-04-01",
+      "to": "2025-04-30"
+    },
+    "discovery": {
+      "from": "2025-05-02",
+      "to": "2025-06-19"
+    },
+    "online": {
+      "from": "2025-06-20",
+      "to": "2025-06-24"
+    },
+    "lockbox": {
+      "from": "2025-06-25",
+      "to": "2025-06-30"
+    }
+  },
+  "event": {
+    "highJumpThreshold": 0.08
+  },
+  "filters": {
+    "minMarketCapKrw": 30000000000,
+    "maxMarketCapKrw": 500000000000,
+    "gapTradability": {
+      "requirePrevClose": true
+    }
+  },
+  "guardrails": {
+    "enforceStepAEngineDuckdb": false
+  },
+  "lightweight": {
+    "stepA": {
+      "engine": "classic",
+      "outputMode": "lite"
+    }
+  },
+  "dataPaths": {
+    "candleDailyJsonl": "data/candle_daily.jsonl",
+    "universeJsonl": "data/universe_daily.jsonl",
+    "symbolMasterJsonl": "data/symbol_master.jsonl",
+    "hourly60mJsonl": "data/optional_empty.jsonl",
+    "newsJsonl": "data/optional_empty.jsonl"
+  }
+}

@@ -1,0 +1,373 @@
+{
+  "createdAt": "2026-03-22T00:00:00+09:00",
+  "manifestPath": "/home/saida/code/stockdesk-lab-lite/meta/server_cleanup_manifests/server_high_confidence_cleanup_v2_20260322.json",
+  "expectedTotalSizeMb": 28513,
+  "itemCount": 54,
+  "serverDfBefore": {
+    "filesystem": "/dev/vda2",
+    "size": 211247489024,
+    "used": 181673951232,
+    "avail": 20859985920,
+    "usePercent": "90%",
+    "mount": "/"
+  },
+  "serverDfAfter": {
+    "filesystem": "/dev/vda2",
+    "size": 211247489024,
+    "used": 151805796352,
+    "avail": 50728140800,
+    "usePercent": "75%",
+    "mount": "/"
+  },
+  "freedBytesByDf": 29868154880,
+  "deletedItemCount": 54,
+  "deletedItems": [
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/gptpro_bundle_20260308_v1",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/gptpro_deep_bundle_20260308_v1",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/gptpro_deep_bundle_20260308_v2",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/gptpro_longterm_bundle_20260308_v1",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_prejump_train_pack_20260313_205829_mem12g",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_exact_compiled_input_build_v2_20260320",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/probee_subset13_fix13_20260312_043208",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/rulecheck_20260312_201432",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_180536_b01",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_180536_b02",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_180536_b03",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_180536_b04",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_184918_b01",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_184918_b02",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_184918_b03",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_184918_b04",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_185242_b01",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_185242_b02",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_185242_b03",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_185242_b04",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_190601_b01",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_190601_b02",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_190724_b01",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_all_20260310_190724_b02",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_era_diag_20260311_011449",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_era_diag_20260311_011503",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_feature_rewire_20260311_020740",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_feature_rewire_fix_20260311_022100",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_low_support_formula_20260311_062747",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_low_support_reason_shadow_20260311_054532",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_low_support_reason_shadow_20260311_054608",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_singleera_evidence_20260311_041050",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_singleera_evidence_bg_20260311_050000",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_singleera_evidence_clean_20260311_054500",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c1_shard25_singleera_tracefix_20260311_060200",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c0c1_shard25_fullregen_20260311_032112",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/c0c1_shard25_singleera_guard_20260311_024200",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_1",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_10",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_11",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_12",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_13",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_14",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_15",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_16",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_17",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_2",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_3",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_4",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_5",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_6",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_7",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_8",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_feature_store_bootstrap_20260314_233103_9",
+      "existedBefore": true,
+      "kind": "dir",
+      "existsAfter": false
+    }
+  ],
+  "postDeleteChecks": [
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_widened_pack_rowcount_matrix_v1_20260322_same_day_plus_recent_upto_5d/step-perfect-prototype-open-train-pack/summary.json",
+      "exists": true
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_widened_pack_rowcount_matrix_v1_20260322_same_day_plus_recent_upto_6d/step-perfect-prototype-open-train-pack/daily_pack_base.tmp.jsonl",
+      "exists": true
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_plus_lite_recent_impulse_3d_budget10k_200k_probe_v7_20260320_train/step-b/templates_lite.jsonl",
+      "exists": true
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/runs/perfect_proto_stepb_afree_53rule_open_oos_eval_v1_20260321/step-perfect-prototype-open-oos-pack/summary.json",
+      "exists": true
+    },
+    {
+      "path": "/home/moltook/apps/stockdesk-lab-lite/artifacts/feature-store",
+      "exists": true
+    }
+  ],
+  "recoveryHint": "Use the companion manifest for exact original paths. Recreate only by rerunning the original experiment families or restoring from external backup if needed."
+}

@@ -1,0 +1,38 @@
+{
+  "kind": "tp12_h80_same_day_pairwise_overcrowding_ranker_contract_v1",
+  "patchKey": "tp12_h80_same_day_pairwise_overcrowding_ranker_v1",
+  "mode": "train_only_same_day_pairwise_ranker_diagnostic",
+  "trainDateRange": {
+    "from": "2016-01-04",
+    "to": "2024-12-30"
+  },
+  "forbiddenDateRange": {
+    "from": "2025-01-02",
+    "to": "2026-04-17"
+  },
+  "inputs": {
+    "candidates": "artifacts/runs/tp12_h80_wilson_contrastive_abstention_v1/train_only_foundation/enriched_consensus_all_folds.jsonl"
+  },
+  "outputs": {
+    "summary": "artifacts/runs/tp12_h80_same_day_pairwise_overcrowding_ranker_v1/train_only_diagnostic/same_day_pairwise_overcrowding_summary.json",
+    "selections": "artifacts/runs/tp12_h80_same_day_pairwise_overcrowding_ranker_v1/train_only_diagnostic/same_day_pairwise_overcrowding_selections.jsonl"
+  },
+  "objective": {
+    "rankerFamily": "same_day_pairwise_support_overcrowding_penalty",
+    "targetWilsonLower95": 0.8,
+    "minSelectedRows": 150,
+    "dailySelectionMode": "forced_top1_per_candidate_date",
+    "diagnosticOnly": true
+  },
+  "hardStops": [
+    "Do not read OOS rows while scoring or selecting policies.",
+    "Do not emit a locked selector from this diagnostic tool.",
+    "Do not tune thresholds on OOS 2025-01-02..2026-04-17.",
+    "Do not silently fall back to the baseline selector when an anti-crowd policy fails.",
+    "Do not use future path-quality fields as live selector features."
+  ],
+  "expectedInterpretation": {
+    "ifImproves": "Open a separate nested calibration patch before any OOS apply.",
+    "ifFails": "Treat current same-day support-overcrowding correction as insufficient and move to richer pairwise/context feature learning."
+  }
+}
