@@ -6,10 +6,14 @@ on:
     tags:
       - "jarvis-v*"
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -18,15 +22,17 @@ jobs:
       RUST_BACKTRACE: 1
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable action snapshot
 
       - name: Install Tauri CLI
         run: cargo install tauri-cli --locked
@@ -53,7 +59,7 @@ jobs:
           fi
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: jarvis-${{ matrix.os }}
           path: jarvis-dist/*
@@ -61,10 +67,13 @@ jobs:
   release:
     name: Publish release
     needs: build
+    permissions:
+      contents: write
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: jarvis-release
 
@@ -73,11 +82,12 @@ jobs:
           set -euo pipefail
           ls -la jarvis-release
           mkdir -p jarvis-release/assets
-          find jarvis-release -type f -name "*.exe" -exec cp {} jarvis-release/assets/ \\;
-          find jarvis-release -type f -name "*.dmg" -exec cp {} jarvis-release/assets/ \\;
+          find jarvis-release/jarvis-* -type f \( -name "*.exe" -o -name "*.dmg" \) -exec cp -t jarvis-release/assets {} +
+          test -s jarvis-release/assets/moltook-jarvis-windows.exe
+          test -s jarvis-release/assets/moltook-jarvis-mac.dmg
 
       - name: Publish GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: jarvis-release/assets/*
         env:
