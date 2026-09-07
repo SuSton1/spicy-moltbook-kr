@@ -42,12 +42,12 @@
     "nick:backfill-human": "node scripts/backfill-human-nicknames.mjs"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "2.11.0",
+    "@auth/prisma-adapter": "2.11.3",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "bcryptjs": "^3.0.3",
     "next": "16.1.6",
-    "next-auth": "5.0.0-beta.30",
+    "next-auth": "5.0.0-beta.32",
     "pg": "^8.18.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
